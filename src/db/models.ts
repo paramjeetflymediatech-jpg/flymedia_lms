@@ -1,4 +1,4 @@
-import { Model, DataTypes, InferAttributes, InferCreationAttributes, CreationOptional, ForeignKey } from 'sequelize';
+import { Model, DataTypes, InferAttributes, InferCreationAttributes, CreationOptional, ForeignKey, NonAttribute } from 'sequelize';
 import { sequelize } from './index';
 
 // ==========================================
@@ -55,7 +55,7 @@ User.init(
 // ==========================================
 // 2. COURSE MODEL
 // ==========================================
-export class Course extends Model<InferAttributes<Course>, InferCreationAttributes<Course>> {
+export class Course extends Model<InferAttributes<Course, { omit: 'modules' }>, InferCreationAttributes<Course, { omit: 'modules' }>> {
   declare id: CreationOptional<string>;
   declare title: string;
   declare slug: string;
@@ -66,6 +66,8 @@ export class Course extends Model<InferAttributes<Course>, InferCreationAttribut
   declare thumbnail: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  // Eager-loaded association (populated by Sequelize at runtime)
+  declare modules?: NonAttribute<Module[]>;
 }
 
 Course.init(
@@ -119,13 +121,15 @@ Course.init(
 // ==========================================
 // 3. MODULE MODEL
 // ==========================================
-export class Module extends Model<InferAttributes<Module>, InferCreationAttributes<Module>> {
+export class Module extends Model<InferAttributes<Module, { omit: 'lessons' }>, InferCreationAttributes<Module, { omit: 'lessons' }>> {
   declare id: CreationOptional<string>;
   declare courseId: ForeignKey<Course['id']>;
   declare title: string;
   declare order: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  // Eager-loaded association (populated by Sequelize at runtime)
+  declare lessons?: NonAttribute<Lesson[]>;
 }
 
 Module.init(
@@ -228,6 +232,7 @@ export class Enrollment extends Model<InferAttributes<Enrollment>, InferCreation
   declare id: CreationOptional<string>;
   declare userId: ForeignKey<User['id']>;
   declare courseId: ForeignKey<Course['id']>;
+  declare batchMode: CreationOptional<'ONLINE' | 'OFFLINE'>;
   declare enrolledAt: CreationOptional<Date>;
   declare completedAt: CreationOptional<Date | null>;
   declare createdAt: CreationOptional<Date>;
@@ -258,6 +263,11 @@ Enrollment.init(
         key: 'id',
       },
       onDelete: 'CASCADE',
+    },
+    batchMode: {
+      type: DataTypes.ENUM('ONLINE', 'OFFLINE'),
+      allowNull: false,
+      defaultValue: 'ONLINE',
     },
     enrolledAt: {
       type: DataTypes.DATE,
@@ -388,6 +398,133 @@ Certificate.init(
 );
 
 // ==========================================
+// 8. INQUIRY MODEL
+// ==========================================
+export class Inquiry extends Model<InferAttributes<Inquiry>, InferCreationAttributes<Inquiry>> {
+  declare id: CreationOptional<string>;
+  declare name: string;
+  declare email: string;
+  declare phone: string;
+  declare message: string;
+  declare status: 'NEW' | 'CONTACTED' | 'RESOLVED';
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Inquiry.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    message: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM('NEW', 'CONTACTED', 'RESOLVED'),
+      allowNull: false,
+      defaultValue: 'NEW',
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'Inquiry',
+    tableName: 'inquiries',
+  }
+);
+
+// ==========================================
+// 9. PAYMENT MODEL
+// ==========================================
+export class Payment extends Model<InferAttributes<Payment>, InferCreationAttributes<Payment>> {
+  declare id: CreationOptional<string>;
+  declare userId: ForeignKey<User['id']>;
+  declare courseId: ForeignKey<Course['id']>;
+  declare amount: number;
+  declare transactionId: string;
+  declare status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  declare provider: string;
+  declare batchMode: 'ONLINE' | 'OFFLINE';
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Payment.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    courseId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'courses',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    transactionId: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
+    },
+    status: {
+      type: DataTypes.ENUM('PENDING', 'SUCCESS', 'FAILED'),
+      allowNull: false,
+      defaultValue: 'PENDING',
+    },
+    provider: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: 'PHONEPE',
+    },
+    batchMode: {
+      type: DataTypes.ENUM('ONLINE', 'OFFLINE'),
+      allowNull: false,
+      defaultValue: 'ONLINE',
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'Payment',
+    tableName: 'payments',
+  }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 
@@ -422,3 +559,67 @@ Certificate.belongsTo(User, { foreignKey: 'userId' });
 // Course has many Certificates, Certificate belongs to Course
 Course.hasMany(Certificate, { as: 'certificates', foreignKey: 'courseId', onDelete: 'CASCADE' });
 Certificate.belongsTo(Course, { foreignKey: 'courseId' });
+
+// User has many Payments, Payment belongs to User
+User.hasMany(Payment, { as: 'payments', foreignKey: 'userId', onDelete: 'CASCADE' });
+Payment.belongsTo(User, { foreignKey: 'userId' });
+
+// Course has many Payments, Payment belongs to Course
+Course.hasMany(Payment, { as: 'payments', foreignKey: 'courseId', onDelete: 'CASCADE' });
+Payment.belongsTo(Course, { foreignKey: 'courseId' });
+
+// ==========================================
+// 9. PASSWORD RESET TOKEN MODEL
+// ==========================================
+export class PasswordResetToken extends Model<
+  InferAttributes<PasswordResetToken>,
+  InferCreationAttributes<PasswordResetToken>
+> {
+  declare id: CreationOptional<string>;
+  declare userId: ForeignKey<User['id']>;
+  declare token: string;      // hashed token stored in DB
+  declare expiresAt: Date;
+  declare used: CreationOptional<boolean>;
+  declare createdAt: CreationOptional<Date>;
+}
+
+PasswordResetToken.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE',
+    },
+    token: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    expiresAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    used: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    createdAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'PasswordResetToken',
+    tableName: 'password_reset_tokens',
+    updatedAt: false,
+  }
+);
+
+// User has many PasswordResetTokens
+User.hasMany(PasswordResetToken, { as: 'resetTokens', foreignKey: 'userId', onDelete: 'CASCADE' });
+PasswordResetToken.belongsTo(User, { foreignKey: 'userId' });
+

@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import Header from '../../../../src/components/layout/Header';
-import Footer from '../../../../src/components/layout/Footer';
 import { requireAuth } from '../../../../src/lib/auth';
 import { Course, Module, Lesson, Enrollment, Progress } from '../../../../src/db/models';
 import { toggleLessonProgress } from '../../../actions';
@@ -50,8 +48,8 @@ export default async function StudentClassroomPage({ params, searchParams }: Pro
 
   // Flatten lessons list to find active, next, and previous lessons
   const allLessons: any[] = [];
-  if (course.modules) {
-    for (const mod of course.modules) {
+  if ((course as any).modules) {
+    for (const mod of (course as any).modules) {
       if ((mod as any).lessons) {
         allLessons.push(...(mod as any).lessons);
       }
@@ -60,21 +58,48 @@ export default async function StudentClassroomPage({ params, searchParams }: Pro
 
   if (allLessons.length === 0) {
     return (
-      <>
-        <Header />
-        <main className="flex-1 bg-slate-50 py-16 text-center">
-          <div className="max-w-md mx-auto bg-white border border-slate-100 p-8 rounded-3xl space-y-4">
-            <h2 className="text-xl font-bold text-slate-900">Classroom is empty</h2>
-            <p className="text-slate-500 text-sm">
-              The instructor has not added modules/lessons to this course yet. Check back soon!
-            </p>
-            <Link href="/dashboard" className="text-blue-600 hover:underline text-sm font-semibold">
-              Return to Dashboard
-            </Link>
+      <div className="min-h-[80vh] flex items-center justify-center py-20 relative overflow-hidden bg-slate-50">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-orange-500/10 to-rose-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none" />
+        
+        <div className="relative z-10 max-w-lg w-full mx-4">
+          <div className="bg-white border border-slate-100 rounded-[3rem] p-10 sm:p-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden">
+            {/* Top Shine */}
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-slate-50/80 to-transparent pointer-events-none" />
+            
+            <div className="relative z-10 space-y-8">
+              <div className="w-24 h-24 mx-auto bg-slate-50 rounded-full flex items-center justify-center text-4xl shadow-sm border border-slate-100 relative">
+                <span className="absolute top-2 right-2 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                </span>
+                🚧
+              </div>
+              
+              <div className="space-y-4">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Classroom is empty</h2>
+                <p className="text-slate-500 font-medium leading-relaxed">
+                  The instructor has not added modules or lessons to this course yet. The curriculum is actively being drafted. Check back soon!
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <Link 
+                  href="/dashboard" 
+                  className="inline-flex items-center justify-center w-full px-6 py-4 font-black text-white bg-slate-900 hover:bg-slate-800 rounded-2xl transition-all shadow-md group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    Return to Dashboard
+                  </span>
+                </Link>
+              </div>
+            </div>
           </div>
-        </main>
-        <Footer />
-      </>
+        </div>
+      </div>
     );
   }
 
@@ -104,17 +129,19 @@ export default async function StudentClassroomPage({ params, searchParams }: Pro
   // Compute course overall progress percent
   const progressPercent = Math.round((completedLessonIds.size / allLessons.length) * 100);
 
+  // Extract primitives to avoid capturing Sequelize model in closure
+  const lessonIdToToggle = activeLesson.id;
+  const nextCompletionState = !isActiveCompleted;
+
   // Server Action call wrapper
   const handleToggleProgress = async () => {
     'use server';
-    await toggleLessonProgress(activeLesson.id, !isActiveCompleted);
+    await toggleLessonProgress(lessonIdToToggle, nextCompletionState);
   };
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 bg-slate-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           
           {/* Top Title Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -153,7 +180,7 @@ export default async function StudentClassroomPage({ params, searchParams }: Pro
                 <h3 className="font-bold text-slate-900 text-sm">Course Syllabus</h3>
               </div>
               <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
-                {course.modules?.map((mod) => (
+                {((course as any).modules || []).map((mod: any) => (
                   <div key={mod.id} className="p-4 space-y-3">
                     <h4 className="text-xs font-extrabold tracking-wider text-slate-400 uppercase">
                       {mod.title}
@@ -289,9 +316,7 @@ export default async function StudentClassroomPage({ params, searchParams }: Pro
 
             </div>
           </div>
-        </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </div>
   );
 }

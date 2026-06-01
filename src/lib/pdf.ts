@@ -1,4 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function generateCertificatePDF(studentName: string, courseTitle: string, certificateId: string, completionDate: string) {
   // Create a new PDFDocument
@@ -43,27 +45,36 @@ export async function generateCertificatePDF(studentName: string, courseTitle: s
   drawCorner(35, height - 35);
   drawCorner(width - 35, height - 35);
 
-  // 3. Header Text
-  const orgName = 'ANTIGRAVITY ACADEMY OF TECHNOLOGY';
-  const orgNameWidth = timesBoldFont.widthOfTextAtSize(orgName, 18);
-  page.drawText(orgName, {
-    x: (width - orgNameWidth) / 2,
-    y: height - 100,
-    size: 18,
-    font: timesBoldFont,
-    color: rgb(0.12, 0.16, 0.32),
-  });
+  // 3. Header Logo & Text
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+    const logoBytes = await fs.readFile(logoPath);
+    const logoImage = await pdfDoc.embedPng(logoBytes);
 
-  // Small subtitle
-  const subtitle = 'PROVING EXCELLENCE IN MODERN SOFTWARE ENGINEERING';
-  const subtitleWidth = helveticaBoldFont.widthOfTextAtSize(subtitle, 9);
-  page.drawText(subtitle, {
-    x: (width - subtitleWidth) / 2,
-    y: height - 120,
-    size: 9,
-    font: helveticaBoldFont,
-    color: rgb(0.74, 0.6, 0.23),
-  });
+    // Scale logo down to fit
+    const logoDims = logoImage.scaleToFit(200, 80);
+
+    page.drawImage(logoImage, {
+      x: (width - logoDims.width) / 2,
+      y: height - 60 - logoDims.height,
+      width: logoDims.width,
+      height: logoDims.height,
+    });
+  } catch (error) {
+    console.warn("Could not load logo image for PDF:", error);
+    // Fallback to text
+    const orgName = 'FLYMEDIA TECHNOLOGY';
+    const orgNameWidth = timesBoldFont.widthOfTextAtSize(orgName, 18);
+    page.drawText(orgName, {
+      x: (width - orgNameWidth) / 2,
+      y: height - 100,
+      size: 18,
+      font: timesBoldFont,
+      color: rgb(0.12, 0.16, 0.32),
+    });
+  }
+
+  // Subtitle removed to keep design clean alongside the logo
 
   // 4. Main Certificate Text
   const mainTitle = 'CERTIFICATE OF COMPLETION';
@@ -136,7 +147,7 @@ export async function generateCertificatePDF(studentName: string, courseTitle: s
   // Signature Block (Right Side)
   page.drawLine({ start: { x: width - 300, y: 100 }, end: { x: width - 150, y: 100 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
   page.drawText('Authorized Signature', { x: width - 265, y: 80, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
-  page.drawText('Antigravity LMS Team', { x: width - 260, y: 110, size: 13, font: timesBoldFont, color: rgb(0.12, 0.16, 0.32) });
+  page.drawText('Flymedia LMS Team', { x: width - 260, y: 110, size: 13, font: timesBoldFont, color: rgb(0.12, 0.16, 0.32) });
 
   // Certificate ID (Bottom Center)
   const certIdText = `Certificate ID: ${certificateId}`;

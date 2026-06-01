@@ -7,18 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:sync": "tsx scripts/dbSync.ts"
+    "db:sync": "tsx scripts/dbSync.ts",
+    "db:migrate": "tsx scripts/addResetTokenTable.ts"
   },
   "dependencies": {
+    "@types/nodemailer": "^8.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.5",
     "jose": "^6.2.3",
     "mysql2": "^3.11.0",
     "next": "16.2.6",
+    "nodemailer": "^8.0.10",
     "pdf-lib": "^1.17.1",
+    "pg-sdk-node": "^2.0.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sequelize": "^6.37.0"
+    "sequelize": "^6.37.0",
+    "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

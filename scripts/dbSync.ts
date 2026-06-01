@@ -11,7 +11,7 @@ async function main() {
     host: process.env.MYSQL_HOST || 'localhost',
     port: Number(process.env.MYSQL_PORT) || 3306,
     user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || 'Root@123',
+    password: process.env.MYSQL_PASSWORD || 'root',
   });
   
   const dbName = process.env.MYSQL_DATABASE || 'my_lms_db';

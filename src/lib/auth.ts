@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { User } from '../db/models';
 
 const SECRET_KEY = new TextEncoder().encode(
@@ -73,7 +74,7 @@ export async function getCurrentUser() {
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
-    throw new Error('Unauthorized');
+    redirect('/login');
   }
   return user;
 }
@@ -81,7 +82,7 @@ export async function requireAuth() {
 export async function requireAdmin() {
   const user = await requireAuth();
   if (user.role !== 'ADMIN') {
-    throw new Error('Forbidden');
+    redirect('/dashboard');
   }
   return user;
 }

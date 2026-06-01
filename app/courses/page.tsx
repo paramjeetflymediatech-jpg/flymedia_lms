@@ -4,7 +4,7 @@ import Footer from '../../src/components/layout/Footer';
 import { Course } from '../../src/db/models';
 
 export const metadata = {
-  title: 'Training Programs | Antigravity Academy LMS',
+  title: 'Training Programs | Flymedia Technology LMS',
   description: 'Browse our catalog of professional courses, coding bootcamps, and certification tracks designed for software developers.',
 };
 
@@ -78,7 +78,7 @@ export default async function CoursesListingPage() {
                           ⏱️ {course.duration ? Math.round(course.duration / 60) : 0} hrs
                         </span>
                       </div>
-                      
+
                       <Link
                         href={`/courses/${course.slug}`}
                         className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white gradient-bg hover:opacity-90 rounded-xl transition-all"

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Antigravity Academy LMS - Professional Training & Bootcamp",
+  title: "Flymedia Academy LMS - Professional Training & Bootcamp",
   description: "A premium learning management system for software engineers and technology professionals. Enroll in our summer bootcamp courses.",
 };
 

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Header from '../src/components/layout/Header';
 import Footer from '../src/components/layout/Footer';
+import HeroSlider from '../src/components/home/HeroSlider';
+import CallbackForm from '../src/components/home/CallbackForm';
 import { Course } from '../src/db/models';
 
 export const revalidate = 0; // Dynamic rendering to fetch courses
@@ -17,113 +19,83 @@ export default async function HomePage() {
     <>
       <Header />
       <main className="flex-1 bg-[#fafafa]">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28 bg-slate-900 text-white">
-          {/* Subtle background glow mapping the brand orange */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-gradient-to-tr from-amber-500/20 to-orange-600/10 blur-3xl -z-10 rounded-full" />
-          
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs font-semibold text-orange-400">
-              <span>🚀 Summer Training 2026 Admissions Open</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-none text-white">
-              Summer Training 2026 at <span className="bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">Flymedia Technology</span>
-            </h1>
-            
-            <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Kickstart your career with practical industry training from a leading digital marketing agency. Join our comprehensive program and get job-ready in 30 days!
-            </p>
 
-            {/* Quick specifications highlights */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto pt-4 text-xs font-semibold text-slate-300">
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl">
-                <span className="block text-orange-400 text-base mb-1">⏱️ Duration</span>
-                30 Days Program
-              </div>
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl">
-                <span className="block text-orange-400 text-base mb-1">💻 Learning Mode</span>
-                Online & Offline Both
-              </div>
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl">
-                <span className="block text-orange-400 text-base mb-1">📍 Location</span>
-                Ludhiana Center
-              </div>
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl">
-                <span className="block text-orange-400 text-base mb-1">🕒 Timings</span>
-                2 Hrs Daily | 5 Days/Wk
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link
-                href="/courses"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 font-bold text-white bg-[#ff9900] hover:bg-[#e08800] rounded-2xl shadow-lg shadow-orange-500/20 transition-all text-base"
-              >
-                Explore Courses Offered
-              </Link>
-              <Link
-                href="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 font-bold text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-base"
-              >
-                Apply Now
-              </Link>
-            </div>
-          </div>
-        </section>
+        <HeroSlider />
 
         {/* Training Benefits Section */}
-        <section className="py-20 bg-white border-y border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-orange-500">Program Benefits</span>
-              <h2 className="text-3xl font-bold text-slate-900">Why Train with Flymedia Technology?</h2>
-              <p className="text-slate-600">Get equipped with practical, live project execution experience built for software developers & digital marketers.</p>
+        <section className="py-24 bg-white relative overflow-hidden border-b border-slate-100">
+          {/* Subtle Background Elements */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Why Train with Flymedia?</h2>
+              <p className="text-lg text-slate-600 font-medium">Get equipped with practical, live project execution experience built for software developers & digital marketers.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Benefit 1 */}
-              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-4 hover:shadow-md transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-orange-100/80 flex items-center justify-center text-orange-600 font-bold text-xl">
-                  🚀
+              <div className="group relative p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-6">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-sm">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-orange-600 transition-colors">Live Projects</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Gain practical knowledge working on actual client campaigns and production server projects.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Live Projects</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Gain practical knowledge working on actual client campaigns and production server projects.
-                </p>
               </div>
 
               {/* Benefit 2 */}
-              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-4 hover:shadow-md transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-orange-100/80 flex items-center justify-center text-orange-600 font-bold text-xl">
-                  💻
+              <div className="group relative p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-6">
+                  <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-sm">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-rose-600 transition-colors">Hands-on Coding</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Write dynamic scripts, design graphical UI/UX assets, or manage SEO parameters directly under expert review.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Hands-on Experience</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Write dynamic scripts, design graphical UI/UX assets, or manage SEO parameters directly under expert review.
-                </p>
               </div>
 
               {/* Benefit 3 */}
-              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-4 hover:shadow-md transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-orange-100/80 flex items-center justify-center text-orange-600 font-bold text-xl">
-                  🌐
+              <div className="group relative p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-6">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 shadow-sm">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Agency Exposure</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Observe how a leading IT and Digital Marketing agency structures sprint schedules, deliverables, and ROI strategies.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Industry Exposure</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Observe how a leading IT and Digital Marketing agency structures sprint schedules, deliverables, and ROI strategies.
-                </p>
               </div>
 
               {/* Benefit 4 */}
-              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 space-y-4 hover:shadow-md transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-orange-100/80 flex items-center justify-center text-orange-600 font-bold text-xl">
-                  🎓
+              <div className="group relative p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-6">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 shadow-sm">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors">Verified Certificate</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Graduate with a professional training completion certificate valid for recruitment in leading IT corporations.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Verified Certificate</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Graduate with a professional training completion certificate valid for recruitment in leading IT corporations.
-                </p>
               </div>
             </div>
           </div>
@@ -192,136 +164,160 @@ export default async function HomePage() {
         </section>
 
         {/* Expert Mentor & Apply Section */}
-        <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 blur-3xl -z-10 rounded-full" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Mentor info */}
-            <div className="space-y-6">
-              <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">Learn From The Best</span>
-              <h2 className="text-4xl font-extrabold text-white">Transform Your Career in 30 Days</h2>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Our summer bootcamp is mentored directly by **Anuj Gupta**, Google AdWords Certified Digital Marketing Expert. Connect directly with years of professional agency strategy and learn how to optimize campaigns, design web frameworks, and launch systems.
-              </p>
+        <section className="py-32 bg-slate-50 relative overflow-hidden border-t border-slate-100">
+          {/* Animated Glow Backdrops */}
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/5 blur-[100px] -z-10 rounded-full animate-pulse" />
+          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-rose-500/5 blur-[100px] -z-10 rounded-full" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+
+            {/* Mentor & Value Prop */}
+            <div className="space-y-10">
+              <div className="space-y-6">
+                <h2 className="text-5xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                  Transform Your Career in <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 bg-clip-text text-transparent">30 Days</span>
+                </h2>
+              </div>
               
-              <div className="pt-4 border-t border-white/10 space-y-3 text-sm text-slate-300">
-                <div className="flex items-center space-x-2">
-                  <span className="text-orange-400 font-bold">📞 Call Support:</span>
-                  <a href="tel:+919888484310" className="hover:underline text-white font-semibold">+91-98884-84310</a>
+              <div className="p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-orange-500 to-rose-500 p-[2px] shadow-sm">
+                      <div className="h-full w-full bg-white rounded-full flex items-center justify-center font-black text-lg text-slate-900">AG</div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg text-slate-900">Anuj Gupta</h4>
+                      <p className="text-orange-600 text-xs font-bold uppercase tracking-wider">Lead Mentor & Strategist</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium">
+                    Google AdWords Certified Digital Marketing Expert. Connect directly with years of professional agency strategy and learn how to optimize campaigns, design web frameworks, and launch systems.
+                  </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-orange-400 font-bold">✉️ Email Admissions:</span>
-                  <a href="mailto:anujguptaflymedia@gmail.com" className="hover:underline text-white font-semibold">anujguptaflymedia@gmail.com</a>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-orange-500 hover:shadow-md transition-all group cursor-pointer">
+                  <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Direct Call Support</span>
+                  <a href="tel:+919888484310" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91-98884-84310</a>
+                </div>
+                <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-rose-500 hover:shadow-md transition-all group cursor-pointer">
+                  <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Email Admissions</span>
+                  <a href="mailto:anujguptaflymedia@gmail.com" className="text-base sm:text-sm font-bold text-slate-900 group-hover:text-rose-600 transition-colors truncate block">anujguptaflymedia@gmail.com</a>
                 </div>
               </div>
             </div>
 
-            {/* Quick Apply panel */}
-            <div className="bg-white/5 border border-white/10 p-8 sm:p-10 rounded-3xl shadow-2xl space-y-6">
-              <h3 className="text-xl font-bold text-white">Request Course Callback</h3>
-              <p className="text-xs text-slate-400">Fill in details and our advisor will reach back regarding timing & fee structure.</p>
+            {/* Premium CTA Form */}
+            <div className="relative">
+              {/* Form glowing shadow */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/10 to-rose-500/10 blur-3xl rounded-[3rem] -z-10" />
               
-              <form className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Name"
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/25"
-                  />
-                  <input
-                    type="email"
-                    required
-                    placeholder="Email Address"
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/25"
-                  />
+              <div className="bg-white border border-slate-100 p-8 sm:p-12 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
+                {/* Shine effect */}
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-slate-50/50 to-transparent pointer-events-none" />
+                
+                <div className="relative z-10 space-y-8">
+                  <div className="space-y-3">
+                    <h3 className="text-3xl sm:text-4xl font-black text-slate-900">Request Callback</h3>
+                    <p className="text-slate-500 font-medium text-sm sm:text-base">Secure your spot. Fill in the details and our advisor will connect regarding timings & fee structures.</p>
+                  </div>
+                  <CallbackForm />
                 </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Phone Number (e.g. +91 98884-84310)"
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/25"
-                />
-                <select
-                  required
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/25"
-                >
-                  <option value="">Select Training Course</option>
-                  <option value="digital-marketing">Digital Marketing</option>
-                  <option value="web-development">Web Development</option>
-                  <option value="video-editing">Video Editing</option>
-                  <option value="graphic-designing">Graphic Designing</option>
-                </select>
-                <button
-                  type="button"
-                  className="w-full py-3 bg-[#ff9900] hover:bg-[#e08800] rounded-xl text-white text-xs font-bold transition-all shadow shadow-orange-500/10"
-                >
-                  Submit Inquiry callback
-                </button>
-              </form>
+              </div>
             </div>
-            
+
           </div>
         </section>
 
         {/* Global Locations Map Links */}
-        <section className="py-20 bg-slate-50 border-t border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-2">
-              <span className="text-xs font-bold text-orange-500 uppercase tracking-widest">Global Footprint</span>
-              <h2 className="text-3xl font-bold text-slate-900">Our Training Offices</h2>
+        <section className="py-24 bg-white relative overflow-hidden border-t border-slate-100">
+          {/* Subtle World Map / Pattern Background */}
+          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/5 blur-[120px] rounded-full pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 relative z-10">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              
+              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Our Training Offices</h2>
+              <p className="text-lg text-slate-600 font-medium">Learn from anywhere in the world. Visit us at our global headquarters or regional centers.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* India */}
-              <div className="p-6 bg-white border border-slate-150 rounded-2xl shadow-sm space-y-3">
-                <span className="text-xl">🇮🇳</span>
-                <h4 className="font-extrabold text-slate-900 text-sm">India Headquarters</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Plot no, 20, Vishal Nagar Ext, Vishal Nagar, Ludhiana, Punjab 141001
-                </p>
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-orange-600 font-bold hover:underline inline-block mt-2"
-                >
-                  View on Map →
-                </a>
+              <div className="group relative p-8 rounded-[2.5rem] bg-slate-50 border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 overflow-hidden hover:-translate-y-2">
+                <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-5">
+                  <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                    🇮🇳
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-xl mb-2">India Headquarters</h4>
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                      Plot no, 20, Vishal Nagar Ext, Vishal Nagar, Ludhiana, Punjab 141001
+                    </p>
+                  </div>
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-2 text-sm font-bold text-orange-600 group-hover:text-orange-500 transition-colors mt-4"
+                  >
+                    <span>View on Map</span>
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </a>
+                </div>
               </div>
 
               {/* Australia */}
-              <div className="p-6 bg-white border border-slate-150 rounded-2xl shadow-sm space-y-3">
-                <span className="text-xl">🇦🇺</span>
-                <h4 className="font-extrabold text-slate-900 text-sm">Australia Office</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  35 Edgewood Dr, Stanhope Gardens NSW 2768, Australia
-                </p>
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-orange-600 font-bold hover:underline inline-block mt-2"
-                >
-                  View on Map →
-                </a>
+              <div className="group relative p-8 rounded-[2.5rem] bg-slate-50 border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 overflow-hidden hover:-translate-y-2">
+                <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-5">
+                  <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                    🇦🇺
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-xl mb-2">Australia Office</h4>
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                      35 Edgewood Dr, Stanhope Gardens NSW 2768, Australia
+                    </p>
+                  </div>
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-2 text-sm font-bold text-blue-600 group-hover:text-blue-500 transition-colors mt-4"
+                  >
+                    <span>View on Map</span>
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </a>
+                </div>
               </div>
 
               {/* Canada */}
-              <div className="p-6 bg-white border border-slate-150 rounded-2xl shadow-sm space-y-3">
-                <span className="text-xl">🇨🇦</span>
-                <h4 className="font-extrabold text-slate-900 text-sm">Canada Office</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  7664 126a St, Surrey, BC V3W 4A9, Canada
-                </p>
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-orange-600 font-bold hover:underline inline-block mt-2"
-                >
-                  View on Map →
-                </a>
+              <div className="group relative p-8 rounded-[2.5rem] bg-slate-50 border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 overflow-hidden hover:-translate-y-2">
+                <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10 space-y-5">
+                  <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500">
+                    🇨🇦
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-xl mb-2">Canada Office</h4>
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                      7664 126a St, Surrey, BC V3W 4A9, Canada
+                    </p>
+                  </div>
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-2 text-sm font-bold text-rose-600 group-hover:text-rose-500 transition-colors mt-4"
+                  >
+                    <span>View on Map</span>
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </a>
+                </div>
               </div>
             </div>
           </div>

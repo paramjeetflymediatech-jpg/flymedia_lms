@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Course, Module, Lesson, Enrollment, Progress, Certificate } from '../src/db/models';
+import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
+import { sendPasswordResetEmail } from '../src/lib/mailer';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -30,6 +31,8 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { error: 'Please enter your email and password' };
   }
 
+  let redirectUrl = '/dashboard';
+
   try {
     const user = await User.findOne({ where: { email } });
     if (!user || !user.passwordHash) {
@@ -47,12 +50,14 @@ export async function loginAction(prevState: any, formData: FormData) {
       role: user.role,
       name: user.name,
     });
+    
+    redirectUrl = user.role === 'ADMIN' ? '/admin' : '/dashboard';
   } catch (error: any) {
     console.error('Login error:', error);
     return { error: 'Something went wrong. Please try again.' };
   }
 
-  redirect('/dashboard');
+  redirect(redirectUrl);
 }
 
 export async function registerAction(prevState: any, formData: FormData) {
@@ -95,6 +100,89 @@ export async function registerAction(prevState: any, formData: FormData) {
 export async function logoutAction() {
   await logoutUser();
   redirect('/');
+}
+
+export async function forgotPasswordAction(prevState: any, formData: FormData) {
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
+
+  if (!email) {
+    return { error: 'Please enter your email address.' };
+  }
+
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (user) {
+      // 1. Generate a secure random token
+      const rawToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+
+      // 2. Hash it before storing (so a DB leak can't be used directly)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(rawToken);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashedToken = Buffer.from(hashBuffer).toString('hex');
+
+      // 3. Store hashed token in DB (expire in 1 hour)
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await PasswordResetToken.create({
+        userId: user.id,
+        token: hashedToken,
+        expiresAt,
+      });
+
+      // 4. Build reset URL with RAW token (user needs the raw one)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+
+      // 5. Send the email
+      await sendPasswordResetEmail(email, user.name || 'Student', resetUrl);
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    // Still return success — don't leak info about errors
+  }
+
+  // Always return success to prevent email enumeration
+  return { success: true, email };
+}
+
+export async function resetPasswordAction(prevState: any, formData: FormData) {
+  const rawToken = (formData.get('token') as string || '').trim();
+  const password = (formData.get('password') as string || '').trim();
+  const confirm = (formData.get('confirm') as string || '').trim();
+
+  if (!rawToken) return { error: 'Invalid or missing reset token.' };
+  if (!password || password.length < 8) return { error: 'Password must be at least 8 characters.' };
+  if (password !== confirm) return { error: 'Passwords do not match.' };
+
+  try {
+    // Hash the incoming raw token to compare against the stored hash
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
+    const hashedToken = Buffer.from(hashBuffer).toString('hex');
+
+    const record = await PasswordResetToken.findOne({ where: { token: hashedToken } });
+
+    if (!record) return { error: 'This reset link is invalid or has already been used.' };
+    if (record.used) return { error: 'This reset link has already been used.' };
+    if (new Date() > record.expiresAt) return { error: 'This reset link has expired. Please request a new one.' };
+
+    // Update password
+    const user = await User.findByPk(record.userId);
+    if (!user) return { error: 'Account not found.' };
+
+    user.passwordHash = await bcrypt.hash(password, 10);
+    await user.save();
+
+    // Mark token as used
+    record.used = true;
+    await record.save();
+
+    return { success: true };
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return { error: 'Something went wrong. Please try again.' };
+  }
 }
 
 // ==========================================
@@ -331,3 +419,61 @@ export async function adminDeleteLesson(lessonId: string) {
     return { error: 'Failed to delete lesson' };
   }
 }
+
+// ==========================================
+// 4. PUBLIC ACTIONS
+// ==========================================
+
+export async function submitInquiryAction(formData: FormData) {
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const phone = formData.get('phone') as string;
+  const message = (formData.get('message') as string) || 'Requesting callback';
+
+  if (!name || !email || !phone) {
+    return { error: 'Name, email, and phone are required' };
+  }
+
+  try {
+    await Inquiry.create({
+      name,
+      email,
+      phone,
+      message,
+      status: 'NEW',
+    });
+
+    return { success: true, message: 'Inquiry submitted successfully!' };
+  } catch (error) {
+    console.error('Inquiry submission error:', error);
+    return { error: 'Failed to submit inquiry. Please try again.' };
+  }
+}
+
+export async function updateUserRole(userId: string, newRole: 'ADMIN' | 'STUDENT') {
+  const admin = await requireAdmin();
+  if (admin.id === userId) {
+    throw new Error('You cannot change your own role.');
+  }
+  const targetUser = await User.findByPk(userId);
+  if (!targetUser) throw new Error('User not found');
+  targetUser.role = newRole;
+  await targetUser.save();
+  revalidatePath('/admin/users');
+}
+
+export async function deleteUserAction(userId: string) {
+  const admin = await requireAdmin();
+  if (admin.id === userId) {
+    throw new Error('Cannot delete yourself.');
+  }
+  await User.destroy({ where: { id: userId } });
+  revalidatePath('/admin/users');
+}
+
+export async function deletePaymentAction(paymentId: string) {
+  await requireAdmin();
+  await Payment.destroy({ where: { id: paymentId } });
+  revalidatePath('/admin/payments');
+}
+
