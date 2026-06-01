@@ -1,10 +1,13 @@
 'use server';
 
+import fs from 'fs';
+import path from 'path';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment } from '../src/db/models';
+import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment, Coupon } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail } from '../src/lib/mailer';
 
@@ -260,7 +263,30 @@ export async function adminCreateCourse(formData: FormData) {
   const duration = Number(formData.get('duration') || 0);
   const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
-  const thumbnail = formData.get('thumbnail') as string || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+  
+  let finalThumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+  
+  const file = formData.get('thumbnailFile') as File | null;
+  if (file && file.size > 0) {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'courses');
+    
+    // Ensure dir exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    finalThumbnailUrl = `/uploads/courses/${fileName}`;
+  } else {
+    const urlInput = formData.get('thumbnailUrl') as string;
+    if (urlInput) {
+      finalThumbnailUrl = urlInput;
+    }
+  }
 
   if (!title || !description) {
     return { error: 'Title and Description are required' };
@@ -278,7 +304,7 @@ export async function adminCreateCourse(formData: FormData) {
       duration,
       level,
       price,
-      thumbnail,
+      thumbnail: finalThumbnailUrl,
     });
 
     revalidatePath('/admin');
@@ -475,5 +501,36 @@ export async function deletePaymentAction(paymentId: string) {
   await requireAdmin();
   await Payment.destroy({ where: { id: paymentId } });
   revalidatePath('/admin/payments');
+}
+
+export async function adminCreateCoupon(formData: FormData) {
+  await requireAdmin();
+  const code = formData.get('code') as string;
+  const discountPercentage = Number(formData.get('discountPercentage') || 0);
+  
+  if (!code || !discountPercentage) {
+    return { error: 'Code and Discount Percentage are required.' };
+  }
+
+  try {
+    await Coupon.create({
+      code: code.toUpperCase(),
+      discountPercentage,
+    });
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (error: any) {
+    console.error(error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return { error: 'Coupon code already exists.' };
+    }
+    return { error: 'Failed to create coupon.' };
+  }
+}
+
+export async function adminDeleteCoupon(couponId: string) {
+  await requireAdmin();
+  await Coupon.destroy({ where: { id: couponId } });
+  revalidatePath('/admin/coupons');
 }
 

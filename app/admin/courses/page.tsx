@@ -34,12 +34,22 @@ export default async function AdminCoursesPage() {
         <p className="text-sm text-slate-500">Create and manage curriculums, modules, and lessons.</p>
       </div>
 
-      <div className="space-y-12 max-w-4xl">
-        {/* Course Creator Form */}
-        <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6">
-          <h3 className="text-xl font-bold text-slate-900">Create New Course Program</h3>
+      <div className="space-y-8 max-w-5xl">
+        {/* Course Creator Form Hidden Behind Button */}
+        <details className="group [&_summary::-webkit-details-marker]:hidden">
+          <summary className="inline-flex items-center justify-center px-6 py-3 font-extrabold text-white bg-slate-900 hover:bg-slate-800 rounded-2xl cursor-pointer list-none transition-all shadow-md">
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+              Create New Course
+            </span>
+          </summary>
           
-          <form action={async (formData) => { 'use server'; await adminCreateCourse(formData); }} className="space-y-4">
+          <div className="mt-6 bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h3 className="text-xl font-bold text-slate-900">Course Details</h3>
+            </div>
+            
+            <form action={async (formData) => { 'use server'; await adminCreateCourse(formData); }} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course Title</label>
@@ -95,14 +105,25 @@ export default async function AdminCoursesPage() {
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Thumbnail Image URL</label>
-                <input
-                  name="thumbnail"
-                  type="text"
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
-                />
+              <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload Thumbnail Image (Local)</label>
+                  <input
+                    name="thumbnailFile"
+                    type="file"
+                    accept="image/*"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Or enter Image URL</label>
+                  <input
+                    name="thumbnailUrl"
+                    type="text"
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                  />
+                </div>
               </div>
             </div>
 
@@ -113,32 +134,59 @@ export default async function AdminCoursesPage() {
               Add Program Course
             </button>
           </form>
-        </div>
+          </div>
+        </details>
 
         {/* Course Manager list containing syllabus adder */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-bold text-slate-900">Manage Course Curriculums</h3>
+        <div className="space-y-6 pt-4">
+          <h3 className="text-2xl font-extrabold text-slate-900">Your Courses</h3>
 
           {courses.length === 0 ? (
-            <div className="p-8 text-center bg-white border border-slate-100 rounded-3xl text-slate-400 text-xs">
-              No courses created yet. Create one above to manage syllabus.
+            <div className="p-12 text-center bg-white border border-slate-100 rounded-3xl text-slate-500 font-medium">
+              No courses created yet. Click "Create New Course" above to get started.
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {courses.map((course: any) => (
-                <div key={course.id} className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
+                <details key={course.id} className="bg-white border border-slate-200 rounded-3xl shadow-sm group [&_summary::-webkit-details-marker]:hidden overflow-hidden">
                   
-                  {/* Course Name Header */}
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div>
-                      <h4 className="font-extrabold text-slate-900 text-lg leading-snug">{course.title}</h4>
-                      <span className="text-[10px] uppercase font-bold text-purple-600 px-2 py-0.5 rounded bg-purple-50 border border-purple-100">
-                        {course.level}
-                      </span>
+                  {/* Course Name Header (Listing Format) */}
+                  <summary className="flex flex-col sm:flex-row sm:items-center justify-between p-6 cursor-pointer list-none hover:bg-slate-50 transition-colors gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-lg leading-tight">{course.title}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] uppercase font-bold text-purple-700 px-2.5 py-0.5 rounded-full bg-purple-100">
+                            {course.level}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {course.modules?.length || 0} Modules
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500 border-l border-slate-300 pl-2">
+                            {course.price ? `₹${course.price}` : 'Free'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-blue-600 group-open:hidden">Manage Syllabus</span>
+                      <span className="text-sm font-bold text-slate-500 hidden group-open:block">Close</span>
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-open:rotate-180 transition-transform">
+                        <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg>
+                      </div>
+                    </div>
+                  </summary>
+
+                  {/* Syllabus Management Body */}
+                  <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-8">
+                    
                     {/* Course delete form */}
-                    <form
+                    <div className="flex justify-end">
+                      <form
                       action={async () => {
                         'use server';
                         await adminDeleteCourse(course.id);
@@ -294,8 +342,8 @@ export default async function AdminCoursesPage() {
                       ))}
                     </div>
                   )}
-
-                </div>
+                  </div>
+                </details>
               ))}
             </div>
           )}

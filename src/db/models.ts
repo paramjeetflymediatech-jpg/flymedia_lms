@@ -623,3 +623,52 @@ PasswordResetToken.init(
 User.hasMany(PasswordResetToken, { as: 'resetTokens', foreignKey: 'userId', onDelete: 'CASCADE' });
 PasswordResetToken.belongsTo(User, { foreignKey: 'userId' });
 
+// ==========================================
+// 10. COUPON MODEL
+// ==========================================
+export class Coupon extends Model<
+  InferAttributes<Coupon>,
+  InferCreationAttributes<Coupon>
+> {
+  declare id: CreationOptional<string>;
+  declare code: string;
+  declare discountPercentage: number;
+  declare expiresAt: CreationOptional<Date | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Coupon.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    code: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true,
+    },
+    discountPercentage: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 100,
+      },
+    },
+    expiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'Coupon',
+    tableName: 'coupons',
+  }
+);
+
