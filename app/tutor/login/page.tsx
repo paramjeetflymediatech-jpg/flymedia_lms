@@ -1,11 +1,11 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { registerAction } from '../actions';
+import { loginAction } from '../../actions';
 import Link from 'next/link';
 
-export default function RegisterPage() {
-  const [state, formAction, isPending] = useActionState(registerAction, null);
+export default function TutorLoginPage() {
+  const [state, formAction, isPending] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -17,11 +17,17 @@ export default function RegisterPage() {
             <Link href="/" className="inline-block">
               <img src="/logo.png" alt="Flymedia Technology" className="h-10 w-auto" />
             </Link>
-            <h2 className="mt-8 text-4xl font-extrabold text-slate-900 tracking-tight">
-              Create an account
+            <div className="mt-8 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-600 text-xs font-bold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                Tutor Portal
+              </span>
+            </div>
+            <h2 className="mt-4 text-4xl font-extrabold text-slate-900 tracking-tight">
+              Instructor Sign In
             </h2>
             <p className="mt-3 text-base text-slate-500">
-              Join thousands of professionals scaling their careers.
+              Manage your courses, students, and schedules.
             </p>
           </div>
 
@@ -36,49 +42,34 @@ export default function RegisterPage() {
             <form action={formAction} className="space-y-6">
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-bold text-slate-700">
-                    Full Name
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
-                      placeholder="Jane Doe"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-bold text-slate-700">
+                  <label htmlFor="tutor-email" className="block text-sm font-bold text-slate-700">
                     Email address
                   </label>
                   <div className="mt-2">
                     <input
-                      id="email"
+                      id="tutor-email"
                       name="email"
                       type="email"
                       autoComplete="email"
                       required
-                      className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
-                      placeholder="name@company.com"
+                      className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-900 placeholder-slate-400 focus:border-orange-500 focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all text-sm font-medium bg-slate-50 hover:bg-white focus:bg-white"
+                      placeholder="instructor@company.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-bold text-slate-700">
+                  <label htmlFor="tutor-password" className="block text-sm font-bold text-slate-700">
                     Password
                   </label>
                   <div className="mt-2 relative">
                     <input
-                      id="password"
+                      id="tutor-password"
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       required
-                      className="block w-full rounded-2xl border border-slate-200 pl-5 pr-12 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
+                      className="block w-full rounded-2xl border border-slate-200 pl-5 pr-12 py-4 text-slate-900 placeholder-slate-400 focus:border-orange-500 focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all text-sm font-medium bg-slate-50 hover:bg-white focus:bg-white"
                       placeholder="••••••••"
                     />
                     <button
@@ -96,7 +87,27 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm font-medium text-slate-600">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <Link href="/forgot-password" className="font-bold text-orange-600 hover:text-orange-500 transition-colors">
+                    Forgot password?
+                  </Link>
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isPending}
@@ -108,21 +119,27 @@ export default function RegisterPage() {
                     {isPending ? (
                       <>
                         <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Creating account...
+                        Authenticating...
                       </>
-                    ) : 'Create account'}
+                    ) : 'Sign in to Tutor Panel'}
                   </span>
                 </button>
               </div>
             </form>
 
-            <div className="mt-10 text-center">
+            <div className="mt-10 text-center space-y-6">
               <p className="text-sm font-medium text-slate-500">
-                Already have an account?{' '}
-                <Link href="/login" className="font-bold text-slate-900 hover:text-blue-600 hover:underline transition-colors">
-                  Sign in instead
+                Want to join our team?{' '}
+                <Link href="/become-tutor" className="font-bold text-slate-900 hover:text-orange-600 hover:underline transition-colors">
+                  Apply to be a tutor
                 </Link>
               </p>
+              
+              <div className="pt-6 border-t border-slate-100">
+                <Link href="/login" className="inline-flex items-center justify-center px-6 py-2.5 border-2 border-slate-100 text-sm font-bold text-slate-600 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition-all">
+                  ← Back to Student Login
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -131,9 +148,9 @@ export default function RegisterPage() {
       {/* Visuals Section (now on left) */}
       <div className="hidden lg:block relative w-0 flex-1 overflow-hidden bg-slate-900">
         <img
-          className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-[10s] ease-out"
-          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2670&auto=format&fit=crop"
-          alt="Students studying"
+          className="absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-[10s] ease-out"
+          src="https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2669&auto=format&fit=crop"
+          alt="Instructor teaching students"
         />
         <div 
           className="absolute inset-0 opacity-80 mix-blend-multiply" 
@@ -153,32 +170,17 @@ export default function RegisterPage() {
         <div className="absolute inset-0 flex flex-col justify-end p-16 lg:p-24 pb-20">
           <div className="max-w-2xl transform transition-all duration-700 translate-y-0">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium mb-6">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Enrollments Open</span>
+              <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+              <span>Tutor Portal Active</span>
             </div>
 
             <h3 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-6">
-              Accelerate your learning journey today.
+              Shape the minds of tomorrow.
             </h3>
 
             <p className="text-lg text-slate-300 leading-relaxed max-w-xl mb-12">
-              Unlock access to world-class curriculum, hands-on projects, and a community of ambitious learners.
+              Join Flymedia Technology's elite network of educators. Manage your curriculum, track student progress, and expand your reach.
             </p>
-
-            {/* Value Props */}
-            {/* <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl">
-                <div className="text-2xl mb-2">🎓</div>
-                <div className="font-bold text-white text-sm mb-1">Expert Instructors</div>
-                <div className="text-slate-400 text-xs">Learn from industry veterans</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl">
-                <div className="text-2xl mb-2">💼</div>
-                <div className="font-bold text-white text-sm mb-1">Career Support</div>
-                <div className="text-slate-400 text-xs">Get hired faster</div>
-              </div>
-            </div> */}
-
           </div>
         </div>
       </div>

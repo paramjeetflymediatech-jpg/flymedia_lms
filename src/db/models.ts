@@ -9,7 +9,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare email: string;
   declare name: CreationOptional<string | null>;
   declare passwordHash: CreationOptional<string | null>;
-  declare role: 'ADMIN' | 'STUDENT';
+  declare role: 'ADMIN' | 'STUDENT' | 'TUTOR';
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -38,7 +38,7 @@ User.init(
       allowNull: true,
     },
     role: {
-      type: DataTypes.ENUM('ADMIN', 'STUDENT'),
+      type: DataTypes.ENUM('ADMIN', 'STUDENT', 'TUTOR'),
       allowNull: false,
       defaultValue: 'STUDENT',
     },

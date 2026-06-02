@@ -60,7 +60,8 @@ export default function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-blue-600/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden"
+                    style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
+                    className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-rose-600/20 text-sm font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden"
                   >
                     <span className="absolute inset-0 w-full h-full bg-white/20 scale-x-0 group-hover:scale-x-100 transform origin-left transition-transform duration-300 ease-out" />
                     <span className="relative flex items-center gap-2">
@@ -122,10 +123,20 @@ export default function ForgotPasswordPage() {
           src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop"
           alt="Students learning together"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/90 via-slate-900/80 to-purple-900/40" />
+        <div 
+          className="absolute inset-0 opacity-80 mix-blend-multiply" 
+          style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }} 
+        />
 
-        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
+        {/* Abstract decorative elements */}
+        <div 
+          className="absolute top-[-10%] right-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" 
+          style={{ backgroundColor: '#E60870' }} 
+        />
+        <div 
+          className="absolute bottom-[-10%] left-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40" 
+          style={{ backgroundColor: '#F8750E' }} 
+        />
 
         <div className="absolute inset-0 flex flex-col justify-end p-16 lg:p-24 pb-20">
           <div className="max-w-2xl">
@@ -142,24 +153,6 @@ export default function ForgotPasswordPage() {
               We use industry-standard security to verify your identity and help you regain access quickly and safely.
             </p>
 
-            {/* Tips card */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl max-w-lg space-y-4">
-              <p className="text-white font-bold text-sm uppercase tracking-wider">Security tips</p>
-              {[
-                'Use a unique, strong password for every site.',
-                'Enable two-factor authentication wherever possible.',
-                'Never share your password with anyone.',
-              ].map((tip) => (
-                <div key={tip} className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <p className="text-slate-300 text-sm leading-relaxed">{tip}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

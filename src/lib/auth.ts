@@ -10,11 +10,11 @@ const SECRET_KEY = new TextEncoder().encode(
 export interface JWTPayload {
   userId: string;
   email: string;
-  role: 'ADMIN' | 'STUDENT';
+  role: 'ADMIN' | 'STUDENT' | 'TUTOR';
   name: string | null;
 }
 
-export async function loginUser(user: { id: string; email: string; role: 'ADMIN' | 'STUDENT'; name: string | null }) {
+export async function loginUser(user: { id: string; email: string; role: 'ADMIN' | 'STUDENT' | 'TUTOR'; name: string | null }) {
   const token = await new SignJWT({
     userId: user.id,
     email: user.email,

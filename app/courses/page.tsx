@@ -23,7 +23,7 @@ export default async function CoursesListingPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-slate-50 py-16">
+      <main className="flex-1 bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {/* Headline */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -81,7 +81,8 @@ export default async function CoursesListingPage() {
 
                       <Link
                         href={`/courses/${course.slug}`}
-                        className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white gradient-bg hover:opacity-90 rounded-xl transition-all"
+                        style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
+                        className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white hover:opacity-90 rounded-xl transition-all shadow-lg shadow-rose-500/25"
                       >
                         Enroll Now
                       </Link>

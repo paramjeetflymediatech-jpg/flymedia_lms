@@ -135,7 +135,7 @@ export async function forgotPasswordAction(prevState: any, formData: FormData) {
 
       // 4. Build reset URL with RAW token (user needs the raw one)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+      const resetUrl = `${baseUrl}reset-password?token=${rawToken}`;
 
       // 5. Send the email
       await sendPasswordResetEmail(email, user.name || 'Student', resetUrl);

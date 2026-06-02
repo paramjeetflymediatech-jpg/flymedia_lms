@@ -151,7 +151,8 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
             <button
               onClick={handleEnroll}
               disabled={loading}
-              className="w-full relative overflow-hidden group py-5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-orange-500/25 hover:-translate-y-1 hover:shadow-orange-500/40 disabled:opacity-70 disabled:hover:translate-y-0"
+              style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
+              className="w-full relative overflow-hidden group py-5 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-1 hover:shadow-rose-500/40 disabled:opacity-70 disabled:hover:translate-y-0"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -164,7 +165,8 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
           <div className="space-y-4">
             <Link
               href={`/login?callbackUrl=/courses/${course.slug}`}
-              className="w-full relative overflow-hidden group flex items-center justify-center py-5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-orange-500/25 hover:-translate-y-1 hover:shadow-orange-500/40"
+              style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
+              className="w-full relative overflow-hidden group flex items-center justify-center py-5 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-1 hover:shadow-rose-500/40"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10">Sign In to Enroll</span>
