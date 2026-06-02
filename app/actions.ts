@@ -324,7 +324,29 @@ export async function adminUpdateCourse(courseId: string, formData: FormData) {
   const duration = Number(formData.get('duration') || 0);
   const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
-  const thumbnail = formData.get('thumbnail') as string || undefined;
+  
+  let finalThumbnailUrl = undefined;
+  
+  const file = formData.get('thumbnailFile') as File | null;
+  if (file && file.size > 0) {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'courses');
+    
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    finalThumbnailUrl = `/uploads/courses/${fileName}`;
+  } else {
+    const urlInput = formData.get('thumbnailUrl') as string;
+    if (urlInput) {
+      finalThumbnailUrl = urlInput;
+    }
+  }
 
   if (!title || !description) {
     return { error: 'Title and Description are required' };
@@ -339,7 +361,7 @@ export async function adminUpdateCourse(courseId: string, formData: FormData) {
     course.duration = duration;
     course.level = level;
     if (price !== undefined) course.price = price;
-    if (thumbnail !== undefined) course.thumbnail = thumbnail;
+    if (finalThumbnailUrl !== undefined) course.thumbnail = finalThumbnailUrl;
 
     await course.save();
 

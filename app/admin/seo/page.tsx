@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 interface SeoEntry {
   id: string;
@@ -70,9 +71,26 @@ export default function SeoManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this SEO entry?')) {
-      setSeoList(prev => prev.filter(item => item.id !== id));
-    }
+    Swal.fire({
+      title: 'Delete SEO Entry?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setSeoList(prev => prev.filter(item => item.id !== id));
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'The SEO entry has been deleted.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {

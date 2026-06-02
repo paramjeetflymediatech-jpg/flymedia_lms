@@ -44,7 +44,8 @@ export async function POST(req: Request) {
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const redirectUrl = `${baseUrl}/api/payment/callback`;
+    const redirectUrl = `${baseUrl}/api/payment/callback?transactionId=${transactionId}`;
+    const s2sCallbackUrl = `${baseUrl}/api/payment/callback`;
 
     // Construct PhonePe V1 Payload
     const payload = {
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
       amount: amount * 100, // paise
       redirectUrl: redirectUrl,
       redirectMode: 'REDIRECT',
-      callbackUrl: redirectUrl,
+      callbackUrl: s2sCallbackUrl,
       paymentInstrument: {
         type: 'PAY_PAGE'
       }

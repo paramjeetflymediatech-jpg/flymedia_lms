@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Top Call to Action / Newsletter */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 md:p-12 mb-16 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group shadow-2xl">
+        {/* <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 md:p-12 mb-16 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group shadow-2xl">
            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
            <div className="relative z-10 max-w-xl text-center lg:text-left">
              <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-3">Ready to level up your career?</h3>
@@ -24,7 +24,7 @@ export default function Footer() {
                Subscribe
              </button>
            </form>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16">
           {/* Branding */}

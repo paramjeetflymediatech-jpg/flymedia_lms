@@ -26,13 +26,15 @@ async function handleCallback(req: Request) {
       }
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
+
     if (!txnId) {
-      return NextResponse.redirect(new URL('/dashboard?error=MissingTxnId', req.url));
+      return NextResponse.redirect(new URL('/dashboard?error=MissingTxnId', baseUrl));
     }
 
     const payment = await Payment.findOne({ where: { transactionId: txnId } });
     if (!payment) {
-      return NextResponse.redirect(new URL('/dashboard?error=PaymentNotFound', req.url));
+      return NextResponse.redirect(new URL('/dashboard?error=PaymentNotFound', baseUrl));
     }
 
     // Initialize PhonePe Verification
@@ -78,16 +80,17 @@ async function handleCallback(req: Request) {
         });
       }
 
-      return NextResponse.redirect(new URL('/dashboard?payment=success', req.url));
+      return NextResponse.redirect(new URL('/dashboard?payment=success', baseUrl));
     } else {
       payment.status = 'FAILED';
       await payment.save();
     }
 
-    return NextResponse.redirect(new URL('/dashboard?payment=failed', req.url));
+    return NextResponse.redirect(new URL('/dashboard?payment=failed', baseUrl));
 
   } catch (error) {
     console.error('Payment callback error:', error);
-    return NextResponse.redirect(new URL('/dashboard?payment=error', req.url));
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
+    return NextResponse.redirect(new URL('/dashboard?payment=error', baseUrl));
   }
 }

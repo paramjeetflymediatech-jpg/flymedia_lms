@@ -147,7 +147,7 @@ export async function generateCertificatePDF(studentName: string, courseTitle: s
   // Signature Block (Right Side)
   page.drawLine({ start: { x: width - 300, y: 100 }, end: { x: width - 150, y: 100 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
   page.drawText('Authorized Signature', { x: width - 265, y: 80, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
-  page.drawText('Flymedia LMS Team', { x: width - 260, y: 110, size: 13, font: timesBoldFont, color: rgb(0.12, 0.16, 0.32) });
+  page.drawText('Anuj Gupta', { x: width - 260, y: 110, size: 13, font: timesBoldFont, color: rgb(0.12, 0.16, 0.32) });
 
   // Certificate ID (Bottom Center)
   const certIdText = `Certificate ID: ${certificateId}`;

@@ -128,7 +128,7 @@ export default async function HomePage() {
                         <img
                           src={course.thumbnail}
                           alt={course.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                         />
                         <span className="absolute top-4 right-4 text-[10px] font-bold px-2 py-1 rounded-full bg-slate-950/80 text-white backdrop-blur uppercase">
                           {course.level}
