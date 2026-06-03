@@ -7,9 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment, Coupon } from '../src/db/models';
+import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail } from '../src/lib/mailer';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -54,7 +54,7 @@ export async function loginAction(prevState: any, formData: FormData) {
       name: user.name,
     });
     
-    redirectUrl = user.role === 'ADMIN' ? '/admin' : '/dashboard';
+    redirectUrl = user.role === 'ADMIN' ? '/admin' : user.role === 'TUTOR' ? '/tutor/dashboard' : '/dashboard';
   } catch (error: any) {
     console.error('Login error:', error);
     return { error: 'Something went wrong. Please try again.' };
@@ -180,12 +180,12 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
     // Mark token as used
     record.used = true;
     await record.save();
-
-    return { success: true };
   } catch (error) {
     console.error('Reset password error:', error);
     return { error: 'Something went wrong. Please try again.' };
   }
+
+  return { success: true };
 }
 
 // ==========================================
@@ -498,7 +498,190 @@ export async function submitInquiryAction(formData: FormData) {
   }
 }
 
-export async function updateUserRole(userId: string, newRole: 'ADMIN' | 'STUDENT') {
+export async function submitTutorApplication(formData: FormData) {
+  const fullName = formData.get('fullName') as string;
+  const email = formData.get('email') as string;
+  const phone = formData.get('phone') as string;
+  const expertise = formData.get('expertise') as string;
+  const experience = formData.get('experience') as string;
+
+  if (!fullName || !email || !phone || !expertise || !experience) {
+    return { error: 'All fields are required.' };
+  }
+
+  try {
+    // Check if an application already exists
+    const existing = await TutorApplication.findOne({ where: { email } });
+    if (existing) {
+      return { error: 'An application with this email already exists.' };
+    }
+
+    await TutorApplication.create({
+      fullName,
+      email,
+      phone,
+      expertise,
+      experience,
+      status: 'PENDING',
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Tutor application submission error:', error);
+    return { error: 'Failed to submit application. Please try again.' };
+  }
+}
+
+export async function approveTutorApplication(applicationId: string) {
+  await requireAdmin();
+
+  try {
+    const application = await TutorApplication.findByPk(applicationId);
+    if (!application) return { error: 'Application not found' };
+    if (application.status !== 'PENDING') return { error: 'Application already processed' };
+
+    // 1. Mark as approved
+    application.status = 'APPROVED';
+    await application.save();
+
+    // 2. Create the User (if they don't exist)
+    let user = await User.findOne({ where: { email: application.email } });
+    if (!user) {
+      user = await User.create({
+        email: application.email,
+        name: application.fullName,
+        passwordHash: '', // Empty because they will set it via reset link
+        role: 'TUTOR',
+      });
+    } else {
+      // If user exists (e.g. as a STUDENT), just upgrade their role
+      user.role = 'TUTOR';
+      await user.save();
+    }
+
+    // 3. Generate a secure random token
+    const rawToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(rawToken);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashedToken = Buffer.from(hashBuffer).toString('hex');
+
+    // 4. Store hashed token in DB (expire in 7 days for new tutors)
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await PasswordResetToken.create({
+      userId: user.id,
+      token: hashedToken,
+      expiresAt,
+    });
+
+    // 5. Send approval email with the reset link
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // We can reuse the reset-password page for this!
+    const setPasswordUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+
+    await sendTutorApprovalEmail(application.email, application.fullName, setPasswordUrl);
+
+    revalidatePath('/admin/tutor-applications');
+    return { success: true };
+  } catch (error) {
+    console.error('Approve tutor error:', error);
+    return { error: 'Failed to approve application' };
+  }
+}
+
+export async function rejectTutorApplication(applicationId: string) {
+  await requireAdmin();
+
+  try {
+    const application = await TutorApplication.findByPk(applicationId);
+    if (!application) return { error: 'Application not found' };
+
+    application.status = 'REJECTED';
+    await application.save();
+
+    revalidatePath('/admin/tutor-applications');
+    return { success: true };
+  } catch (error) {
+    console.error('Reject tutor error:', error);
+    return { error: 'Failed to reject application' };
+  }
+}
+
+export async function updateTutorProfile(formData: FormData) {
+  const user = await requireAuth();
+  if (user.role !== 'TUTOR') return { error: 'Unauthorized' };
+
+  const name = formData.get('name') as string;
+  const bio = formData.get('bio') as string;
+  const avatarFile = formData.get('avatar') as File | null;
+
+  try {
+    const dbUser = await User.findByPk(user.id);
+    if (!dbUser) return { error: 'User not found' };
+
+    if (name) dbUser.name = name;
+    if (bio !== null) dbUser.bio = bio;
+
+    if (avatarFile && avatarFile.size > 0) {
+      const bytes = await avatarFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      // Clean filename
+      const safeName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '');
+      const uniqueName = `${user.id}-${Date.now()}-${safeName}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      try {
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+      } catch (e) {}
+      
+      const filePath = path.join(uploadDir, uniqueName);
+      await fs.promises.writeFile(filePath, buffer);
+      
+      dbUser.avatar = `/uploads/${uniqueName}`;
+    }
+
+    await dbUser.save();
+
+    revalidatePath('/tutor/profile');
+    return { success: true };
+  } catch (error) {
+    console.error('Update tutor profile error:', error);
+    return { error: 'Failed to update profile' };
+  }
+}
+
+export async function createCourse(formData: FormData) {
+  const user = await requireAuth();
+  if (user.role !== 'TUTOR') return { error: 'Unauthorized' };
+
+  try {
+    const title = formData.get('title') as string;
+    const slug = slugify(title) + '-' + Date.now();
+    const description = formData.get('description') as string;
+    const duration = parseInt(formData.get('duration') as string, 10) || 0;
+    const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    const price = parseFloat(formData.get('price') as string) || 0;
+    
+    // Create course
+    await Course.create({
+      title,
+      slug,
+      description,
+      duration,
+      level,
+      price,
+      status: 'DRAFT',
+      instructorId: user.id,
+    });
+
+    revalidatePath('/tutor/courses');
+    return { success: true };
+  } catch (error) {
+    console.error('Create course error:', error);
+    return { error: 'Failed to create course' };
+  }
+}
+
+export async function updateUserRole(userId: string, newRole: 'ADMIN' | 'STUDENT' | 'TUTOR') {
   const admin = await requireAdmin();
   if (admin.id === userId) {
     throw new Error('You cannot change your own role.');
@@ -517,6 +700,40 @@ export async function deleteUserAction(userId: string) {
   }
   await User.destroy({ where: { id: userId } });
   revalidatePath('/admin/users');
+}
+
+export async function adminInviteUser(formData: FormData) {
+  await requireAdmin();
+  
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const role = formData.get('role') as 'STUDENT' | 'TUTOR' | 'ADMIN';
+  const password = formData.get('password') as string;
+
+  if (!email || !password || !role || !name) {
+    return { error: 'Name, Email, Role, and Password are required.' };
+  }
+
+  try {
+    const existing = await User.findOne({ where: { email } });
+    if (existing) {
+      return { error: 'A user with this email already exists.' };
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await User.create({
+      name,
+      email,
+      role,
+      passwordHash,
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (error) {
+    console.error('Invite user error:', error);
+    return { error: 'Failed to create user.' };
+  }
 }
 
 export async function deletePaymentAction(paymentId: string) {

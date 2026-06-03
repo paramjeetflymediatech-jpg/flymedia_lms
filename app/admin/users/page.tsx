@@ -1,15 +1,38 @@
 import { requireAdmin } from '../../../src/lib/auth';
 import { User, Enrollment, Course } from '../../../src/db/models';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
-import { deleteUserAction } from '../../actions';
+import InviteUserModal from '../../../src/components/admin/InviteUserModal';
+import RoleFilter from './RoleFilter';
+import { deleteUserAction, updateUserRole } from '../../actions';
+import Link from 'next/link';
 
 export const revalidate = 0;
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string; page?: string }>;
+}) {
   await requireAdmin();
+  
+  const resolvedSearchParams = await searchParams;
 
-  // Fetch all users with their enrollments
-  const usersData = await User.findAll({
+  const roleFilter = resolvedSearchParams.role?.toUpperCase() || 'ALL';
+  const page = parseInt(resolvedSearchParams.page || '1', 10) || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
+  // Build the where clause
+  const whereClause: any = {};
+  if (roleFilter !== 'ALL') {
+    whereClause.role = roleFilter;
+  }
+
+  // Fetch users with pagination and filtering
+  const { count, rows: usersData } = await User.findAndCountAll({
+    where: whereClause,
+    limit,
+    offset,
     include: [
       {
         model: Enrollment,
@@ -23,20 +46,30 @@ export default async function AdminUsersPage() {
       },
     ],
     order: [['createdAt', 'DESC']],
+    distinct: true, // important when using include to get accurate count
   });
   
   const users = usersData.map(u => u.toJSON());
+  const totalPages = Math.ceil(count / limit) || 1;
 
   return (
-    <div className="p-6 md:p-10 space-y-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
-          <p className="text-sm text-slate-500">View and manage platform students and administrators.</p>
+    <div className="p-6 md:p-10 space-y-8">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        {/* Left Side: Title & Invite User */}
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
+            <p className="text-sm text-slate-500">View and manage platform students, tutors, and administrators.</p>
+          </div>
+          <div>
+            <InviteUserModal />
+          </div>
         </div>
-        <button className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all">
-          + Invite User
-        </button>
+
+        {/* Right Side: Filters */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shrink-0">
+          <RoleFilter initialRole={roleFilter} />
+        </div>
       </div>
 
       <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
@@ -56,7 +89,7 @@ export default async function AdminUsersPage() {
                 <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
                         {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -66,7 +99,11 @@ export default async function AdminUsersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 text-[10px] uppercase font-bold rounded border ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                    <span className={`px-2.5 py-1 text-[10px] uppercase font-bold rounded border inline-block
+                      ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-600 border-purple-100' : 
+                        user.role === 'TUTOR' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                        'bg-slate-100 text-slate-600 border-slate-200'}`}
+                    >
                       {user.role}
                     </span>
                   </td>
@@ -74,7 +111,7 @@ export default async function AdminUsersPage() {
                     <div className="flex flex-col gap-1">
                       {user.enrollments && user.enrollments.length > 0 ? (
                         user.enrollments.map((enr: any) => (
-                          <span key={enr.id} className="text-[10px] font-medium text-slate-700 bg-slate-100 inline-block px-2 py-0.5 rounded border border-slate-200 w-fit">
+                          <span key={enr.id} className="text-[10px] font-medium text-slate-700 bg-slate-100 inline-block px-2 py-0.5 rounded border border-slate-200 w-fit line-clamp-1 max-w-[150px]" title={enr.Course?.title}>
                             {enr.Course?.title}
                           </span>
                         ))
@@ -88,17 +125,6 @@ export default async function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      <form
-                        action={async () => {
-                          'use server';
-                          const { updateUserRole } = await import('../../actions');
-                          await updateUserRole(user.id, user.role === 'ADMIN' ? 'STUDENT' : 'ADMIN');
-                        }}
-                      >
-                        <button type="submit" className="text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors border border-blue-200 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100" title={`Make ${user.role === 'ADMIN' ? 'Student' : 'Admin'}`}>
-                          {user.role === 'ADMIN' ? 'Make ST' : 'Make AD'}
-                        </button>
-                      </form>
                       <button className="text-slate-400 hover:text-blue-600 transition-colors" title="Edit User">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                       </button>
@@ -116,9 +142,36 @@ export default async function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+        
         {users.length === 0 && (
           <div className="p-12 text-center text-slate-400 text-sm">
-            No users found.
+            No users found matching the selected filter.
+          </div>
+        )}
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+            <span className="text-sm text-slate-500 font-medium">
+              Showing <span className="font-bold text-slate-900">{offset + 1}</span> to <span className="font-bold text-slate-900">{Math.min(offset + limit, count)}</span> of <span className="font-bold text-slate-900">{count}</span> users
+            </span>
+            <div className="flex items-center gap-2">
+              <Link 
+                href={`/admin/users?role=${roleFilter}&page=${page - 1}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded border ${page <= 1 ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
+              >
+                Previous
+              </Link>
+              <div className="text-sm font-bold text-slate-700 px-2">
+                {page} / {totalPages}
+              </div>
+              <Link 
+                href={`/admin/users?role=${roleFilter}&page=${page + 1}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded border ${page >= totalPages ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
+              >
+                Next
+              </Link>
+            </div>
           </div>
         )}
       </div>

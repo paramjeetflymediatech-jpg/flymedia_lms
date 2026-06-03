@@ -26,7 +26,7 @@ export default async function HomePage() {
         <section className="py-24 bg-white relative overflow-hidden border-b border-slate-100">
           {/* Subtle Background Elements */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
               <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">Why Train with Flymedia?</h2>
@@ -121,8 +121,8 @@ export default async function HomePage() {
                   Master the most in-demand skills with our intensive, industry-aligned training programs.
                 </p>
               </div>
-              <Link 
-                href="/courses" 
+              <Link
+                href="/courses"
                 className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white transition-all rounded-2xl shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40 shrink-0"
                 style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               >
@@ -205,7 +205,7 @@ export default async function HomePage() {
           {/* Animated Glow Backdrops */}
           <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/5 blur-[100px] -z-10 rounded-full animate-pulse" />
           <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-rose-500/5 blur-[100px] -z-10 rounded-full" />
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
             {/* Mentor & Value Prop */}
@@ -215,7 +215,7 @@ export default async function HomePage() {
                   Transform Your Career in <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 bg-clip-text text-transparent">30 Days</span>
                 </h2>
               </div>
-              
+
               <div className="p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
@@ -250,11 +250,11 @@ export default async function HomePage() {
             <div className="relative">
               {/* Form glowing shadow */}
               <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/10 to-rose-500/10 blur-3xl rounded-[3rem] -z-10" />
-              
+
               <div className="bg-white border border-slate-100 p-8 sm:p-12 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
                 {/* Shine effect */}
                 <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-slate-50/50 to-transparent pointer-events-none" />
-                
+
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-3">
                     <h3 className="text-3xl sm:text-4xl font-black text-slate-900">Request Callback</h3>
@@ -276,7 +276,7 @@ export default async function HomePage() {
               <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">What Our Students Say</h2>
               <p className="text-lg text-slate-600 font-medium">Join thousands of successful graduates who have transformed their careers with our premium bootcamps.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Testimonial 1 */}
               <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2">

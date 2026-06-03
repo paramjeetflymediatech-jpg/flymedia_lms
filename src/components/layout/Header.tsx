@@ -16,17 +16,21 @@ export default async function Header() {
 
         {/* Navigation links */}
         <nav className="hidden md:flex items-center space-x-10 text-sm font-bold text-slate-600">
-          <Link href="/courses" className="hover:text-blue-600 transition-colors relative group">
+          <Link href="/courses" className="hover:text-orange-500 transition-colors relative group">
             <span>Programs</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/about" className="hover:text-blue-600 transition-colors relative group">
+          <Link href="/about" className="hover:text-orange-500 transition-colors relative group">
             <span>About Us</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/contact" className="hover:text-blue-600 transition-colors relative group">
+          <Link href="/contact" className="hover:text-orange-500 transition-colors relative group">
             <span>Contact</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+          <Link href="/mentors" className="hover:text-orange-500 transition-colors relative group">
+            <span>Tutors</span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
           <Link href="/become-tutor" className="hover:text-orange-500 transition-colors relative group">
             <span>Become a tutor</span>
@@ -40,7 +44,7 @@ export default async function Header() {
             <>
               <Link
                 href={session.role === 'ADMIN' ? '/admin' : session.role === 'TUTOR' ? '/tutor' : '/dashboard'}
-                className="text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors"
+                className="text-sm font-bold text-slate-700 hover:text-orange-500 transition-colors"
               >
                 Dashboard
               </Link>
@@ -58,7 +62,7 @@ export default async function Header() {
             <>
               <Link
                 href="/login"
-                className="hidden sm:inline-block text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors"
+                className="hidden sm:inline-block text-sm font-bold text-slate-600 hover:text-orange-500 transition-colors"
               >
                 Sign In
               </Link>

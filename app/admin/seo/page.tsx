@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Swal from 'sweetalert2';
+import { useSearchParams } from 'next/navigation';
+import Pagination from '../../../src/components/admin/Pagination';
 
 interface SeoEntry {
   id: string;
@@ -13,7 +15,11 @@ interface SeoEntry {
   ogImage: string;
 }
 
-export default function SeoManagementPage() {
+function SeoManagementContent() {
+  const searchParams = useSearchParams();
+  const page = parseInt(searchParams.get('page') || '1', 10) || 1;
+  const limit = 10;
+
   const [view, setView] = useState<'list' | 'form'>('list');
   const [isSaving, setIsSaving] = useState(false);
   const [seoList, setSeoList] = useState<SeoEntry[]>([
@@ -27,6 +33,11 @@ export default function SeoManagementPage() {
       ogImage: '/og-image.jpg'
     }
   ]);
+  
+  const totalItems = seoList.length;
+  const totalPages = Math.ceil(totalItems / limit) || 1;
+  const offset = (page - 1) * limit;
+  const paginatedList = seoList.slice(offset, offset + limit);
   
   const [formData, setFormData] = useState<Omit<SeoEntry, 'id'>>({
     pagePath: '',
@@ -147,7 +158,7 @@ export default function SeoManagementPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {seoList.map((entry) => (
+                      {paginatedList.map((entry) => (
                         <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 font-bold text-slate-900">{entry.pagePath}</td>
                           <td className="px-6 py-4 text-slate-700 font-medium truncate max-w-[200px]">{entry.title}</td>
@@ -165,6 +176,15 @@ export default function SeoManagementPage() {
                     </tbody>
                   </table>
                 </div>
+              )}
+              {seoList.length > 0 && (
+                <Pagination 
+                  page={page} 
+                  totalPages={totalPages} 
+                  totalItems={totalItems} 
+                  limit={limit} 
+                  baseUrl="/admin/seo" 
+                />
               )}
             </div>
           </>
@@ -299,5 +319,13 @@ export default function SeoManagementPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function SeoManagementPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading...</div>}>
+      <SeoManagementContent />
+    </Suspense>
   );
 }

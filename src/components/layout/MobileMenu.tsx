@@ -38,13 +38,13 @@ export default function MobileMenu({ session }: MobileMenuProps) {
       {/* Mobile Dropdown */}
       {isOpen && (
         <div className="absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-xl flex flex-col py-4 px-6 space-y-4 z-50">
-          <Link href="/courses" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-blue-600">
+          <Link href="/courses" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Programs
           </Link>
-          <Link href="/about" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-blue-600">
+          <Link href="/about" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             About Us
           </Link>
-          <Link href="/contact" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-blue-600">
+          <Link href="/contact" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Contact
           </Link>
           <Link href="/become-tutor" onClick={() => setIsOpen(false)} className="text-base font-bold text-orange-500 hover:text-orange-600">
@@ -57,7 +57,7 @@ export default function MobileMenu({ session }: MobileMenuProps) {
                 <Link
                   href={session.role === 'ADMIN' ? '/admin' : session.role === 'TUTOR' ? '/tutor' : '/dashboard'}
                   onClick={() => setIsOpen(false)}
-                  className="text-base font-bold text-slate-700 hover:text-blue-600"
+                  className="text-base font-bold text-slate-700 hover:text-orange-500"
                 >
                   Dashboard
                 </Link>
@@ -73,7 +73,7 @@ export default function MobileMenu({ session }: MobileMenuProps) {
               </>
             ) : (
               <>
-                <Link href="/login" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-blue-600">
+                <Link href="/login" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
                   Sign In
                 </Link>
                 <Link

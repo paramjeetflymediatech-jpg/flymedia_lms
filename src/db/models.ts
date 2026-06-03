@@ -8,6 +8,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare id: CreationOptional<string>;
   declare email: string;
   declare name: CreationOptional<string | null>;
+  declare bio: CreationOptional<string | null>;
+  declare avatar: CreationOptional<string | null>;
   declare passwordHash: CreationOptional<string | null>;
   declare role: 'ADMIN' | 'STUDENT' | 'TUTOR';
   declare createdAt: CreationOptional<Date>;
@@ -31,6 +33,14 @@ User.init(
     },
     name: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    avatar: {
+      type: DataTypes.STRING(1024),
       allowNull: true,
     },
     passwordHash: {
@@ -57,11 +67,13 @@ User.init(
 // ==========================================
 export class Course extends Model<InferAttributes<Course, { omit: 'modules' }>, InferCreationAttributes<Course, { omit: 'modules' }>> {
   declare id: CreationOptional<string>;
+  declare instructorId: CreationOptional<string | null>;
   declare title: string;
   declare slug: string;
   declare description: string;
   declare duration: number; // in minutes
   declare level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
   declare price: CreationOptional<number | null>;
   declare thumbnail: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
@@ -76,6 +88,11 @@ Course.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+    instructorId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: { model: 'users', key: 'id' },
     },
     title: {
       type: DataTypes.STRING(255),
@@ -99,6 +116,11 @@ Course.init(
       type: DataTypes.ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED'),
       allowNull: false,
       defaultValue: 'BEGINNER',
+    },
+    status: {
+      type: DataTypes.ENUM('DRAFT', 'PUBLISHED'),
+      allowNull: false,
+      defaultValue: 'DRAFT',
     },
     price: {
       type: DataTypes.DECIMAL(10, 2),
@@ -528,6 +550,10 @@ Payment.init(
 // ASSOCIATIONS
 // ==========================================
 
+// User has many Courses (as Instructor), Course belongs to User
+User.hasMany(Course, { as: 'teachingCourses', foreignKey: 'instructorId' });
+Course.belongsTo(User, { as: 'instructor', foreignKey: 'instructorId' });
+
 // Course has many Modules, Module belongs to Course
 Course.hasMany(Module, { as: 'modules', foreignKey: 'courseId', onDelete: 'CASCADE' });
 Module.belongsTo(Course, { foreignKey: 'courseId' });
@@ -669,6 +695,67 @@ Coupon.init(
     sequelize,
     modelName: 'Coupon',
     tableName: 'coupons',
+  }
+);
+
+// ==========================================
+// 11. TUTOR APPLICATION MODEL
+// ==========================================
+export class TutorApplication extends Model<
+  InferAttributes<TutorApplication>,
+  InferCreationAttributes<TutorApplication>
+> {
+  declare id: CreationOptional<string>;
+  declare fullName: string;
+  declare email: string;
+  declare phone: string;
+  declare expertise: string;
+  declare experience: string;
+  declare status: CreationOptional<'PENDING' | 'APPROVED' | 'REJECTED'>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+TutorApplication.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    fullName: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
+    },
+    phone: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    expertise: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    experience: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+      allowNull: false,
+      defaultValue: 'PENDING',
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'TutorApplication',
+    tableName: 'tutor_applications',
   }
 );
 

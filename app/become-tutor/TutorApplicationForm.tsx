@@ -45,17 +45,35 @@ export default function TutorApplicationForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
     
     setLoading(true);
-    // Simulate network request
-    setTimeout(() => {
+    
+    const formDataObj = new FormData();
+    formDataObj.append('fullName', formData.fullName);
+    formDataObj.append('email', formData.email);
+    formDataObj.append('phone', formData.phone);
+    formDataObj.append('expertise', formData.expertise);
+    formDataObj.append('experience', formData.experience);
+
+    try {
+      // Dynamic import to avoid client-side bundling issues with server actions
+      const { submitTutorApplication } = await import('../../app/actions');
+      const result = await submitTutorApplication(formDataObj);
+      
+      if (result.error) {
+        setErrors({ submit: result.error });
+      } else {
+        setSubmitted(true);
+        setFormData({ fullName: '', email: '', phone: '', expertise: '', experience: '' });
+      }
+    } catch (err) {
+      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-      setFormData({ fullName: '', email: '', phone: '', expertise: '', experience: '' });
-    }, 1500);
+    }
   };
 
   if (submitted) {
@@ -82,6 +100,11 @@ export default function TutorApplicationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {errors.submit && (
+        <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-bold text-red-600">
+          {errors.submit}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="fullName" className="block text-sm font-bold text-slate-700">

@@ -7,7 +7,7 @@ export const revalidate = 0; // Dynamic dashboard
 export default async function StudentDashboardPage() {
   const user = await requireAuth();
 
-  // Fetch all enrollments for user, including Course -> Modules -> Lessons
+  // Fetch all enrollments for user
   const enrollments = await Enrollment.findAll({
     where: { userId: user.id },
     include: [
@@ -25,18 +25,18 @@ export default async function StudentDashboardPage() {
     order: [['enrolledAt', 'DESC']],
   });
 
-  // Fetch all completed progress for user
   const userProgress = await Progress.findAll({
     where: { userId: user.id, completed: true },
   });
   const completedLessonIds = new Set(userProgress.map((p) => p.lessonId));
 
-  // Build course data with progress computed
-  const enrolledCourses = enrollments.map((enroll) => {
+  let completedCourses = 0;
+  let inProgressCourses = 0;
+
+  const enrichedCourses = enrollments.map((enroll) => {
     const course = (enroll as any).Course;
     if (!course) return null;
 
-    // Gather all lessons for this course
     const lessons: any[] = [];
     if (course.modules) {
       for (const mod of course.modules) {
@@ -50,6 +50,9 @@ export default async function StudentDashboardPage() {
     const completedCount = lessons.filter((l) => completedLessonIds.has(l.id)).length;
     const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
+    if (progressPercent === 100) completedCourses++;
+    else if (progressPercent > 0) inProgressCourses++;
+
     return {
       id: course.id,
       title: course.title,
@@ -59,123 +62,167 @@ export default async function StudentDashboardPage() {
       progressPercent,
       completedCount,
       totalLessons,
-      enrolledAt: enroll.enrolledAt,
-      completedAt: enroll.completedAt,
       batchMode: enroll.batchMode,
     };
   }).filter(Boolean);
 
+  const activeCourse = enrichedCourses.find(c => c!.progressPercent > 0 && c!.progressPercent < 100) || enrichedCourses[0];
+
   return (
-    <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          
-          {/* Dashboard Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-8 bg-white border border-slate-100 rounded-3xl shadow-sm">
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-600">Student Dashboard</span>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                Welcome back, {user.name || 'Student'}!
-              </h1>
-              <p className="text-sm text-slate-500">
-                Logged in as <span className="font-semibold text-slate-700">{user.email}</span>
-              </p>
+    <div className="p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-extrabold mb-2">Welcome back, {user.name || 'Student'}! 👋</h1>
+            <p className="text-orange-50 mb-6">Ready to continue your learning journey today?</p>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/dashboard/my-courses" className="bg-white text-orange-600 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm">
+                Go to My Courses
+              </Link>
+              <Link href="/dashboard/book-session" className="bg-white/20 text-white border border-white/20 px-6 py-2.5 rounded-xl font-bold hover:bg-white/30 transition-colors backdrop-blur-sm">
+                Book a Session
+              </Link>
             </div>
           </div>
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 right-1/4 translate-y-1/2 w-48 h-48 bg-blue-400 opacity-20 rounded-full blur-2xl pointer-events-none"></div>
+        </div>
 
-          {/* Core Body */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">My Courses</h2>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+              📚
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Enrolled</p>
+              <p className="text-2xl font-bold text-slate-900">{enrollments.length}</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+              ⚡
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">In Progress</p>
+              <p className="text-2xl font-bold text-slate-900">{inProgressCourses}</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xl shrink-0">
+              ✅
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Completed</p>
+              <p className="text-2xl font-bold text-slate-900">{completedCourses}</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl shrink-0">
+              🎓
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Certificates</p>
+              <p className="text-2xl font-bold text-slate-900">{completedCourses}</p>
+            </div>
+          </div>
+        </div>
 
-            {enrolledCourses.length === 0 ? (
-              <div className="text-center p-16 bg-white border border-slate-100 rounded-3xl max-w-xl mx-auto space-y-6">
-                <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-500 text-3xl flex items-center justify-center mx-auto">
-                  📚
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold text-slate-900">You are not enrolled in any training program yet</h3>
-                  <p className="text-slate-500 text-sm">
-                    Discover summer Bootcamps, professional career tracks, and get certified.
-                  </p>
-                </div>
-                <Link
-                  href="/courses"
-                  className="inline-flex items-center justify-center px-6 py-3 font-bold text-white gradient-bg hover:opacity-90 rounded-xl transition-all shadow-md shadow-blue-500/10 text-sm"
-                >
-                  Browse Courses
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {enrolledCourses.map((c: any) => (
-                  <div key={c.id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between h-full">
-                    {/* Thumbnail */}
-                    {c.thumbnail && (
-                      <div className="h-40 relative bg-slate-100 overflow-hidden">
-                        <img
-                          src={c.thumbnail}
-                          alt={c.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute top-4 right-4 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-900/80 text-white backdrop-blur">
-                          {c.level}
-                        </span>
-                      </div>
-                    )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Continue Learning */}
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="text-xl font-bold text-slate-900">Continue Learning</h2>
+            {activeCourse ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-6 items-center">
+                {activeCourse.thumbnail ? (
+                  <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                    <img src={activeCourse.thumbnail} alt={activeCourse.title} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-full sm:w-48 h-32 rounded-xl shrink-0 bg-slate-100 flex items-center justify-center text-2xl">
+                    📘
+                  </div>
+                )}
+                <div className="flex-1 w-full space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-1">
+                      <h3 className="font-bold text-lg text-slate-900 line-clamp-1">{activeCourse.title}</h3>
+                      <span className="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded-md shrink-0">
+                        {activeCourse.level}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500">
+                      {activeCourse.completedCount} of {activeCourse.totalLessons} lessons completed
+                    </p>
+                  </div>
 
-                    {/* Progress details */}
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-lg font-bold text-slate-900 leading-snug line-clamp-2">
-                            {c.title}
-                          </h3>
-                          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                            {c.batchMode}
-                          </span>
-                        </div>
-
-                        {/* Progress slider bar */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs font-medium">
-                            <span className="text-slate-500">Course Progress</span>
-                            <span className="text-slate-900 font-semibold">{c.progressPercent}%</span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                              style={{ width: `${c.progressPercent}%` }}
-                            />
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            Completed {c.completedCount} of {c.totalLessons} lessons
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Operations */}
-                      <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
-                        <Link
-                          href={`/dashboard/courses/${c.slug}`}
-                          className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white gradient-bg hover:opacity-90 rounded-xl transition-all text-center"
-                        >
-                          {c.progressPercent === 0 ? 'Start Course' : 'Continue Learning'}
-                        </Link>
-
-                        {c.progressPercent === 100 && (
-                          <a
-                            href={`/api/certificate/download?courseId=${c.id}`}
-                            className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200/50 rounded-xl transition-all text-center"
-                          >
-                            🎓 Download Certificate
-                          </a>
-                        )}
-                      </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-orange-600">Progress</span>
+                      <span className="text-slate-900">{activeCourse.progressPercent}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-orange-600 rounded-full transition-all duration-500" style={{ width: `${activeCourse.progressPercent}%` }}></div>
                     </div>
                   </div>
-                ))}
+
+                  <Link href={`/dashboard/courses/${activeCourse.slug}`} className="inline-block mt-2 px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm">
+                    {activeCourse.progressPercent === 0 ? 'Start Learning' : 'Resume Course'}
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-orange-50 text-orange-600 text-2xl flex items-center justify-center mx-auto mb-4">
+                  🚀
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Start your journey</h3>
+                <p className="text-slate-500 mb-6 max-w-sm mx-auto">You aren't taking any courses yet. Browse our catalog to find the perfect course for you.</p>
+                <Link href="/courses" className="inline-block px-6 py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors shadow-sm">
+                  Explore Courses
+                </Link>
               </div>
             )}
           </div>
+
+          {/* Quick Actions */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <Link href="/dashboard/my-courses" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-blue-100 transition-all">
+                  ▶️
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900">My Courses</h4>
+                  <p className="text-xs text-slate-500">View all your enrollments</p>
+                </div>
+              </Link>
+              <Link href="/dashboard/book-session" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-orange-100 transition-all">
+                  📅
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900">Book Session</h4>
+                  <p className="text-xs text-slate-500">Schedule 1-on-1 tutoring</p>
+                </div>
+              </Link>
+              <Link href="/dashboard/tutors" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-amber-100 transition-all">
+                  👨‍🏫
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900">Find Tutors</h4>
+                  <p className="text-xs text-slate-500">Connect with experts</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
