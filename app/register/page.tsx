@@ -1,187 +1,99 @@
-'use client';
-
-import { useActionState, useState } from 'react';
-import { registerAction } from '../actions';
-import Link from 'next/link';
+import Header from '../../src/components/layout/Header';
+import Footer from '../../src/components/layout/Footer';
+import RegisterForm from './RegisterForm';
 
 export default function RegisterPage() {
-  const [state, formAction, isPending] = useActionState(registerAction, null);
-  const [showPassword, setShowPassword] = useState(false);
-
   return (
-    <div className="min-h-screen flex flex-row-reverse bg-white">
-      {/* Form Section (now on right) */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 relative z-10">
-        <div className="mx-auto w-full max-w-sm lg:w-[400px]">
-          <div>
-            <Link href="/" className="inline-block">
-              <img src="/logo.png" alt="Flymedia Technology" className="h-10 w-auto" />
-            </Link>
-            <h2 className="mt-8 text-4xl font-extrabold text-slate-900 tracking-tight">
-              Create an account
-            </h2>
-            <p className="mt-3 text-base text-slate-500">
-              Join thousands of professionals scaling their careers.
-            </p>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 flex flex-row-reverse bg-white min-h-[calc(100vh-80px)]">
+          {/* Form Section */}
+          <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+            <div className="mx-auto w-full max-w-sm lg:w-[400px]">
+              <RegisterForm />
+            </div>
           </div>
 
-          <div className="mt-10">
-            {state?.error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-sm font-semibold text-red-600 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {state.error}
-              </div>
-            )}
+          {/* Visuals Section */}
+          <div className="hidden lg:block relative w-0 flex-1 overflow-hidden bg-slate-900">
+            <img
+              className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-[10s] ease-out"
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2670&auto=format&fit=crop"
+              alt="Students studying"
+            />
+            <div 
+              className="absolute inset-0 opacity-80 mix-blend-multiply" 
+              style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }} 
+            />
 
-            <form action={formAction} className="space-y-6">
-              <div className="space-y-5">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-bold text-slate-700">
-                    Full Name
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
-                      placeholder="Jane Doe"
-                    />
+            {/* Abstract decorative elements */}
+            <div 
+              className="absolute top-[-10%] right-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" 
+              style={{ backgroundColor: '#E60870' }} 
+            />
+            <div 
+              className="absolute bottom-[-10%] left-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40" 
+              style={{ backgroundColor: '#F8750E' }} 
+            />
+
+            <div className="absolute inset-0 flex flex-col justify-center p-16 lg:p-24 pb-20">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-rose-200 text-xs font-semibold tracking-wider uppercase mb-6 animate-pulse">
+                  Unlock Your Potential
+                </div>
+
+               
+                <h3 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
+                Start Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-600">Learning Journey Today</span>
+                </h3>
+
+                <p className="text-base text-white font-medium leading-relaxed max-w-xl mb-4">
+                  Join SocialFly LMS and gain access to industry-focused courses, practical training, and expert guidance designed to help you succeed in the digital age.
+                </p>
+
+                <p className="text-sm text-slate-200 leading-relaxed max-w-xl mb-4">
+                  Whether you&apos;re a student, freelancer, entrepreneur, or working professional, our platform provides the knowledge and skills you need to grow with confidence.
+                </p>
+
+                <p className="text-xs text-slate-300 leading-relaxed max-w-xl mb-8">
+                  Thousands of learners are upgrading their skills and advancing their careers through structured, practical, and results-driven learning experiences.
+                </p>
+
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-rose-200">
+                    Why Join SocialFly LMS?
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 max-w-xl">
+                    {[
+                      "Access Premium Learning Resources",
+                      "Learn from Industry Experts",
+                      "Build Real-World Skills & Experience",
+                      "Track Your Progress & Achievements",
+                      "Earn Certificates & Showcase Your Expertise",
+                      "Learn Anytime, Anywhere"
+                    ].map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-3 text-white text-xs font-medium bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                      >
+                        <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <span className="leading-snug">{item}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-bold text-slate-700">
-                    Email address
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="block w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
-                      placeholder="name@company.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-bold text-slate-700">
-                    Password
-                  </label>
-                  <div className="mt-2 relative">
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      className="block w-full rounded-2xl border border-slate-200 pl-5 pr-12 py-4 text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-600/10 transition-all text-sm font-medium"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
               </div>
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
-                  className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-rose-600/20 text-sm font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden"
-                >
-                  <span className="absolute inset-0 w-full h-full bg-white/20 scale-x-0 group-hover:scale-x-100 transform origin-left transition-transform duration-300 ease-out" />
-                  <span className="relative flex items-center gap-2">
-                    {isPending ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Creating account...
-                      </>
-                    ) : 'Create account'}
-                  </span>
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-10 text-center">
-              <p className="text-sm font-medium text-slate-500">
-                Already have an account?{' '}
-                <Link href="/login" className="font-bold text-slate-900 hover:text-blue-600 hover:underline transition-colors">
-                  Sign in instead
-                </Link>
-              </p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Visuals Section (now on left) */}
-      <div className="hidden lg:block relative w-0 flex-1 overflow-hidden bg-slate-900">
-        <img
-          className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-[10s] ease-out"
-          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2670&auto=format&fit=crop"
-          alt="Students studying"
-        />
-        <div 
-          className="absolute inset-0 opacity-80 mix-blend-multiply" 
-          style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }} 
-        />
-
-        {/* Abstract decorative elements */}
-        <div 
-          className="absolute top-[-10%] right-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" 
-          style={{ backgroundColor: '#E60870' }} 
-        />
-        <div 
-          className="absolute bottom-[-10%] left-[-5%] w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-40" 
-          style={{ backgroundColor: '#F8750E' }} 
-        />
-
-        <div className="absolute inset-0 flex flex-col justify-end p-16 lg:p-24 pb-20">
-          <div className="max-w-2xl transform transition-all duration-700 translate-y-0">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium mb-6">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Enrollments Open</span>
-            </div>
-
-            <h3 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-6">
-              Accelerate your learning journey today.
-            </h3>
-
-            <p className="text-lg text-slate-300 leading-relaxed max-w-xl mb-12">
-              Unlock access to world-class curriculum, hands-on projects, and a community of ambitious learners.
-            </p>
-
-            {/* Value Props */}
-            {/* <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl">
-                <div className="text-2xl mb-2">🎓</div>
-                <div className="font-bold text-white text-sm mb-1">Expert Instructors</div>
-                <div className="text-slate-400 text-xs">Learn from industry veterans</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl">
-                <div className="text-2xl mb-2">💼</div>
-                <div className="font-bold text-white text-sm mb-1">Career Support</div>
-                <div className="text-slate-400 text-xs">Get hired faster</div>
-              </div>
-            </div> */}
-
-          </div>
-        </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
