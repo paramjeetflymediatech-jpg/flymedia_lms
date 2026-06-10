@@ -16,7 +16,7 @@ export default async function Header() {
 
         {/* Navigation links */}
         <nav className="hidden md:flex items-center space-x-10 text-sm font-bold text-slate-600">
-          <Link href="/courses" className="hover:text-orange-500 transition-colors relative group">
+          <Link href="/packages" className="hover:text-orange-500 transition-colors relative group">
             <span>Programs</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>

@@ -3,16 +3,16 @@ import Header from '../src/components/layout/Header';
 import Footer from '../src/components/layout/Footer';
 import HeroSlider from '../src/components/home/HeroSlider';
 import CallbackForm from '../src/components/home/CallbackForm';
-import { Course } from '../src/db/models';
+import { Package } from '../src/db/models';
 
 export const revalidate = 0; // Dynamic rendering to fetch courses
 
 export default async function HomePage() {
-  let courses: Course[] = [];
+  let packages: Package[] = [];
   try {
-    courses = await Course.findAll({ limit: 4 });
+    packages = await Package.findAll({ limit: 4 });
   } catch (error) {
-    console.error('Failed to load courses for homepage:', error);
+    console.error('Failed to load packages for homepage:', error);
   }
 
   return (
@@ -122,7 +122,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <Link
-                href="/courses"
+                href="/packages"
                 className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white transition-all rounded-2xl shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40 shrink-0"
                 style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               >
@@ -130,23 +130,23 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {courses.length === 0 ? (
+            {packages.length === 0 ? (
               <div className="text-center p-16 bg-slate-50 rounded-[3rem] border border-slate-100 max-w-2xl mx-auto">
                 <div className="text-4xl mb-4">📭</div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No Courses Available</h3>
-                <p className="text-slate-500 mb-6 font-medium">The course catalog is currently being updated. Please check back soon or sync the database.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No Packages Available</h3>
+                <p className="text-slate-500 mb-6 font-medium">The package catalog is currently being updated. Please check back soon or sync the database.</p>
                 <code className="text-xs px-3 py-2 rounded-lg bg-slate-200 font-mono text-slate-700 font-bold">npm run db:sync</code>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {courses.map((course) => (
-                  <div key={course.id} className="group flex flex-col h-full bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                {packages.map((pkg) => (
+                  <div key={pkg.id} className="group flex flex-col h-full bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                     {/* Image Header */}
                     <div className="h-48 relative overflow-hidden bg-slate-100">
-                      {course.thumbnail ? (
+                      {pkg.thumbnail ? (
                         <img
-                          src={course.thumbnail}
-                          alt={course.title}
+                          src={pkg.thumbnail}
+                          alt={pkg.title}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                       ) : (
@@ -154,7 +154,7 @@ export default async function HomePage() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <span className="absolute top-4 right-4 text-[10px] font-black px-3 py-1.5 rounded-full bg-white/90 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
-                        {course.level}
+                        PACKAGE
                       </span>
                     </div>
 
@@ -164,7 +164,7 @@ export default async function HomePage() {
                         <div className="flex items-center space-x-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                           <span className="flex items-center">
                             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            {course.duration ? Math.round(course.duration / 60) : 30} hrs
+                            {pkg.price ? `₹${pkg.price}` : 'Free'}
                           </span>
                           <span>•</span>
                           <span className="flex items-center text-orange-500">
@@ -173,20 +173,20 @@ export default async function HomePage() {
                           </span>
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
-                          {course.title}
+                          {pkg.title}
                         </h3>
                         <p className="text-slate-500 text-sm line-clamp-3 font-medium leading-relaxed">
-                          {course.description}
+                          {pkg.description}
                         </p>
                       </div>
 
                       {/* Footer CTA */}
                       <div className="mt-8 pt-5 border-t border-slate-100">
                         <Link
-                          href={`/courses/${course.slug}`}
+                          href={`/packages/${pkg.slug}`}
                           className="w-full inline-flex items-center justify-between text-sm font-bold text-slate-900 group/link"
                         >
-                          <span>Explore Syllabus</span>
+                          <span>Explore Details</span>
                           <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover/link:bg-orange-50 group-hover/link:border-orange-200 group-hover/link:text-orange-600 transition-colors">
                             <svg className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                           </span>
@@ -324,7 +324,7 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <p className="text-slate-700 leading-relaxed font-medium mb-8">
-                  "The tools are unparalleled. Everything you need to learn and build real-world applications in one seamless program. It's truly the best investment I've made in my education."
+                  &quot;The tools are unparalleled. Everything you need to learn and build real-world applications in one seamless program. It&apos;s truly the best investment I&apos;ve made in my education.&quot;
                 </p>
                 <div className="flex items-center gap-4">
                   <img src="https://i.pravatar.cc/100?img=32" alt="Emily Davis" className="w-12 h-12 rounded-full border-2 border-slate-100" />

@@ -59,7 +59,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 text-sm font-medium">
               <li>
-                <Link href="/courses" className="hover:text-orange-400 transition-colors inline-block hover:translate-x-1.5 transform duration-300">
+                <Link href="/packages" className="hover:text-orange-400 transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Browse Courses
                 </Link>
               </li>

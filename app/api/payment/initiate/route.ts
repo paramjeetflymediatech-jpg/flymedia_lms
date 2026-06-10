@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '../../../../src/lib/auth';
-import { Course, Payment } from '../../../../src/db/models';
+import { Package, Payment } from '../../../../src/db/models';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
@@ -10,19 +10,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { courseId, batchMode } = await req.json();
-    if (!courseId) {
-      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+    const { packageId, batchMode } = await req.json();
+    if (!packageId) {
+      return NextResponse.json({ error: 'Package ID is required' }, { status: 400 });
     }
 
-    const course = await Course.findByPk(courseId);
-    if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    const pkg = await Package.findByPk(packageId);
+    if (!pkg) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
-    const amount = Number(course.price);
+    const amount = Number(pkg.price);
     if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount for paid course' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid amount for paid package' }, { status: 400 });
     }
 
     const clientId = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
@@ -35,12 +35,11 @@ export async function POST(req: Request) {
     // Create Payment Record (PENDING)
     await Payment.create({
       userId: user.id,
-      courseId: course.id,
+      packageId: pkg.id,
       amount,
       transactionId,
       status: 'PENDING',
       provider: 'PHONEPE',
-      batchMode: batchMode || 'ONLINE',
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

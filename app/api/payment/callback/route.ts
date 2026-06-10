@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Payment, Enrollment, Course } from '../../../../src/db/models';
+import { Payment, Enrollment, Package } from '../../../../src/db/models';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
@@ -69,14 +69,13 @@ async function handleCallback(req: Request) {
 
       // Check if already enrolled
       const existing = await Enrollment.findOne({
-        where: { userId: payment.userId, courseId: payment.courseId }
+        where: { userId: payment.userId, packageId: payment.packageId }
       });
 
       if (!existing) {
         await Enrollment.create({
           userId: payment.userId,
-          courseId: payment.courseId,
-          batchMode: payment.batchMode,
+          packageId: payment.packageId,
         });
       }
 

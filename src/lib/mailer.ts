@@ -150,12 +150,7 @@ export async function sendTutorApprovalEmail(to: string, name: string, setPasswo
                 </tr>
               </table>
 
-              <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">
-                Or copy and paste this link into your browser:
-              </p>
-              <p style="margin:0 0 28px;font-size:12px;color:#f43f5e;word-break:break-all;">
-                <a href="${setPasswordUrl}" style="color:#f43f5e;">${setPasswordUrl}</a>
-              </p>
+             
 
               <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 24px;"/>
 

@@ -1,9 +1,9 @@
 import { requireAdmin } from '../../../src/lib/auth';
-import { User, Enrollment, Course } from '../../../src/db/models';
+import { User, Enrollment, Package } from '../../../src/db/models';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
 import InviteUserModal from '../../../src/components/admin/InviteUserModal';
 import RoleFilter from './RoleFilter';
-import { deleteUserAction, updateUserRole } from '../../actions';
+import { deleteUserAction } from '../../actions';
 import Link from 'next/link';
 
 export const revalidate = 0;
@@ -14,7 +14,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ role?: string; page?: string }>;
 }) {
   await requireAdmin();
-  
+
   const resolvedSearchParams = await searchParams;
 
   const roleFilter = resolvedSearchParams.role?.toUpperCase() || 'ALL';
@@ -39,7 +39,8 @@ export default async function AdminUsersPage({
         as: 'enrollments',
         include: [
           {
-            model: Course,
+            model: Package,
+            as: 'Package',
             attributes: ['id', 'title'],
           },
         ],
@@ -48,7 +49,7 @@ export default async function AdminUsersPage({
     order: [['createdAt', 'DESC']],
     distinct: true, // important when using include to get accurate count
   });
-  
+
   const users = usersData.map(u => u.toJSON());
   const totalPages = Math.ceil(count / limit) || 1;
 
@@ -100,9 +101,9 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 text-[10px] uppercase font-bold rounded border inline-block
-                      ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-600 border-purple-100' : 
+                      ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                         user.role === 'TUTOR' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                        'bg-slate-100 text-slate-600 border-slate-200'}`}
+                          'bg-slate-100 text-slate-600 border-slate-200'}`}
                     >
                       {user.role}
                     </span>
@@ -111,8 +112,8 @@ export default async function AdminUsersPage({
                     <div className="flex flex-col gap-1">
                       {user.enrollments && user.enrollments.length > 0 ? (
                         user.enrollments.map((enr: any) => (
-                          <span key={enr.id} className="text-[10px] font-medium text-slate-700 bg-slate-100 inline-block px-2 py-0.5 rounded border border-slate-200 w-fit line-clamp-1 max-w-[150px]" title={enr.Course?.title}>
-                            {enr.Course?.title}
+                          <span key={enr.id} className="text-[10px] font-medium text-slate-700 bg-slate-100 inline-block px-2 py-0.5 rounded border border-slate-200 w-fit line-clamp-1 max-w-[150px]" title={enr.Package?.title}>
+                            {enr.Package?.title}
                           </span>
                         ))
                       ) : (
@@ -125,15 +126,18 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      <button className="text-slate-400 hover:text-blue-600 transition-colors" title="Edit User">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                      </button>
-                      <DeleteConfirmButton 
-                        itemType="User" 
+                      <Link 
+                        href={`/admin/users/${user.id}`}
+                        className="inline-flex items-center justify-center text-[10px] font-bold text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 px-3 py-1.5 rounded transition-colors uppercase tracking-wider"
+                      >
+                        View
+                      </Link>
+                      <DeleteConfirmButton
+                        itemType="User"
                         onDelete={async () => {
                           'use server';
                           await deleteUserAction(user.id);
-                        }} 
+                        }}
                       />
                     </div>
                   </td>
@@ -142,7 +146,7 @@ export default async function AdminUsersPage({
             </tbody>
           </table>
         </div>
-        
+
         {users.length === 0 && (
           <div className="p-12 text-center text-slate-400 text-sm">
             No users found matching the selected filter.
@@ -156,7 +160,7 @@ export default async function AdminUsersPage({
               Showing <span className="font-bold text-slate-900">{offset + 1}</span> to <span className="font-bold text-slate-900">{Math.min(offset + limit, count)}</span> of <span className="font-bold text-slate-900">{count}</span> users
             </span>
             <div className="flex items-center gap-2">
-              <Link 
+              <Link
                 href={`/admin/users?role=${roleFilter}&page=${page - 1}`}
                 className={`px-3 py-1.5 text-xs font-bold rounded border ${page <= 1 ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
               >
@@ -165,7 +169,7 @@ export default async function AdminUsersPage({
               <div className="text-sm font-bold text-slate-700 px-2">
                 {page} / {totalPages}
               </div>
-              <Link 
+              <Link
                 href={`/admin/users?role=${roleFilter}&page=${page + 1}`}
                 className={`px-3 py-1.5 text-xs font-bold rounded border ${page >= totalPages ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
               >

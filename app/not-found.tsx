@@ -39,7 +39,7 @@ export default function GlobalNotFound() {
             </Link>
             
             <Link 
-              href="/courses"
+              href="/packages"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 font-black text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all shadow-sm group"
             >
               Browse All Courses

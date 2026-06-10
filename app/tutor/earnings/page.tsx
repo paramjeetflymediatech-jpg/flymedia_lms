@@ -1,109 +1,136 @@
 import { requireAuth } from '../../../src/lib/auth';
-import { redirect } from 'next/navigation';
-import { Payment, Course } from '../../../src/db/models';
+import { LiveClass, Package } from '../../../src/db/models';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
 export default async function TutorEarningsPage() {
   const user = await requireAuth();
-  
+
   if (user.role !== 'TUTOR') {
-    redirect('/dashboard');
+    return (
+      <div className="p-10">
+        <h1 className="text-2xl font-bold text-red-600">Unauthorized</h1>
+      </div>
+    );
   }
 
-  // Fetch payments for courses taught by this tutor
-  const paymentsData = await Payment.findAll({
-    include: [
-      {
-        model: Course,
-        where: { instructorId: user.id },
-        attributes: ['title'],
-      }
-    ],
-    order: [['createdAt', 'DESC']],
+  // Fetch all classes assigned to this tutor
+  const classes = await LiveClass.findAll({
+    where: { tutorId: user.id },
+    include: [{ model: Package, attributes: ['title'] }],
+    order: [['startTime', 'DESC']],
   });
 
-  let totalLifetime = 0;
-  
-  const transactions = paymentsData.map(p => {
-    const raw = p.get({ plain: true });
-    
-    // Add to lifetime earnings if success
-    if (raw.status === 'SUCCESS' && raw.amount) {
-      totalLifetime += parseFloat(raw.amount as unknown as string);
+  const now = new Date();
+  const hourlyRate = 35; // Fixed placeholder rate of $35/hour for demonstration
+
+  let totalEarnings = 0;
+  let upcomingEarnings = 0;
+  let totalHoursCompleted = 0;
+
+  const earningsHistory = classes.map(c => {
+    const classData = c.toJSON() as any;
+    const endTime = new Date(new Date(classData.startTime).getTime() + classData.duration * 60000);
+    const isCompleted = endTime < now;
+    const hours = classData.duration / 60;
+    const payout = hours * hourlyRate;
+
+    if (isCompleted) {
+      totalEarnings += payout;
+      totalHoursCompleted += hours;
+    } else {
+      upcomingEarnings += payout;
     }
-    
-    return { 
-      id: raw.id.substring(0, 8).toUpperCase(), 
-      date: new Date(raw.createdAt).toLocaleDateString(), 
-      course: (raw as any).Course?.title || 'Unknown Course', 
-      amount: raw.amount ? `$${parseFloat(raw.amount as unknown as string).toFixed(2)}` : '$0.00', 
-      status: raw.status === 'SUCCESS' ? 'CLEARED' : raw.status 
+
+    return {
+      ...classData,
+      isCompleted,
+      payout,
+      hours,
     };
   });
 
-  const availablePayout = totalLifetime * 0.8; // Assume 80% rev share for demonstration
-
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Earnings</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Track your course sales, payouts, and revenue history.
-          </p>
-        </div>
-        <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-orange-700 transition-all">
-          Request Payout
-        </button>
+    <div className="p-6 md:p-10 space-y-8">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Earnings & Payouts</h1>
+        <p className="text-sm text-slate-500">Track your teaching revenue and upcoming scheduled payouts.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">Available for Payout (80%)</p>
-          <h2 className="mt-2 text-4xl font-extrabold text-slate-900">${availablePayout.toFixed(2)}</h2>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10" />
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Earned</h3>
+          <div className="text-4xl font-black">${totalEarnings.toFixed(2)}</div>
+          <p className="text-xs text-slate-400 mt-2">Lifetime processed payouts</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">Pending Clearance</p>
-          <h2 className="mt-2 text-4xl font-extrabold text-slate-900">$0.00</h2>
+
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Upcoming</h3>
+          <div className="text-4xl font-black text-slate-900">${upcomingEarnings.toFixed(2)}</div>
+          <p className="text-xs text-slate-500 mt-2">Pending from scheduled classes</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">Lifetime Earnings</p>
-          <h2 className="mt-2 text-4xl font-extrabold text-slate-900">${totalLifetime.toFixed(2)}</h2>
+
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Hours Taught</h3>
+          <div className="text-4xl font-black text-orange-600">{totalHoursCompleted.toFixed(1)}</div>
+          <p className="text-xs text-slate-500 mt-2">Total completed class hours</p>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mt-8">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900">Recent Transactions</h3>
+      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">Payout History</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-100 text-xs uppercase font-bold text-slate-500">
               <tr>
-                <th className="px-6 py-4">Transaction ID</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Course</th>
-                <th className="px-6 py-4">Amount</th>
-                <th className="px-6 py-4 text-right">Status</th>
+                <th className="px-6 py-4">Session Date</th>
+                <th className="px-6 py-4">Live Class</th>
+                <th className="px-6 py-4">Duration</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {transactions.map((trx) => (
-                <tr key={trx.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-slate-500">{trx.id}</td>
-                  <td className="px-6 py-4">{trx.date}</td>
-                  <td className="px-6 py-4 font-medium text-slate-900">{trx.course}</td>
-                  <td className="px-6 py-4 font-bold text-slate-900">{trx.amount}</td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={`px-2.5 py-1 text-[10px] uppercase font-bold rounded border inline-block
-                      ${trx.status === 'CLEARED' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-orange-50 text-orange-600 border-orange-100'}`}
-                    >
-                      {trx.status}
-                    </span>
+              {earningsHistory.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">
+                    No earning history yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                earningsHistory.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 text-xs font-medium">
+                      {new Date(item.startTime).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-900">{item.title}</div>
+                      <div className="text-xs text-slate-500">{item.Package?.title || 'Unknown Package'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.hours.toFixed(1)} hrs
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.isCompleted ? (
+                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase rounded bg-green-50 text-green-600 border border-green-100">
+                          Processed
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase rounded bg-orange-50 text-orange-600 border border-orange-100">
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-slate-900">
+                      ${item.payout.toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

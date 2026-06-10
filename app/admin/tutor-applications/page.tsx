@@ -77,6 +77,9 @@ export default async function TutorApplicationsPage({
                   <td className="px-6 py-4 text-right">
                     {app.status === 'PENDING' ? (
                       <div className="flex items-center justify-end gap-2">
+                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors border border-blue-200 px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap">
+                          View
+                        </Link>
                         <form
                           action={async () => {
                             'use server';
@@ -94,12 +97,16 @@ export default async function TutorApplicationsPage({
                           }}
                         >
                           <button type="submit" className="text-[10px] font-bold text-white transition-colors border border-green-600 px-3 py-1.5 rounded bg-green-600 hover:bg-green-700 whitespace-nowrap shadow-sm">
-                            Approve & Invite
+                            Approve
                           </button>
                         </form>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">Processed</span>
+                      <div className="flex items-center justify-end gap-2">
+                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-slate-500 hover:text-blue-600 transition-colors border border-slate-200 px-3 py-1.5 rounded bg-white hover:bg-slate-50 whitespace-nowrap">
+                          View Details
+                        </Link>
+                      </div>
                     )}
                   </td>
                 </tr>

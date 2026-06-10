@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Course, Module, Lesson, Enrollment, Progress, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail } from '../src/lib/mailer';
 
@@ -116,16 +116,12 @@ export async function forgotPasswordAction(prevState: any, formData: FormData) {
     const user = await User.findOne({ where: { email } });
 
     if (user) {
-      // 1. Generate a secure random token
       const rawToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
-
-      // 2. Hash it before storing (so a DB leak can't be used directly)
       const encoder = new TextEncoder();
       const data = encoder.encode(rawToken);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashedToken = Buffer.from(hashBuffer).toString('hex');
 
-      // 3. Store hashed token in DB (expire in 1 hour)
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await PasswordResetToken.create({
         userId: user.id,
@@ -133,19 +129,15 @@ export async function forgotPasswordAction(prevState: any, formData: FormData) {
         expiresAt,
       });
 
-      // 4. Build reset URL with RAW token (user needs the raw one)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const resetUrl = `${baseUrl}reset-password?token=${rawToken}`;
 
-      // 5. Send the email
       await sendPasswordResetEmail(email, user.name || 'Student', resetUrl);
     }
   } catch (error) {
     console.error('Forgot password error:', error);
-    // Still return success — don't leak info about errors
   }
 
-  // Always return success to prevent email enumeration
   return { success: true, email };
 }
 
@@ -159,7 +151,6 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
   if (password !== confirm) return { error: 'Passwords do not match.' };
 
   try {
-    // Hash the incoming raw token to compare against the stored hash
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
     const hashedToken = Buffer.from(hashBuffer).toString('hex');
@@ -170,14 +161,12 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
     if (record.used) return { error: 'This reset link has already been used.' };
     if (new Date() > record.expiresAt) return { error: 'This reset link has expired. Please request a new one.' };
 
-    // Update password
     const user = await User.findByPk(record.userId);
     if (!user) return { error: 'Account not found.' };
 
     user.passwordHash = await bcrypt.hash(password, 10);
     await user.save();
 
-    // Mark token as used
     record.used = true;
     await record.save();
   } catch (error) {
@@ -192,12 +181,12 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
 // 2. STUDENT LEARNING ACTIONS
 // ==========================================
 
-export async function enrollInCourse(courseId: string) {
+export async function enrollInPackage(packageId: string) {
   const user = await requireAuth();
 
   try {
     const existing = await Enrollment.findOne({
-      where: { userId: user.id, courseId },
+      where: { userId: user.id, packageId },
     });
 
     if (existing) {
@@ -206,48 +195,29 @@ export async function enrollInCourse(courseId: string) {
 
     await Enrollment.create({
       userId: user.id,
-      courseId,
+      packageId,
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/courses/${courseId}`);
+    revalidatePath(`/packages/${packageId}`);
     return { success: true };
   } catch (error) {
     console.error('Enrollment error:', error);
-    return { error: 'Failed to enroll in course' };
+    return { error: 'Failed to enroll in package' };
   }
 }
 
-export async function toggleLessonProgress(lessonId: string, completed: boolean) {
-  const user = await requireAuth();
-
+export async function adminDeleteEnrollment(enrollmentId: string) {
+  await requireAdmin();
   try {
-    const [progressRecord, created] = await Progress.findOrCreate({
-      where: { userId: user.id, lessonId },
-      defaults: { completed },
-    });
-
-    if (!created) {
-      progressRecord.completed = completed;
-      await progressRecord.save();
-    }
-
-    // Retrieve course ID to check if certificate is ready
-    const lesson = await Lesson.findByPk(lessonId, {
-      include: [{ model: Module, include: [Course] }],
-    });
-
-    if (lesson && (lesson as any).Module?.Course) {
-      const course = (lesson as any).Module.Course;
-      revalidatePath(`/dashboard/courses/${course.slug}`);
-      revalidatePath(`/courses/${course.slug}`);
-    }
-
-    revalidatePath('/dashboard');
+    const enr = await Enrollment.findByPk(enrollmentId);
+    if (!enr) return { error: 'Enrollment not found' };
+    await enr.destroy();
+    revalidatePath('/admin/enrollments');
     return { success: true };
   } catch (error) {
-    console.error('Progress toggle error:', error);
-    return { error: 'Failed to update progress' };
+    console.error('Delete enrollment error:', error);
+    return { error: 'Failed to delete enrollment' };
   }
 }
 
@@ -255,13 +225,11 @@ export async function toggleLessonProgress(lessonId: string, completed: boolean)
 // 3. ADMIN MANAGEMENT ACTIONS
 // ==========================================
 
-export async function adminCreateCourse(formData: FormData) {
+export async function adminCreatePackage(formData: FormData) {
   await requireAdmin();
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
-  const duration = Number(formData.get('duration') || 0);
-  const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   
   let finalThumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
@@ -271,7 +239,7 @@ export async function adminCreateCourse(formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'courses');
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'packages');
     
     // Ensure dir exists
     if (!fs.existsSync(uploadDir)) {
@@ -280,7 +248,7 @@ export async function adminCreateCourse(formData: FormData) {
     
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
-    finalThumbnailUrl = `/uploads/courses/${fileName}`;
+    finalThumbnailUrl = `/uploads/packages/${fileName}`;
   } else {
     const urlInput = formData.get('thumbnailUrl') as string;
     if (urlInput) {
@@ -294,36 +262,33 @@ export async function adminCreateCourse(formData: FormData) {
 
   try {
     const slug = slugify(title);
-    const existing = await Course.findOne({ where: { slug } });
+    const existing = await Package.findOne({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
 
-    await Course.create({
+    await Package.create({
       title,
       slug: finalSlug,
       description,
-      duration,
-      level,
       price,
       thumbnail: finalThumbnailUrl,
+      status: 'DRAFT',
     });
 
-    revalidatePath('/admin');
-    revalidatePath('/courses');
+    revalidatePath('/admin/packages');
     return { success: true };
   } catch (error) {
-    console.error('Create course error:', error);
-    return { error: 'Failed to create course' };
+    console.error('Create package error:', error);
+    return { error: 'Failed to create package' };
   }
 }
 
-export async function adminUpdateCourse(courseId: string, formData: FormData) {
+export async function adminUpdatePackage(packageId: string, formData: FormData) {
   await requireAdmin();
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
-  const duration = Number(formData.get('duration') || 0);
-  const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
+  const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
   
   let finalThumbnailUrl = undefined;
   
@@ -332,7 +297,7 @@ export async function adminUpdateCourse(courseId: string, formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'courses');
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'packages');
     
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -340,7 +305,7 @@ export async function adminUpdateCourse(courseId: string, formData: FormData) {
     
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
-    finalThumbnailUrl = `/uploads/courses/${fileName}`;
+    finalThumbnailUrl = `/uploads/packages/${fileName}`;
   } else {
     const urlInput = formData.get('thumbnailUrl') as string;
     if (urlInput) {
@@ -353,123 +318,149 @@ export async function adminUpdateCourse(courseId: string, formData: FormData) {
   }
 
   try {
-    const course = await Course.findByPk(courseId);
-    if (!course) return { error: 'Course not found' };
+    const pkg = await Package.findByPk(packageId);
+    if (!pkg) return { error: 'Package not found' };
 
-    course.title = title;
-    course.description = description;
-    course.duration = duration;
-    course.level = level;
-    if (price !== undefined) course.price = price;
-    if (finalThumbnailUrl !== undefined) course.thumbnail = finalThumbnailUrl;
+    pkg.title = title;
+    pkg.description = description;
+    pkg.status = status;
+    if (price !== null && price !== undefined) pkg.price = price;
+    if (finalThumbnailUrl !== undefined) pkg.thumbnail = finalThumbnailUrl;
 
-    await course.save();
+    await pkg.save();
 
-    revalidatePath('/admin');
-    revalidatePath(`/courses/${course.slug}`);
+    revalidatePath('/admin/packages');
+    revalidatePath(`/admin/packages/${pkg.id}`);
+    revalidatePath(`/packages/${pkg.slug}`);
     return { success: true };
   } catch (error) {
-    console.error('Update course error:', error);
-    return { error: 'Failed to update course' };
+    console.error('Update package error:', error);
+    return { error: 'Failed to update package' };
   }
 }
 
-export async function adminDeleteCourse(courseId: string) {
+export async function adminDeletePackage(packageId: string) {
   await requireAdmin();
 
   try {
-    const course = await Course.findByPk(courseId);
-    if (!course) return { error: 'Course not found' };
+    const pkg = await Package.findByPk(packageId);
+    if (!pkg) return { error: 'Package not found' };
 
-    await course.destroy();
+    await pkg.destroy();
 
-    revalidatePath('/admin');
-    revalidatePath('/courses');
+    revalidatePath('/admin/packages');
+    revalidatePath('/packages');
     return { success: true };
   } catch (error) {
-    console.error('Delete course error:', error);
-    return { error: 'Failed to delete course' };
+    console.error('Delete package error:', error);
+    return { error: 'Failed to delete package' };
   }
 }
 
-export async function adminCreateModule(courseId: string, title: string, order: number) {
+export async function adminCreateLiveClass(formData: FormData) {
   await requireAdmin();
 
-  if (!title) return { error: 'Module title is required' };
+  const packageId = formData.get('packageId') as string;
+  let tutorId: string | undefined = formData.get('tutorId') as string;
+  if (!tutorId || tutorId === '') tutorId = undefined;
+  
+  const title = formData.get('title') as string;
+  const meetLink = formData.get('meetLink') as string;
+  const startTimeStr = formData.get('startTime') as string;
+  const duration = parseInt(formData.get('duration') as string, 10) || 60;
+
+  if (!packageId || !title || !startTimeStr) return { error: 'Package, Title, and Start Time are required' };
 
   try {
-    await Module.create({
-      courseId,
+    await LiveClass.create({
+      packageId,
+      tutorId,
       title,
-      order,
+      meetLink,
+      startTime: new Date(startTimeStr),
+      duration,
     });
 
-    revalidatePath('/admin');
+    revalidatePath(`/admin/packages/${packageId}`);
     return { success: true };
   } catch (error) {
-    console.error('Create module error:', error);
-    return { error: 'Failed to create module' };
+    console.error('Create live class error:', error);
+    return { error: 'Failed to create live class' };
   }
 }
 
-export async function adminDeleteModule(moduleId: string) {
+export async function adminDeleteLiveClass(classId: string, packageId: string) {
   await requireAdmin();
 
   try {
-    const mod = await Module.findByPk(moduleId);
-    if (!mod) return { error: 'Module not found' };
+    const liveClass = await LiveClass.findByPk(classId);
+    if (!liveClass) return { error: 'Live Class not found' };
 
-    await mod.destroy();
+    await liveClass.destroy();
 
-    revalidatePath('/admin');
+    revalidatePath(`/admin/packages/${packageId}`);
     return { success: true };
   } catch (error) {
-    console.error('Delete module error:', error);
-    return { error: 'Failed to delete module' };
+    console.error('Delete live class error:', error);
+    return { error: 'Failed to delete live class' };
   }
 }
 
-export async function adminCreateLesson(moduleId: string, title: string, type: 'VIDEO' | 'TEXT' | 'PDF' | 'QUIZ', content: string, order: number) {
+export async function adminUpdateLiveClass(classId: string, packageId: string, formData: FormData) {
   await requireAdmin();
 
-  if (!title || !content) return { error: 'Lesson title and content are required' };
+  let tutorId: string | undefined = formData.get('tutorId') as string;
+  if (!tutorId || tutorId === '') tutorId = undefined;
+
+  const title = formData.get('title') as string;
+  const meetLink = formData.get('meetLink') as string;
+  const startTimeStr = formData.get('startTime') as string;
+  const duration = parseInt(formData.get('duration') as string, 10) || 60;
+
+  if (!title || !startTimeStr) return { error: 'Title and Start Time are required' };
 
   try {
-    await Lesson.create({
-      moduleId,
-      title,
-      type,
-      content,
-      order,
-    });
+    const liveClass = await LiveClass.findByPk(classId);
+    if (!liveClass) return { error: 'Live class not found' };
 
-    revalidatePath('/admin');
+    liveClass.title = title;
+    liveClass.meetLink = meetLink || '';
+    liveClass.startTime = new Date(startTimeStr);
+    liveClass.duration = duration;
+    // We must pass undefined instead of null to typescript depending on strictNullChecks, but let's use the any approach or just set it:
+    liveClass.tutorId = tutorId as any;
+
+    await liveClass.save();
+
+    revalidatePath(`/admin/packages/${packageId}`);
     return { success: true };
   } catch (error) {
-    console.error('Create lesson error:', error);
-    return { error: 'Failed to create lesson' };
+    console.error('Update live class error:', error);
+    return { error: 'Failed to update live class' };
   }
 }
 
-export async function adminDeleteLesson(lessonId: string) {
-  await requireAdmin();
+export async function tutorUpdateMeetLink(classId: string, meetLink: string) {
+  const user = await requireAuth();
+  if (user.role !== 'TUTOR') return { error: 'Unauthorized' };
 
   try {
-    const lesson = await Lesson.findByPk(lessonId);
-    if (!lesson) return { error: 'Lesson not found' };
+    const liveClass = await LiveClass.findOne({ where: { id: classId, tutorId: user.id } });
+    if (!liveClass) return { error: 'Live class not found or unauthorized' };
 
-    await lesson.destroy();
+    liveClass.meetLink = meetLink || '';
+    await liveClass.save();
 
-    revalidatePath('/admin');
+    revalidatePath('/tutor/classes');
     return { success: true };
   } catch (error) {
-    console.error('Delete lesson error:', error);
-    return { error: 'Failed to delete lesson' };
+    console.error('Update meet link error:', error);
+    return { error: 'Failed to update meet link' };
   }
 }
 
 // ==========================================
-// 4. PUBLIC ACTIONS
+// 4. PUBLIC & OTHER ACTIONS
 // ==========================================
 
 export async function submitInquiryAction(formData: FormData) {
@@ -510,7 +501,6 @@ export async function submitTutorApplication(formData: FormData) {
   }
 
   try {
-    // Check if an application already exists
     const existing = await TutorApplication.findOne({ where: { email } });
     if (existing) {
       return { error: 'An application with this email already exists.' };
@@ -540,33 +530,28 @@ export async function approveTutorApplication(applicationId: string) {
     if (!application) return { error: 'Application not found' };
     if (application.status !== 'PENDING') return { error: 'Application already processed' };
 
-    // 1. Mark as approved
     application.status = 'APPROVED';
     await application.save();
 
-    // 2. Create the User (if they don't exist)
     let user = await User.findOne({ where: { email: application.email } });
     if (!user) {
       user = await User.create({
         email: application.email,
         name: application.fullName,
-        passwordHash: '', // Empty because they will set it via reset link
+        passwordHash: '', 
         role: 'TUTOR',
       });
     } else {
-      // If user exists (e.g. as a STUDENT), just upgrade their role
       user.role = 'TUTOR';
       await user.save();
     }
 
-    // 3. Generate a secure random token
     const rawToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
     const encoder = new TextEncoder();
     const data = encoder.encode(rawToken);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashedToken = Buffer.from(hashBuffer).toString('hex');
 
-    // 4. Store hashed token in DB (expire in 7 days for new tutors)
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await PasswordResetToken.create({
       userId: user.id,
@@ -574,9 +559,7 @@ export async function approveTutorApplication(applicationId: string) {
       expiresAt,
     });
 
-    // 5. Send approval email with the reset link
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    // We can reuse the reset-password page for this!
     const setPasswordUrl = `${baseUrl}/reset-password?token=${rawToken}`;
 
     await sendTutorApprovalEmail(application.email, application.fullName, setPasswordUrl);
@@ -625,7 +608,6 @@ export async function updateTutorProfile(formData: FormData) {
     if (avatarFile && avatarFile.size > 0) {
       const bytes = await avatarFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      // Clean filename
       const safeName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '');
       const uniqueName = `${user.id}-${Date.now()}-${safeName}`;
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -649,35 +631,44 @@ export async function updateTutorProfile(formData: FormData) {
   }
 }
 
-export async function createCourse(formData: FormData) {
+export async function updateStudentProfile(formData: FormData) {
   const user = await requireAuth();
-  if (user.role !== 'TUTOR') return { error: 'Unauthorized' };
+  
+  const name = formData.get('name') as string;
+  const bio = formData.get('bio') as string;
+  const avatarFile = formData.get('avatar') as File | null;
 
   try {
-    const title = formData.get('title') as string;
-    const slug = slugify(title) + '-' + Date.now();
-    const description = formData.get('description') as string;
-    const duration = parseInt(formData.get('duration') as string, 10) || 0;
-    const level = formData.get('level') as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-    const price = parseFloat(formData.get('price') as string) || 0;
-    
-    // Create course
-    await Course.create({
-      title,
-      slug,
-      description,
-      duration,
-      level,
-      price,
-      status: 'DRAFT',
-      instructorId: user.id,
-    });
+    const dbUser = await User.findByPk(user.id);
+    if (!dbUser) return { error: 'User not found' };
 
-    revalidatePath('/tutor/courses');
+    if (name) dbUser.name = name;
+    if (bio !== null) dbUser.bio = bio;
+
+    if (avatarFile && avatarFile.size > 0) {
+      const bytes = await avatarFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const safeName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '');
+      const uniqueName = `student-${user.id}-${Date.now()}-${safeName}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      try {
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+      } catch (e) {}
+      
+      const filePath = path.join(uploadDir, uniqueName);
+      await fs.promises.writeFile(filePath, buffer);
+      
+      dbUser.avatar = `/uploads/${uniqueName}`;
+    }
+
+    await dbUser.save();
+
+    revalidatePath('/dashboard/profile');
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('Create course error:', error);
-    return { error: 'Failed to create course' };
+    console.error('Update student profile error:', error);
+    return { error: 'Failed to update profile' };
   }
 }
 
@@ -772,4 +763,3 @@ export async function adminDeleteCoupon(couponId: string) {
   await Coupon.destroy({ where: { id: couponId } });
   revalidatePath('/admin/coupons');
 }
-

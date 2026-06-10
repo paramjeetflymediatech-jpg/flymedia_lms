@@ -4,42 +4,40 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function CourseEnrollWidget({ course, user, isEnrolled }: { course: any, user: any, isEnrolled: boolean }) {
-  const [batchMode, setBatchMode] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
+export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: any, user: any, isEnrolled: boolean }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleEnroll = async () => {
     if (!user) {
-      router.push(`/login?callbackUrl=/courses/${course.slug}`);
+      router.push(`/login?callbackUrl=/packages/${pkg.slug}`);
       return;
     }
     
     setLoading(true);
     try {
-      if (!course.price || Number(course.price) === 0) {
-        // Free course, enroll directly via API or server action (simulating here, we will create a dedicated free enroll endpoint)
+      if (!pkg.price || Number(pkg.price) === 0) {
+        // Free package, enroll directly via API
         const res = await fetch('/api/payment/free-enroll', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ courseId: course.id, batchMode })
+          body: JSON.stringify({ packageId: pkg.id })
         });
         if (res.ok) {
-          window.location.href = `/dashboard/courses/${course.slug}`;
+          window.location.href = `/dashboard`;
         } else {
           alert('Failed to enroll.');
         }
         return;
       }
 
-      // Paid course -> Initiate PhonePe Payment
+      // Paid package -> Initiate Payment (e.g. PhonePe)
       const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          courseId: course.id,
-          amount: Number(course.price),
-          batchMode
+          packageId: pkg.id,
+          amount: Number(pkg.price)
         }),
       });
 
@@ -66,9 +64,9 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Enrollment Plan</h3>
           <div className="flex items-end space-x-2">
             <span className="text-5xl font-black text-slate-900 tracking-tight">
-              {course.price && Number(course.price) > 0 ? `₹${course.price}` : 'Free'}
+              {pkg.price && Number(pkg.price) > 0 ? `₹${pkg.price}` : 'Free'}
             </span>
-            {course.price && Number(course.price) > 0 && (
+            {pkg.price && Number(pkg.price) > 0 && (
               <span className="text-sm text-slate-500 font-bold mb-1">/ one-time</span>
             )}
           </div>
@@ -77,11 +75,11 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
         <div className="space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6">
           <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50">
             <span className="flex items-center space-x-2">
-              <span className="text-lg">⏱️</span>
-              <span className="font-bold text-slate-700">Duration</span>
+              <span className="text-lg">📅</span>
+              <span className="font-bold text-slate-700">Live Classes</span>
             </span>
             <span className="font-black text-slate-900">
-              {course.duration ? Math.round(course.duration / 60) : 0} hours
+              {pkg.liveClasses ? pkg.liveClasses.length : 0} Sessions
             </span>
           </div>
 
@@ -92,59 +90,17 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
             </span>
             <span className="font-black text-slate-900">Included</span>
           </div>
-
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50">
-            <span className="flex items-center space-x-2">
-              <span className="text-lg">📶</span>
-              <span className="font-bold text-slate-700">Level</span>
-            </span>
-            <span className="font-black text-slate-900 capitalize">
-              {course.level.toLowerCase()}
-            </span>
-          </div>
         </div>
-
-        {/* Batch Mode Selection */}
-        {!isEnrolled && (
-          <div className="pt-4 border-t border-slate-100 space-y-3">
-            <h4 className="text-sm font-bold text-slate-700">Select Batch Mode:</h4>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setBatchMode('ONLINE')}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                  batchMode === 'ONLINE'
-                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                Online
-              </button>
-              <button
-                type="button"
-                onClick={() => setBatchMode('OFFLINE')}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                  batchMode === 'OFFLINE'
-                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                Offline
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
 
       <div className="relative z-10 pt-4">
         {user ? (
           isEnrolled ? (
             <Link
-              href={`/dashboard/courses/${course.slug}`}
+              href={`/dashboard`}
               className="w-full inline-flex items-center justify-center px-6 py-5 font-black text-white bg-slate-900 hover:bg-slate-800 rounded-2xl transition-all shadow-md group"
             >
-              <span>Enter Classroom</span>
+              <span>Go to Dashboard</span>
               <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
             </Link>
           ) : (
@@ -156,7 +112,7 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? 'Processing...' : (course.price && Number(course.price) > 0 ? `Pay ₹${course.price} & Enroll` : 'Instant Enrollment')}
+                {loading ? 'Processing...' : (pkg.price && Number(pkg.price) > 0 ? `Pay ₹${pkg.price} & Enroll` : 'Instant Enrollment')}
                 {!loading && <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
               </span>
             </button>
@@ -164,7 +120,7 @@ export default function CourseEnrollWidget({ course, user, isEnrolled }: { cours
         ) : (
           <div className="space-y-4">
             <Link
-              href={`/login?callbackUrl=/courses/${course.slug}`}
+              href={`/login?callbackUrl=/packages/${pkg.slug}`}
               style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               className="w-full relative overflow-hidden group flex items-center justify-center py-5 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-1 hover:shadow-rose-500/40"
             >

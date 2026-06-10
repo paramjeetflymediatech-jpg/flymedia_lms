@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '../../../../src/lib/auth';
-import { Course, Enrollment } from '../../../../src/db/models';
+import { Package, Enrollment } from '../../../../src/db/models';
 
 export async function POST(req: Request) {
   try {
@@ -9,29 +9,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { courseId, batchMode } = await req.json();
-    if (!courseId) {
-      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+    const { packageId, batchMode } = await req.json();
+    if (!packageId) {
+      return NextResponse.json({ error: 'Package ID is required' }, { status: 400 });
     }
 
-    const course = await Course.findByPk(courseId);
-    if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    const pkg = await Package.findByPk(packageId);
+    if (!pkg) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
-    if (course.price && Number(course.price) > 0) {
-      return NextResponse.json({ error: 'This course is not free' }, { status: 400 });
+    if (pkg.price && Number(pkg.price) > 0) {
+      return NextResponse.json({ error: 'This package is not free' }, { status: 400 });
     }
 
     const existing = await Enrollment.findOne({
-      where: { userId: user.id, courseId: course.id }
+      where: { userId: user.id, packageId: pkg.id }
     });
 
     if (!existing) {
       await Enrollment.create({
         userId: user.id,
-        courseId: course.id,
-        batchMode: batchMode || 'ONLINE',
+        packageId: pkg.id,
       });
     }
 

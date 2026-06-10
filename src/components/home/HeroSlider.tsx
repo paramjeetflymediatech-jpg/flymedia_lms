@@ -115,7 +115,7 @@ export default function HeroSlider() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-8">
           <Link
-            href="/courses"
+            href="/packages"
             className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 font-extrabold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 rounded-2xl shadow-xl shadow-orange-500/25 transition-all text-lg hover:-translate-y-1"
           >
             Explore Programs
