@@ -1,7 +1,7 @@
 import { requireAdmin } from '../../../src/lib/auth';
 import { TutorApplication } from '../../../src/db/models';
 import Link from 'next/link';
-import { rejectTutorApplication, approveTutorApplication } from '../../actions';
+import { rejectTutorApplication, approveTutorApplication, deleteTutorApplication } from '../../actions';
 import Pagination from '../../../src/components/admin/Pagination';
 
 export const revalidate = 0;
@@ -106,6 +106,16 @@ export default async function TutorApplicationsPage({
                         <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-slate-500 hover:text-blue-600 transition-colors border border-slate-200 px-3 py-1.5 rounded bg-white hover:bg-slate-50 whitespace-nowrap">
                           View Details
                         </Link>
+                        <form
+                          action={async () => {
+                            'use server';
+                            await deleteTutorApplication(app.id);
+                          }}
+                        >
+                          <button type="submit" className="text-[10px] font-bold text-red-600 hover:text-white transition-colors border border-red-200 hover:border-red-600 px-3 py-1.5 rounded bg-red-50 hover:bg-red-600 whitespace-nowrap">
+                            Delete
+                          </button>
+                        </form>
                       </div>
                     )}
                   </td>

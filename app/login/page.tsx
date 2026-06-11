@@ -36,7 +36,7 @@ export default function LoginPage() {
             
             <div className="absolute inset-0 flex flex-col justify-center p-16 lg:p-24 pb-20">
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold tracking-wider uppercase mb-6 animate-pulse">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-wider uppercase mb-6 animate-pulse">
                   Learn. Grow. Succeed.
                 </div>
 

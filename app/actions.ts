@@ -653,6 +653,23 @@ export async function rejectTutorApplication(applicationId: string) {
   }
 }
 
+export async function deleteTutorApplication(applicationId: string) {
+  await requireAdmin();
+
+  try {
+    const application = await TutorApplication.findByPk(applicationId);
+    if (!application) return { error: 'Application not found' };
+
+    await application.destroy();
+
+    revalidatePath('/admin/tutor-applications');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete tutor application error:', error);
+    return { error: 'Failed to delete application' };
+  }
+}
+
 export async function updateTutorProfile(formData: FormData) {
   const user = await requireAuth();
   if (user.role !== 'TUTOR') return { error: 'Unauthorized' };
@@ -752,6 +769,13 @@ export async function deleteUserAction(userId: string) {
   if (admin.id === userId) {
     throw new Error('Cannot delete yourself.');
   }
+
+  const targetUser = await User.findByPk(userId);
+  if (targetUser) {
+    // Also delete any tutor application associated with this user's email
+    await TutorApplication.destroy({ where: { email: targetUser.email } });
+  }
+
   await User.destroy({ where: { id: userId } });
   revalidatePath('/admin/users');
 }
