@@ -34,8 +34,8 @@ export default function TutorClassRow({ item, isPast, startTime }: TutorClassRow
         {item.Package?.title || 'Unknown Package'}
       </td>
       <td className="px-6 py-4">
-        <div className="text-xs font-bold text-slate-700">{startTime.toLocaleDateString()}</div>
-        <div className="text-xs text-slate-500">{startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+        <div suppressHydrationWarning className="text-xs font-bold text-slate-700">{startTime.toLocaleDateString()}</div>
+        <div suppressHydrationWarning className="text-xs text-slate-500">{startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
       </td>
       <td className="px-6 py-4 text-right">
         {!isPast ? (

@@ -3,9 +3,30 @@ import Header from '../src/components/layout/Header';
 import Footer from '../src/components/layout/Footer';
 import HeroSlider from '../src/components/home/HeroSlider';
 import CallbackForm from '../src/components/home/CallbackForm';
-import { Package } from '../src/db/models';
+import { Package, SeoSetting } from '../src/db/models';
+import { Metadata } from 'next';
 
 export const revalidate = 0; // Dynamic rendering to fetch courses
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const seo = await SeoSetting.findOne({ where: { pagePath: '/' } });
+    if (seo) {
+      return {
+        title: seo.title,
+        description: seo.description,
+        keywords: seo.keywords ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined,
+      };
+    }
+  } catch (e) {
+    console.error('Failed to load SEO for homepage:', e);
+  }
+  
+  return {
+    title: "Flymedia Academy LMS",
+    description: "Premium learning management system.",
+  };
+}
 
 export default async function HomePage() {
   let packages: Package[] = [];

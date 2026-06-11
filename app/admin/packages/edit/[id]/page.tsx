@@ -153,12 +153,19 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                   required
                   className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
                 />
-                <input
+                <select
                   name="duration"
-                  type="number"
-                  placeholder="Duration (mins) - Default 60"
+                  required
                   className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-                />
+                >
+                  <option value="">Duration (Default 60 mins)</option>
+                  <option value="30">30 Minutes</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">60 Minutes (1 Hour)</option>
+                  <option value="90">90 Minutes (1.5 Hours)</option>
+                  <option value="120">120 Minutes (2 Hours)</option>
+                  <option value="180">180 Minutes (3 Hours)</option>
+                </select>
               </div>
               <input
                 name="meetLink"
@@ -177,7 +184,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               </select>
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white gradient-bg rounded-xl transition-all shadow"
+                className="w-full inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all shadow"
               >
                 Schedule Class
               </button>

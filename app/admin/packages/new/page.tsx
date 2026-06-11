@@ -82,7 +82,7 @@ export default async function CreatePackagePage() {
           <div className="pt-4 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white gradient-bg hover:opacity-90 rounded-xl transition-all shadow-md text-sm"
+              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all shadow-md text-sm"
             >
               Create Package
             </button>

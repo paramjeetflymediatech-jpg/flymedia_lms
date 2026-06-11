@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
 
@@ -221,6 +221,63 @@ export async function adminDeleteEnrollment(enrollmentId: string) {
   }
 }
 
+export async function adminCreateEnrollment(formData: FormData) {
+  await requireAdmin();
+
+  const userId = formData.get('userId') as string;
+  const packageId = formData.get('packageId') as string;
+
+  if (!userId || !packageId) {
+    return { error: 'Student and Package are required' };
+  }
+
+  try {
+    const existing = await Enrollment.findOne({
+      where: { userId, packageId },
+    });
+
+    if (existing) {
+      return { error: 'Student is already enrolled in this package' };
+    }
+
+    await Enrollment.create({
+      userId,
+      packageId,
+    });
+
+    revalidatePath('/admin/enrollments');
+    return { success: true };
+  } catch (error) {
+    console.error('Create enrollment error:', error);
+    return { error: 'Failed to create enrollment' };
+  }
+}
+
+export async function adminUpdateEnrollment(enrollmentId: string, formData: FormData) {
+  await requireAdmin();
+
+  const status = formData.get('status') as 'ACTIVE' | 'COMPLETED';
+
+  try {
+    const enr = await Enrollment.findByPk(enrollmentId);
+    if (!enr) return { error: 'Enrollment not found' };
+
+    if (status === 'COMPLETED' && !enr.completedAt) {
+      enr.completedAt = new Date();
+    } else if (status === 'ACTIVE' && enr.completedAt) {
+      enr.completedAt = null;
+    }
+
+    await enr.save();
+    revalidatePath('/admin/enrollments');
+    revalidatePath(`/admin/enrollments/${enrollmentId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Update enrollment error:', error);
+    return { error: 'Failed to update enrollment' };
+  }
+}
+
 // ==========================================
 // 3. ADMIN MANAGEMENT ACTIONS
 // ==========================================
@@ -381,7 +438,7 @@ export async function adminCreateLiveClass(formData: FormData) {
       duration,
     });
 
-    revalidatePath(`/admin/packages/${packageId}`);
+    revalidatePath(`/admin/packages/edit/${packageId}`);
     return { success: true };
   } catch (error) {
     console.error('Create live class error:', error);
@@ -398,7 +455,7 @@ export async function adminDeleteLiveClass(classId: string, packageId: string) {
 
     await liveClass.destroy();
 
-    revalidatePath(`/admin/packages/${packageId}`);
+    revalidatePath(`/admin/packages/edit/${packageId}`);
     return { success: true };
   } catch (error) {
     console.error('Delete live class error:', error);
@@ -432,7 +489,7 @@ export async function adminUpdateLiveClass(classId: string, packageId: string, f
 
     await liveClass.save();
 
-    revalidatePath(`/admin/packages/${packageId}`);
+    revalidatePath(`/admin/packages/edit/${packageId}`);
     return { success: true };
   } catch (error) {
     console.error('Update live class error:', error);
@@ -711,6 +768,209 @@ export async function updateTutorProfile(formData: FormData) {
   }
 }
 
+// ==========================================
+// 4. COUPON ACTIONS
+// ==========================================
+
+export async function adminCreateCoupon(formData: FormData) {
+  await requireAdmin();
+
+  const code = (formData.get('code') as string || '').trim().toUpperCase();
+  const discountPercentage = parseInt(formData.get('discountPercentage') as string, 10);
+  const expiresAtStr = formData.get('expiresAt') as string;
+
+  if (!code || isNaN(discountPercentage)) {
+    return { error: 'Coupon code and discount percentage are required.' };
+  }
+
+  try {
+    const existing = await Coupon.findOne({ where: { code } });
+    if (existing) {
+      return { error: 'Coupon code already exists.' };
+    }
+
+    await Coupon.create({
+      code,
+      discountPercentage,
+      expiresAt: expiresAtStr ? new Date(expiresAtStr) : null,
+    });
+
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (error) {
+    console.error('Create coupon error:', error);
+    return { error: 'Failed to create coupon' };
+  }
+}
+
+export async function adminDeleteCoupon(couponId: string) {
+  await requireAdmin();
+
+  try {
+    const coupon = await Coupon.findByPk(couponId);
+    if (!coupon) return { error: 'Coupon not found' };
+
+    await coupon.destroy();
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete coupon error:', error);
+    return { error: 'Failed to delete coupon' };
+  }
+}
+
+export async function adminUpdateCoupon(couponId: string, formData: FormData) {
+  await requireAdmin();
+
+  const code = (formData.get('code') as string || '').trim().toUpperCase();
+  const discountPercentage = parseInt(formData.get('discountPercentage') as string, 10);
+  const expiresAtStr = formData.get('expiresAt') as string;
+
+  if (!code || isNaN(discountPercentage)) {
+    return { error: 'Coupon code and discount percentage are required.' };
+  }
+
+  try {
+    const coupon = await Coupon.findByPk(couponId);
+    if (!coupon) return { error: 'Coupon not found' };
+
+    if (coupon.code !== code) {
+      const existing = await Coupon.findOne({ where: { code } });
+      if (existing) {
+        return { error: 'Coupon code already exists.' };
+      }
+    }
+
+    coupon.code = code;
+    coupon.discountPercentage = discountPercentage;
+    coupon.expiresAt = expiresAtStr ? new Date(expiresAtStr) : null;
+
+    await coupon.save();
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (error) {
+    console.error('Update coupon error:', error);
+    return { error: 'Failed to update coupon' };
+  }
+}
+
+// ==========================================
+// 5. SEO ACTIONS
+// ==========================================
+
+export async function adminCreateSeo(formData: FormData) {
+  await requireAdmin();
+
+  let pagePath = (formData.get('pagePath') as string || '').trim();
+  const title = (formData.get('title') as string || '').trim();
+  const description = (formData.get('description') as string || '').trim();
+  const keywords = (formData.get('keywords') as string || '').trim();
+  const headerScript = (formData.get('headerScript') as string || '').trim();
+  const footerScript = (formData.get('footerScript') as string || '').trim();
+
+  if (!pagePath || !title || !description) {
+    return { error: 'Path, Title, and Description are required.' };
+  }
+
+  // Allow 'GLOBAL' as a valid path without prefixing with '/'
+  if (pagePath !== 'GLOBAL' && !pagePath.startsWith('/')) {
+    pagePath = '/' + pagePath;
+  }
+
+  try {
+    const existing = await SeoSetting.findOne({ where: { pagePath } });
+    if (existing) {
+      return { error: 'SEO setting for this path already exists.' };
+    }
+
+    await SeoSetting.create({
+      pagePath,
+      title,
+      description,
+      keywords: keywords || null,
+      headerScript: headerScript || null,
+      footerScript: footerScript || null,
+    });
+
+    revalidatePath('/admin/seo');
+    revalidatePath(pagePath);
+    return { success: true };
+  } catch (error) {
+    console.error('Create SEO error:', error);
+    return { error: 'Failed to create SEO setting' };
+  }
+}
+
+export async function adminUpdateSeo(seoId: string, formData: FormData) {
+  await requireAdmin();
+
+  let pagePath = (formData.get('pagePath') as string || '').trim();
+  const title = (formData.get('title') as string || '').trim();
+  const description = (formData.get('description') as string || '').trim();
+  const keywords = (formData.get('keywords') as string || '').trim();
+  const headerScript = (formData.get('headerScript') as string || '').trim();
+  const footerScript = (formData.get('footerScript') as string || '').trim();
+
+  if (!pagePath || !title || !description) {
+    return { error: 'Path, Title, and Description are required.' };
+  }
+
+  if (pagePath !== 'GLOBAL' && !pagePath.startsWith('/')) {
+    pagePath = '/' + pagePath;
+  }
+
+  try {
+    const seo = await SeoSetting.findByPk(seoId);
+    if (!seo) return { error: 'SEO setting not found' };
+
+    if (seo.pagePath !== pagePath) {
+      const existing = await SeoSetting.findOne({ where: { pagePath } });
+      if (existing) {
+        return { error: 'SEO setting for this path already exists.' };
+      }
+    }
+
+    const oldPath = seo.pagePath;
+
+    seo.pagePath = pagePath;
+    seo.title = title;
+    seo.description = description;
+    seo.keywords = keywords || null;
+    seo.headerScript = headerScript || null;
+    seo.footerScript = footerScript || null;
+
+    await seo.save();
+    
+    revalidatePath('/admin/seo');
+    revalidatePath(oldPath);
+    if (oldPath !== pagePath) revalidatePath(pagePath);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Update SEO error:', error);
+    return { error: 'Failed to update SEO setting' };
+  }
+}
+
+export async function adminDeleteSeo(seoId: string) {
+  await requireAdmin();
+
+  try {
+    const seo = await SeoSetting.findByPk(seoId);
+    if (!seo) return { error: 'SEO setting not found' };
+
+    const pagePath = seo.pagePath;
+    await seo.destroy();
+    
+    revalidatePath('/admin/seo');
+    revalidatePath(pagePath);
+    return { success: true };
+  } catch (error) {
+    console.error('Delete SEO error:', error);
+    return { error: 'Failed to delete SEO setting' };
+  }
+}
+
 export async function updateStudentProfile(formData: FormData) {
   const user = await requireAuth();
 
@@ -780,6 +1040,49 @@ export async function deleteUserAction(userId: string) {
   revalidatePath('/admin/users');
 }
 
+export async function adminUpdateUser(userId: string, formData: FormData) {
+  await requireAdmin();
+
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const role = formData.get('role') as 'STUDENT' | 'TUTOR' | 'ADMIN';
+  const password = formData.get('password') as string;
+
+  if (!email || !role || !name) {
+    return { error: 'Name, Email, and Role are required.' };
+  }
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) return { error: 'User not found' };
+
+    // Check email uniqueness if email changed
+    if (user.email !== email) {
+      const existing = await User.findOne({ where: { email } });
+      if (existing) {
+        return { error: 'A user with this email already exists.' };
+      }
+    }
+
+    user.name = name;
+    user.email = email;
+    user.role = role;
+
+    if (password) {
+      user.passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${userId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Update user error:', error);
+    return { error: 'Failed to update user' };
+  }
+}
+
 export async function adminInviteUser(formData: FormData) {
   await requireAdmin();
 
@@ -800,8 +1103,8 @@ export async function adminInviteUser(formData: FormData) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     await User.create({
-      name,
       email,
+      name,
       role,
       passwordHash,
     });
@@ -810,7 +1113,7 @@ export async function adminInviteUser(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error('Invite user error:', error);
-    return { error: 'Failed to create user.' };
+    return { error: 'Failed to invite user' };
   }
 }
 
@@ -820,33 +1123,3 @@ export async function deletePaymentAction(paymentId: string) {
   revalidatePath('/admin/payments');
 }
 
-export async function adminCreateCoupon(formData: FormData) {
-  await requireAdmin();
-  const code = formData.get('code') as string;
-  const discountPercentage = Number(formData.get('discountPercentage') || 0);
-
-  if (!code || !discountPercentage) {
-    return { error: 'Code and Discount Percentage are required.' };
-  }
-
-  try {
-    await Coupon.create({
-      code: code.toUpperCase(),
-      discountPercentage,
-    });
-    revalidatePath('/admin/coupons');
-    return { success: true };
-  } catch (error: any) {
-    console.error(error);
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      return { error: 'Coupon code already exists.' };
-    }
-    return { error: 'Failed to create coupon.' };
-  }
-}
-
-export async function adminDeleteCoupon(couponId: string) {
-  await requireAdmin();
-  await Coupon.destroy({ where: { id: couponId } });
-  revalidatePath('/admin/coupons');
-}

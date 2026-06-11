@@ -37,7 +37,7 @@ export default function InviteUserModal() {
         onClick={() => setIsOpen(true)}
         className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all"
       >
-        + Invite User
+        + Add User
       </button>
     );
   }

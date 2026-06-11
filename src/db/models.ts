@@ -282,6 +282,36 @@ TutorApplication.init(
 );
 
 // ==========================================
+// 11. SEO SETTING MODEL
+// ==========================================
+export class SeoSetting extends Model<InferAttributes<SeoSetting>, InferCreationAttributes<SeoSetting>> {
+  declare id: CreationOptional<string>;
+  declare pagePath: string; // e.g. '/', '/courses', or 'GLOBAL'
+  declare title: string;
+  declare description: string;
+  declare keywords: CreationOptional<string | null>;
+  declare headerScript: CreationOptional<string | null>;
+  declare footerScript: CreationOptional<string | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+SeoSetting.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    pagePath: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    title: { type: DataTypes.STRING(255), allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: false },
+    keywords: { type: DataTypes.TEXT, allowNull: true },
+    headerScript: { type: DataTypes.TEXT, allowNull: true },
+    footerScript: { type: DataTypes.TEXT, allowNull: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'SeoSetting', tableName: 'seo_settings' }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 
