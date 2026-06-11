@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -53,7 +53,7 @@ export async function loginAction(prevState: any, formData: FormData) {
       role: user.role,
       name: user.name,
     });
-    
+
     redirectUrl = user.role === 'ADMIN' ? '/admin' : user.role === 'TUTOR' ? '/tutor/dashboard' : '/dashboard';
   } catch (error: any) {
     console.error('Login error:', error);
@@ -231,21 +231,21 @@ export async function adminCreatePackage(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
-  
+
   let finalThumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
-  
+
   const file = formData.get('thumbnailFile') as File | null;
   if (file && file.size > 0) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'packages');
-    
+
     // Ensure dir exists
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
+
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
     finalThumbnailUrl = `/uploads/packages/${fileName}`;
@@ -289,20 +289,20 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
   const description = formData.get('description') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
-  
+
   let finalThumbnailUrl = undefined;
-  
+
   const file = formData.get('thumbnailFile') as File | null;
   if (file && file.size > 0) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'packages');
-    
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
+
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
     finalThumbnailUrl = `/uploads/packages/${fileName}`;
@@ -363,7 +363,7 @@ export async function adminCreateLiveClass(formData: FormData) {
   const packageId = formData.get('packageId') as string;
   let tutorId: string | undefined = formData.get('tutorId') as string;
   if (!tutorId || tutorId === '') tutorId = undefined;
-  
+
   const title = formData.get('title') as string;
   const meetLink = formData.get('meetLink') as string;
   const startTimeStr = formData.get('startTime') as string;
@@ -482,6 +482,38 @@ export async function submitInquiryAction(formData: FormData) {
       status: 'NEW',
     });
 
+    // Notify the admin
+    sendMail({
+      to: 'amandeepkumar.flymediatech@gmail.com', // Using your email from .env
+      subject: `New Contact Inquiry from ${name}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #0f172a;">New Contact Inquiry</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Message:</strong></p>
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${message}</div>
+        </div>
+      `,
+    }).catch((e: any) => console.error("Failed to send inquiry email:", e));
+
+    // Send confirmation email to the user
+    sendMail({
+      to: email,
+      subject: `Thank you for contacting Flymedia Technology!`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #f97316;">Hi ${name},</h2>
+          <p>Thank you for reaching out to us! We have received your inquiry.</p>
+          <p>Our admissions team will review your message and get back to you within 24 hours.</p>
+          <p><strong>Your Message:</strong></p>
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap; margin-bottom: 20px;">${message}</div>
+          <p>Best regards,<br/>The Flymedia Technology Team</p>
+        </div>
+      `,
+    }).catch((e: any) => console.error("Failed to send confirmation email to user:", e));
+
     return { success: true, message: 'Inquiry submitted successfully!' };
   } catch (error) {
     console.error('Inquiry submission error:', error);
@@ -515,6 +547,37 @@ export async function submitTutorApplication(formData: FormData) {
       status: 'PENDING',
     });
 
+    // Notify the admin
+    sendMail({
+      to: 'amandeepkumar.flymediatech@gmail.com',
+      subject: `New Tutor Application: ${fullName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #0f172a;">New Tutor Application</h2>
+          <p><strong>Name:</strong> ${fullName}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Expertise:</strong> ${expertise}</p>
+          <p><strong>Experience:</strong></p>
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${experience}</div>
+        </div>
+      `,
+    }).catch((e: any) => console.error("Failed to send admin email for tutor application:", e));
+
+    // Send confirmation email to the applicant
+    sendMail({
+      to: email,
+      subject: `Application Received - Flymedia Technology`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #f97316;">Hi ${fullName},</h2>
+          <p>Thank you for applying to be a tutor at Flymedia Technology!</p>
+          <p>We have successfully received your application. Our team will review your profile and experience in <strong>${expertise}</strong>, and we'll get back to you soon regarding the next steps.</p>
+          <p>Best regards,<br/>The Flymedia Technology Team</p>
+        </div>
+      `,
+    }).catch((e: any) => console.error("Failed to send confirmation email to tutor applicant:", e));
+
     return { success: true };
   } catch (error) {
     console.error('Tutor application submission error:', error);
@@ -538,7 +601,7 @@ export async function approveTutorApplication(applicationId: string) {
       user = await User.create({
         email: application.email,
         name: application.fullName,
-        passwordHash: '', 
+        passwordHash: '',
         role: 'TUTOR',
       });
     } else {
@@ -613,11 +676,11 @@ export async function updateTutorProfile(formData: FormData) {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
       try {
         await fs.promises.mkdir(uploadDir, { recursive: true });
-      } catch (e) {}
-      
+      } catch (e) { }
+
       const filePath = path.join(uploadDir, uniqueName);
       await fs.promises.writeFile(filePath, buffer);
-      
+
       dbUser.avatar = `/uploads/${uniqueName}`;
     }
 
@@ -633,7 +696,7 @@ export async function updateTutorProfile(formData: FormData) {
 
 export async function updateStudentProfile(formData: FormData) {
   const user = await requireAuth();
-  
+
   const name = formData.get('name') as string;
   const bio = formData.get('bio') as string;
   const avatarFile = formData.get('avatar') as File | null;
@@ -653,11 +716,11 @@ export async function updateStudentProfile(formData: FormData) {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
       try {
         await fs.promises.mkdir(uploadDir, { recursive: true });
-      } catch (e) {}
-      
+      } catch (e) { }
+
       const filePath = path.join(uploadDir, uniqueName);
       await fs.promises.writeFile(filePath, buffer);
-      
+
       dbUser.avatar = `/uploads/${uniqueName}`;
     }
 
@@ -695,7 +758,7 @@ export async function deleteUserAction(userId: string) {
 
 export async function adminInviteUser(formData: FormData) {
   await requireAdmin();
-  
+
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const role = formData.get('role') as 'STUDENT' | 'TUTOR' | 'ADMIN';
@@ -737,7 +800,7 @@ export async function adminCreateCoupon(formData: FormData) {
   await requireAdmin();
   const code = formData.get('code') as string;
   const discountPercentage = Number(formData.get('discountPercentage') || 0);
-  
+
   if (!code || !discountPercentage) {
     return { error: 'Code and Discount Percentage are required.' };
   }

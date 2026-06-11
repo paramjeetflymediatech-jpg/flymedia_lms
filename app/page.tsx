@@ -221,7 +221,7 @@ export default async function HomePage() {
                 <div className="relative z-10">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-orange-500 to-rose-500 p-[2px] shadow-sm">
-                      <div className="h-full w-full bg-white rounded-full flex items-center justify-center font-black text-lg text-slate-900">AG</div>
+                      <img src="/Anujgupta.png" alt="Anuj Gupta" className="h-full w-full object-cover rounded-full bg-white" />
                     </div>
                     <div>
                       <h4 className="font-bold text-lg text-slate-900">Anuj Gupta</h4>

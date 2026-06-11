@@ -93,9 +93,7 @@ export default function AboutPage() {
               
               <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-8">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-[2rem] bg-gradient-to-tr from-orange-500 to-rose-500 p-[3px] shadow-lg shadow-orange-500/20">
-                  <div className="w-full h-full bg-white rounded-[1.8rem] flex items-center justify-center font-black text-4xl text-slate-900">
-                    AG
-                  </div>
+                  <img src="/Anujgupta.png" alt="Anuj Gupta" className="w-full h-full object-cover rounded-[1.8rem] bg-white" />
                 </div>
                 <div className="space-y-4">
                   <div>

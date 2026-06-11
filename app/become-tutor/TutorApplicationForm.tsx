@@ -13,10 +13,18 @@ export default function TutorApplicationForm() {
     experience: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isExpertiseOpen, setIsExpertiseOpen] = useState(false);
 
+  const expertiseOptions = [
+    "Full Stack Developer", "Frontend Developer", "Backend Developer",
+    "Digital Marketing", "Video Editor", "Graphic Designer",
+    "UI/UX Designer", "Data Science & AI", "Mobile App Developer",
+    "Cloud Computing & DevOps", "IELTS / English Language",
+    "Business & Management", "Other"
+  ];
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
     else if (formData.fullName.trim().length < 3) newErrors.fullName = "Name must be at least 3 characters";
 
@@ -48,9 +56,9 @@ export default function TutorApplicationForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setLoading(true);
-    
+
     const formDataObj = new FormData();
     formDataObj.append('fullName', formData.fullName);
     formDataObj.append('email', formData.email);
@@ -62,7 +70,7 @@ export default function TutorApplicationForm() {
       // Dynamic import to avoid client-side bundling issues with server actions
       const { submitTutorApplication } = await import('../../app/actions');
       const result = await submitTutorApplication(formDataObj);
-      
+
       if (result.error) {
         setErrors({ submit: result.error });
       } else {
@@ -160,31 +168,41 @@ export default function TutorApplicationForm() {
           Area of Expertise
         </label>
         <div className="relative">
-          <select
-            id="expertise"
-            name="expertise"
-            value={formData.expertise}
-            onChange={handleChange}
-            className={`block w-full rounded-2xl border ${errors.expertise ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500/10 text-red-900' : 'border-slate-200 bg-slate-50 hover:bg-white focus:bg-white focus:border-orange-500 focus:ring-orange-500/10 text-slate-900'} px-4 py-3 focus:outline-none focus:ring-4 transition-all text-sm font-medium appearance-none cursor-pointer`}
+          <div
+            onClick={() => setIsExpertiseOpen(!isExpertiseOpen)}
+            className={`block w-full rounded-2xl border ${errors.expertise ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500/10 text-red-900' : 'border-slate-200 bg-slate-50 hover:bg-white focus:bg-white focus:border-orange-500 focus:ring-orange-500/10 text-slate-900'} px-4 py-3 focus:outline-none focus:ring-4 transition-all text-sm font-medium cursor-pointer flex justify-between items-center`}
           >
-            <option value="" disabled>Select your primary expertise...</option>
-            <option value="Full Stack Developer">Full Stack Developer</option>
-            <option value="Frontend Developer">Frontend Developer</option>
-            <option value="Backend Developer">Backend Developer</option>
-            <option value="Digital Marketing">Digital Marketing</option>
-            <option value="Video Editor">Video Editor</option>
-            <option value="Graphic Designer">Graphic Designer</option>
-            <option value="UI/UX Designer">UI/UX Designer</option>
-            <option value="Data Science & AI">Data Science & AI</option>
-            <option value="Mobile App Developer">Mobile App Developer</option>
-            <option value="Cloud Computing & DevOps">Cloud Computing & DevOps</option>
-            <option value="IELTS / English Language">IELTS / English Language</option>
-            <option value="Business & Management">Business & Management</option>
-            <option value="Other">Other</option>
-          </select>
-          <div className={`absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none ${errors.expertise ? 'text-red-400' : 'text-slate-400'}`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            <span className={formData.expertise ? "text-slate-900" : "text-slate-500"}>
+              {formData.expertise || "Select your primary expertise..."}
+            </span>
+            <svg className={`w-5 h-5 transition-transform ${isExpertiseOpen ? 'rotate-180' : ''} ${errors.expertise ? 'text-red-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
+          
+          {isExpertiseOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsExpertiseOpen(false)}
+              />
+              <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+                <ul className="max-h-60 overflow-y-auto py-2">
+                  {expertiseOptions.map((option) => (
+                    <li
+                      key={option}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, expertise: option }));
+                        if (errors.expertise) setErrors(prev => ({ ...prev, expertise: '' }));
+                        setIsExpertiseOpen(false);
+                      }}
+                      className={`px-4 py-3 text-sm cursor-pointer hover:bg-orange-50 transition-colors ${formData.expertise === option ? 'bg-orange-50 text-orange-600 font-bold' : 'text-slate-700 font-medium'}`}
+                    >
+                      {option}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
         {errors.expertise && <p className="text-red-500 text-xs font-bold mt-1 pl-1">{errors.expertise}</p>}
       </div>
