@@ -129,8 +129,8 @@ export async function forgotPasswordAction(prevState: any, formData: FormData) {
         expiresAt,
       });
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const resetUrl = `${baseUrl}reset-password?token=${rawToken}`;
+      const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
 
       await sendPasswordResetEmail(email, user.name || 'Student', resetUrl);
     }
@@ -622,8 +622,8 @@ export async function approveTutorApplication(applicationId: string) {
       expiresAt,
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const setPasswordUrl = `${baseUrl}reset-password?token=${rawToken}`;
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const setPasswordUrl = `${baseUrl}/reset-password?token=${rawToken}`;
 
     await sendTutorApprovalEmail(application.email, application.fullName, setPasswordUrl);
 
