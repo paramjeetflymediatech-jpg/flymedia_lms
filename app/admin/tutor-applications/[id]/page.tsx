@@ -110,7 +110,7 @@ export default async function TutorApplicationDetailsPage({
 
           <div>
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Professional Experience & Background</h3>
-            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-sm text-slate-700 leading-relaxed min-h-[200px] whitespace-pre-wrap">
+            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-sm text-slate-700 leading-relaxed min-h-[200px] whitespace-pre-wrap break-all">
               {application.experience}
             </div>
           </div>

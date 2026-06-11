@@ -560,7 +560,7 @@ export async function approveTutorApplication(applicationId: string) {
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const setPasswordUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+    const setPasswordUrl = `${baseUrl}reset-password?token=${rawToken}`;
 
     await sendTutorApprovalEmail(application.email, application.fullName, setPasswordUrl);
 
