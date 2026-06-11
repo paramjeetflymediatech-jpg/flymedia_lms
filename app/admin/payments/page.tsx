@@ -100,7 +100,7 @@ export default async function AdminPaymentsPage({
                         {p.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-xs">{p.batchMode}</td>
+                    <td className="px-6 py-4 text-xs">{p.provider}</td>
                     <td className="px-6 py-4 text-xs text-slate-400">
                       {new Date(p.createdAt).toLocaleDateString()}
                     </td>
