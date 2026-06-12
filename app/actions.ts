@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
 
@@ -473,6 +473,7 @@ export async function adminUpdateLiveClass(classId: string, packageId: string, f
   const meetLink = formData.get('meetLink') as string;
   const startTimeStr = formData.get('startTime') as string;
   const duration = parseInt(formData.get('duration') as string, 10) || 60;
+  const status = formData.get('status') as 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
 
   if (!title || !startTimeStr) return { error: 'Title and Start Time are required' };
 
@@ -484,6 +485,7 @@ export async function adminUpdateLiveClass(classId: string, packageId: string, f
     liveClass.meetLink = meetLink || '';
     liveClass.startTime = new Date(startTimeStr);
     liveClass.duration = duration;
+    if (status) liveClass.status = status;
     // We must pass undefined instead of null to typescript depending on strictNullChecks, but let's use the any approach or just set it:
     liveClass.tutorId = tutorId as any;
 
@@ -503,16 +505,54 @@ export async function tutorUpdateMeetLink(classId: string, meetLink: string) {
 
   try {
     const liveClass = await LiveClass.findOne({ where: { id: classId, tutorId: user.id } });
-    if (!liveClass) return { error: 'Live class not found or unauthorized' };
-
-    liveClass.meetLink = meetLink || '';
-    await liveClass.save();
+    if (liveClass) {
+      liveClass.meetLink = meetLink || '';
+      await liveClass.save();
+    } else {
+      const availability = await TutorAvailability.findOne({ where: { id: classId, tutorId: user.id } });
+      if (availability) {
+        availability.meetLink = meetLink || '';
+        await availability.save();
+      } else {
+        return { error: 'Live class or session not found or unauthorized' };
+      }
+    }
 
     revalidatePath('/tutor/classes');
+    revalidatePath('/dashboard/courses');
     return { success: true };
   } catch (error) {
     console.error('Update meet link error:', error);
     return { error: 'Failed to update meet link' };
+  }
+}
+
+export async function tutorUpdateClassStatus(classId: string, status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED') {
+  const user = await requireAuth();
+  if (user.role !== 'TUTOR' && user.role !== 'ADMIN') return { error: 'Unauthorized' };
+
+  try {
+    const liveClass = await LiveClass.findOne({ where: { id: classId, ...(user.role === 'TUTOR' ? { tutorId: user.id } : {}) } });
+    if (liveClass) {
+      liveClass.status = status;
+      await liveClass.save();
+      revalidatePath(`/admin/packages/edit/${liveClass.packageId}`);
+    } else {
+      const availability = await TutorAvailability.findOne({ where: { id: classId, ...(user.role === 'TUTOR' ? { tutorId: user.id } : {}) } });
+      if (availability) {
+        availability.status = status;
+        await availability.save();
+      } else {
+        return { error: 'Live class or session not found or unauthorized' };
+      }
+    }
+
+    revalidatePath('/tutor/classes');
+    revalidatePath('/dashboard/courses');
+    return { success: true };
+  } catch (error) {
+    console.error('Update class status error:', error);
+    return { error: 'Failed to update class status' };
   }
 }
 
@@ -940,11 +980,11 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
     seo.footerScript = footerScript || null;
 
     await seo.save();
-    
+
     revalidatePath('/admin/seo');
     revalidatePath(oldPath);
     if (oldPath !== pagePath) revalidatePath(pagePath);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Update SEO error:', error);
@@ -961,7 +1001,7 @@ export async function adminDeleteSeo(seoId: string) {
 
     const pagePath = seo.pagePath;
     await seo.destroy();
-    
+
     revalidatePath('/admin/seo');
     revalidatePath(pagePath);
     return { success: true };
@@ -1123,3 +1163,47 @@ export async function deletePaymentAction(paymentId: string) {
   revalidatePath('/admin/payments');
 }
 
+export async function submitTutorReview(formData: FormData) {
+  const user = await requireAuth();
+
+  if (user.role !== 'STUDENT') {
+    return { error: 'Only students can write reviews' };
+  }
+
+  const tutorId = formData.get('tutorId') as string;
+  const rating = parseInt(formData.get('rating') as string, 10);
+  const comment = formData.get('comment') as string;
+
+  if (!tutorId || !rating || !comment) {
+    return { error: 'All fields are required' };
+  }
+
+  if (rating < 1 || rating > 5) {
+    return { error: 'Rating must be between 1 and 5' };
+  }
+
+  try {
+    const existingReview = await Review.findOne({
+      where: { studentId: user.id, tutorId }
+    });
+
+    if (existingReview) {
+      existingReview.rating = rating;
+      existingReview.comment = comment;
+      await existingReview.save();
+    } else {
+      await Review.create({
+        studentId: user.id,
+        tutorId,
+        rating,
+        comment
+      });
+    }
+
+    revalidatePath(`/dashboard/tutors/${tutorId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Submit review error:', error);
+    return { error: 'Failed to submit review' };
+  }
+}

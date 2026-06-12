@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, startTransition } from 'react';
+import { ReactNode, startTransition, useState } from 'react';
 import { logoutAction } from '../actions';
 import Swal from 'sweetalert2';
 
@@ -16,6 +16,7 @@ interface TutorLayoutClientProps {
 
 export default function TutorLayoutClient({ children, user }: TutorLayoutClientProps) {
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     Swal.fire({
@@ -46,38 +47,55 @@ export default function TutorLayoutClient({ children, user }: TutorLayoutClientP
   const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden relative">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
-        <div className="h-16 flex items-center px-6 border-b border-slate-200">
-          <Link href="/">
+      <aside 
+        className={`
+          fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col 
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        `}
+      >
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
+          <Link href="/" onClick={() => setSidebarOpen(false)}>
             <img src="/logo.png" alt="Flymedia Technology" className="h-8 w-auto object-contain" />
           </Link>
+          <button className="md:hidden text-slate-500" onClick={() => setSidebarOpen(false)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-          <Link href="/tutor/dashboard" className={getLinkClass('/tutor/dashboard')}>
+          <Link href="/tutor/dashboard" onClick={() => setSidebarOpen(false)} className={getLinkClass('/tutor/dashboard')}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
             Overview
           </Link>
-          <Link href="/tutor/classes" className={getLinkClass('/tutor/classes')}>
+          <Link href="/tutor/classes" onClick={() => setSidebarOpen(false)} className={getLinkClass('/tutor/classes')}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
             My Classes
           </Link>
-          <Link href="/tutor/students" className={getLinkClass('/tutor/students')}>
+          <Link href="/tutor/students" onClick={() => setSidebarOpen(false)} className={getLinkClass('/tutor/students')}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             Students
           </Link>
-          <Link href="/tutor/earnings" className={getLinkClass('/tutor/earnings')}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            Earnings
+          <Link href="/tutor/availability" onClick={() => setSidebarOpen(false)} className={getLinkClass('/tutor/availability')}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Availability
           </Link>
-          <Link href="/tutor/profile" className={getLinkClass('/tutor/profile')}>
+          <Link href="/tutor/profile" onClick={() => setSidebarOpen(false)} className={getLinkClass('/tutor/profile')}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Tutor Profile
           </Link>
         </div>
         <div className="p-4 border-t border-slate-200">
-          <button 
+          <button
             type="button"
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 w-full text-left text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl font-semibold transition-colors"
@@ -91,9 +109,15 @@ export default function TutorLayoutClient({ children, user }: TutorLayoutClientP
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 z-10 shadow-sm">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-10 z-10 shadow-sm">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-slate-800 hidden sm:block">Tutor Portal</h2>
+            <button 
+              className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+            </button>
+            <h2 className="text-lg font-bold text-slate-800">Tutor Portal</h2>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-sm font-semibold text-orange-600 hover:text-orange-700 hidden sm:block">

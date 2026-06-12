@@ -1,6 +1,7 @@
 import { requireAuth } from '../../../src/lib/auth';
 import { User } from '../../../src/db/models';
 import ProfileForm from '../../../src/components/profile/ProfileForm';
+import { updateStudentProfile } from '../../actions';
 
 export const revalidate = 0;
 
@@ -28,13 +29,8 @@ export default async function ProfilePage() {
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Profile Banner */}
-        <div className="h-32 md:h-48 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 relative">
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        </div>
-
         {/* Profile Form Content */}
-        <ProfileForm user={user} />
+        <ProfileForm user={user} updateAction={updateStudentProfile} />
       </div>
     </div>
   );

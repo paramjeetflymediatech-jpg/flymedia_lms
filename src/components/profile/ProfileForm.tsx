@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useTransition } from 'react';
-import { updateStudentProfile } from '../../../app/actions';
 import Swal from 'sweetalert2';
 
-export default function ProfileForm({ user }: { user: any }) {
+interface ProfileFormProps {
+  user: any;
+  updateAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
+}
+
+export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -15,7 +19,7 @@ export default function ProfileForm({ user }: { user: any }) {
 
   const handleAction = (formData: FormData) => {
     startTransition(async () => {
-      const result = await updateStudentProfile(formData);
+      const result = await updateAction(formData);
       if (result.error) {
         Swal.fire({
           toast: true,
@@ -45,7 +49,7 @@ export default function ProfileForm({ user }: { user: any }) {
     <form action={handleAction} className="px-6 sm:px-10 pb-10">
       
       {/* Avatar & Title */}
-      <div className="relative flex justify-between items-end -mt-12 md:-mt-16 mb-8">
+      <div className="relative flex justify-between items-end pt-6 md:pt-10 mb-8">
         <div className="flex items-end gap-6">
           <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-white shadow-md relative overflow-hidden ${isEditing ? 'group' : ''}`}>
             {user.avatar ? (

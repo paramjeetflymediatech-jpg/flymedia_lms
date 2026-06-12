@@ -79,6 +79,15 @@ export default function LiveClassItem({ lc, pkgId, tutors }: LiveClassItemProps)
               <option key={tutor.id} value={tutor.id}>{tutor.name} ({tutor.email})</option>
             ))}
           </select>
+          <select
+            name="status"
+            defaultValue={lc.status || 'SCHEDULED'}
+            className="w-full px-3 py-2 bg-white rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs text-slate-900"
+          >
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
           <button
             type="submit"
             className="w-full inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow"

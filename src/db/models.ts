@@ -74,6 +74,7 @@ export class LiveClass extends Model<InferAttributes<LiveClass>, InferCreationAt
   declare meetLink: string;
   declare startTime: Date;
   declare duration: number; // in minutes
+  declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -87,6 +88,7 @@ LiveClass.init(
     meetLink: { type: DataTypes.STRING(1024), allowNull: true },
     startTime: { type: DataTypes.DATE, allowNull: false },
     duration: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 60 },
+    status: { type: DataTypes.ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'SCHEDULED' },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -312,6 +314,76 @@ SeoSetting.init(
 );
 
 // ==========================================
+// 12. REVIEW MODEL
+// ==========================================
+export class Review extends Model<InferAttributes<Review>, InferCreationAttributes<Review>> {
+  declare id: CreationOptional<string>;
+  declare studentId: ForeignKey<User['id']>;
+  declare tutorId: ForeignKey<User['id']>;
+  declare rating: number;
+  declare comment: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Review.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    studentId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    tutorId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    rating: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1, max: 5 } },
+    comment: { type: DataTypes.TEXT, allowNull: false },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'Review', tableName: 'reviews' }
+);
+
+// ==========================================
+// 13. TUTOR AVAILABILITY MODEL
+// ==========================================
+export class TutorAvailability extends Model<InferAttributes<TutorAvailability>, InferCreationAttributes<TutorAvailability>> {
+  declare id: CreationOptional<string>;
+  declare tutorId: ForeignKey<User['id']>;
+  declare studentId: CreationOptional<ForeignKey<User['id']> | null>;
+  declare date: string; // Storing as DATEONLY string 'YYYY-MM-DD'
+  declare startTime: string; // e.g. '10:00'
+  declare endTime: string; // e.g. '11:00'
+  declare isBooked: CreationOptional<boolean>;
+  declare meetLink: CreationOptional<string | null>;
+  declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+TutorAvailability.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    tutorId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    studentId: { type: DataTypes.UUID, allowNull: true, references: { model: 'users', key: 'id' }, onDelete: 'SET NULL' },
+    date: { type: DataTypes.DATEONLY, allowNull: false },
+    startTime: { type: DataTypes.STRING(20), allowNull: false },
+    endTime: { type: DataTypes.STRING(20), allowNull: false },
+    isBooked: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    meetLink: { type: DataTypes.STRING(1024), allowNull: true },
+    status: { type: DataTypes.ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'SCHEDULED' },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { 
+    sequelize, 
+    modelName: 'TutorAvailability', 
+    tableName: 'tutor_availabilities',
+    indexes: [
+      {
+        unique: true,
+        fields: ['tutorId', 'date', 'startTime', 'endTime']
+      }
+    ]
+  }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 
@@ -350,3 +422,19 @@ Payment.belongsTo(Package, { foreignKey: 'packageId' });
 // User has many PasswordResetTokens
 User.hasMany(PasswordResetToken, { as: 'resetTokens', foreignKey: 'userId', onDelete: 'CASCADE' });
 PasswordResetToken.belongsTo(User, { foreignKey: 'userId' });
+
+// User (Student) has many Reviews (written by them)
+User.hasMany(Review, { as: 'writtenReviews', foreignKey: 'studentId', onDelete: 'CASCADE' });
+Review.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
+
+// User (Tutor) has many Reviews (received by them)
+User.hasMany(Review, { as: 'receivedReviews', foreignKey: 'tutorId', onDelete: 'CASCADE' });
+Review.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
+
+// User (Tutor) has many Availabilities
+User.hasMany(TutorAvailability, { as: 'availabilities', foreignKey: 'tutorId', onDelete: 'CASCADE' });
+TutorAvailability.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
+
+// User (Student) has many booked Sessions
+User.hasMany(TutorAvailability, { as: 'bookedSessions', foreignKey: 'studentId', onDelete: 'SET NULL' });
+TutorAvailability.belongsTo(User, { as: 'student', foreignKey: 'studentId' });

@@ -89,3 +89,14 @@ export async function requireAdmin() {
   }
   return user;
 }
+
+export async function requireTutor() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/login');
+  }
+  if (user.role !== 'TUTOR') {
+    redirect('/dashboard');
+  }
+  return user;
+}

@@ -1,5 +1,5 @@
 import { requireAuth } from '../../../src/lib/auth';
-import { LiveClass, Package } from '../../../src/db/models';
+import { LiveClass, Package, Enrollment, User, TutorAvailability } from '../../../src/db/models';
 import TutorClassRow from '../../../src/components/tutor/TutorClassRow';
 
 export const revalidate = 0;
@@ -11,14 +11,57 @@ export default async function TutorClassesPage() {
     return <div className="p-10"><h1 className="text-2xl font-bold text-red-600">Unauthorized</h1></div>;
   }
 
-  // Fetch all classes assigned to this tutor
   const classesData = await LiveClass.findAll({
     where: { tutorId: user.id },
-    include: [{ model: Package, attributes: ['title', 'slug'] }],
+    include: [
+      { 
+        model: Package, 
+        attributes: ['title', 'slug'],
+        include: [
+          {
+            model: Enrollment,
+            as: 'enrollments',
+            include: [{ model: User, attributes: ['name'] }]
+          }
+        ]
+      }
+    ],
     order: [['startTime', 'DESC']],
   });
   
-  const classes = classesData.map(c => c.toJSON() as any);
+  const liveClassesList = classesData.map(c => c.toJSON() as any);
+
+  // Fetch all 1-on-1 sessions (TutorAvailability) booked by students with this tutor
+  const oneOnOneSessions = await TutorAvailability.findAll({
+    where: { tutorId: user.id, isBooked: true },
+    include: [{ model: User, as: 'student', attributes: ['name', 'avatar'] }]
+  });
+
+  const oneOnOneList = oneOnOneSessions.map((sessionModel) => {
+    const session = sessionModel.toJSON() as any;
+    const startTimeDate = new Date(`${session.date}T${session.startTime}:00`);
+    const endTimeDate = new Date(`${session.date}T${session.endTime}:00`);
+    const duration = (endTimeDate.getTime() - startTimeDate.getTime()) / 60000;
+
+    return {
+      id: session.id,
+      title: '1-on-1 Session',
+      startTime: startTimeDate.toISOString(),
+      duration: duration,
+      meetLink: session.meetLink || null,
+      status: session.status || 'SCHEDULED',
+      isOneOnOne: true,
+      Package: {
+        title: `1-on-1 Session`,
+        enrollments: [
+          { User: session.student }
+        ]
+      }
+    };
+  });
+
+  // Merge the two lists and sort by start time descending
+  const classes = [...liveClassesList, ...oneOnOneList].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
   
   const now = new Date();
 
@@ -34,11 +77,13 @@ export default async function TutorClassesPage() {
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 border-b border-slate-100 text-xs uppercase font-bold text-slate-500">
               <tr>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Class Details</th>
-                <th className="px-6 py-4">Package</th>
+                <th className="px-6 py-4">Student</th>
+                <th className="px-6 py-4">Course</th>
                 <th className="px-6 py-4">Schedule</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">Time</th>
+                <th className="px-6 py-4">Meeting Link</th>
+                <th className="px-6 py-4">Current Status</th>
+                <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

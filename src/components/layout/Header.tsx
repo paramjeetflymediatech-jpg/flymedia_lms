@@ -1,10 +1,29 @@
 import Link from 'next/link';
 import { getSessionPayload } from '../../lib/auth';
-import { logoutAction } from '../../../app/actions';
+import { User } from '../../db/models';
 import MobileMenu from './MobileMenu';
+import ProfileDropdown from './ProfileDropdown';
 
 export default async function Header() {
   const session = await getSessionPayload();
+  let dbUser = null;
+  if (session) {
+    const user = await User.findByPk(session.userId, { attributes: ['name', 'avatar', 'role'] });
+    if (user) {
+      dbUser = {
+        name: user.name,
+        avatar: user.avatar,
+        role: user.role,
+      };
+    } else {
+      // Fallback if DB user not found
+      dbUser = {
+        name: session.name,
+        avatar: null,
+        role: session.role,
+      };
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-100 shadow-sm transition-all duration-300">
@@ -44,24 +63,8 @@ export default async function Header() {
 
         {/* Auth CTAs */}
         <div className="hidden md:flex items-center space-x-5">
-          {session ? (
-            <>
-              <Link
-                href={session.role === 'ADMIN' ? '/admin' : session.role === 'TUTOR' ? '/tutor' : '/dashboard'}
-                className="text-sm font-bold text-slate-700 hover:text-orange-500 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <div className="h-4 w-px bg-slate-300 hidden sm:block"></div>
-              <form action={logoutAction} className="inline">
-                <button
-                  type="submit"
-                  className="text-sm font-bold text-slate-500 hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Logout
-                </button>
-              </form>
-            </>
+          {session && dbUser ? (
+            <ProfileDropdown user={dbUser} />
           ) : (
             <>
               <Link
