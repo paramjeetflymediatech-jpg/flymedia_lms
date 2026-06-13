@@ -193,11 +193,20 @@ export default async function HomePage() {
                             4.9
                           </span>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
-                          {pkg.title}
+                        <h3 className="text-xl font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors flex items-center justify-between">
+                          <span>{pkg.title}</span>
+                          {pkg.mode && (
+                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md ml-2 flex-shrink-0 ${
+                              pkg.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' :
+                              pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
+                              'bg-indigo-100 text-indigo-700'
+                            }`}>
+                              {pkg.mode === 'BOTH' ? 'Online + Offline' : pkg.mode}
+                            </span>
+                          )}
                         </h3>
-                        <p className="text-slate-500 text-sm line-clamp-3 font-medium leading-relaxed">
-                          {pkg.description}
+                        <p className="text-slate-500 text-sm line-clamp-3 font-medium leading-relaxed whitespace-pre-wrap">
+                          {pkg.description?.replace(/<[^>]*>?/gm, '')}
                         </p>
                       </div>
 

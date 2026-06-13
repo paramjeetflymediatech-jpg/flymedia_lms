@@ -10,6 +10,7 @@ import LiveClassItem from '../../../../../src/components/admin/LiveClassItem';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ThumbnailUpload from '../../../../../src/components/admin/ThumbnailUpload';
+import RichTextEditor from '../../../../../src/components/admin/RichTextEditor';
 
 export const revalidate = 0;
 
@@ -62,38 +63,44 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               redirect('/admin/packages');
             }
           }} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package Title</label>
-                <input
-                  name="title"
-                  type="text"
-                  defaultValue={pkg.title}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Price (₹ INR)</label>
-                <input
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  defaultValue={pkg.price || ''}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package Title</label>
+              <input
+                name="title"
+                type="text"
+                defaultValue={pkg.title}
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+              />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Delivery Mode</label>
+              <select
+                name="mode"
+                defaultValue={pkg.mode || 'ONLINE'}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 bg-white"
+              >
+                <option value="ONLINE">Online Only</option>
+                <option value="OFFLINE">Offline Only</option>
+                <option value="BOTH">Online & Offline Both</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Price (₹ INR)</label>
+              <input
+                name="price"
+                type="number"
+                step="0.01"
+                defaultValue={pkg.price || ''}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+              />
+            </div>
+          </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package Description</label>
-              <textarea
-                name="description"
-                defaultValue={pkg.description}
-                required
-                rows={4}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
-              />
+              <RichTextEditor name="description" defaultValue={pkg.description || ''} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">

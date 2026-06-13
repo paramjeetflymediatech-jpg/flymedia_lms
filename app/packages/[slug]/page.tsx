@@ -82,16 +82,24 @@ export default async function PackageDetailPage({ params }: Props) {
 
             {/* Header info */}
             <div className="space-y-6">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse" />
-                Live Classes
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse" />
+                  Live Classes
+                </div>
+                {pkg.mode && (
+                  <div className={`inline-flex items-center px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-wider ${
+                    pkg.mode === 'ONLINE' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                    pkg.mode === 'OFFLINE' ? 'bg-orange-50 border-orange-200 text-orange-700' :
+                    'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  }`}>
+                    {pkg.mode === 'ONLINE' ? '🌐 Online' : pkg.mode === 'OFFLINE' ? '🏫 Offline' : '🌐🏫 Hybrid (Online + Offline)'}
+                  </div>
+                )}
               </div>
               <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
                 {pkg.title}
               </h1>
-              <p className="text-slate-600 text-lg sm:text-xl font-medium leading-relaxed max-w-3xl">
-                {pkg.description}
-              </p>
             </div>
 
             {/* Thumbnail */}
@@ -105,6 +113,15 @@ export default async function PackageDetailPage({ params }: Props) {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
             )}
+
+            {/* Description & Modules */}
+            <div className="space-y-6 pt-4">
+           <h2 className="text-3xl font-black text-slate-900">Modules Covered</h2>
+              <div 
+                className="prose prose-slate prose-lg max-w-none prose-headings:font-black prose-h2:text-3xl prose-a:text-orange-600 prose-li:marker:text-orange-500 prose-p:my-3 prose-ul:my-3 prose-li:my-1 bg-white p-8 sm:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm"
+                dangerouslySetInnerHTML={{ __html: pkg.description || '' }}
+              />
+            </div>
 
             {/* Live Classes Schedule */}
             <div className="space-y-8 pt-8">

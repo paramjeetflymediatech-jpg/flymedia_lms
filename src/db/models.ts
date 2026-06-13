@@ -42,6 +42,7 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare price: CreationOptional<number | null>;
   declare thumbnail: CreationOptional<string | null>;
   declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
+  declare mode: CreationOptional<'ONLINE' | 'OFFLINE' | 'BOTH'>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   // Eager-loaded association
@@ -57,6 +58,7 @@ Package.init(
     price: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     thumbnail: { type: DataTypes.STRING(1024), allowNull: true },
     status: { type: DataTypes.ENUM('DRAFT', 'PUBLISHED'), allowNull: false, defaultValue: 'DRAFT' },
+    mode: { type: DataTypes.ENUM('ONLINE', 'OFFLINE', 'BOTH'), allowNull: false, defaultValue: 'ONLINE' },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

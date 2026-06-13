@@ -288,6 +288,7 @@ export async function adminCreatePackage(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
+  const mode = formData.get('mode') as 'ONLINE' | 'OFFLINE' | 'BOTH' || 'ONLINE';
 
   let finalThumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
 
@@ -329,6 +330,7 @@ export async function adminCreatePackage(formData: FormData) {
       price,
       thumbnail: finalThumbnailUrl,
       status: 'DRAFT',
+      mode,
     });
 
     revalidatePath('/admin/packages');
@@ -346,6 +348,7 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
   const description = formData.get('description') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
+  const mode = formData.get('mode') as 'ONLINE' | 'OFFLINE' | 'BOTH';
 
   let finalThumbnailUrl = undefined;
 
@@ -381,6 +384,7 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     pkg.title = title;
     pkg.description = description;
     pkg.status = status;
+    if (mode) pkg.mode = mode;
     if (price !== null && price !== undefined) pkg.price = price;
     if (finalThumbnailUrl !== undefined) pkg.thumbnail = finalThumbnailUrl;
 
