@@ -96,10 +96,7 @@ export default async function AdminCouponsPage() {
                       <DeleteConfirmButton 
                         itemType="Coupon"
                         className="text-red-500 hover:text-red-700 transition-colors p-1"
-                        onDelete={async () => {
-                          'use server';
-                          await adminDeleteCoupon(coupon.id);
-                        }}
+                        onDelete={adminDeleteCoupon.bind(null, coupon.id)}
                       />
                     </div>
                   </div>

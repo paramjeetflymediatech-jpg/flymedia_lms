@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:sync": "tsx scripts/dbSync.ts",
-    "db:migrate": "tsx scripts/addResetTokenTable.ts"
+    "db:migrate": "tsx scripts/addResetTokenTable.ts",
+    "db:migrate:live": "tsx scripts/migrateLiveDB.ts"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.0",

@@ -136,10 +136,7 @@ export default async function AdminEnrollmentsPage() {
                           <DeleteConfirmButton
                             itemType="Enrollment"
                             className="text-red-500 hover:text-red-700 transition-colors p-1"
-                            onDelete={async () => {
-                              'use server';
-                              await adminDeleteEnrollment(enr.id);
-                            }}
+                            onDelete={adminDeleteEnrollment.bind(null, enr.id)}
                           />
                         </div>
                       </td>

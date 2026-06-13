@@ -87,10 +87,7 @@ export default async function AdminSeoPage() {
                           <DeleteConfirmButton
                             itemType="SEO"
                             className="text-red-500 hover:text-red-700 transition-colors p-1"
-                            onDelete={async () => {
-                              'use server';
-                              await adminDeleteSeo(seo.id);
-                            }}
+                            onDelete={adminDeleteSeo.bind(null, seo.id)}
                           />
                         </div>
                       </td>

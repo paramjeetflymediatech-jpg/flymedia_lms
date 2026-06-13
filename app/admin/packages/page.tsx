@@ -79,10 +79,7 @@ export default async function AdminPackagesPage() {
                     </Link>
                     <DeleteConfirmButton
                       itemType="Package"
-                      onDelete={async () => {
-                        'use server';
-                        await adminDeletePackage(pkg.id);
-                      }}
+                      onDelete={adminDeletePackage.bind(null, pkg.id)}
                       className="text-red-500 hover:text-red-700 transition-colors p-2 bg-red-50 hover:bg-red-100 rounded-xl"
                     />
                   </div>

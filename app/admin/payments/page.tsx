@@ -111,10 +111,7 @@ export default async function AdminPaymentsPage({
                         </button>
                         <DeleteConfirmButton 
                           itemType="Payment" 
-                          onDelete={async () => {
-                            'use server';
-                            await deletePaymentAction(p.id);
-                          }} 
+                          onDelete={deletePaymentAction.bind(null, p.id)} 
                         />
                       </div>
                     </td>

@@ -3,7 +3,7 @@
 import Swal from 'sweetalert2';
 
 interface DeleteConfirmButtonProps {
-  onDelete: () => Promise<void>;
+  onDelete: () => Promise<any>;
   itemType: string;
   className?: string;
   children?: React.ReactNode;

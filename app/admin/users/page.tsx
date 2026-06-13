@@ -143,10 +143,7 @@ export default async function AdminUsersPage({
                       <DeleteConfirmButton
                         itemType="User"
                         className="text-red-500 hover:text-red-700 transition-colors p-1"
-                        onDelete={async () => {
-                          'use server';
-                          await deleteUserAction(user.id);
-                        }}
+                        onDelete={deleteUserAction.bind(null, user.id)}
                       />
                     </div>
                   </td>

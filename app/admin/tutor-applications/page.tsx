@@ -80,22 +80,12 @@ export default async function TutorApplicationsPage({
                         <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors border border-blue-200 px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap">
                           View
                         </Link>
-                        <form
-                          action={async () => {
-                            'use server';
-                            await rejectTutorApplication(app.id);
-                          }}
-                        >
+                        <form action={rejectTutorApplication.bind(null, app.id) as any}>
                           <button type="submit" className="text-[10px] font-bold text-slate-600 hover:text-red-600 transition-colors border border-slate-200 hover:border-red-200 px-3 py-1.5 rounded bg-white hover:bg-red-50 whitespace-nowrap">
                             Reject
                           </button>
                         </form>
-                        <form
-                          action={async () => {
-                            'use server';
-                            await approveTutorApplication(app.id);
-                          }}
-                        >
+                        <form action={approveTutorApplication.bind(null, app.id) as any}>
                           <button type="submit" className="text-[10px] font-bold text-white transition-colors border border-green-600 px-3 py-1.5 rounded bg-green-600 hover:bg-green-700 whitespace-nowrap shadow-sm">
                             Approve
                           </button>
@@ -106,12 +96,7 @@ export default async function TutorApplicationsPage({
                         <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-slate-500 hover:text-blue-600 transition-colors border border-slate-200 px-3 py-1.5 rounded bg-white hover:bg-slate-50 whitespace-nowrap">
                           View Details
                         </Link>
-                        <form
-                          action={async () => {
-                            'use server';
-                            await deleteTutorApplication(app.id);
-                          }}
-                        >
+                        <form action={deleteTutorApplication.bind(null, app.id) as any}>
                           <button type="submit" className="text-[10px] font-bold text-red-600 hover:text-white transition-colors border border-red-200 hover:border-red-600 px-3 py-1.5 rounded bg-red-50 hover:bg-red-600 whitespace-nowrap">
                             Delete
                           </button>

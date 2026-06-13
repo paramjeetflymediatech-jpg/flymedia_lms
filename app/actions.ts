@@ -682,7 +682,7 @@ export async function submitTutorApplication(formData: FormData) {
   }
 }
 
-export async function approveTutorApplication(applicationId: string) {
+export async function approveTutorApplication(applicationId: string, formData?: FormData) {
   await requireAdmin();
 
   try {
@@ -732,7 +732,7 @@ export async function approveTutorApplication(applicationId: string) {
   }
 }
 
-export async function rejectTutorApplication(applicationId: string) {
+export async function rejectTutorApplication(applicationId: string, formData?: FormData) {
   await requireAdmin();
 
   try {
@@ -750,7 +750,7 @@ export async function rejectTutorApplication(applicationId: string) {
   }
 }
 
-export async function deleteTutorApplication(applicationId: string) {
+export async function deleteTutorApplication(applicationId: string, formData?: FormData) {
   await requireAdmin();
 
   try {
