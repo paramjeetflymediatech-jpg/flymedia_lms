@@ -94,7 +94,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                         <div className="flex flex-col">
                           <span className="text-xs text-slate-500 font-medium">Price</span>
                           <span className="text-sm font-semibold text-slate-700">
-                            {Number(pkg.price) > 0 ? `₹${Number(pkg.price).toFixed(2)}` : 'FREE'}
+                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'FREE'}
                           </span>
                         </div>
 

@@ -62,9 +62,9 @@ export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: an
       <div className="relative z-10 space-y-6">
         <div>
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Enrollment Plan</h3>
-          <div className="flex items-end space-x-2">
-            <span className="text-5xl font-black text-slate-900 tracking-tight">
-              {pkg.price && Number(pkg.price) > 0 ? `₹${pkg.price}` : 'Free'}
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight break-words">
+              {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'Free'}
             </span>
             {pkg.price && Number(pkg.price) > 0 && (
               <span className="text-sm text-slate-500 font-bold mb-1">/ one-time</span>
@@ -112,7 +112,7 @@ export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: an
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? 'Processing...' : (pkg.price && Number(pkg.price) > 0 ? `Pay ₹${pkg.price} & Enroll` : 'Instant Enrollment')}
+                {loading ? 'Processing...' : (pkg.price && Number(pkg.price) > 0 ? `Pay ₹${Number(pkg.price)} & Enroll` : 'Instant Enrollment')}
                 {!loading && <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
               </span>
             </button>

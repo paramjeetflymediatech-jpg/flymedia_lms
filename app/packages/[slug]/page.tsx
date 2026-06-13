@@ -97,7 +97,7 @@ export default async function PackageDetailPage({ params }: Props) {
                   </div>
                 )}
               </div>
-              <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
+              <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-[1.2] tracking-tight">
                 {pkg.title}
               </h1>
             </div>
@@ -116,18 +116,18 @@ export default async function PackageDetailPage({ params }: Props) {
 
             {/* Description & Modules */}
             <div className="space-y-6 pt-4">
-           <h2 className="text-3xl font-black text-slate-900">Modules Covered</h2>
+           {/* <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Modules Covered</h2> */}
               <div 
-                className="prose prose-slate prose-lg max-w-none prose-headings:font-black prose-h2:text-3xl prose-a:text-orange-600 prose-li:marker:text-orange-500 prose-p:my-3 prose-ul:my-3 prose-li:my-1 bg-white p-8 sm:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm"
+                className="prose prose-slate max-w-none prose-headings:font-black prose-h2:text-2xl prose-a:text-orange-600 prose-li:marker:text-orange-500 prose-p:my-2 prose-ul:my-2 prose-li:my-1 bg-white p-6 sm:p-10 rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: pkg.description || '' }}
               />
             </div>
 
             {/* Live Classes Schedule */}
             <div className="space-y-8 pt-8">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h2 className="text-3xl font-black text-slate-900">Class Schedule</h2>
-                <span className="text-sm font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{((pkg as any).liveClasses || []).length} Classes</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-2">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Class Schedule</h2>
+                <span className="text-sm font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full w-fit">{((pkg as any).liveClasses || []).length} Classes</span>
               </div>
 
               {(!(pkg as any).liveClasses || (pkg as any).liveClasses.length === 0) ? (

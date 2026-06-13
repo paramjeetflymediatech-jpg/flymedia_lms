@@ -2,6 +2,7 @@ import { requireAdmin } from '../../../src/lib/auth';
 import { User, Enrollment, Package } from '../../../src/db/models';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
 import InviteUserModal from '../../../src/components/admin/InviteUserModal';
+import Pagination from '../../../src/components/admin/Pagination';
 import RoleFilter from './RoleFilter';
 import { deleteUserAction } from '../../actions';
 import Link from 'next/link';
@@ -159,31 +160,14 @@ export default async function AdminUsersPage({
           </div>
         )}
 
-        {/* Pagination controls */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-            <span className="text-sm text-slate-500 font-medium">
-              Showing <span className="font-bold text-slate-900">{offset + 1}</span> to <span className="font-bold text-slate-900">{Math.min(offset + limit, count)}</span> of <span className="font-bold text-slate-900">{count}</span> users
-            </span>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/admin/users?role=${roleFilter}&page=${page - 1}`}
-                className={`px-3 py-1.5 text-xs font-bold rounded border ${page <= 1 ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
-              >
-                Previous
-              </Link>
-              <div className="text-sm font-bold text-slate-700 px-2">
-                {page} / {totalPages}
-              </div>
-              <Link
-                href={`/admin/users?role=${roleFilter}&page=${page + 1}`}
-                className={`px-3 py-1.5 text-xs font-bold rounded border ${page >= totalPages ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 transition-colors'}`}
-              >
-                Next
-              </Link>
-            </div>
-          </div>
-        )}
+        <Pagination 
+          page={page} 
+          totalPages={totalPages} 
+          totalItems={count} 
+          limit={limit} 
+          baseUrl="/admin/users" 
+          searchParams={{ role: roleFilter }}
+        />
       </div>
     </div>
   );

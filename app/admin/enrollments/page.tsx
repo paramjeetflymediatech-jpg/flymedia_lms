@@ -3,36 +3,46 @@ import { Enrollment, User, Package, LiveClass } from '../../../src/db/models';
 import Link from 'next/link';
 import { adminCreateEnrollment, adminDeleteEnrollment } from '../../actions';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
+import Pagination from '../../../src/components/admin/Pagination';
 
 export const revalidate = 0;
 
-export default async function AdminEnrollmentsPage() {
+export default async function AdminEnrollmentsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   await requireAdmin();
 
+  const resolvedSearchParams = await searchParams;
+  const pageParam = resolvedSearchParams?.page;
+  const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
   const [enrollmentsData, usersData, packagesData] = await Promise.all([
-    Enrollment.findAll({
-    include: [
-      { model: User, attributes: ['id', 'name', 'email'] },
-      { 
-        model: Package, 
-        as: 'Package', 
-        attributes: ['id', 'title'],
-        include: [
-          {
-            model: LiveClass,
-            as: 'liveClasses',
-            include: [{ model: User, as: 'tutor', attributes: ['name'] }]
-          }
-        ]
-      },
-    ],
-    order: [['enrolledAt', 'DESC']],
+    Enrollment.findAndCountAll({
+      limit,
+      offset,
+      include: [
+        { model: User, attributes: ['id', 'name', 'email'] },
+        { 
+          model: Package, 
+          as: 'Package', 
+          attributes: ['id', 'title'],
+          include: [
+            {
+              model: LiveClass,
+              as: 'liveClasses',
+              include: [{ model: User, as: 'tutor', attributes: ['name'] }]
+            }
+          ]
+        },
+      ],
+      order: [['enrolledAt', 'DESC']],
     }),
     User.findAll({ where: { role: 'STUDENT' }, attributes: ['id', 'name', 'email'] }),
     Package.findAll({ attributes: ['id', 'title'] }),
   ]);
   
-  const enrollments = enrollmentsData.map(e => e.toJSON());
+  const enrollments = enrollmentsData.rows.map(e => e.toJSON());
+  const totalPages = Math.ceil(enrollmentsData.count / limit) || 1;
   const users = usersData.map(u => u.toJSON());
   const packages = packagesData.map(p => p.toJSON());
 
@@ -148,6 +158,15 @@ export default async function AdminEnrollmentsPage() {
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      <Pagination 
+        page={page} 
+        totalPages={totalPages} 
+        totalItems={enrollmentsData.count} 
+        limit={limit} 
+        baseUrl="/admin/enrollments" 
+      />
     </div>
   );
 }
