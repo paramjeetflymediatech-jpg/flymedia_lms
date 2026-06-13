@@ -75,7 +75,7 @@ export default async function PackagesListingPage() {
                       <div className="flex flex-col">
                         <span className="text-xs text-slate-500 font-medium">Price</span>
                         <span className="text-sm font-semibold text-slate-700">
-                          {Number(pkg.price) > 0 ? `$${Number(pkg.price).toFixed(2)}` : 'FREE'}
+                          {Number(pkg.price) > 0 ? `₹${Number(pkg.price).toFixed(2)}` : 'FREE'}
                         </span>
                       </div>
 
