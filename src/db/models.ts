@@ -12,6 +12,15 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare avatar: CreationOptional<string | null>;
   declare passwordHash: CreationOptional<string | null>;
   declare role: 'ADMIN' | 'STUDENT' | 'TUTOR';
+  
+  // Mentor/Tutor Specific Fields
+  declare professionTitle: CreationOptional<string | null>;
+  declare rating: CreationOptional<number>;
+  declare reviewsCount: CreationOptional<number>;
+  declare studentsMentored: CreationOptional<number>;
+  declare skills: CreationOptional<string[] | null>;
+  declare trialExpectations: CreationOptional<string[] | null>;
+
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -25,6 +34,12 @@ User.init(
     avatar: { type: DataTypes.STRING(1024), allowNull: true },
     passwordHash: { type: DataTypes.STRING(255), allowNull: true },
     role: { type: DataTypes.ENUM('ADMIN', 'STUDENT', 'TUTOR'), allowNull: false, defaultValue: 'STUDENT' },
+    professionTitle: { type: DataTypes.STRING(255), allowNull: true },
+    rating: { type: DataTypes.DECIMAL(3, 1), allowNull: false, defaultValue: 5.0 },
+    reviewsCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    studentsMentored: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    skills: { type: DataTypes.JSON, allowNull: true },
+    trialExpectations: { type: DataTypes.JSON, allowNull: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -386,6 +401,63 @@ TutorAvailability.init(
 );
 
 // ==========================================
+// 14. BLOG POST MODEL
+// ==========================================
+export class BlogPost extends Model<InferAttributes<BlogPost, { omit: 'author' }>, InferCreationAttributes<BlogPost, { omit: 'author' }>> {
+  declare id: CreationOptional<string>;
+  declare authorId: ForeignKey<User['id']>;
+  declare title: string;
+  declare slug: string;
+  declare category: string;
+  declare excerpt: string;
+  declare content: string;
+  declare readTime: CreationOptional<string | null>;
+  declare image: CreationOptional<string | null>;
+  declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+  declare author?: NonAttribute<User>;
+}
+
+BlogPost.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    authorId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    title: { type: DataTypes.STRING(255), allowNull: false },
+    slug: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    category: { type: DataTypes.STRING(100), allowNull: false },
+    excerpt: { type: DataTypes.TEXT, allowNull: false },
+    content: { type: DataTypes.TEXT('long'), allowNull: false },
+    readTime: { type: DataTypes.STRING(50), allowNull: true },
+    image: { type: DataTypes.STRING(1024), allowNull: true },
+    status: { type: DataTypes.ENUM('DRAFT', 'PUBLISHED'), allowNull: false, defaultValue: 'DRAFT' },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'BlogPost', tableName: 'blog_posts' }
+);
+
+// ==========================================
+// 15. NEWSLETTER SUBSCRIBER MODEL
+// ==========================================
+export class NewsletterSubscriber extends Model<InferAttributes<NewsletterSubscriber>, InferCreationAttributes<NewsletterSubscriber>> {
+  declare id: CreationOptional<string>;
+  declare email: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+NewsletterSubscriber.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    email: { type: DataTypes.STRING(255), allowNull: false, unique: true, validate: { isEmail: true } },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'NewsletterSubscriber', tableName: 'newsletter_subscribers' }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 
@@ -440,3 +512,8 @@ TutorAvailability.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
 // User (Student) has many booked Sessions
 User.hasMany(TutorAvailability, { as: 'bookedSessions', foreignKey: 'studentId', onDelete: 'SET NULL' });
 TutorAvailability.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
+
+// User has many BlogPosts
+User.hasMany(BlogPost, { as: 'blogPosts', foreignKey: 'authorId', onDelete: 'CASCADE' });
+BlogPost.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
+

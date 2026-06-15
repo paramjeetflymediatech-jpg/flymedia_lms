@@ -104,14 +104,11 @@ export default async function PackageDetailPage({ params }: Props) {
 
             {/* Thumbnail */}
             {pkg.thumbnail && (
-              <div className="w-full h-72 sm:h-[450px] rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 relative group">
-                <img
-                  src={pkg.thumbnail}
-                  alt={pkg.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
+              <img
+                src={pkg.thumbnail}
+                alt={pkg.title}
+                className="w-full object-contain rounded-xl"
+              />
             )}
 
             {/* Description & Modules */}

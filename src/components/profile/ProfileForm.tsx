@@ -160,6 +160,21 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                 ></textarea>
               </div>
 
+              {user.role === 'TUTOR' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">What to expect in our Trial Call (One point per line)</label>
+                  <textarea 
+                    rows={4}
+                    name="trialExpectations"
+                    defaultValue={user.trialExpectations ? user.trialExpectations.join('\n') : ''}
+                    disabled={!isEditing}
+                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 shadow-sm resize-none transition-colors
+                      ${!isEditing ? 'bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-300 text-slate-900'}`}
+                    placeholder="Enter expectations, one on each line..."
+                  ></textarea>
+                </div>
+              )}
+
               {/* Mobile Buttons */}
               <div className="pt-4 flex justify-end sm:hidden">
                 {isEditing ? (

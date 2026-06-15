@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import { Package } from '../../src/db/models';
+import { Op } from 'sequelize';
 
 export const metadata = {
   title: 'Training Programs | Flymedia Technology LMS',
@@ -13,6 +14,7 @@ export const revalidate = 0; // Fresh listing every time
 export default async function PackagesListingPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const resolvedSearchParams = await searchParams;
   const pageParam = resolvedSearchParams?.page;
+  const searchParam = resolvedSearchParams?.search as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 6;
   const offset = (page - 1) * limit;
@@ -21,7 +23,12 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
   let totalPages = 1;
 
   try {
+    const whereClause = searchParam ? {
+      title: { [Op.like]: `%${searchParam}%` }
+    } : {};
+    
     const { count, rows } = await Package.findAndCountAll({
+      where: whereClause,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
@@ -47,11 +54,35 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
             </p>
           </div>
 
+          {/* Search Bar */}
+          <form method="GET" action="/packages" className="max-w-xl mx-auto flex gap-2">
+            <input 
+              type="text" 
+              name="search" 
+              defaultValue={searchParam}
+              placeholder="Search packages..." 
+              className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-sm"
+            />
+            <button type="submit" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm">
+              Search
+            </button>
+            {searchParam && (
+              <Link href="/packages" className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-sm">
+                Clear
+              </Link>
+            )}
+          </form>
+
           {/* Grid list */}
           {packages.length === 0 ? (
-            <div className="text-center p-16 bg-white rounded-3xl border border-slate-100 max-w-lg mx-auto">
-              <p className="text-slate-500 mb-4">No training packages found.</p>
-              <code className="text-xs px-2.5 py-1.5 rounded bg-slate-100 font-mono text-slate-600">npm run db:sync</code>
+            <div className="text-center p-16 bg-white rounded-3xl border border-slate-100 max-w-lg mx-auto shadow-sm">
+              <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <p className="text-slate-700 font-bold text-xl mb-2">No packages found</p>
+              <p className="text-slate-500">
+                {searchParam ? `We couldn't find any packages matching "${searchParam}". Try adjusting your search.` : 'Check back later for new training programs.'}
+              </p>
             </div>
           ) : (
             <>
@@ -115,7 +146,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
               {totalPages > 1 && (
                 <div className="flex items-center justify-center space-x-4 mt-12">
                   {page > 1 ? (
-                    <Link href={`/packages?page=${page - 1}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                    <Link href={`/packages?page=${page - 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                       Previous
                     </Link>
                   ) : (
@@ -129,7 +160,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                   </span>
 
                   {page < totalPages ? (
-                    <Link href={`/packages?page=${page + 1}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                    <Link href={`/packages?page=${page + 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                       Next
                     </Link>
                   ) : (

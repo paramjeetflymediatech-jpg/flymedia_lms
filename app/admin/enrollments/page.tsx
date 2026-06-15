@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { adminCreateEnrollment, adminDeleteEnrollment } from '../../actions';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
 import Pagination from '../../../src/components/admin/Pagination';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
@@ -12,16 +13,24 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
 
   const resolvedSearchParams = await searchParams;
   const pageParam = resolvedSearchParams?.page;
+  const searchParam = resolvedSearchParams?.search as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 10;
   const offset = (page - 1) * limit;
+
+  const userWhereClause = searchParam ? {
+    [Op.or]: [
+      { name: { [Op.like]: `%${searchParam}%` } },
+      { email: { [Op.like]: `%${searchParam}%` } }
+    ]
+  } : undefined;
 
   const [enrollmentsData, usersData, packagesData] = await Promise.all([
     Enrollment.findAndCountAll({
       limit,
       offset,
       include: [
-        { model: User, attributes: ['id', 'name', 'email'] },
+        { model: User, attributes: ['id', 'name', 'email'], where: userWhereClause },
         { 
           model: Package, 
           as: 'Package', 
@@ -48,9 +57,29 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
 
   return (
     <div className="p-6 md:p-10 space-y-8">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Enrollments</h1>
-        <p className="text-sm text-slate-500">View and manage student package enrollments.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Enrollments</h1>
+          <p className="text-sm text-slate-500">View and manage student package enrollments.</p>
+        </div>
+        
+        <form method="GET" action="/admin/enrollments" className="flex items-center gap-2 max-w-sm w-full">
+          <input 
+            type="text" 
+            name="search" 
+            defaultValue={searchParam}
+            placeholder="Search student..." 
+            className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+          />
+          <button type="submit" className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors text-sm">
+            Search
+          </button>
+          {searchParam && (
+            <Link href="/admin/enrollments" className="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">
+              Clear
+            </Link>
+          )}
+        </form>
       </div>
 
       <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm max-w-4xl">

@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
 
@@ -777,6 +777,7 @@ export async function updateTutorProfile(formData: FormData) {
 
   const name = formData.get('name') as string;
   const bio = formData.get('bio') as string;
+  const trialExpectationsStr = formData.get('trialExpectations') as string;
   const avatarFile = formData.get('avatar') as File | null;
 
   try {
@@ -785,6 +786,9 @@ export async function updateTutorProfile(formData: FormData) {
 
     if (name) dbUser.name = name;
     if (bio !== null) dbUser.bio = bio;
+    if (trialExpectationsStr !== null && trialExpectationsStr !== undefined) {
+      dbUser.trialExpectations = trialExpectationsStr.split('\n').map(s => s.trim()).filter(Boolean);
+    }
 
     if (avatarFile && avatarFile.size > 0) {
       const bytes = await avatarFile.arrayBuffer();
@@ -1091,6 +1095,14 @@ export async function adminUpdateUser(userId: string, formData: FormData) {
   const email = formData.get('email') as string;
   const role = formData.get('role') as 'STUDENT' | 'TUTOR' | 'ADMIN';
   const password = formData.get('password') as string;
+  const bio = formData.get('bio') as string;
+
+  // Tutor fields
+  const professionTitle = formData.get('professionTitle') as string;
+  const rating = formData.get('rating') as string;
+  const reviewsCount = formData.get('reviewsCount') as string;
+  const studentsMentored = formData.get('studentsMentored') as string;
+  const skillsStr = formData.get('skills') as string;
 
   if (!email || !role || !name) {
     return { error: 'Name, Email, and Role are required.' };
@@ -1111,6 +1123,17 @@ export async function adminUpdateUser(userId: string, formData: FormData) {
     user.name = name;
     user.email = email;
     user.role = role;
+    if (bio !== null && bio !== undefined) user.bio = bio;
+
+    if (role === 'TUTOR') {
+      if (professionTitle !== null && professionTitle !== undefined) user.professionTitle = professionTitle;
+      if (rating) user.rating = parseFloat(rating);
+      if (reviewsCount) user.reviewsCount = parseInt(reviewsCount, 10);
+      if (studentsMentored) user.studentsMentored = parseInt(studentsMentored, 10);
+      if (skillsStr !== null && skillsStr !== undefined) {
+        user.skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
 
     if (password) {
       user.passwordHash = await bcrypt.hash(password, 10);
@@ -1209,5 +1232,177 @@ export async function submitTutorReview(formData: FormData) {
   } catch (error) {
     console.error('Submit review error:', error);
     return { error: 'Failed to submit review' };
+  }
+}
+
+// ==========================================
+// 5. ADMIN BLOG ACTIONS
+// ==========================================
+
+export async function adminCreateBlogPost(formData: FormData) {
+  const admin = await requireAdmin();
+
+  const title = formData.get('title') as string;
+  const category = formData.get('category') as string;
+  const excerpt = formData.get('excerpt') as string;
+  const content = formData.get('content') as string;
+  const readTime = formData.get('readTime') as string;
+  const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
+
+  let finalImageUrl = 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80';
+
+  const file = formData.get('imageFile') as File | null;
+  if (file && file.size > 0) {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogs');
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    finalImageUrl = `/uploads/blogs/${fileName}`;
+  } else {
+    const urlInput = formData.get('imageUrl') as string;
+    if (urlInput) {
+      finalImageUrl = urlInput;
+    }
+  }
+
+  if (!title || !category || !excerpt || !content) {
+    return { error: 'Title, Category, Excerpt, and Content are required.' };
+  }
+
+  try {
+    const slug = slugify(title);
+    const existing = await BlogPost.findOne({ where: { slug } });
+    const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
+
+    await BlogPost.create({
+      authorId: admin.id,
+      title,
+      slug: finalSlug,
+      category,
+      excerpt,
+      content,
+      readTime,
+      image: finalImageUrl,
+      status,
+    });
+
+    revalidatePath('/admin/blogs');
+    revalidatePath('/blog');
+    return { success: true };
+  } catch (error) {
+    console.error('Create blog post error:', error);
+    return { error: 'Failed to create blog post' };
+  }
+}
+
+export async function adminUpdateBlogPost(postId: string, formData: FormData) {
+  await requireAdmin();
+
+  const title = formData.get('title') as string;
+  const category = formData.get('category') as string;
+  const excerpt = formData.get('excerpt') as string;
+  const content = formData.get('content') as string;
+  const readTime = formData.get('readTime') as string;
+  const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
+
+  let finalImageUrl = undefined;
+
+  const file = formData.get('imageFile') as File | null;
+  if (file && file.size > 0) {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogs');
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    finalImageUrl = `/uploads/blogs/${fileName}`;
+  } else {
+    const urlInput = formData.get('imageUrl') as string;
+    if (urlInput) {
+      finalImageUrl = urlInput;
+    }
+  }
+
+  if (!title || !category || !excerpt || !content) {
+    return { error: 'Title, Category, Excerpt, and Content are required.' };
+  }
+
+  try {
+    const post = await BlogPost.findByPk(postId);
+    if (!post) return { error: 'Blog post not found' };
+
+    post.title = title;
+    post.category = category;
+    post.excerpt = excerpt;
+    post.content = content;
+    post.readTime = readTime;
+    post.status = status;
+    if (finalImageUrl !== undefined) post.image = finalImageUrl;
+
+    await post.save();
+
+    revalidatePath('/admin/blogs');
+    revalidatePath(`/admin/blogs/${post.id}`);
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${post.slug}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Update blog post error:', error);
+    return { error: 'Failed to update blog post' };
+  }
+}
+
+export async function adminDeleteBlogPost(postId: string) {
+  await requireAdmin();
+
+  try {
+    const post = await BlogPost.findByPk(postId);
+    if (!post) return { error: 'Blog post not found' };
+
+    await post.destroy();
+
+    revalidatePath('/admin/blogs');
+    revalidatePath('/blog');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete blog post error:', error);
+    return { error: 'Failed to delete blog post' };
+  }
+}
+
+// ==========================================
+// 6. NEWSLETTER ACTIONS
+// ==========================================
+
+export async function subscribeNewsletterAction(formData: FormData) {
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
+
+  if (!email) {
+    return { error: 'Please enter a valid email address.' };
+  }
+
+  try {
+    const existing = await NewsletterSubscriber.findOne({ where: { email } });
+    if (existing) {
+      return { success: true, message: 'You are already subscribed!' };
+    }
+
+    await NewsletterSubscriber.create({ email });
+    return { success: true, message: 'Successfully subscribed to the newsletter!' };
+  } catch (error) {
+    console.error('Newsletter subscription error:', error);
+    return { error: 'Something went wrong. Please try again.' };
   }
 }

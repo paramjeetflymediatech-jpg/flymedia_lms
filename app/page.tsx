@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch (e) {
     console.error('Failed to load SEO for homepage:', e);
   }
-  
+
   return {
     title: "Flymedia Academy LMS",
     description: "Premium learning management system.",
@@ -123,28 +123,28 @@ export default async function HomePage() {
         </section>
 
         {/* Featured Courses Offered Section */}
-        <section className="py-24 relative overflow-hidden bg-white">
+        <section className="py-16 sm:py-24 relative overflow-hidden bg-white">
           {/* Subtle decoration */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-500/5 blur-[100px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-rose-500/5 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 md:mb-16 gap-6">
-              <div className="space-y-4 max-w-2xl">
-                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                  Training Modules
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 sm:mb-12 md:mb-16 gap-4 sm:gap-6">
+              <div className="space-y-3 sm:space-y-4 max-w-2xl">
+                <div className="inline-flex items-center space-x-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-slate-50 border border-slate-200 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500 animate-pulse" />
+                  <span>Training Modules</span>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                  Explore Our <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">Premium Tracks</span>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight sm:leading-[1.1]">
+                  Explore Our <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent block sm:inline">Premium Tracks</span>
                 </h2>
-                <p className="text-lg text-slate-600 font-medium">
+                <p className="text-base sm:text-lg text-slate-600 font-medium">
                   Master the most in-demand skills with our intensive, industry-aligned training programs.
                 </p>
               </div>
               <Link
                 href="/packages"
-                className="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white transition-all rounded-2xl shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40 shrink-0"
+                className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-sm font-bold text-white transition-all rounded-xl sm:rounded-2xl shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40 shrink-0"
                 style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               >
                 View All Programs →
@@ -152,73 +152,74 @@ export default async function HomePage() {
             </div>
 
             {packages.length === 0 ? (
-              <div className="text-center p-16 bg-slate-50 rounded-[3rem] border border-slate-100 max-w-2xl mx-auto">
+              <div className="text-center p-8 sm:p-16 bg-slate-50 rounded-3xl sm:rounded-[3rem] border border-slate-100 max-w-2xl mx-auto">
                 <div className="text-4xl mb-4">📭</div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No Packages Available</h3>
-                <p className="text-slate-500 mb-6 font-medium">The package catalog is currently being updated. Please check back soon or sync the database.</p>
-                <code className="text-xs px-3 py-2 rounded-lg bg-slate-200 font-mono text-slate-700 font-bold">npm run db:sync</code>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">No Packages Available</h3>
+                <p className="text-sm sm:text-base text-slate-500 mb-6 font-medium">The package catalog is currently being updated. Please check back soon or sync the database.</p>
+                <code className="text-xs px-3 py-2 rounded-lg bg-slate-200 font-mono text-slate-700 font-bold break-all">npm run db:sync</code>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                 {packages.map((pkg) => (
-                  <div key={pkg.id} className="group flex flex-col h-full bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                  <div key={pkg.id} className="group flex flex-col h-full bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden">
                     {/* Image Header */}
-                    <div className="h-48 relative overflow-hidden bg-slate-100">
+                    <div className="h-40 sm:h-48 relative overflow-hidden bg-slate-100">
                       {pkg.thumbnail ? (
                         <img
                           src={pkg.thumbnail}
                           alt={pkg.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300 text-4xl">📚</div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <span className="absolute top-4 right-4 text-[10px] font-black px-3 py-1.5 rounded-full bg-white/90 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
+                      <span className="absolute top-3 sm:top-4 right-3 sm:right-4 text-[10px] font-black px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/90 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
                         PACKAGE
                       </span>
                     </div>
 
                     {/* Content Body */}
-                    <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between">
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="p-5 sm:p-6 md:p-8 flex-1 flex flex-col justify-between">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                           <span className="flex items-center">
-                            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'Free'}
                           </span>
                           <span>•</span>
                           <span className="flex items-center text-orange-500">
-                            <svg className="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                             4.9
                           </span>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors flex items-center justify-between">
-                          <span>{pkg.title}</span>
+                        <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+                            {pkg.title}
+                          </h3>
                           {pkg.mode && (
-                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md ml-2 flex-shrink-0 ${
-                              pkg.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' :
-                              pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
-                              'bg-indigo-100 text-indigo-700'
-                            }`}>
+                            <span className={`self-start text-[9px] sm:text-[10px] uppercase tracking-wider font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md flex-shrink-0 ${pkg.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' :
+                                pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-indigo-100 text-indigo-700'
+                              }`}>
                               {pkg.mode === 'BOTH' ? 'Online + Offline' : pkg.mode}
                             </span>
                           )}
-                        </h3>
-                        <p className="text-slate-500 text-sm line-clamp-3 font-medium leading-relaxed whitespace-pre-wrap">
+                        </div>
+                        <p className="text-slate-500 text-xs sm:text-sm line-clamp-3 font-medium leading-relaxed whitespace-pre-wrap">
                           {pkg.description?.replace(/<[^>]*>?/gm, '')}
                         </p>
                       </div>
 
                       {/* Footer CTA */}
-                      <div className="mt-8 pt-5 border-t border-slate-100">
+                      <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-slate-100">
                         <Link
                           href={`/packages/${pkg.slug}`}
-                          className="w-full inline-flex items-center justify-between text-sm font-bold text-slate-900 group/link"
+                          className="w-full inline-flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 group/link"
                         >
                           <span>Explore Details</span>
-                          <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover/link:bg-orange-50 group-hover/link:border-orange-200 group-hover/link:text-orange-600 transition-colors">
-                            <svg className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                          <span className="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover/link:bg-orange-50 group-hover/link:border-orange-200 group-hover/link:text-orange-600 transition-colors">
+                            <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4 group-hover/link:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                           </span>
                         </Link>
                       </div>

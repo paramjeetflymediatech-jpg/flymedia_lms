@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface MentorListProps {
   tutors: any[];
@@ -74,12 +75,12 @@ export function MentorList({ tutors }: MentorListProps) {
               
               {/* Actions */}
               <div className="mt-auto grid grid-cols-2 gap-3 relative z-10">
-                <button className="w-full py-2.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-700 text-sm font-bold hover:bg-slate-100 hover:border-slate-200 transition-colors">
+                <Link href={`/mentors/${tutor.id}`} className="w-full text-center py-2.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-700 text-sm font-bold hover:bg-slate-100 hover:border-slate-200 transition-colors">
                   View Profile
-                </button>
-                <button className="w-full py-2.5 rounded-xl bg-orange-600 text-white text-sm font-bold shadow-sm hover:bg-orange-700 transition-colors">
+                </Link>
+                <Link href={`/mentors/${tutor.id}?book=true`} className="w-full text-center py-2.5 rounded-xl bg-orange-600 text-white text-sm font-bold shadow-sm hover:bg-orange-700 transition-colors">
                   Book Trial
-                </button>
+                </Link>
               </div>
             </div>
           ))}
