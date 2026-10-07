@@ -585,7 +585,7 @@ export async function submitInquiryAction(formData: FormData) {
 
     // Notify the admin
     sendMail({
-      to: 'amandeepkumar.flymediatech@gmail.com', // Using your email from .env
+      to: 'anujguptaflymedia@gmail.com', // Using your email from .env
       subject: `New Contact Inquiry from ${name}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -650,7 +650,7 @@ export async function submitTutorApplication(formData: FormData) {
 
     // Notify the admin
     sendMail({
-      to: 'amandeepkumar.flymediatech@gmail.com',
+      to: 'anujguptaflymedia@gmail.com',
       subject: `New Tutor Application: ${fullName}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">

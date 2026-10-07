@@ -5,14 +5,14 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: 'amandeepkumar.flymediatech@gmail.com',
+    user: 'anujguptaflymedia@gmail.com',
     pass: 'ijavnsuywhievjxb'
   }
 });
 
 transporter.sendMail({
-  from: '"Flymedia Technology" <amandeepkumar.flymediatech@gmail.com>',
-  to: 'amandeepkumar.flymediatech@gmail.com',
+  from: '"Flymedia Technology" <anujguptaflymedia@gmail.com>',
+  to: 'anujguptaflymedia@gmail.com',
   subject: 'Test Email via Port 465',
   text: 'This is a test email.'
 }).then(info => {

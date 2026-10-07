@@ -47,9 +47,7 @@ export default function MobileMenu({ session }: MobileMenuProps) {
           <Link href="/contact" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Contact
           </Link>
-          <Link href="/become-tutor" onClick={() => setIsOpen(false)} className="text-base font-bold text-orange-500 hover:text-orange-600">
-            Become a tutor
-          </Link>
+
 
           <div className="pt-4 border-t border-slate-100 flex flex-col space-y-4">
             {session ? (
