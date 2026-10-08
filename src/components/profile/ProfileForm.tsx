@@ -55,7 +55,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
             {user.avatar ? (
               <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-3xl md:text-5xl font-bold text-purple-600">
+              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-3xl md:text-5xl font-bold text-orange-600">
                 {initials}
               </div>
             )}
@@ -96,7 +96,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
             <button 
               type="submit" 
               disabled={isPending}
-              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-70"
+              className="px-6 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white rounded-xl font-semibold  transition-colors shadow-sm disabled:opacity-70"
             >
               {isPending ? 'Saving...' : 'Save Changes'}
             </button>
@@ -105,7 +105,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
           <button 
             type="button" 
             onClick={() => setIsEditing(true)}
-            className="hidden sm:inline-flex px-6 py-2.5 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors shadow-sm mb-2"
+            className="hidden sm:inline-flex px-6 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white rounded-xl font-semibold  transition-colors shadow-sm mb-2"
           >
             Edit Profile
           </button>
@@ -117,7 +117,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
         <div className="space-y-6">
           <div className="border border-slate-100 rounded-2xl p-6 md:p-8 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <span className="text-purple-600">👤</span> Personal Information
+              <span className="text-orange-600">👤</span> Personal Information
             </h3>
             
             <div className="space-y-5">
@@ -129,7 +129,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                     name="name"
                     defaultValue={user.name || ''} 
                     disabled={!isEditing}
-                    className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 shadow-sm transition-colors
+                    className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 shadow-sm transition-colors
                       ${!isEditing ? 'bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-300 text-slate-900'}`}
                     placeholder="e.g. John Doe"
                   />
@@ -139,7 +139,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                   <input 
                     type="email" 
                     defaultValue={user.email} 
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-slate-100 text-slate-500 shadow-sm opacity-70 cursor-not-allowed"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-slate-100 text-slate-500 shadow-sm opacity-70 cursor-not-allowed"
                     disabled
                     readOnly
                   />
@@ -154,7 +154,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                   name="bio"
                   defaultValue={user.bio || ''}
                   disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 shadow-sm resize-none transition-colors
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 shadow-sm resize-none transition-colors
                     ${!isEditing ? 'bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-300 text-slate-900'}`}
                   placeholder="Write a short bio about yourself and your learning goals..."
                 ></textarea>
@@ -168,7 +168,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                     name="trialExpectations"
                     defaultValue={user.trialExpectations ? user.trialExpectations.join('\n') : ''}
                     disabled={!isEditing}
-                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 shadow-sm resize-none transition-colors
+                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 shadow-sm resize-none transition-colors
                       ${!isEditing ? 'bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-300 text-slate-900'}`}
                     placeholder="Enter expectations, one on each line..."
                   ></textarea>
@@ -182,7 +182,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                     <button 
                       type="submit" 
                       disabled={isPending}
-                      className="w-full px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-70"
+                      className="w-full px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-70"
                     >
                       {isPending ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -198,7 +198,7 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
                   <button 
                     type="button" 
                     onClick={() => setIsEditing(true)}
-                    className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors shadow-sm"
+                    className="w-full px-6 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white rounded-xl font-semibold  transition-colors shadow-sm"
                   >
                     Edit Profile
                   </button>

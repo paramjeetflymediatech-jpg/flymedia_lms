@@ -28,7 +28,7 @@ export default function RoleFilter({ initialRole }: { initialRole: string }) {
         id="role"
         value={initialRole}
         onChange={handleRoleChange}
-        className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 bg-slate-50 cursor-pointer min-w-[150px]"
+        className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 text-slate-700 bg-slate-50 cursor-pointer min-w-[150px]"
       >
         <option value="ALL">All Users</option>
         <option value="STUDENT">Students</option>

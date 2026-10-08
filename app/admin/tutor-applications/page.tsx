@@ -57,7 +57,7 @@ export default async function TutorApplicationsPage({
                     <div className="text-xs text-slate-500 mt-0.5">Applied: {new Date(app.createdAt).toLocaleDateString()}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded border border-blue-100">
+                    <span className="inline-block px-2.5 py-1 bg-orange-50 text-orange-700 text-[10px] font-bold uppercase rounded border border-orange-100">
                       {app.expertise}
                     </span>
                   </td>
@@ -77,7 +77,7 @@ export default async function TutorApplicationsPage({
                   <td className="px-6 py-4 text-right">
                     {app.status === 'PENDING' ? (
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors border border-blue-200 px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap">
+                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-orange-600 hover:text-orange-700 transition-colors border border-orange-200 px-3 py-1.5 rounded bg-orange-50 hover:bg-orange-100 whitespace-nowrap">
                           View
                         </Link>
                         <form action={rejectTutorApplication.bind(null, app.id) as any}>
@@ -93,7 +93,7 @@ export default async function TutorApplicationsPage({
                       </div>
                     ) : (
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-slate-500 hover:text-blue-600 transition-colors border border-slate-200 px-3 py-1.5 rounded bg-white hover:bg-slate-50 whitespace-nowrap">
+                        <Link href={`/admin/tutor-applications/${app.id}`} className="text-[10px] font-bold text-slate-500 hover:text-orange-600 transition-colors border border-slate-200 px-3 py-1.5 rounded bg-white hover:bg-slate-50 whitespace-nowrap">
                           View Details
                         </Link>
                         <form action={deleteTutorApplication.bind(null, app.id) as any}>

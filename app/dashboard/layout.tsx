@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const getLinkClass = (path: string) => {
     const isActive = pathname === path || (path !== '/dashboard' && pathname?.startsWith(path));
     return isActive
-      ? "flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold transition-colors shadow-sm text-sm"
+      ? "flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white rounded-xl font-bold transition-colors shadow-sm text-sm"
       : "flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl font-semibold transition-colors text-sm";
   };
 

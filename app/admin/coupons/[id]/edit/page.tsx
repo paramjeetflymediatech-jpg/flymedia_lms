@@ -46,7 +46,7 @@ export default async function EditCouponPage({ params }: { params: Promise<{ id:
                 type="text"
                 defaultValue={coupon.code}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 uppercase"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 uppercase"
               />
             </div>
             
@@ -59,7 +59,7 @@ export default async function EditCouponPage({ params }: { params: Promise<{ id:
                 max="100"
                 defaultValue={coupon.discountPercentage}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
 
@@ -69,7 +69,7 @@ export default async function EditCouponPage({ params }: { params: Promise<{ id:
                 name="expiresAt"
                 type="datetime-local"
                 defaultValue={coupon.expiresAt ? new Date(new Date(coupon.expiresAt).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
           </div>

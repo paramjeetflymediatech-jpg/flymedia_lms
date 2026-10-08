@@ -47,7 +47,7 @@ export default function TutorSearchFilter() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search tutors by name or bio..."
-          className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-sm transition-colors bg-white text-slate-900"
+          className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 shadow-sm transition-colors bg-white text-slate-900"
         />
         {query && (
           <button
@@ -63,7 +63,7 @@ export default function TutorSearchFilter() {
       </div>
       <button
         type="submit"
-        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl shadow-sm hover:bg-indigo-700 transition-colors"
+        className="px-4 py-2 bg-orange-600 text-white font-semibold rounded-xl shadow-sm hover:bg-orange-700 transition-colors"
       >
         Search
       </button>

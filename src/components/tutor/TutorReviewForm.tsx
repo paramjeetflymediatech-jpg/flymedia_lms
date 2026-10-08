@@ -65,14 +65,14 @@ export default function TutorReviewForm({ tutorId }: TutorReviewFormProps) {
               required
               rows={4}
               placeholder="Tell us about your learning experience with this tutor..."
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm resize-none text-slate-900"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-sm resize-none text-slate-900"
             ></textarea>
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"
+            className="w-full py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
           >
             {isSubmitting ? 'Submitting...' : 'Post Review'}
           </button>

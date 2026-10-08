@@ -47,6 +47,32 @@ User.init(
 );
 
 // ==========================================
+// 1.5 CATEGORY MODEL
+// ==========================================
+export class Category extends Model<InferAttributes<Category>, InferCreationAttributes<Category>> {
+  declare id: CreationOptional<string>;
+  declare name: string;
+  declare slug: string;
+  declare icon: CreationOptional<string | null>;
+  declare image: CreationOptional<string | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Category.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    slug: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    icon: { type: DataTypes.STRING(1024), allowNull: true },
+    image: { type: DataTypes.STRING(1024), allowNull: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'Category', tableName: 'categories' }
+);
+
+// ==========================================
 // 2. PACKAGE MODEL
 // ==========================================
 export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses' }>, InferCreationAttributes<Package, { omit: 'liveClasses' }>> {
@@ -54,10 +80,15 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare title: string;
   declare slug: string;
   declare description: string;
+  declare category: CreationOptional<string>;
   declare price: CreationOptional<number | null>;
   declare thumbnail: CreationOptional<string | null>;
   declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
   declare mode: CreationOptional<'ONLINE' | 'OFFLINE' | 'BOTH'>;
+  declare whatYoullLearn: CreationOptional<string[] | null>;
+  declare instructors: CreationOptional<{ name: string; role: string; bio: string; avatar: string }[] | null>;
+  declare successStories: CreationOptional<{ name: string; role: string; quote: string; avatar: string }[] | null>;
+  declare courseModules: CreationOptional<{ title: string; topics: string[] }[] | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   // Eager-loaded association
@@ -70,10 +101,15 @@ Package.init(
     title: { type: DataTypes.STRING(255), allowNull: false },
     slug: { type: DataTypes.STRING(255), allowNull: false, unique: true },
     description: { type: DataTypes.TEXT, allowNull: false },
+    category: { type: DataTypes.STRING(100), allowNull: false, defaultValue: 'Uncategorized' },
     price: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     thumbnail: { type: DataTypes.STRING(1024), allowNull: true },
     status: { type: DataTypes.ENUM('DRAFT', 'PUBLISHED'), allowNull: false, defaultValue: 'DRAFT' },
     mode: { type: DataTypes.ENUM('ONLINE', 'OFFLINE', 'BOTH'), allowNull: false, defaultValue: 'ONLINE' },
+    whatYoullLearn: { type: DataTypes.JSON, allowNull: true },
+    instructors: { type: DataTypes.JSON, allowNull: true },
+    successStories: { type: DataTypes.JSON, allowNull: true },
+    courseModules: { type: DataTypes.JSON, allowNull: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -309,6 +345,8 @@ export class SeoSetting extends Model<InferAttributes<SeoSetting>, InferCreation
   declare title: string;
   declare description: string;
   declare keywords: CreationOptional<string | null>;
+  declare ogTitle: CreationOptional<string | null>;
+  declare ogDescription: CreationOptional<string | null>;
   declare headerScript: CreationOptional<string | null>;
   declare footerScript: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
@@ -322,6 +360,8 @@ SeoSetting.init(
     title: { type: DataTypes.STRING(255), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
     keywords: { type: DataTypes.TEXT, allowNull: true },
+    ogTitle: { type: DataTypes.STRING(255), allowNull: true },
+    ogDescription: { type: DataTypes.TEXT, allowNull: true },
     headerScript: { type: DataTypes.TEXT, allowNull: true },
     footerScript: { type: DataTypes.TEXT, allowNull: true },
     createdAt: DataTypes.DATE,
@@ -414,6 +454,16 @@ export class BlogPost extends Model<InferAttributes<BlogPost, { omit: 'author' }
   declare readTime: CreationOptional<string | null>;
   declare image: CreationOptional<string | null>;
   declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
+  
+  // SEO Fields
+  declare metaTitle: CreationOptional<string | null>;
+  declare metaDescription: CreationOptional<string | null>;
+  declare keywords: CreationOptional<string | null>;
+  declare ogTitle: CreationOptional<string | null>;
+  declare ogDescription: CreationOptional<string | null>;
+  declare headerScript: CreationOptional<string | null>;
+  declare footerScript: CreationOptional<string | null>;
+
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare author?: NonAttribute<User>;
@@ -431,6 +481,16 @@ BlogPost.init(
     readTime: { type: DataTypes.STRING(50), allowNull: true },
     image: { type: DataTypes.STRING(1024), allowNull: true },
     status: { type: DataTypes.ENUM('DRAFT', 'PUBLISHED'), allowNull: false, defaultValue: 'DRAFT' },
+    
+    // SEO Fields
+    metaTitle: { type: DataTypes.STRING(255), allowNull: true },
+    metaDescription: { type: DataTypes.TEXT, allowNull: true },
+    keywords: { type: DataTypes.TEXT, allowNull: true },
+    ogTitle: { type: DataTypes.STRING(255), allowNull: true },
+    ogDescription: { type: DataTypes.TEXT, allowNull: true },
+    headerScript: { type: DataTypes.TEXT, allowNull: true },
+    footerScript: { type: DataTypes.TEXT, allowNull: true },
+
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -455,6 +515,36 @@ NewsletterSubscriber.init(
     updatedAt: DataTypes.DATE,
   },
   { sequelize, modelName: 'NewsletterSubscriber', tableName: 'newsletter_subscribers' }
+);
+
+// ==========================================
+// 16. TESTIMONIAL MODEL (HOMEPAGE)
+// ==========================================
+export class Testimonial extends Model<InferAttributes<Testimonial>, InferCreationAttributes<Testimonial>> {
+  declare id: CreationOptional<string>;
+  declare name: string;
+  declare role: string;
+  declare content: string;
+  declare avatar: CreationOptional<string | null>;
+  declare rating: CreationOptional<number>;
+  declare isActive: CreationOptional<boolean>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Testimonial.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    role: { type: DataTypes.STRING, allowNull: false },
+    content: { type: DataTypes.TEXT, allowNull: false },
+    avatar: { type: DataTypes.STRING(1024), allowNull: true },
+    rating: { type: DataTypes.INTEGER, defaultValue: 5 },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'Testimonial', tableName: 'testimonials' }
 );
 
 // ==========================================

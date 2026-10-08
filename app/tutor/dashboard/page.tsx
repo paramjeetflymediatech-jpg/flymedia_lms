@@ -85,7 +85,7 @@ export default async function TutorDashboard() {
                       📅 {new Date(lc.startTime).toLocaleString()} ({lc.duration} mins)
                     </div>
                     {lc.meetLink ? (
-                      <a href={lc.meetLink} target="_blank" rel="noreferrer" className="mt-3 inline-block px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 w-max">
+                      <a href={lc.meetLink} target="_blank" rel="noreferrer" className="mt-3 inline-block px-4 py-2 bg-orange-600 text-white text-xs font-bold rounded-lg hover:bg-orange-700 w-max">
                         Join Google Meet
                       </a>
                     ) : (

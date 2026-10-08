@@ -39,7 +39,7 @@ export default async function TutorApplicationDetailsPage({
         {/* Header */}
         <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg">
+            <div className="w-20 h-20 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg">
               {application.fullName.charAt(0)}
             </div>
             <div>
@@ -102,7 +102,7 @@ export default async function TutorApplicationDetailsPage({
             
             <div>
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Expertise</h3>
-              <div className="inline-block px-4 py-2 bg-blue-50 text-blue-700 text-sm font-bold rounded-xl border border-blue-100 shadow-sm">
+              <div className="inline-block px-4 py-2 bg-orange-50 text-orange-700 text-sm font-bold rounded-xl border border-orange-100 shadow-sm">
                 {application.expertise}
               </div>
             </div>

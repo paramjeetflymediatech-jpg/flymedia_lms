@@ -37,8 +37,17 @@ export default async function CreateBlogPostPage() {
                 name="title"
                 type="text"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 placeholder="e.g. 10 Best SEO Practices in 2024"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Slug (Optional - auto-generates from title)</label>
+              <input
+                name="slug"
+                type="text"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                placeholder="e.g. 10-best-seo-practices"
               />
             </div>
             <div>
@@ -47,7 +56,7 @@ export default async function CreateBlogPostPage() {
                 name="category"
                 type="text"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 placeholder="e.g. SEO, Marketing"
               />
             </div>
@@ -59,7 +68,7 @@ export default async function CreateBlogPostPage() {
               <input
                 name="readTime"
                 type="text"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 placeholder="e.g. 5 min read"
               />
             </div>
@@ -68,7 +77,7 @@ export default async function CreateBlogPostPage() {
               <select
                 name="status"
                 defaultValue="DRAFT"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
@@ -82,7 +91,7 @@ export default async function CreateBlogPostPage() {
               name="excerpt"
               required
               rows={3}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               placeholder="Short summary for the blog listing page..."
             />
           </div>
@@ -103,15 +112,92 @@ export default async function CreateBlogPostPage() {
                 name="imageUrl"
                 type="text"
                 placeholder="Enter image URL"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-100 space-y-6">
+            <h3 className="text-xl font-bold text-slate-900">SEO Settings (Optional)</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Meta Title</label>
+                <input
+                  name="metaTitle"
+                  type="text"
+                  placeholder="e.g. Best SEO Practices | Flymedia"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Keywords</label>
+                <input
+                  name="keywords"
+                  type="text"
+                  placeholder="e.g. seo, marketing, tips"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Meta Description</label>
+              <textarea
+                name="metaDescription"
+                rows={2}
+                placeholder="Brief description of the page for search engines..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Title (Social Share)</label>
+                <input
+                  name="ogTitle"
+                  type="text"
+                  placeholder="e.g. Learn Web Development"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Description</label>
+                <textarea
+                  name="ogDescription"
+                  rows={2}
+                  placeholder="Description for social sharing..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Header Script</label>
+                <textarea
+                  name="headerScript"
+                  rows={2}
+                  placeholder="<script>...</script>"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Footer Script</label>
+                <textarea
+                  name="footerScript"
+                  rows={2}
+                  placeholder="<script>...</script>"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
             </div>
           </div>
 
           <div className="pt-4 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all shadow-md text-sm"
+              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 rounded-xl transition-all shadow-md text-sm"
             >
               Create Post
             </button>

@@ -29,7 +29,7 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
         <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100">
           User not found.
         </div>
-        <Link href="/admin/users" className="mt-4 inline-block text-blue-600 hover:underline">
+        <Link href="/admin/users" className="mt-4 inline-block text-orange-600 hover:underline">
           &larr; Back to Users
         </Link>
       </div>
@@ -54,7 +54,7 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
         <div className="flex items-center gap-3">
           <Link 
             href={`/admin/users/${user.id}/edit`}
-            className="px-4 py-2 uppercase font-bold rounded-lg border text-sm tracking-wider bg-white text-blue-600 border-blue-200 hover:bg-blue-50 transition-colors"
+            className="px-4 py-2 uppercase font-bold rounded-lg border text-sm tracking-wider bg-white text-orange-600 border-orange-200 hover:bg-orange-50 transition-colors"
           >
             Edit
           </Link>
@@ -108,7 +108,7 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
         <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Enrollments</h2>
-            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">
+            <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full">
               {user.enrollments?.length || 0} Total
             </span>
           </div>
@@ -123,7 +123,7 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
                   </div>
                   <Link 
                     href={`/admin/enrollments/${enr.id}`}
-                    className="text-xs font-bold text-blue-600 hover:underline"
+                    className="text-xs font-bold text-orange-600 hover:underline"
                   >
                     View &rarr;
                   </Link>

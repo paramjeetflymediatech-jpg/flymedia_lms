@@ -124,7 +124,7 @@ export default function LiveClassItem({ lc, pkgId, tutors }: LiveClassItemProps)
         </div>
       </div>
       <div className="text-xs text-slate-600 space-y-1">
-        <p><strong>Time:</strong> {new Date(lc.startTime).toLocaleString()} ({lc.duration} mins)</p>
+        <p><strong>Time:</strong> {new Date(lc.startTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} ({lc.duration} mins)</p>
         <p><strong>Tutor:</strong> {lc.tutor ? lc.tutor.name : 'Unassigned'}</p>
         <p className="flex items-center gap-2">
           <strong>Meet Link:</strong>{' '}

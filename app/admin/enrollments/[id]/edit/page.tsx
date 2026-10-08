@@ -61,7 +61,7 @@ export default async function EditEnrollmentPage({ params }: { params: Promise<{
                 name="status"
                 defaultValue={enr.completedAt ? 'COMPLETED' : 'ACTIVE'}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               >
                 <option value="ACTIVE">Active (In Progress)</option>
                 <option value="COMPLETED">Completed</option>

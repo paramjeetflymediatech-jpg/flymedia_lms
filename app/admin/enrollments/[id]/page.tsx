@@ -53,7 +53,7 @@ export default async function AdminEnrollmentDetailPage({ params }: { params: { 
         {/* Student Details */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span> Student Information
+            <span className="w-2 h-2 rounded-full bg-orange-500"></span> Student Information
           </h2>
           <div className="space-y-4">
             <div>
@@ -79,7 +79,7 @@ export default async function AdminEnrollmentDetailPage({ params }: { params: { 
             </div>
             <div>
               <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Assigned Tutors</p>
-              <p className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">
+              <p className="font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded inline-block">
                 {tutorDisplay}
               </p>
             </div>

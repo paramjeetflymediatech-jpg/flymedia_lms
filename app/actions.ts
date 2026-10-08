@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
 
@@ -282,11 +282,97 @@ export async function adminUpdateEnrollment(enrollmentId: string, formData: Form
 // 3. ADMIN MANAGEMENT ACTIONS
 // ==========================================
 
+export async function adminCreateCategory(formData: FormData) {
+  await requireAdmin();
+  const name = formData.get('name') as string;
+  if (!name) return { error: 'Name is required' };
+
+  // Handle icon upload
+  let iconUrl: string | null = null;
+  const iconFile = formData.get('iconFile') as File | null;
+  if (iconFile && iconFile.size > 0) {
+    const bytes = await iconFile.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${iconFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+    iconUrl = `/uploads/categories/${fileName}`;
+  } else {
+    const urlInput = formData.get('iconUrl') as string;
+    if (urlInput) iconUrl = urlInput;
+  }
+
+  try {
+    const slug = slugify(name);
+    await Category.create({ name, slug, icon: iconUrl });
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+    return { success: true };
+  } catch (error) {
+    console.error('Create category error:', error);
+    return { error: 'Failed to create category' };
+  }
+}
+
+export async function adminDeleteCategory(categoryId: string) {
+  await requireAdmin();
+  try {
+    const category = await Category.findByPk(categoryId);
+    if (!category) return { error: 'Category not found' };
+    await category.destroy();
+    revalidatePath('/admin/categories');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete category error:', error);
+    return { error: 'Failed to delete category' };
+  }
+}
+
+export async function adminUpdateCategory(categoryId: string, formData: FormData) {
+  await requireAdmin();
+  const name = formData.get('name') as string;
+  if (!name) return { error: 'Name is required' };
+
+  try {
+    const category = await Category.findByPk(categoryId);
+    if (!category) return { error: 'Category not found' };
+
+    let iconUrl = category.icon;
+    const iconFile = formData.get('iconFile') as File | null;
+    if (iconFile && iconFile.size > 0) {
+      const bytes = await iconFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const fileName = `${Date.now()}-${iconFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+      iconUrl = `/uploads/categories/${fileName}`;
+    } else {
+      const urlInput = formData.get('iconUrl') as string;
+      if (urlInput !== null && urlInput !== undefined) iconUrl = urlInput;
+    }
+
+    category.name = name;
+    category.slug = slugify(name);
+    category.icon = iconUrl;
+    await category.save();
+
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+    return { success: true };
+  } catch (error) {
+    console.error('Update category error:', error);
+    return { error: 'Failed to update category' };
+  }
+}
+
 export async function adminCreatePackage(formData: FormData) {
   await requireAdmin();
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const category = (formData.get('category') as string) || 'Uncategorized';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   const mode = formData.get('mode') as 'ONLINE' | 'OFFLINE' | 'BOTH' || 'ONLINE';
 
@@ -327,6 +413,7 @@ export async function adminCreatePackage(formData: FormData) {
       title,
       slug: finalSlug,
       description,
+      category,
       price,
       thumbnail: finalThumbnailUrl,
       status: 'DRAFT',
@@ -346,6 +433,7 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const category = formData.get('category') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
   const mode = formData.get('mode') as 'ONLINE' | 'OFFLINE' | 'BOTH';
@@ -383,10 +471,44 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
 
     pkg.title = title;
     pkg.description = description;
+    if (category) pkg.category = category;
     pkg.status = status;
     if (mode) pkg.mode = mode;
     if (price !== null && price !== undefined) pkg.price = price;
     if (finalThumbnailUrl !== undefined) pkg.thumbnail = finalThumbnailUrl;
+
+    // What You'll Learn (one per line -> array)
+    const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
+    if (whatYoullLearnRaw !== null) {
+      pkg.whatYoullLearn = whatYoullLearnRaw
+        .split('\n')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+
+    // Instructors (JSON array)
+    const instructorsRaw = formData.get('instructors') as string;
+    if (instructorsRaw !== null) {
+      try {
+        pkg.instructors = instructorsRaw.trim() ? JSON.parse(instructorsRaw) : null;
+      } catch { pkg.instructors = null; }
+    }
+
+    // Success Stories (JSON array)
+    const successStoriesRaw = formData.get('successStories') as string;
+    if (successStoriesRaw !== null) {
+      try {
+        pkg.successStories = successStoriesRaw.trim() ? JSON.parse(successStoriesRaw) : null;
+      } catch { pkg.successStories = null; }
+    }
+
+    // Course Modules (JSON array)
+    const courseModulesRaw = formData.get('courseModules') as string;
+    if (courseModulesRaw !== null) {
+      try {
+        pkg.courseModules = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null;
+      } catch { pkg.courseModules = null; }
+    }
 
     await pkg.save();
 
@@ -913,6 +1035,8 @@ export async function adminCreateSeo(formData: FormData) {
   const title = (formData.get('title') as string || '').trim();
   const description = (formData.get('description') as string || '').trim();
   const keywords = (formData.get('keywords') as string || '').trim();
+  const ogTitle = (formData.get('ogTitle') as string || '').trim();
+  const ogDescription = (formData.get('ogDescription') as string || '').trim();
   const headerScript = (formData.get('headerScript') as string || '').trim();
   const footerScript = (formData.get('footerScript') as string || '').trim();
 
@@ -936,6 +1060,8 @@ export async function adminCreateSeo(formData: FormData) {
       title,
       description,
       keywords: keywords || null,
+      ogTitle: ogTitle || null,
+      ogDescription: ogDescription || null,
       headerScript: headerScript || null,
       footerScript: footerScript || null,
     });
@@ -956,6 +1082,8 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
   const title = (formData.get('title') as string || '').trim();
   const description = (formData.get('description') as string || '').trim();
   const keywords = (formData.get('keywords') as string || '').trim();
+  const ogTitle = (formData.get('ogTitle') as string || '').trim();
+  const ogDescription = (formData.get('ogDescription') as string || '').trim();
   const headerScript = (formData.get('headerScript') as string || '').trim();
   const footerScript = (formData.get('footerScript') as string || '').trim();
 
@@ -984,6 +1112,8 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
     seo.title = title;
     seo.description = description;
     seo.keywords = keywords || null;
+    seo.ogTitle = ogTitle || null;
+    seo.ogDescription = ogDescription || null;
     seo.headerScript = headerScript || null;
     seo.footerScript = footerScript || null;
 
@@ -1243,11 +1373,21 @@ export async function adminCreateBlogPost(formData: FormData) {
   const admin = await requireAdmin();
 
   const title = formData.get('title') as string;
+  const rawSlug = formData.get('slug') as string;
   const category = formData.get('category') as string;
   const excerpt = formData.get('excerpt') as string;
   const content = formData.get('content') as string;
   const readTime = formData.get('readTime') as string;
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
+
+  // SEO Fields
+  const metaTitle = formData.get('metaTitle') as string || null;
+  const metaDescription = formData.get('metaDescription') as string || null;
+  const keywords = formData.get('keywords') as string || null;
+  const ogTitle = formData.get('ogTitle') as string || null;
+  const ogDescription = formData.get('ogDescription') as string || null;
+  const headerScript = formData.get('headerScript') as string || null;
+  const footerScript = formData.get('footerScript') as string || null;
 
   let finalImageUrl = 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80';
 
@@ -1277,7 +1417,7 @@ export async function adminCreateBlogPost(formData: FormData) {
   }
 
   try {
-    const slug = slugify(title);
+    const slug = rawSlug ? slugify(rawSlug) : slugify(title);
     const existing = await BlogPost.findOne({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
 
@@ -1291,6 +1431,13 @@ export async function adminCreateBlogPost(formData: FormData) {
       readTime,
       image: finalImageUrl,
       status,
+      metaTitle,
+      metaDescription,
+      keywords,
+      ogTitle,
+      ogDescription,
+      headerScript,
+      footerScript,
     });
 
     revalidatePath('/admin/blogs');
@@ -1306,11 +1453,21 @@ export async function adminUpdateBlogPost(postId: string, formData: FormData) {
   await requireAdmin();
 
   const title = formData.get('title') as string;
+  const rawSlug = formData.get('slug') as string;
   const category = formData.get('category') as string;
   const excerpt = formData.get('excerpt') as string;
   const content = formData.get('content') as string;
   const readTime = formData.get('readTime') as string;
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
+
+  // SEO Fields
+  const metaTitle = formData.get('metaTitle') as string || null;
+  const metaDescription = formData.get('metaDescription') as string || null;
+  const keywords = formData.get('keywords') as string || null;
+  const ogTitle = formData.get('ogTitle') as string || null;
+  const ogDescription = formData.get('ogDescription') as string || null;
+  const headerScript = formData.get('headerScript') as string || null;
+  const footerScript = formData.get('footerScript') as string || null;
 
   let finalImageUrl = undefined;
 
@@ -1344,12 +1501,34 @@ export async function adminUpdateBlogPost(postId: string, formData: FormData) {
     if (!post) return { error: 'Blog post not found' };
 
     post.title = title;
+    if (rawSlug) {
+      const newSlug = slugify(rawSlug);
+      if (newSlug !== post.slug) {
+        const existing = await BlogPost.findOne({ where: { slug: newSlug } });
+        post.slug = existing ? `${newSlug}-${Date.now().toString().slice(-4)}` : newSlug;
+      }
+    } else {
+      if (post.title !== title) {
+        const newSlug = slugify(title);
+        const existing = await BlogPost.findOne({ where: { slug: newSlug } });
+        post.slug = existing && existing.id !== post.id ? `${newSlug}-${Date.now().toString().slice(-4)}` : newSlug;
+      }
+    }
+    
     post.category = category;
     post.excerpt = excerpt;
     post.content = content;
     post.readTime = readTime;
     post.status = status;
     if (finalImageUrl !== undefined) post.image = finalImageUrl;
+
+    post.metaTitle = metaTitle;
+    post.metaDescription = metaDescription;
+    post.keywords = keywords;
+    post.ogTitle = ogTitle;
+    post.ogDescription = ogDescription;
+    post.headerScript = headerScript;
+    post.footerScript = footerScript;
 
     await post.save();
 
@@ -1406,3 +1585,42 @@ export async function subscribeNewsletterAction(formData: FormData) {
     return { error: 'Something went wrong. Please try again.' };
   }
 }
+
+// ==========================================
+// 7. ADMIN INQUIRY / LEAD ACTIONS
+// ==========================================
+
+export async function adminUpdateInquiryStatus(inquiryId: string, status: 'NEW' | 'CONTACTED' | 'RESOLVED') {
+  await requireAdmin();
+  try {
+    const inquiry = await Inquiry.findByPk(inquiryId);
+    if (!inquiry) return { error: 'Inquiry not found' };
+    
+    inquiry.status = status;
+    await inquiry.save();
+    
+    revalidatePath('/admin/leads');
+    return { success: true };
+  } catch (error) {
+    console.error('Update inquiry status error:', error);
+    return { error: 'Failed to update status' };
+  }
+}
+
+export async function adminDeleteInquiry(inquiryId: string) {
+  await requireAdmin();
+  try {
+    const inquiry = await Inquiry.findByPk(inquiryId);
+    if (!inquiry) return { error: 'Inquiry not found' };
+    
+    await inquiry.destroy();
+    
+    revalidatePath('/admin/leads');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete inquiry error:', error);
+    return { error: 'Failed to delete inquiry' };
+  }
+}
+
+

@@ -3,7 +3,8 @@ import Header from '../src/components/layout/Header';
 import Footer from '../src/components/layout/Footer';
 import HeroSlider from '../src/components/home/HeroSlider';
 import CallbackForm from '../src/components/home/CallbackForm';
-import { Package, SeoSetting } from '../src/db/models';
+import TestimonialsSlider from '../src/components/home/TestimonialsSlider';
+import { Package, SeoSetting, Testimonial } from '../src/db/models';
 import { Metadata } from 'next';
 
 export const revalidate = 0; // Dynamic rendering to fetch courses
@@ -30,10 +31,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   let packages: Package[] = [];
+  let testimonials: any[] = [];
   try {
     packages = await Package.findAll({ limit: 4 });
+    const testimonialsData = await Testimonial.findAll({
+      where: { isActive: true },
+      order: [['createdAt', 'DESC']],
+      limit: 6
+    });
+    testimonials = testimonialsData.map(t => t.toJSON());
   } catch (error) {
-    console.error('Failed to load packages for homepage:', error);
+    console.error('Failed to load data for homepage:', error);
   }
 
   return (
@@ -199,8 +207,8 @@ export default async function HomePage() {
                           </h3>
                           {pkg.mode && (
                             <span className={`self-start text-[9px] sm:text-[10px] uppercase tracking-wider font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md flex-shrink-0 ${pkg.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' :
-                                pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
-                                  'bg-indigo-100 text-indigo-700'
+                              pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
+                                'bg-indigo-100 text-indigo-700'
                               }`}>
                               {pkg.mode === 'BOTH' ? 'Online + Offline' : pkg.mode}
                             </span>
@@ -268,7 +276,7 @@ export default async function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                 <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-orange-500 hover:shadow-md transition-all group cursor-pointer">
                   <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Direct Call Support</span>
-                  <a href="tel:+919888484310" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91-98884-84310</a>
+                  <a href="tel:+919888484310" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91-97793-24178</a>
                 </div>
                 <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-rose-500 hover:shadow-md transition-all group cursor-pointer">
                   <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Email Admissions</span>
@@ -308,64 +316,7 @@ export default async function HomePage() {
               <p className="text-lg text-slate-600 font-medium">Join thousands of successful graduates who have transformed their careers with our premium bootcamps.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Testimonial 1 */}
-              <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                <div className="flex gap-1 text-orange-400 mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                  ))}
-                </div>
-                <p className="text-slate-700 leading-relaxed font-medium mb-8">
-                  "The Full Stack Developer bootcamp completely changed my career trajectory. The direct mentorship from industry experts gave me the confidence to land my dream job within weeks of graduating."
-                </p>
-                <div className="flex items-center gap-4">
-                  <img src="https://i.pravatar.cc/100?img=68" alt="Sarah Jenkins" className="w-12 h-12 rounded-full border-2 border-slate-100" />
-                  <div>
-                    <h4 className="font-extrabold text-slate-900">Sarah Jenkins</h4>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Frontend Engineer</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 2 */}
-              <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                <div className="flex gap-1 text-orange-400 mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                  ))}
-                </div>
-                <p className="text-slate-700 leading-relaxed font-medium mb-8">
-                  "I was blown away by the depth of the Digital Marketing curriculum. We didn't just learn theory; we actually ran live campaigns. Highly recommended for anyone serious about marketing."
-                </p>
-                <div className="flex items-center gap-4">
-                  <img src="https://i.pravatar.cc/100?img=11" alt="Michael Chen" className="w-12 h-12 rounded-full border-2 border-slate-100" />
-                  <div>
-                    <h4 className="font-extrabold text-slate-900">Michael Chen</h4>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Growth Lead</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 3 */}
-              <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                <div className="flex gap-1 text-orange-400 mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                  ))}
-                </div>
-                <p className="text-slate-700 leading-relaxed font-medium mb-8">
-                  &quot;The tools are unparalleled. Everything you need to learn and build real-world applications in one seamless program. It&apos;s truly the best investment I&apos;ve made in my education.&quot;
-                </p>
-                <div className="flex items-center gap-4">
-                  <img src="https://i.pravatar.cc/100?img=32" alt="Emily Davis" className="w-12 h-12 rounded-full border-2 border-slate-100" />
-                  <div>
-                    <h4 className="font-extrabold text-slate-900">Emily Davis</h4>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Product Manager</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TestimonialsSlider testimonials={testimonials} />
           </div>
         </section>
 

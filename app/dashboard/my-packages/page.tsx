@@ -48,14 +48,14 @@ export default async function MyPackagesPage() {
 
       {enrolledPackages.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center max-w-2xl mx-auto">
-          <div className="w-16 h-16 rounded-full bg-purple-50 text-purple-600 text-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-orange-50 text-orange-600 text-2xl flex items-center justify-center mx-auto mb-4">
             📦
           </div>
           <h3 className="text-xl font-bold text-slate-900 mb-2">No packages yet</h3>
           <p className="text-slate-500 mb-8 max-w-md mx-auto">
             You haven't enrolled in any packages yet. Discover our packages and start learning today!
           </p>
-          <Link href="/packages" className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-sm shadow-purple-200">
+          <Link href="/packages" className="inline-flex items-center justify-center px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition-colors shadow-sm shadow-purple-200">
             Browse Packages
           </Link>
         </div>
@@ -94,7 +94,7 @@ export default async function MyPackagesPage() {
                 <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-3">
                   <Link
                     href={`/packages/${p.slug}`}
-                    className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-all text-center"
+                    className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl transition-all text-center"
                   >
                     View Details
                   </Link>

@@ -35,7 +35,7 @@ export default function InviteUserModal() {
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all"
+        className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600  rounded-xl transition-all"
       >
         + Add User
       </button>

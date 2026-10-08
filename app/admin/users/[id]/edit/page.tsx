@@ -47,7 +47,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                 type="text"
                 defaultValue={user.name}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
             
@@ -58,7 +58,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                 type="email"
                 defaultValue={user.email}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
             
@@ -68,7 +68,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                 name="role"
                 defaultValue={user.role}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               >
                 <option value="STUDENT">Student</option>
                 <option value="TUTOR">Tutor</option>
@@ -82,7 +82,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                 name="password"
                 type="password"
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
 
@@ -94,7 +94,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                 rows={4}
                 defaultValue={user.bio || ''}
                 placeholder="Brief biography..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
 
@@ -110,7 +110,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                     type="text"
                     defaultValue={user.professionTitle || ''}
                     placeholder="e.g. Senior Software Engineer"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                   />
                 </div>
                 
@@ -121,7 +121,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                     type="text"
                     defaultValue={user.skills ? (user.skills as string[]).join(', ') : ''}
                     placeholder="e.g. React, Next.js, System Design"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                   />
                 </div>
 
@@ -134,7 +134,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                     min="1"
                     max="5"
                     defaultValue={user.rating || 5.0}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                   />
                 </div>
 
@@ -145,7 +145,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                     type="number"
                     min="0"
                     defaultValue={user.reviewsCount || 0}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                   />
                 </div>
 
@@ -156,7 +156,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
                     type="number"
                     min="0"
                     defaultValue={user.studentsMentored || 0}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                   />
                 </div>
               </div>
@@ -166,7 +166,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
           <div className="pt-4 flex justify-end border-t border-slate-100 mt-6">
             <button
               type="submit"
-              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md text-sm"
+              className="inline-flex items-center justify-center px-8 py-3 font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl transition-all shadow-md text-sm"
             >
               Save Changes
             </button>

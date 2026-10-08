@@ -46,7 +46,7 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                 type="text"
                 defaultValue={seo.pagePath}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
             
@@ -57,7 +57,7 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                 type="text"
                 defaultValue={seo.title}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
 
@@ -68,7 +68,7 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                 defaultValue={seo.description}
                 required
                 rows={4}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
 
@@ -78,8 +78,30 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                 name="keywords"
                 type="text"
                 defaultValue={seo.keywords || ''}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Title (Optional)</label>
+                <input
+                  name="ogTitle"
+                  type="text"
+                  defaultValue={seo.ogTitle || ''}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Description (Optional)</label>
+                <textarea
+                  name="ogDescription"
+                  rows={2}
+                  defaultValue={seo.ogDescription || ''}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100">
@@ -92,7 +114,7 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                     defaultValue={seo.headerScript || ''}
                     rows={4}
                     placeholder="<script>...</script> (Injected inside <head>)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -102,7 +124,7 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                     defaultValue={seo.footerScript || ''}
                     rows={4}
                     placeholder="<script>...</script> (Injected before </body>)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
               </div>

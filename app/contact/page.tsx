@@ -18,7 +18,7 @@ export default function ContactPage() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
-          
+
           {/* Header Section */}
           <div className="text-center max-w-4xl mx-auto space-y-6 pt-12">
             <h1 className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tight leading-[1.1]">
@@ -30,10 +30,10 @@ export default function ContactPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-            
+
             {/* Contact Details Cards */}
             <div className="lg:col-span-5 space-y-6">
-              
+
               <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-2xl">
@@ -41,7 +41,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Call Us</p>
-                    <a href="tel:+919888484310" className="block text-xl font-black text-slate-900 hover:text-orange-600 transition-colors">+91-98884-84310</a>
+                    <a href="tel:+919888484310" className="block text-xl font-black text-slate-900 hover:text-orange-600 transition-colors">+91-97793-24178</a>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -57,7 +57,7 @@ export default function ContactPage() {
 
               <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 space-y-6">
                 <h3 className="text-xl font-black text-slate-900">Global Offices</h3>
-                
+
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4 group cursor-pointer">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -97,7 +97,7 @@ export default function ContactPage() {
             <div className="lg:col-span-7">
               <div className="bg-white border border-slate-100 p-8 sm:p-12 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 blur-[80px] rounded-full pointer-events-none" />
-                
+
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-2">
                     <h2 className="text-3xl font-black text-slate-900">Send an Inquiry</h2>

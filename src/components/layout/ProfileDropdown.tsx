@@ -45,7 +45,7 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 focus:outline-none"
       >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-indigo-700 font-bold border-2 border-transparent hover:border-indigo-200 transition-colors shadow-sm overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-orange-700 font-bold border-2 border-transparent hover:border-orange-200 transition-colors shadow-sm overflow-hidden">
           {user.avatar ? (
             <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
           ) : (
@@ -64,7 +64,7 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
           <Link 
             href={getDashboardLink()} 
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-orange-600 hover:bg-slate-50 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
             Dashboard

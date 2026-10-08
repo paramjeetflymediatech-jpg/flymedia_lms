@@ -23,8 +23,8 @@ export default async function TutorsPage({
   const whereClause: any = { role: 'TUTOR' };
   if (q) {
     whereClause[Op.or] = [
-      { name: { [Op.iLike]: `%${q}%` } },
-      { bio: { [Op.iLike]: `%${q}%` } },
+      { name: { [Op.like]: `%${q}%` } },
+      { bio: { [Op.like]: `%${q}%` } },
     ];
   }
 
@@ -67,7 +67,7 @@ export default async function TutorsPage({
             {q ? "We couldn't find any tutors matching your search." : "We are currently onboarding our expert tutors. Please check back later!"}
           </p>
           {q && (
-            <Link href="/dashboard/tutors" className="mt-4 inline-block px-4 py-2 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
+            <Link href="/dashboard/tutors" className="mt-4 inline-block px-4 py-2 bg-orange-50 text-orange-700 font-semibold rounded-xl hover:bg-orange-100 transition-colors">
               Clear Search
             </Link>
           )}
@@ -90,14 +90,14 @@ export default async function TutorsPage({
                     {tutor.avatar ? (
                       <img src={tutor.avatar} alt={tutor.name} className="w-16 h-16 rounded-full object-cover shadow-sm ring-4 ring-white border border-slate-100" />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-700 shadow-sm ring-4 ring-white border border-slate-100 shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-xl font-bold text-orange-700 shadow-sm ring-4 ring-white border border-slate-100 shrink-0">
                         {tutor.name ? tutor.name.charAt(0).toUpperCase() : 'T'}
                       </div>
                     )}
                     <div>
                       <h3 className="font-bold text-lg text-slate-900">{tutor.name || 'Anonymous Tutor'}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-block px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-indigo-100">
+                        <span className="inline-block px-2.5 py-0.5 bg-orange-50 text-orange-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-orange-100">
                           Verified Tutor
                         </span>
                         <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
@@ -116,7 +116,7 @@ export default async function TutorsPage({
                     
                     <Link 
                       href={`/dashboard/tutors/${tutor.id}`}
-                      className="w-full mt-auto block text-center py-2.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-bold text-sm rounded-xl transition-colors border border-indigo-100 hover:border-indigo-600"
+                      className="w-full mt-auto block text-center py-2.5 bg-orange-50 hover:bg-orange-600 text-orange-700 hover:text-white font-bold text-sm rounded-xl transition-colors border border-orange-100 hover:border-orange-600"
                     >
                       View Full Profile
                     </Link>

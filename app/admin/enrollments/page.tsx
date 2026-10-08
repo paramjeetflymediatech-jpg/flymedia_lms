@@ -69,9 +69,9 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
             name="search" 
             defaultValue={searchParam}
             placeholder="Search student..." 
-            className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+            className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm"
           />
-          <button type="submit" className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors text-sm">
+          <button type="submit" className="px-4 py-2 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-colors text-sm">
             Search
           </button>
           {searchParam && (
@@ -87,7 +87,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
         <form action={async (formData) => { 'use server'; await adminCreateEnrollment(formData); }} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Student</label>
-            <select name="userId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 bg-white">
+            <select name="userId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white">
               <option value="">Select Student...</option>
               {users.map((u: any) => (
                 <option key={u.id} value={u.id}>{u.name || 'No Name'} ({u.email})</option>
@@ -96,7 +96,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package</label>
-            <select name="packageId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 bg-white">
+            <select name="packageId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white">
               <option value="">Select Package...</option>
               {packages.map((p: any) => (
                 <option key={p.id} value={p.id}>{p.title}</option>
@@ -104,7 +104,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
             </select>
           </div>
           <div>
-            <button type="submit" className="w-full inline-flex items-center justify-center px-6 py-2.5 font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all shadow-sm text-sm">
+            <button type="submit" className="w-full inline-flex items-center justify-center px-6 py-2.5 font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 rounded-xl transition-all shadow-sm text-sm">
               Enroll Student
             </button>
           </div>
@@ -146,7 +146,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
                         <div className="text-xs text-slate-500">{enr.User?.email}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        <span className="font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded">
                           {tutorDisplay}
                         </span>
                       </td>
@@ -167,7 +167,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
                         <div className="flex items-center justify-end gap-3">
                           <Link 
                             href={`/admin/enrollments/${enr.id}/edit`}
-                            className="text-slate-500 hover:text-blue-600 transition-colors p-1"
+                            className="text-slate-500 hover:text-orange-600 transition-colors p-1"
                             title="Edit"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { getSessionPayload } from '../../lib/auth';
-import { User } from '../../db/models';
+import { User, Category } from '../../db/models';
 import MobileMenu from './MobileMenu';
 import ProfileDropdown from './ProfileDropdown';
+import ProgramsDropdown from './ProgramsDropdown';
 
 export default async function Header() {
   const session = await getSessionPayload();
@@ -16,7 +17,6 @@ export default async function Header() {
         role: user.role,
       };
     } else {
-      // Fallback if DB user not found
       dbUser = {
         name: session.name,
         avatar: null,
@@ -24,6 +24,10 @@ export default async function Header() {
       };
     }
   }
+
+  // Fetch all categories for Programs dropdown
+  const categoriesData = await Category.findAll({ order: [['name', 'ASC']] });
+  const categories = categoriesData.map(c => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon }));
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-100 shadow-sm transition-all duration-300">
@@ -37,25 +41,24 @@ export default async function Header() {
         <nav className="hidden md:flex items-center space-x-10 text-sm font-bold text-slate-600">
           <Link href="/" className="hover:text-orange-500 transition-colors relative group">
             <span>Home</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
-          <Link href="/packages" className="hover:text-orange-500 transition-colors relative group">
-            <span>Programs</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
+
+          {/* Programs with category dropdown */}
+          <ProgramsDropdown categories={categories} />
+
           <Link href="/about" className="hover:text-orange-500 transition-colors relative group">
             <span>About Us</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
           <Link href="/contact" className="hover:text-orange-500 transition-colors relative group">
             <span>Contact</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
           <Link href="/mentors" className="hover:text-orange-500 transition-colors relative group">
             <span>Tutors</span>
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
-
         </nav>
 
         {/* Auth CTAs */}

@@ -34,7 +34,7 @@ export default function CoursesTabs({
             onClick={() => setTab(t)}
             className={`px-4 py-3 font-semibold text-sm transition-colors border-b-2 capitalize ${
               tab === t
-                ? 'border-purple-600 text-purple-600'
+                ? 'border-orange-600 text-orange-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
@@ -54,15 +54,15 @@ export default function CoursesTabs({
         {displayClasses.length > 0 ? (
           <div className="space-y-4">
             {displayClasses.map((cls, idx) => (
-              <div key={idx} className="flex flex-col sm:flex-row gap-6 p-6 border border-slate-100 rounded-2xl hover:border-purple-100 hover:shadow-md transition-all">
+              <div key={idx} className="flex flex-col sm:flex-row gap-6 p-6 border border-slate-100 rounded-2xl hover:border-orange-100 hover:shadow-md transition-all">
                 {cls.packageThumbnail ? (
                   <div className="w-full sm:w-48 h-32 rounded-xl shrink-0 bg-slate-100 overflow-hidden border border-slate-200 relative">
                     <img src={cls.packageThumbnail} alt={cls.title} className="w-full h-full object-cover" />
-                    {tab === 'upcoming' && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 bg-purple-600 text-white rounded-md shadow-sm">UPCOMING</span>}
+                    {tab === 'upcoming' && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 bg-orange-600 text-white rounded-md shadow-sm">UPCOMING</span>}
                     {tab === 'completed' && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 bg-emerald-600 text-white rounded-md shadow-sm">COMPLETED</span>}
                   </div>
                 ) : (
-                  <div className="w-full sm:w-48 h-32 rounded-xl shrink-0 bg-slate-100 flex flex-col items-center justify-center text-purple-600 border border-purple-100">
+                  <div className="w-full sm:w-48 h-32 rounded-xl shrink-0 bg-slate-100 flex flex-col items-center justify-center text-orange-600 border border-orange-100">
                     <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                   </div>
                 )}
@@ -84,7 +84,7 @@ export default function CoursesTabs({
                   {tab === 'upcoming' && (
                     <div className="pt-2">
                       {cls.meetLink ? (
-                        <a href={cls.meetLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm">
+                        <a href={cls.meetLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-sm">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                           Join Session
                         </a>
@@ -110,7 +110,7 @@ export default function CoursesTabs({
               {tab === 'missed' && "You haven't missed any sessions."}
             </p>
             {tab === 'upcoming' && (
-              <Link href="/packages" className="inline-block mt-6 px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors">
+              <Link href="/packages" className="inline-block mt-6 px-6 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white text-sm font-bold rounded-xl  transition-colors">
                 Browse Packages
               </Link>
             )}

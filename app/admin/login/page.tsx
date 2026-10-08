@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-900 relative overflow-hidden">
       {/* Abstract Dark Background Elements */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] mix-blend-screen animate-pulse pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px] mix-blend-screen animate-pulse pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[150px] mix-blend-screen pointer-events-none" />
 
       <div className="w-full max-w-md p-8 relative z-10">
@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
                 name="email"
                 type="email"
                 required
-                className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
                 placeholder="admin@company.com"
               />
             </div>
@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
                 name="password"
                 type="password"
                 required
-                className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 rounded-2xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
                 placeholder="••••••••"
               />
             </div>
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-black rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white text-sm font-black rounded-2xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 transform hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               {isPending ? (
                 <>

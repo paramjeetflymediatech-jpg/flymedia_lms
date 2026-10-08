@@ -98,7 +98,7 @@ export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: an
           isEnrolled ? (
             <Link
               href={`/dashboard`}
-              className="w-full inline-flex items-center justify-center px-6 py-5 font-black text-white bg-slate-900 hover:bg-slate-800 rounded-2xl transition-all shadow-md group"
+              className="w-full inline-flex items-center justify-center px-6 py-5 font-black text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600  rounded-2xl transition-all shadow-md group"
             >
               <span>Go to Dashboard</span>
               <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>

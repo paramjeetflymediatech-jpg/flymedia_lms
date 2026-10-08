@@ -36,7 +36,7 @@ export default async function NewSeoPage() {
                 type="text"
                 placeholder="e.g. /courses, /about, or GLOBAL"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
               />
               <p className="text-[10px] text-slate-500 mt-1">Use 'GLOBAL' for site-wide header/footer scripts.</p>
             </div>
@@ -48,7 +48,7 @@ export default async function NewSeoPage() {
                 type="text"
                 placeholder="e.g. Web Development Training | Flymedia"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
               />
             </div>
             
@@ -59,7 +59,7 @@ export default async function NewSeoPage() {
                 rows={3}
                 placeholder="Brief description of the page for search engines..."
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
               />
             </div>
             
@@ -69,8 +69,30 @@ export default async function NewSeoPage() {
                 name="keywords"
                 type="text"
                 placeholder="e.g. web dev, training, bootcamp"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Title (Optional)</label>
+                <input
+                  name="ogTitle"
+                  type="text"
+                  placeholder="e.g. Learn Web Development"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">OG Description (Optional)</label>
+                <textarea
+                  name="ogDescription"
+                  rows={2}
+                  placeholder="Description for social sharing..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100">
@@ -82,7 +104,7 @@ export default async function NewSeoPage() {
                     name="headerScript"
                     rows={4}
                     placeholder="<script>...</script> (Injected inside <head>)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -91,7 +113,7 @@ export default async function NewSeoPage() {
                     name="footerScript"
                     rows={4}
                     placeholder="<script>...</script> (Injected before </body>)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 text-xs text-slate-900 placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
               </div>

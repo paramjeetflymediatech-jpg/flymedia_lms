@@ -15,6 +15,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
   const resolvedSearchParams = await searchParams;
   const pageParam = resolvedSearchParams?.page;
   const searchParam = resolvedSearchParams?.search as string || '';
+  const categoryParam = resolvedSearchParams?.category as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 6;
   const offset = (page - 1) * limit;
@@ -23,9 +24,13 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
   let totalPages = 1;
 
   try {
-    const whereClause = searchParam ? {
-      title: { [Op.like]: `%${searchParam}%` }
-    } : {};
+    const whereClause: any = {};
+    if (searchParam) {
+      whereClause.title = { [Op.like]: `%${searchParam}%` };
+    }
+    if (categoryParam) {
+      whereClause.category = categoryParam;
+    }
     
     const { count, rows } = await Package.findAndCountAll({
       where: whereClause,
@@ -47,17 +52,20 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
           {/* Headline */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              All Training Programs
+              {categoryParam ? `${categoryParam} Programs` : 'All Training Programs'}
             </h1>
             <p className="text-lg text-slate-600">
-              Select a specialized learning track to expand your skill set and earn industry-recognized credentials.
+              {categoryParam 
+                ? `Explore our specialized ${categoryParam} courses designed to expand your skill set.`
+                : 'Select a specialized learning track to expand your skill set and earn industry-recognized credentials.'}
             </p>
           </div>
 
           {/* Search Bar */}
           <form method="GET" action="/packages" className="max-w-xl mx-auto flex gap-2">
+            {categoryParam && <input type="hidden" name="category" value={categoryParam} />}
             <input 
-              type="text" 
+              type="text"  
               name="search" 
               defaultValue={searchParam}
               placeholder="Search packages..." 
@@ -66,9 +74,9 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
             <button type="submit" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm">
               Search
             </button>
-            {searchParam && (
+            {(searchParam || categoryParam) && (
               <Link href="/packages" className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-sm">
-                Clear
+                Clear All Filters
               </Link>
             )}
           </form>
@@ -81,7 +89,9 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
               </div>
               <p className="text-slate-700 font-bold text-xl mb-2">No packages found</p>
               <p className="text-slate-500">
-                {searchParam ? `We couldn't find any packages matching "${searchParam}". Try adjusting your search.` : 'Check back later for new training programs.'}
+                {searchParam || categoryParam 
+                  ? `We couldn't find any packages matching your filters. Try adjusting your search.` 
+                  : 'Check back later for new training programs.'}
               </p>
             </div>
           ) : (
@@ -100,7 +110,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                           className="w-full h-full object-cover"
                         />
                         <span className="absolute top-4 right-4 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-900/80 text-white backdrop-blur">
-                          PROGRAM
+                          {pkg.category || 'PROGRAM'}
                         </span>
                       </div>
                     )}
@@ -146,7 +156,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
               {totalPages > 1 && (
                 <div className="flex items-center justify-center space-x-4 mt-12">
                   {page > 1 ? (
-                    <Link href={`/packages?page=${page - 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                    <Link href={`/packages?page=${page - 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}${categoryParam ? `&category=${encodeURIComponent(categoryParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                       Previous
                     </Link>
                   ) : (
@@ -160,7 +170,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                   </span>
 
                   {page < totalPages ? (
-                    <Link href={`/packages?page=${page + 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                    <Link href={`/packages?page=${page + 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}${categoryParam ? `&category=${encodeURIComponent(categoryParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                       Next
                     </Link>
                   ) : (

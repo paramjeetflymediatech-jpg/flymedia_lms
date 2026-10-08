@@ -63,7 +63,7 @@ export default async function TutorStudentsPage() {
                   <tr key={enr.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0 border border-blue-200 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold flex-shrink-0 border border-orange-200 overflow-hidden">
                           {enr.User?.avatar ? (
                             <img src={enr.User.avatar} alt="Avatar" className="w-full h-full object-cover" />
                           ) : (

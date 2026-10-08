@@ -59,7 +59,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
               onClick={() => goToPage(page)}
               className={`w-10 h-10 rounded-lg text-sm font-semibold transition-colors ${
                 currentPage === page
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-orange-600 text-white shadow-sm'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >

@@ -174,13 +174,13 @@ export default function BookSessionPage() {
       {step === 1 && (
         <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 h-fit">
           <h2 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-600">1</span>
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-600">1</span>
             Choose a Tutor
           </h2>
 
           {isLoadingTutors ? (
             <div className="py-12 flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
             </div>
           ) : isEligible === false ? (
             <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -193,7 +193,7 @@ export default function BookSessionPage() {
               <p className="text-slate-500 max-w-md mx-auto mb-8">
                 You currently do not have any active course or package enrollments. Please purchase a package to unlock 1-on-1 tutoring sessions.
               </p>
-              <Link href="/packages" className="inline-block px-8 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-200">
+              <Link href="/packages" className="inline-block px-8 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-sm shadow-purple-200">
                 Explore Packages
               </Link>
             </div>
@@ -202,9 +202,9 @@ export default function BookSessionPage() {
           ) : (
             <div className="flex flex-col gap-4">
               {tutors.map(tutor => (
-                <div key={tutor.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left transition-all hover:shadow-md hover:border-purple-200 group gap-4">
+                <div key={tutor.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center sm:justify-between text-center sm:text-left transition-all hover:shadow-md hover:border-orange-200 group gap-4">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-purple-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-purple-600 font-bold text-xl shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-orange-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-orange-600 font-bold text-xl shrink-0">
                       {tutor.avatar ? (
                         <img src={tutor.avatar} alt={tutor.name} className="w-full h-full object-cover" />
                       ) : (
@@ -218,7 +218,7 @@ export default function BookSessionPage() {
                   </div>
                   <button 
                     onClick={() => handleSelectTutor(tutor)}
-                    className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold rounded-xl group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 transition-colors"
+                    className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold rounded-xl group-hover:bg-orange-600 group-hover:text-white group-hover:border-orange-600 transition-colors"
                   >
                     View Availability
                   </button>
@@ -235,12 +235,12 @@ export default function BookSessionPage() {
           
           {/* CALENDAR WIDGET */}
           <div className="lg:col-span-5 xl:col-span-4 bg-white p-6 rounded-3xl border border-slate-100 h-fit">
-            <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-2xl mb-6">
-               <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center font-bold text-purple-600">
+            <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-2xl mb-6">
+               <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center font-bold text-orange-600">
                   {selectedTutor.avatar ? <img src={selectedTutor.avatar} className="w-full h-full object-cover" /> : selectedTutor.name.substring(0,2).toUpperCase()}
                </div>
                <div>
-                 <p className="text-xs font-black uppercase tracking-wider text-purple-400 mb-0.5">Booking with</p>
+                 <p className="text-xs font-black uppercase tracking-wider text-orange-400 mb-0.5">Booking with</p>
                  <p className="font-bold text-slate-800">{selectedTutor.name}</p>
                </div>
             </div>
@@ -276,14 +276,14 @@ export default function BookSessionPage() {
                     disabled={!day.isCurrentMonth}
                     className={`
                       relative flex flex-col items-center justify-center py-2 rounded-xl transition-all border
-                      ${!day.isCurrentMonth ? 'text-slate-200 bg-transparent border-transparent cursor-not-allowed' : 'text-slate-700 bg-white hover:bg-purple-50 hover:text-purple-700 hover:border-purple-100'}
-                      ${isSelected ? '!bg-purple-600 !text-white !border-purple-600 shadow-md shadow-purple-200' : ''}
-                      ${isToday && !isSelected ? '!border-purple-200 text-purple-700 font-black' : ''}
+                      ${!day.isCurrentMonth ? 'text-slate-200 bg-transparent border-transparent cursor-not-allowed' : 'text-slate-700 bg-white hover:bg-orange-50 hover:text-orange-700 hover:border-orange-100'}
+                      ${isSelected ? '!bg-orange-600 !text-white !border-orange-600 shadow-md shadow-purple-200' : ''}
+                      ${isToday && !isSelected ? '!border-orange-200 text-orange-700 font-black' : ''}
                     `}
                   >
                     <span className="text-sm font-bold">{day.dayNum}</span>
                     {hasSlots && (
-                      <div className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`}></div>
+                      <div className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-orange-500'}`}></div>
                     )}
                   </button>
                 );
@@ -307,7 +307,7 @@ export default function BookSessionPage() {
 
                   <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                     {isLoadingDay ? (
-                      <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div></div>
+                      <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div></div>
                     ) : daySlots.length === 0 ? (
                       <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-300 mb-4"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -317,9 +317,9 @@ export default function BookSessionPage() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {daySlots.map((slot) => (
-                          <div key={slot.id} className="p-5 rounded-2xl bg-white border-2 border-slate-100 hover:border-purple-200 transition-colors flex flex-col">
+                          <div key={slot.id} className="p-5 rounded-2xl bg-white border-2 border-slate-100 hover:border-orange-200 transition-colors flex flex-col">
                             <div className="flex items-center gap-3 mb-4">
-                               <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                               <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                </div>
                                <div>
@@ -332,7 +332,7 @@ export default function BookSessionPage() {
                             <button 
                               onClick={() => handleBookSlot(slot.id)}
                               disabled={bookingSlotId === slot.id}
-                              className="mt-auto w-full py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex justify-center items-center gap-2 shadow-sm shadow-purple-200 disabled:opacity-50"
+                              className="mt-auto w-full py-2.5 rounded-xl font-bold text-white bg-orange-600 hover:bg-orange-700 transition-colors flex justify-center items-center gap-2 shadow-sm shadow-purple-200 disabled:opacity-50"
                             >
                               {bookingSlotId === slot.id ? (
                                 <span className="animate-pulse">Booking...</span>
@@ -349,7 +349,7 @@ export default function BookSessionPage() {
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
                   </div>
                   <h3 className="text-lg font-bold text-slate-700">Select a Date</h3>
                   <p className="text-slate-500 text-sm mt-2 max-w-xs">Click on any highlighted date in the calendar to view {selectedTutor.name}'s available time slots.</p>
