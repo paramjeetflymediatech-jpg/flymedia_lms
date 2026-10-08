@@ -83,7 +83,8 @@ export default async function AdminTestimonialsPage() {
                     <div className="flex justify-end gap-3">
                       <Link href={`/admin/testimonials/${t.id}`} className="text-blue-600 font-bold hover:underline">Edit</Link>
                       <DeleteConfirmButton 
-                        action={async () => {
+                        itemType="Testimonial"
+                        onDelete={async () => {
                           'use server';
                           await deleteTestimonial(t.id);
                         }} 
