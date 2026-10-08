@@ -6,28 +6,38 @@ import Link from 'next/link';
 const SLIDES = [
   {
     image: '/mern_stack_bg.png',
-    title: 'MERN Stack Developer',
-    subtitle: 'Master full-stack JavaScript with React, Node, Express, and MongoDB.'
+    title: 'MERN Stack Development',
+    subtitle: 'Master full-stack JavaScript with React, Node, Express, and MongoDB.',
+    link: '/packages/full-stack-mern-developer-program-with-ai',
+    courseValue: 'MERN Stack'
   },
   {
     image: '/graphic_design_bg.png',
     title: 'Graphic Design',
-    subtitle: 'Create stunning visual experiences and digital art with industry-standard tools.'
+    subtitle: 'Create stunning visual experiences and digital art with industry-standard tools.',
+    link: '/packages/graphic-design',
+    courseValue: 'Graphic Designing'
   },
   {
     image: '/video_editing_bg.png',
     title: 'Video Editing',
-    subtitle: 'Produce cinematic masterpieces with professional non-linear editing workflows.'
+    subtitle: 'Produce cinematic masterpieces with professional non-linear editing workflows.',
+    link: '/packages/video-editing',
+    courseValue: 'Video Editing'
   },
   {
     image: '/web_development_bg.png',
     title: 'Web Development',
-    subtitle: 'Build modern, responsive, and scalable web applications from scratch.'
+    subtitle: 'Build modern, responsive, and scalable web applications from scratch.',
+    link: '/packages/web-development',
+    courseValue: 'Web Development'
   },
   {
     image: '/digital_marketing_bg.png',
     title: 'Digital Marketing',
-    subtitle: 'Dominate search engines and drive massive ROI with data-driven campaigns.'
+    subtitle: 'Dominate search engines and drive massive ROI with data-driven campaigns.',
+    link: '/packages/digital-marketing',
+    courseValue: 'Digital Marketing'
   }
 ];
 
@@ -75,11 +85,11 @@ export default function HeroSlider() {
           <span className="text-xs font-bold text-orange-300 uppercase tracking-wider">Summer Training 2026 Admissions Open</span>
         </div> */}
         
-        <div className="min-h-[160px] sm:min-h-[200px] flex flex-col items-center justify-center">
-          <h1 className="text-5xl sm:text-7xl font-black tracking-tight max-w-5xl mx-auto leading-[1.1] text-white transition-all duration-500">
+        <div key={currentIndex} className="min-h-[160px] sm:min-h-[200px] flex flex-col items-center justify-center">
+          <h1 className="animate-title text-5xl sm:text-7xl font-black tracking-tight max-w-5xl mx-auto leading-[1.1] text-white">
             Learn <span className="bg-gradient-to-r from-orange-400 via-rose-400 to-amber-400 bg-clip-text text-transparent drop-shadow-sm">{SLIDES[currentIndex].title}</span>
           </h1>
-          <p className="text-lg sm:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium mt-6 transition-all duration-500">
+          <p className="animate-subtitle text-lg sm:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium mt-6">
             {SLIDES[currentIndex].subtitle}
           </p>
         </div>
@@ -115,13 +125,13 @@ export default function HeroSlider() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-8">
           <Link
-            href="/packages"
+            href={SLIDES[currentIndex].link}
             className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 font-extrabold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 rounded-2xl shadow-xl shadow-orange-500/25 transition-all text-lg hover:-translate-y-1"
           >
             Explore Programs
           </Link>
           <Link
-            href="/contact"
+            href={`/contact?course=${encodeURIComponent(SLIDES[currentIndex].courseValue)}`}
             className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md rounded-2xl transition-all text-lg hover:-translate-y-1"
           >
             Apply Now

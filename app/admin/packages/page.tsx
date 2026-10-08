@@ -1,8 +1,9 @@
 import { requireAdmin } from '../../../src/lib/auth';
-import { Package, LiveClass } from '../../../src/db/models';
+import { Package, LiveClass, Category } from '../../../src/db/models';
 import { adminDeletePackage } from '../../actions';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
 import Pagination from '../../../src/components/admin/Pagination';
+import PackageFilter from '../../../src/components/admin/PackageFilter';
 import Link from 'next/link';
 import { Op } from 'sequelize';
 
@@ -14,13 +15,25 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
   const resolvedSearchParams = await searchParams;
   const pageParam = resolvedSearchParams?.page;
   const searchParam = resolvedSearchParams?.search as string || '';
+  const categoryParam = resolvedSearchParams?.category as string || '';
+  const statusParam = resolvedSearchParams?.status as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 10;
   const offset = (page - 1) * limit;
 
-  const whereClause = searchParam ? {
-    title: { [Op.like]: `%${searchParam}%` }
-  } : {};
+  const whereClause: any = {};
+  if (searchParam) {
+    whereClause.title = { [Op.like]: `%${searchParam}%` };
+  }
+  if (categoryParam) {
+    whereClause.category = categoryParam;
+  }
+  if (statusParam) {
+    whereClause.status = statusParam;
+  }
+
+  const categoriesData = await Category.findAll({ order: [['name', 'ASC']] });
+  const categories = categoriesData.map(c => c.toJSON());
 
   const { count, rows } = await Package.findAndCountAll({
     where: whereClause,
@@ -58,23 +71,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h3 className="text-2xl font-extrabold text-slate-900">Your Packages</h3>
           
-          <form method="GET" action="/admin/packages" className="flex items-center gap-2 max-w-sm w-full">
-            <input 
-              type="text" 
-              name="search" 
-              defaultValue={searchParam}
-              placeholder="Search packages..." 
-              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm"
-            />
-            <button type="submit" className="px-4 py-2 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-colors text-sm">
-              Search
-            </button>
-            {searchParam && (
-              <Link href="/admin/packages" className="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">
-                Clear
-              </Link>
-            )}
-          </form>
+          <PackageFilter categories={categories} />
         </div>
 
         {packages.length === 0 ? (
@@ -99,11 +96,16 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
                       </div>
                       <div>
                         <h4 className="font-extrabold text-slate-900 text-lg leading-tight">{pkg.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-[10px] uppercase font-bold text-purple-700 px-2.5 py-0.5 rounded-full bg-purple-100">
                             {pkg.status}
                           </span>
-                          <span className="text-[11px] font-semibold text-slate-500">
+                          {pkg.category && (
+                            <span className="text-[10px] uppercase font-bold text-orange-700 px-2.5 py-0.5 rounded-full bg-orange-100">
+                              {pkg.category}
+                            </span>
+                          )}
+                          <span className={`text-[11px] font-semibold text-slate-500 ${pkg.category ? 'border-l border-slate-300 pl-2' : ''}`}>
                             {pkg.liveClasses?.length || 0} Live Classes
                           </span>
                           <span className="text-[11px] font-semibold text-slate-500 border-l border-slate-300 pl-2">

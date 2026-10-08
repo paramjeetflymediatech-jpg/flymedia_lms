@@ -6,6 +6,8 @@ import { Package, LiveClass, Enrollment, User } from '../../../src/db/models';
 import { getCurrentUser } from '../../../src/lib/auth';
 import PackageEnrollWidget from '../../../src/components/packages/PackageEnrollWidget';
 import CourseModuleAccordion from '../../../src/components/packages/CourseModuleAccordion';
+import FaqAccordion from '../../../src/components/packages/FaqAccordion';
+import CertificateToggle from '../../../src/components/packages/CertificateToggle';
 
 export const revalidate = 0;
 
@@ -58,6 +60,15 @@ export default async function PackageDetailPage({ params }: Props) {
   const instructors: any[] = pkgJson.instructors || [];
   const successStories: any[] = pkgJson.successStories || [];
   const courseModules: { title: string; topics: string[] }[] = pkgJson.courseModules || [];
+  
+  // New Dynamic Sections
+  const highlights: { title: string; description: string }[] = pkgJson.highlights || [];
+  const skills: string[] = pkgJson.skills || [];
+  const techStack: string[] = pkgJson.techStack || [];
+  const projectDetails: { description: string; stages: { title: string; content: string }[] } | null = pkgJson.projectDetails || null;
+  const targetAudience: { list: string[]; prerequisites: string } | null = pkgJson.targetAudience || null;
+  const faqs: { question: string; answer: string }[] = pkgJson.faqs || [];
+  const certificateData: any = pkgJson.certificateData || null;
 
   return (
     <>
@@ -78,7 +89,7 @@ export default async function PackageDetailPage({ params }: Props) {
             </p>
 
             {/* Badges */}
-            <div className="flex flex-wrap gap-3 mb-6">
+            {/* <div className="flex flex-wrap gap-3 mb-6">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
                 Live Classes
@@ -97,7 +108,7 @@ export default async function PackageDetailPage({ params }: Props) {
                   {pkgJson.category}
                 </span>
               )}
-            </div>
+            </div> */}
 
             {/* Title */}
             <h1 className="text-3xl md:text-5xl font-black text-white leading-tight tracking-tight max-w-4xl mb-6">
@@ -105,7 +116,7 @@ export default async function PackageDetailPage({ params }: Props) {
             </h1>
 
             {/* Meta strip */}
-            <div className="flex flex-wrap gap-6 text-sm text-white/60 font-medium">
+            {/* <div className="flex flex-wrap gap-6 text-sm text-white/60 font-medium">
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 {liveClasses.length} Live Sessions
@@ -120,7 +131,7 @@ export default async function PackageDetailPage({ params }: Props) {
                 <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 {pkgJson.price && Number(pkgJson.price) > 0 ? `₹${Number(pkgJson.price).toLocaleString('en-IN')}` : 'Free'}
               </span>
-            </div>
+            </div> */}
           </div>
         </section>
 
@@ -150,6 +161,44 @@ export default async function PackageDetailPage({ params }: Props) {
                 />
               </section>
 
+
+
+              {/* Skills & Tech Stack */}
+              {(skills.length > 0 || techStack.length > 0) && (
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {skills.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-1 h-8 rounded-full bg-gradient-to-b from-indigo-500 to-blue-500 flex-shrink-0" />
+                        <h2 className="text-2xl font-black text-slate-900">Skills You'll Gain</h2>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill, i) => (
+                          <span key={i} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {techStack.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-1 h-8 rounded-full bg-gradient-to-b from-amber-500 to-yellow-500 flex-shrink-0" />
+                        <h2 className="text-2xl font-black text-slate-900">Tech Stack</h2>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {techStack.map((tech, i) => (
+                          <span key={i} className="px-4 py-2 bg-amber-50 text-amber-700 font-bold text-xs rounded-xl border border-amber-200">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+
               {/* What You'll Learn */}
               {whatYoullLearn.length > 0 && (
                 <section>
@@ -171,6 +220,82 @@ export default async function PackageDetailPage({ params }: Props) {
                   </div>
                 </section>
               )}
+
+            </div>
+
+            {/* ── RIGHT COLUMN – Sticky Enroll Widget ── */}
+            <div className="w-full lg:w-[360px] xl:w-[400px] flex-shrink-0">
+              <div className="sticky top-24">
+                <PackageEnrollWidget
+                  pkg={pkgJson}
+                  user={user ? { id: user.id } : null}
+                  isEnrolled={isEnrolled}
+                />
+                
+                {/* Highlights (Sidebar) */}
+                {highlights.length > 0 && (
+                  <div className="mt-8 p-8 sm:p-10 bg-white border border-slate-100 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-2xl rounded-full pointer-events-none" />
+                    <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 block" />
+                      Course Highlights
+                    </h3>
+                    <div className="space-y-5 relative z-10">
+                      {highlights.map((item, i) => (
+                        <div key={i} className="flex gap-3 text-sm">
+                          <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-rose-50 to-orange-50 border border-orange-100 flex items-center justify-center text-orange-500">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 block mb-1">{item.title}</span>
+                            <span className="text-slate-500 leading-snug">{item.description}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ─── FULL WIDTH SECTIONS (Bottom Section) ─── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-24 space-y-16 lg:space-y-24">
+          
+          {/* Project Details */}
+          {projectDetails && (
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-1 h-8 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 flex-shrink-0" />
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Your Project</h2>
+              </div>
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-7">
+                <p className="text-slate-700 text-sm leading-relaxed mb-6 font-medium">
+                  {projectDetails.description}
+                </p>
+                <div className="bg-white rounded-2xl border border-emerald-100 overflow-hidden">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-emerald-50/50 text-emerald-800 text-xs uppercase font-bold tracking-wider">
+                      <tr>
+                        <th className="px-6 py-4 border-b border-emerald-100">Stage</th>
+                        <th className="px-6 py-4 border-b border-emerald-100">What you add to your project</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-50/50">
+                      {projectDetails.stages.map((stage, i) => (
+                        <tr key={i}>
+                          <td className="px-6 py-4 font-bold text-slate-900">{stage.title}</td>
+                          <td className="px-6 py-4">{stage.content}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
 
               {/* Course Content */}
               <section>
@@ -278,20 +403,54 @@ export default async function PackageDetailPage({ params }: Props) {
                 </section>
               )}
 
-            </div>
+              {/* Target Audience */}
+              {targetAudience && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 flex-shrink-0" />
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Who Can Join</h2>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded-3xl p-7 space-y-6">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {targetAudience.list.map((item, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-orange-500" />
+                          <span className="text-slate-700 font-medium text-sm leading-relaxed">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {targetAudience.prerequisites && (
+                      <div className="bg-orange-50 border border-orange-100 p-5 rounded-2xl">
+                        <span className="font-bold text-orange-800 text-sm block mb-1">Prerequisites:</span>
+                        <span className="text-orange-700 text-sm font-medium">{targetAudience.prerequisites}</span>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
 
-            {/* ── RIGHT COLUMN – Sticky Enroll Widget ── */}
-            <div className="w-full lg:w-[360px] xl:w-[400px] flex-shrink-0">
-              <div className="sticky top-24">
-                <PackageEnrollWidget
-                  pkg={pkgJson}
-                  user={user ? { id: user.id } : null}
-                  isEnrolled={isEnrolled}
-                />
-              </div>
-            </div>
+              {/* Certificate Section */}
+              {certificateData && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 flex-shrink-0" />
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Certification</h2>
+                  </div>
+                  <CertificateToggle data={certificateData} />
+                </section>
+              )}
 
-          </div>
+              {/* FAQs */}
+              {faqs.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 flex-shrink-0" />
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Frequently Asked Questions</h2>
+                  </div>
+                  <FaqAccordion faqs={faqs} />
+                </section>
+              )}
+
         </div>
 
       </main>

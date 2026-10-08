@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ThumbnailUpload from '../../../../src/components/admin/ThumbnailUpload';
 import RichTextEditor from '../../../../src/components/admin/RichTextEditor';
+import CategoryNameSlugInputs from '../../../../src/components/admin/CategoryNameSlugInputs';
 
 export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -39,23 +40,13 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
           }
         }} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Post Title</label>
-              <input
-                name="title"
-                type="text"
-                required
-                defaultValue={post.title}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Slug (Auto-generates if empty)</label>
-              <input
-                name="slug"
-                type="text"
-                defaultValue={post.slug}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+            <div className="sm:col-span-2">
+              <CategoryNameSlugInputs 
+                initialName={post.title}
+                initialSlug={post.slug}
+                layout="grid" 
+                nameLabel="Post Title" 
+                nameField="title"
               />
             </div>
             <div>

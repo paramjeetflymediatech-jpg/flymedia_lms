@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { submitInquiryAction } from '../../../app/actions';
 
 export default function ContactForm() {
   const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const courseParam = params.get('course');
+      if (courseParam) {
+        setSelectedCourse(courseParam);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,6 +50,7 @@ export default function ContactForm() {
         });
         // Reset form
         (e.target as HTMLFormElement).reset();
+        setSelectedCourse('');
       }
     } catch (error) {
       Swal.fire({
@@ -93,6 +105,8 @@ export default function ContactForm() {
           <div className="relative">
             <select
               name="course"
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-medium appearance-none"
             >
               <option value="" className="text-slate-400">Select a program...</option>
@@ -100,6 +114,9 @@ export default function ContactForm() {
               <option value="Web Development" className="text-slate-900">Web Development</option>
               <option value="Video Editing" className="text-slate-900">Video Editing</option>
               <option value="Graphic Designing" className="text-slate-900">Graphic Designing</option>
+              <option value="MERN Stack" className="text-slate-900">MERN Stack Development</option>
+              <option value="Others" className="text-slate-900">Others</option>
+
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center px-5 pointer-events-none text-slate-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

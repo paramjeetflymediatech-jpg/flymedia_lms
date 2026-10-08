@@ -55,6 +55,10 @@ export class Category extends Model<InferAttributes<Category>, InferCreationAttr
   declare slug: string;
   declare icon: CreationOptional<string | null>;
   declare image: CreationOptional<string | null>;
+  declare content: CreationOptional<string | null>;
+  declare metaTitle: CreationOptional<string | null>;
+  declare metaDescription: CreationOptional<string | null>;
+  declare metaKeywords: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -66,6 +70,10 @@ Category.init(
     slug: { type: DataTypes.STRING(255), allowNull: false, unique: true },
     icon: { type: DataTypes.STRING(1024), allowNull: true },
     image: { type: DataTypes.STRING(1024), allowNull: true },
+    content: { type: DataTypes.TEXT, allowNull: true },
+    metaTitle: { type: DataTypes.STRING(255), allowNull: true },
+    metaDescription: { type: DataTypes.TEXT, allowNull: true },
+    metaKeywords: { type: DataTypes.STRING(255), allowNull: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -89,6 +97,13 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare instructors: CreationOptional<{ name: string; role: string; bio: string; avatar: string }[] | null>;
   declare successStories: CreationOptional<{ name: string; role: string; quote: string; avatar: string }[] | null>;
   declare courseModules: CreationOptional<{ title: string; topics: string[] }[] | null>;
+  declare highlights: CreationOptional<{ title: string; description: string }[] | null>;
+  declare skills: CreationOptional<string[] | null>;
+  declare techStack: CreationOptional<string[] | null>;
+  declare projectDetails: CreationOptional<{ description: string; stages: { title: string; content: string }[] } | null>;
+  declare targetAudience: CreationOptional<{ list: string[]; prerequisites: string } | null>;
+  declare faqs: CreationOptional<{ question: string; answer: string }[] | null>;
+  declare certificateData: CreationOptional<{ title: string; features: { title: string; body: string }[]; providers: { name: string; image: string }[] } | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   // Eager-loaded association
@@ -110,6 +125,13 @@ Package.init(
     instructors: { type: DataTypes.JSON, allowNull: true },
     successStories: { type: DataTypes.JSON, allowNull: true },
     courseModules: { type: DataTypes.JSON, allowNull: true },
+    highlights: { type: DataTypes.JSON, allowNull: true },
+    skills: { type: DataTypes.JSON, allowNull: true },
+    techStack: { type: DataTypes.JSON, allowNull: true },
+    projectDetails: { type: DataTypes.JSON, allowNull: true },
+    targetAudience: { type: DataTypes.JSON, allowNull: true },
+    faqs: { type: DataTypes.JSON, allowNull: true },
+    certificateData: { type: DataTypes.JSON, allowNull: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

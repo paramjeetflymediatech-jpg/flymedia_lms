@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ThumbnailUpload from '../../../../src/components/admin/ThumbnailUpload';
 import RichTextEditor from '../../../../src/components/admin/RichTextEditor';
+import CategoryNameSlugInputs from '../../../../src/components/admin/CategoryNameSlugInputs';
 
 export default async function CreateBlogPostPage() {
   await requireAdmin();
@@ -31,23 +32,11 @@ export default async function CreateBlogPostPage() {
           }
         }} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Post Title</label>
-              <input
-                name="title"
-                type="text"
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
-                placeholder="e.g. 10 Best SEO Practices in 2024"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Slug (Optional - auto-generates from title)</label>
-              <input
-                name="slug"
-                type="text"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
-                placeholder="e.g. 10-best-seo-practices"
+            <div className="sm:col-span-2">
+              <CategoryNameSlugInputs 
+                layout="grid" 
+                nameLabel="Post Title" 
+                nameField="title"
               />
             </div>
             <div>

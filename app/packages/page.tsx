@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
+import PublicFilterForm from '../../src/components/packages/PublicFilterForm';
 import { Package } from '../../src/db/models';
 import { Op } from 'sequelize';
 
@@ -16,6 +17,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
   const pageParam = resolvedSearchParams?.page;
   const searchParam = resolvedSearchParams?.search as string || '';
   const categoryParam = resolvedSearchParams?.category as string || '';
+  const modeParam = resolvedSearchParams?.mode as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 6;
   const offset = (page - 1) * limit;
@@ -31,7 +33,12 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
     if (categoryParam) {
       whereClause.category = categoryParam;
     }
+    if (modeParam) {
+      whereClause.mode = modeParam;
+    }
     
+    // Only fetch published packages
+    whereClause.status = 'PUBLISHED';
     const { count, rows } = await Package.findAndCountAll({
       where: whereClause,
       limit,
@@ -62,24 +69,12 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
           </div>
 
           {/* Search Bar */}
-          <form method="GET" action="/packages" className="max-w-xl mx-auto flex gap-2">
-            {categoryParam && <input type="hidden" name="category" value={categoryParam} />}
-            <input 
-              type="text"  
-              name="search" 
-              defaultValue={searchParam}
-              placeholder="Search packages..." 
-              className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-sm"
-            />
-            <button type="submit" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm">
-              Search
-            </button>
-            {(searchParam || categoryParam) && (
-              <Link href="/packages" className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-sm">
-                Clear All Filters
-              </Link>
-            )}
-          </form>
+          <PublicFilterForm 
+            actionPath="/packages" 
+            currentCategory={categoryParam} 
+            currentMode={modeParam} 
+            currentSearch={searchParam} 
+          />
 
           {/* Grid list */}
           {packages.length === 0 ? (

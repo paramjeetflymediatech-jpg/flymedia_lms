@@ -3,6 +3,8 @@ import { Category } from '../../../../../src/db/models';
 import { adminUpdateCategory } from '../../../../actions';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import CategoryContentEditor from '../../../../../src/components/admin/CategoryContentEditor';
+import CategoryNameSlugInputs from '../../../../../src/components/admin/CategoryNameSlugInputs';
 
 export const revalidate = 0;
 
@@ -41,16 +43,12 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
           redirect('/admin/categories');
         }} className="space-y-6">
           
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Category Name</label>
-            <input
-              name="name"
-              type="text"
-              required
-              defaultValue={catData.name}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-sm text-slate-900"
-            />
-          </div>
+          <CategoryNameSlugInputs 
+            initialName={catData.name} 
+            initialSlug={catData.slug} 
+            layout="grid"
+            nameLabel="Category Name"
+          />
 
           <div className="space-y-4">
             <div>
@@ -76,6 +74,48 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
                 placeholder="e.g. https://example.com/icon.png"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-sm text-slate-900"
               />
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-slate-100">
+            <h4 className="text-base font-bold text-slate-800 mb-2">Category Page Content</h4>
+            <p className="text-xs text-slate-500 mb-4">Add structured dynamic content (Features, Sections, Dropdowns/FAQs) for the category landing page.</p>
+            <CategoryContentEditor defaultValue={catData.content || ''} />
+          </div>
+
+          <div className="pt-6 border-t border-slate-100">
+            <h4 className="text-base font-bold text-slate-800 mb-4">SEO Settings (Optional)</h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5">Meta Title</label>
+                <input
+                  name="metaTitle"
+                  type="text"
+                  defaultValue={catData.metaTitle || ''}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 text-sm"
+                  placeholder="SEO Title"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5">Meta Description</label>
+                <textarea
+                  name="metaDescription"
+                  rows={3}
+                  defaultValue={catData.metaDescription || ''}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 text-sm"
+                  placeholder="SEO Description"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5">Meta Keywords</label>
+                <input
+                  name="metaKeywords"
+                  type="text"
+                  defaultValue={catData.metaKeywords || ''}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 text-sm"
+                  placeholder="comma, separated, keywords"
+                />
+              </div>
             </div>
           </div>
 

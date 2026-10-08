@@ -11,6 +11,15 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ThumbnailUpload from '../../../../../src/components/admin/ThumbnailUpload';
 import RichTextEditor from '../../../../../src/components/admin/RichTextEditor';
+import FaqsEditor from '../../../../../src/components/admin/FaqsEditor';
+import HighlightsEditor from '../../../../../src/components/admin/HighlightsEditor';
+import CourseModulesEditor from '../../../../../src/components/admin/CourseModulesEditor';
+import StringArrayEditor from '../../../../../src/components/admin/StringArrayEditor';
+import InstructorsEditor from '../../../../../src/components/admin/InstructorsEditor';
+import SuccessStoriesEditor from '../../../../../src/components/admin/SuccessStoriesEditor';
+import ProjectDetailsEditor from '../../../../../src/components/admin/ProjectDetailsEditor';
+import TargetAudienceEditor from '../../../../../src/components/admin/TargetAudienceEditor';
+import CertificateDataEditor from '../../../../../src/components/admin/CertificateDataEditor';
 
 export const revalidate = 0;
 
@@ -43,7 +52,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
   const categories = categoriesData.map(c => c.toJSON());
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-12">
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-12">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Edit Package: {pkg.title}</h1>
@@ -54,10 +63,88 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Package Details Form */}
-        <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6">
-          <h3 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4">Package Details</h3>
+      {/* Live Classes Management */}
+      <div className="bg-slate-50 border border-slate-100 p-8 rounded-3xl shadow-inner space-y-6">
+        <h3 className="text-xl font-bold text-slate-900 border-b border-slate-200 pb-4">Manage Live Classes</h3>
+        
+        {/* Add Live Class inside this package */}
+        <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+          <h5 className="text-xs font-bold text-slate-700 mb-3">Schedule Live Class</h5>
+          <form
+            action={async (formData: FormData) => {
+              'use server';
+              formData.append('packageId', pkg.id);
+              await adminCreateLiveClass(formData);
+            }}
+            className="space-y-3"
+          >
+            <input
+              name="title"
+              type="text"
+              required
+              placeholder="Class Title (e.g. Introduction to React)"
+              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                name="startTime"
+                type="datetime-local"
+                required
+                className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
+              />
+              <select
+                name="duration"
+                required
+                className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
+              >
+                <option value="">Duration (Default 60 mins)</option>
+                <option value="30">30 Minutes</option>
+                <option value="45">45 Minutes</option>
+                <option value="60">60 Minutes (1 Hour)</option>
+                <option value="90">90 Minutes (1.5 Hours)</option>
+                <option value="120">120 Minutes (2 Hours)</option>
+                <option value="180">180 Minutes (3 Hours)</option>
+              </select>
+            </div>
+            <input
+              name="meetLink"
+              type="url"
+              placeholder="Google Meet Link (https://meet.google.com/...)"
+              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
+            />
+            <select
+              name="tutorId"
+              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
+            >
+              <option value="">Select Tutor (Optional)</option>
+              {tutors.map((tutor: any) => (
+                <option key={tutor.id} value={tutor.id}>{tutor.name} ({tutor.email})</option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="w-full inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 rounded-xl transition-all shadow"
+            >
+              Schedule Class
+            </button>
+          </form>
+        </div>
+
+        {/* List existing live classes */}
+        {(!pkg.liveClasses || pkg.liveClasses.length === 0) ? (
+          <p className="text-xs text-slate-400 italic text-center py-4">No live classes scheduled yet.</p>
+        ) : (
+          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 pb-2">
+            {pkg.liveClasses.map((lc: any) => (
+              <LiveClassItem key={lc.id} lc={lc} pkgId={pkg.id} tutors={tutors} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Package Details Form */}
+      <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6">
+        <h3 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4">Package Details</h3>
           
           <form action={async (formData) => {
             'use server';
@@ -112,6 +199,17 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
+              <select
+                name="status"
+                defaultValue={pkg.status || 'DRAFT'}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white"
+              >
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+              </select>
+            </div>
           </div>
 
             <div>
@@ -143,89 +241,85 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   What You'll Learn
-                  <span className="ml-2 text-slate-400 font-normal">(one item per line)</span>
                 </label>
-                <textarea
-                  name="whatYoullLearn"
-                  rows={6}
-                  defaultValue={(pkg.whatYoullLearn || []).join('\n')}
-                  placeholder="Master React fundamentals&#10;Build full-stack projects&#10;Deploy to production"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 font-mono"
-                />
+                <div className="bg-white p-4 border border-slate-200 rounded-xl">
+                  <StringArrayEditor 
+                    initialData={pkg.whatYoullLearn || []} 
+                    name="whatYoullLearn" 
+                    label="Learning Point" 
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Instructors
-                  <span className="ml-2 text-slate-400 font-normal">(JSON array)</span>
                 </label>
-                <textarea
-                  name="instructors"
-                  rows={8}
-                  defaultValue={pkg.instructors ? JSON.stringify(pkg.instructors, null, 2) : ''}
-                  placeholder={`[
-  {
-    "name": "John Doe",
-    "role": "Senior Developer",
-    "bio": "10+ years experience in web dev.",
-    "avatar": "https://..."
-  }
-]`}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 font-mono"
-                />
+                <InstructorsEditor initialData={pkg.instructors || []} />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Success Stories
-                  <span className="ml-2 text-slate-400 font-normal">(JSON array)</span>
                 </label>
-                <textarea
-                  name="successStories"
-                  rows={8}
-                  defaultValue={pkg.successStories ? JSON.stringify(pkg.successStories, null, 2) : ''}
-                  placeholder={`[
-  {
-    "name": "Riya Sharma",
-    "role": "Software Engineer at TCS",
-    "quote": "This course changed my career!",
-    "avatar": "https://..."
-  }
-]`}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 font-mono"
-                />
+                <SuccessStoriesEditor initialData={pkg.successStories || []} />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Course Modules
-                  <span className="ml-2 text-slate-400 font-normal">(JSON array — each module has a title and topics array)</span>
                 </label>
-                <textarea
-                  name="courseModules"
-                  rows={14}
-                  defaultValue={pkg.courseModules ? JSON.stringify(pkg.courseModules, null, 2) : ''}
-                  placeholder={`[
-  {
-    "title": "Namaste Coder !!",
-    "topics": [
-      "Welcome to Red",
-      "What is LIVE Dashboard",
-      "How to access Lectures"
-    ]
-  },
-  {
-    "title": "Learn C++",
-    "topics": [
-      "Intro to C++",
-      "Setting up VS Code",
-      "Variables and Datatypes"
-    ]
-  }
-]`}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 font-mono"
-                />
+                <CourseModulesEditor initialData={pkg.courseModules || []} />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Highlights
+                </label>
+                <HighlightsEditor initialData={pkg.highlights || []} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Skills You'll Gain
+                </label>
+                <StringArrayEditor initialData={pkg.skills || []} name="skills" label="Skill" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Tech Stack
+                </label>
+                <StringArrayEditor initialData={pkg.techStack || []} name="techStack" label="Tech" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Project Details
+                </label>
+                <ProjectDetailsEditor initialData={pkg.projectDetails || null} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Target Audience (Who Can Join)
+                </label>
+                <TargetAudienceEditor initialData={pkg.targetAudience || null} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  FAQs
+                </label>
+                <FaqsEditor initialData={pkg.faqs || []} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Certificate Data
+                </label>
+                <CertificateDataEditor initialData={pkg.certificateData || null} />
+              </div>
+
             </div>
 
             <div className="pt-2">
@@ -238,86 +332,6 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
             </div>
           </form>
         </div>
-
-        {/* Live Classes Management */}
-        <div className="bg-slate-50 border border-slate-100 p-8 rounded-3xl shadow-inner space-y-6">
-          <h3 className="text-xl font-bold text-slate-900 border-b border-slate-200 pb-4">Manage Live Classes</h3>
-          
-          {/* Add Live Class inside this package */}
-          <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
-            <h5 className="text-xs font-bold text-slate-700 mb-3">Schedule Live Class</h5>
-            <form
-              action={async (formData: FormData) => {
-                'use server';
-                formData.append('packageId', pkg.id);
-                await adminCreateLiveClass(formData);
-              }}
-              className="space-y-3"
-            >
-              <input
-                name="title"
-                type="text"
-                required
-                placeholder="Class Title (e.g. Introduction to React)"
-                className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  name="startTime"
-                  type="datetime-local"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-                />
-                <select
-                  name="duration"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-                >
-                  <option value="">Duration (Default 60 mins)</option>
-                  <option value="30">30 Minutes</option>
-                  <option value="45">45 Minutes</option>
-                  <option value="60">60 Minutes (1 Hour)</option>
-                  <option value="90">90 Minutes (1.5 Hours)</option>
-                  <option value="120">120 Minutes (2 Hours)</option>
-                  <option value="180">180 Minutes (3 Hours)</option>
-                </select>
-              </div>
-              <input
-                name="meetLink"
-                type="url"
-                placeholder="Google Meet Link (https://meet.google.com/...)"
-                className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-              />
-              <select
-                name="tutorId"
-                className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none text-xs text-slate-900"
-              >
-                <option value="">Select Tutor (Optional)</option>
-                {tutors.map((tutor: any) => (
-                  <option key={tutor.id} value={tutor.id}>{tutor.name} ({tutor.email})</option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 rounded-xl transition-all shadow"
-              >
-                Schedule Class
-              </button>
-            </form>
-          </div>
-
-          {/* List existing live classes */}
-          {(!pkg.liveClasses || pkg.liveClasses.length === 0) ? (
-            <p className="text-xs text-slate-400 italic text-center py-4">No live classes scheduled yet.</p>
-          ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 pb-2">
-              {pkg.liveClasses.map((lc: any) => (
-                <LiveClassItem key={lc.id} lc={lc} pkgId={pkg.id} tutors={tutors} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

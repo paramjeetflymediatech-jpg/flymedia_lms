@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ThumbnailUpload from '../../../../src/components/admin/ThumbnailUpload';
 import RichTextEditor from '../../../../src/components/admin/RichTextEditor';
+import FaqsEditor from '../../../../src/components/admin/FaqsEditor';
+import HighlightsEditor from '../../../../src/components/admin/HighlightsEditor';
+import CourseModulesEditor from '../../../../src/components/admin/CourseModulesEditor';
+import StringArrayEditor from '../../../../src/components/admin/StringArrayEditor';
+import InstructorsEditor from '../../../../src/components/admin/InstructorsEditor';
+import SuccessStoriesEditor from '../../../../src/components/admin/SuccessStoriesEditor';
+import ProjectDetailsEditor from '../../../../src/components/admin/ProjectDetailsEditor';
+import TargetAudienceEditor from '../../../../src/components/admin/TargetAudienceEditor';
+import CertificateDataEditor from '../../../../src/components/admin/CertificateDataEditor';
 
 export default async function CreatePackagePage() {
   await requireAdmin();
@@ -13,7 +22,7 @@ export default async function CreatePackagePage() {
   const categories = categoriesData.map(c => c.toJSON());
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
+    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Create New Package</h1>
@@ -80,6 +89,17 @@ export default async function CreatePackagePage() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
+              <select
+                name="status"
+                defaultValue="DRAFT"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white"
+              >
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+              </select>
+            </div>
           </div>
 
           <div>
@@ -101,6 +121,93 @@ export default async function CreatePackagePage() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
+          </div>
+
+          <div className="pt-8 mt-8 border-t border-slate-100 space-y-8">
+            <h4 className="text-sm font-bold text-slate-700">Dynamic Page Sections</h4>
+            
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                What You'll Learn
+              </label>
+              <div className="bg-white p-4 border border-slate-200 rounded-xl">
+                <StringArrayEditor 
+                  initialData={[]} 
+                  name="whatYoullLearn" 
+                  label="Learning Point" 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Instructors
+              </label>
+              <InstructorsEditor initialData={[]} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Success Stories
+              </label>
+              <SuccessStoriesEditor initialData={[]} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Course Modules
+              </label>
+              <CourseModulesEditor initialData={[]} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Highlights
+              </label>
+              <HighlightsEditor initialData={[]} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Skills You'll Gain
+              </label>
+              <StringArrayEditor initialData={[]} name="skills" label="Skill" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Tech Stack
+              </label>
+              <StringArrayEditor initialData={[]} name="techStack" label="Tech" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Project Details
+              </label>
+              <ProjectDetailsEditor initialData={null} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Target Audience (Who Can Join)
+              </label>
+              <TargetAudienceEditor initialData={null} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                FAQs
+              </label>
+              <FaqsEditor initialData={[]} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Certificate Data
+              </label>
+              <CertificateDataEditor initialData={null} />
+            </div>
+
           </div>
 
           <div className="pt-4 flex justify-end">

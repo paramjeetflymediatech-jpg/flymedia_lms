@@ -287,6 +287,12 @@ export async function adminCreateCategory(formData: FormData) {
   const name = formData.get('name') as string;
   if (!name) return { error: 'Name is required' };
 
+  const customSlug = formData.get('slug') as string;
+  const metaTitle = formData.get('metaTitle') as string;
+  const metaDescription = formData.get('metaDescription') as string;
+  const metaKeywords = formData.get('metaKeywords') as string;
+  const content = formData.get('content') as string;
+
   // Handle icon upload
   let iconUrl: string | null = null;
   const iconFile = formData.get('iconFile') as File | null;
@@ -304,8 +310,16 @@ export async function adminCreateCategory(formData: FormData) {
   }
 
   try {
-    const slug = slugify(name);
-    await Category.create({ name, slug, icon: iconUrl });
+    const slug = customSlug ? slugify(customSlug) : slugify(name);
+    await Category.create({ 
+      name, 
+      slug, 
+      icon: iconUrl,
+      content: content || null,
+      metaTitle: metaTitle || null,
+      metaDescription: metaDescription || null,
+      metaKeywords: metaKeywords || null
+    });
     revalidatePath('/admin/categories');
     revalidatePath('/');
     return { success: true };
@@ -334,6 +348,12 @@ export async function adminUpdateCategory(categoryId: string, formData: FormData
   const name = formData.get('name') as string;
   if (!name) return { error: 'Name is required' };
 
+  const customSlug = formData.get('slug') as string;
+  const metaTitle = formData.get('metaTitle') as string;
+  const metaDescription = formData.get('metaDescription') as string;
+  const metaKeywords = formData.get('metaKeywords') as string;
+  const content = formData.get('content') as string;
+
   try {
     const category = await Category.findByPk(categoryId);
     if (!category) return { error: 'Category not found' };
@@ -354,8 +374,12 @@ export async function adminUpdateCategory(categoryId: string, formData: FormData
     }
 
     category.name = name;
-    category.slug = slugify(name);
+    category.slug = customSlug ? slugify(customSlug) : slugify(name);
     category.icon = iconUrl;
+    category.content = content || null;
+    category.metaTitle = metaTitle || null;
+    category.metaDescription = metaDescription || null;
+    category.metaKeywords = metaKeywords || null;
     await category.save();
 
     revalidatePath('/admin/categories');
@@ -375,6 +399,7 @@ export async function adminCreatePackage(formData: FormData) {
   const category = (formData.get('category') as string) || 'Uncategorized';
   const price = formData.get('price') ? Number(formData.get('price')) : null;
   const mode = formData.get('mode') as 'ONLINE' | 'OFFLINE' | 'BOTH' || 'ONLINE';
+  const status = formData.get('status') as 'DRAFT' | 'PUBLISHED' || 'DRAFT';
 
   let finalThumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
 
@@ -416,7 +441,7 @@ export async function adminCreatePackage(formData: FormData) {
       category,
       price,
       thumbnail: finalThumbnailUrl,
-      status: 'DRAFT',
+      status,
       mode,
     });
 
@@ -426,6 +451,20 @@ export async function adminCreatePackage(formData: FormData) {
     console.error('Create package error:', error);
     return { error: 'Failed to create package' };
   }
+}
+
+async function saveLocalFile(file: File | null, folder: string = 'packages'): Promise<string | null> {
+  if (!file || file.size === 0) return null;
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  const filePath = path.join(uploadDir, fileName);
+  fs.writeFileSync(filePath, buffer);
+  return `/uploads/${folder}/${fileName}`;
 }
 
 export async function adminUpdatePackage(packageId: string, formData: FormData) {
@@ -490,7 +529,15 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     const instructorsRaw = formData.get('instructors') as string;
     if (instructorsRaw !== null) {
       try {
-        pkg.instructors = instructorsRaw.trim() ? JSON.parse(instructorsRaw) : null;
+        let parsed = instructorsRaw.trim() ? JSON.parse(instructorsRaw) : null;
+        if (parsed && Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const file = formData.get(`instructor_avatar_${i}`) as File | null;
+            const uploadedUrl = await saveLocalFile(file, 'instructors');
+            if (uploadedUrl) parsed[i].avatar = uploadedUrl;
+          }
+        }
+        pkg.instructors = parsed;
       } catch { pkg.instructors = null; }
     }
 
@@ -498,7 +545,15 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     const successStoriesRaw = formData.get('successStories') as string;
     if (successStoriesRaw !== null) {
       try {
-        pkg.successStories = successStoriesRaw.trim() ? JSON.parse(successStoriesRaw) : null;
+        let parsed = successStoriesRaw.trim() ? JSON.parse(successStoriesRaw) : null;
+        if (parsed && Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const file = formData.get(`story_avatar_${i}`) as File | null;
+            const uploadedUrl = await saveLocalFile(file, 'stories');
+            if (uploadedUrl) parsed[i].avatar = uploadedUrl;
+          }
+        }
+        pkg.successStories = parsed;
       } catch { pkg.successStories = null; }
     }
 
@@ -508,6 +563,46 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
       try {
         pkg.courseModules = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null;
       } catch { pkg.courseModules = null; }
+    }
+
+    // New Dynamic JSON Fields
+    const highlightsRaw = formData.get('highlights') as string;
+    if (highlightsRaw !== null) {
+      try { pkg.highlights = highlightsRaw.trim() ? JSON.parse(highlightsRaw) : null; } catch {}
+    }
+    const skillsRaw = formData.get('skills') as string;
+    if (skillsRaw !== null) {
+      try { pkg.skills = skillsRaw.trim() ? JSON.parse(skillsRaw) : null; } catch {}
+    }
+    const techStackRaw = formData.get('techStack') as string;
+    if (techStackRaw !== null) {
+      try { pkg.techStack = techStackRaw.trim() ? JSON.parse(techStackRaw) : null; } catch {}
+    }
+    const projectDetailsRaw = formData.get('projectDetails') as string;
+    if (projectDetailsRaw !== null) {
+      try { pkg.projectDetails = projectDetailsRaw.trim() ? JSON.parse(projectDetailsRaw) : null; } catch {}
+    }
+    const targetAudienceRaw = formData.get('targetAudience') as string;
+    if (targetAudienceRaw !== null) {
+      try { pkg.targetAudience = targetAudienceRaw.trim() ? JSON.parse(targetAudienceRaw) : null; } catch {}
+    }
+    const faqsRaw = formData.get('faqs') as string;
+    if (faqsRaw !== null) {
+      try { pkg.faqs = faqsRaw.trim() ? JSON.parse(faqsRaw) : null; } catch {}
+    }
+    const certificateDataRaw = formData.get('certificateData') as string;
+    if (certificateDataRaw !== null) {
+      try {
+        let parsed = certificateDataRaw.trim() ? JSON.parse(certificateDataRaw) : null;
+        if (parsed && parsed.providers && Array.isArray(parsed.providers)) {
+          for (let i = 0; i < parsed.providers.length; i++) {
+            const file = formData.get(`cert_provider_logo_${i}`) as File | null;
+            const uploadedUrl = await saveLocalFile(file, 'certificates');
+            if (uploadedUrl) parsed.providers[i].logo = uploadedUrl;
+          }
+        }
+        pkg.certificateData = parsed;
+      } catch { pkg.certificateData = null; }
     }
 
     await pkg.save();

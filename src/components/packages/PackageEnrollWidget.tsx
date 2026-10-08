@@ -72,7 +72,7 @@ export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: an
           </div>
         </div>
 
-        <div className="space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6">
+        {/* <div className="space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6">
           <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50">
             <span className="flex items-center space-x-2">
               <span className="text-lg">📅</span>
@@ -90,7 +90,7 @@ export default function PackageEnrollWidget({ pkg, user, isEnrolled }: { pkg: an
             </span>
             <span className="font-black text-slate-900">Included</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="relative z-10 pt-4">

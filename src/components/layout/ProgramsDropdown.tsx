@@ -67,7 +67,7 @@ export default function ProgramsDropdown({ categories }: { categories: Category[
               categories.map((cat) => (
                 <Link
                   key={cat.id}
-                  href={`/packages?category=${encodeURIComponent(cat.name)}`}
+                  href={`/packages/category/${cat.slug}`}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors group/item"
                 >
