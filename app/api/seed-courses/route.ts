@@ -229,6 +229,155 @@ Our graphic designing course can help to boost your career in many ways:</p>
           { question: "How long did it take me to learn the free video editing basic course?", answer: "With full attention, you can learn the free video course in just 2 hours, but to become a master in video editing, you have to do a lot of practice." },
           { question: "After learning a basic video editing course, how can I use it?", answer: "After learning video editing, you should use the tips and tricks that you learned in the course, and to become a professional editor, you have to do a lot of practice." }
         ]
+      },
+      {
+        categoryName: "Web Development",
+        title: "Get Ready To Learn Website Development Course In India From Flymedia Technology Experts",
+        price: 20000,
+        description: `<p>We are living in times where companies can reach out to their customers or potential clients any day, at any time via websites. The use of websites has simplified and improved how customers interact with clients and can get what they want from a position of rest. Websites are an effective tool for companies to reach their market on a global scale; as such, we have numerous companies that desire to have or improve their website to advance their business.</p>
+<p>This is your opportunity to become the next website development expert who has the expertise to create websites that are user-friendly, advanced, and professionally appealing. The first step in your journey of becoming a website developer is enrolling on website design courses in Punjab, where Flymedia Technology’s team of experts instill the right knowledge and skills for you to develop websites. FlyMedia Technology offers practical knowledge in web development through strategic and advanced methodologies that meet today’s demands and provide the flexibility to adapt to various changes in website development. Our courses are structured with practical projects that ensure that you have the expertise to comprehend and deliver effective websites.</p>
+<h2>Take a sneak peek into what you are going to learn as you study website development.</h2>
+<p>The website design courses in Punjab are vast; you get to learn programming languages that are tools to build a website. You will attain the knowledge and skills of how to control visual styling, how the website can adapt to a desktop or mobile phone and how to ensure that the website is user-friendly. This is the structure;</p>
+<h3>Web fundamentals and UI/UX Basics</h3>
+<ul>
+<li>You will get to understand how the web works</li>
+<li>You will learn design principles</li>
+<li>Development tools</li>
+</ul>
+<h3>Front-End Development</h3>
+<ul>
+<li>CSS3</li>
+<li>Javascript</li>
+<li>HTML5</li>
+<li>Front-end libraries/frameworks</li>
+</ul>
+<h3>Version control and collaboration</h3>
+<ul>
+<li>Git/Github</li>
+</ul>
+<h3>Backend development</h3>
+<ul>
+<li>Server-side languages and runtimes</li>
+<li>API’s and communication</li>
+<li>Authentication and security</li>
+</ul>
+<h3>Databases</h3>
+<ul>
+<li>Relational database</li>
+<li>NoSQL databases</li>
+</ul>
+<h3>Testing, deployment and capstone project</h3>
+<ul>
+<li>Testing and optimization</li>
+<li>Deployment</li>
+<li>Capstone project</li>
+</ul>
+<h2>The careers you can venture into after studying website development</h2>
+<p>Website development courses come with great career options to select from;</p>
+<ul>
+<li>A full-stack developer</li>
+<li>A backend developer</li>
+<li>A front-end developer</li>
+<li>Word press/CMS developer</li>
+</ul>
+<h2>Reasons why Flymedia Technology stands out</h2>
+<h3>Structured and practical curriculum</h3>
+<p>Real-life practical training is what Flymedia Technology is always ready to offer. That means projects that are related to real-life problems that you would be challenged to solve by training you how to understand and create websites that meet the needs and demands.</p>
+<h3>An opportunity to learn from the best</h3>
+<p>You will be exposed to skilled trainers who have honed their skills in website development so that you have the opportunity to ask questions, attain skills, and gain the right knowledge and guidance to become the next website development expert.</p>
+<h3>An opportunity to receive guidance for your website development career.</h3>
+<p>With Flymedia Technology expertise, you will have the opportunity to develop an impressive portfolio for your career so that you can excel in the business industries by providing companies with the website services that they require, which is all offered at an exceptional HTML course cost in Ludhiana.</p>`,
+        faqs: [
+          { question: "What kind of projects will I work on as I study website development?", answer: "The projects are segmented based on the modules you have covered, from fundamentals such as creating a personal portfolio website, an e-commerce product gallery, to complex projects such as a real-time chat app, an AI-integrated web app, and so much more." },
+          { question: "Do I need to have prior knowledge to study website development?", answer: "The web development course does not require prior knowledge; the curriculum is structured for you to learn from basics to advanced topics." },
+          { question: "Will I be able to master the skills in 3 months?", answer: "The web development course can be completed in at least 6 months or a year." },
+          { question: "Do you offer certifications after completing the web development course?", answer: "After completing the course, you will receive certification to prove that you have undergone different training and have completed the projects." },
+          { question: "What is full stack web development all about?", answer: "This involves both the front end and back end of the course, which involves the client side and server side." }
+        ]
+      },
+      {
+        categoryName: "MERN Stack Development",
+        title: "Building Modern Web Apps with the MERN Stack",
+        price: 30000,
+        description: `<p>There is always a demand for good web developers as companies move their services on the web. Companies need applications that are fast, reliable and easy to use, from e-commerce websites to interactive business platforms. Getting an opportunity to learn MERN stack development is a great achievement from which you will be gaining a lot of skills that prepare you for your job.</p>
+<p>Taking MERN Stack Development Courses in Ludhiana allows students to gain experience in creating websites and skills that are needed in this field of development practices.</p>
+<h2>What is the MERN stack?</h2>
+<p>MERN stands for MongoDB, Express.js, React and Node. js. These aspects are very important because they allow students to create websites that help businesses grow.</p>
+<ul>
+<li><strong>MongoDB:</strong> It is a database that is used to store and manage application data</li>
+<li><strong>Express js:</strong> A framework that helps developers build server-side applications and APIs.</li>
+<li><strong>React:</strong> A popular tool for building the visible parts of a website that you click and interact with.</li>
+<li><strong>Node. js:</strong> The hidden engine that lets you run code on the computer's server instead of just inside a web browser.</li>
+</ul>
+<h2>Benefits of MERN stack development</h2>
+<h3>Uplifts development skills</h3>
+<ul>
+<li>Students will have access to create websites with all the features you see on them.</li>
+<li>Learning both skills helps students truly understand how full-stack development works.</li>
+</ul>
+<h3>Career opportunities</h3>
+<ul>
+<li>MERN stack skills can support career pathways for students such as full-stack developer, React developer,Node.js developer and junior web developer.</li>
+<li>Working on these practicals allows students to showcase their talents and strengthen their portfolios.</li>
+</ul>
+<h3>Support for modern business</h3>
+<ul>
+<li>For businesses to have a lot of surplus, they need websites and applications that work smoothly across all devices.</li>
+<li>MERN stack development can help create digital solutions that can support customer engagement, online services and business operations.</li>
+</ul>
+<h3>Fast performance</h3>
+<p>Websites built with MERN load very fast. React was designed to make webpages run smoothly and work without slowing down.</p>
+<h2>Core skills acquired when learning a MERN stack development course</h2>
+<h3>HTML and CSS</h3>
+<p>HTML stands for HyperText Markup Language, and CSS stands for Cascading Style Sheets.</p>
+<ul>
+<li>Learners will know where and when to put the colors and fonts on webpages to look good and attract an audience to come for it.</li>
+</ul>
+<h3>JavaScript</h3>
+<ul>
+<li>This is where learners come to know about creating pages that allow customers to interact with the brand owners.</li>
+</ul>
+<h3>React</h3>
+<ul>
+<li>This tool lets you build reusable pieces for a website so the pages update instantly and smoothly without constantly refreshing.</li>
+</ul>
+<h3>API Development</h3>
+<ul>
+<li>This skill involves setting up secure pipelines that allow your website to safely swap information with other systems.</li>
+</ul>
+<h2>Begin building websites today.</h2>
+<p>Learning using MERN stack development courses in India allows all the students who are passionate about making beautiful webpages and becoming programmers to have their dreams come true.</p>
+<ul>
+<li><strong>Get a local job:</strong> locally, and it saves money; no movement from one city to another.</li>
+<li><strong>You learn by yourself:</strong> students will get the opportunity to work on actual projects that allow them to gain experience that equips them for interviews.</li>
+<li><strong>Learning these courses allows you to earn a lot of money:</strong> because it is a highly demanding job.</li>
+</ul>
+<p>Becoming a student of Node. js development courses in Punjab allows you to have more advantages when working in these fields. This course is important because it is commonly used for APIs, web servers and applications that need to process requests efficiently.</p>
+<ul>
+<li><strong>Save money:</strong> you can learn high-paying global skills near your home. This saves you from spending lots of money to live in expensive cities.</li>
+<li><strong>Work from Home:</strong> knowing Node.js lets you live in Punjab and work online for tech companies anywhere in the world.</li>
+</ul>
+<h2>What makes this category a good choice</h2>
+<h3>Learn Everything</h3>
+<ul>
+<li>Learn to build the front part of a website that users see and the back part that saves data. You will use MERN to make the whole website yourself.</li>
+</ul>
+<h3>Real Projects</h3>
+<ul>
+<li>Build complete websites from start to finish with the help of a teacher.</li>
+</ul>
+<h3>Job Ready</h3>
+<ul>
+<li>Get ready for high-paying developer jobs with special interview training.</li>
+</ul>
+<h2>Why does MERN Stack stand out?</h2>
+<p>The MERN stack is a top choice for building websites that pay very well. By learning its four parts, you can build everything yourself from simple pages to smart, AI web apps.</p>`,
+        faqs: [
+          { question: "Do I need to know coding before starting MERN?", answer: "It is not mandatory to know it because you learn it during the course of the learning period." },
+          { question: "What are the benefits of learning these courses in my life?", answer: "You will be able to make your own money by creating websites for brands." },
+          { question: "Which career opportunities can I get after completing MERN courses?", answer: "Learning these courses makes you ready to work as website creator and also engage in developing apps for companies." },
+          { question: "Are there any opportunities to work from home when you have studied these courses?", answer: "Yes. Many companies hire MERN developers to work online from anywhere in the world." }
+        ]
       }
     ];
 
@@ -254,12 +403,15 @@ Our graphic designing course can help to boost your career in many ways:</p>
       if (course.categoryName === 'Digital Marketing') thumbnailStr = 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&q=80';
       else if (course.categoryName === 'Graphic Design') thumbnailStr = 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80';
       else if (course.categoryName === 'Video Editing') thumbnailStr = 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80';
+      else if (course.categoryName === 'Web Development') thumbnailStr = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80';
+      else if (course.categoryName === 'MERN Stack Development') thumbnailStr = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80';
 
       try {
         const [pkg, created] = await Package.findOrCreate({
           where: { slug: packageSlug },
           defaults: {
             title: course.title,
+            slug: packageSlug,
             category: category.name, // using categoryName as per Package model setup
             description: course.description,
             price: course.price,
