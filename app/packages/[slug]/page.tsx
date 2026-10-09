@@ -161,6 +161,29 @@ export default async function PackageDetailPage({ params }: Props) {
                 />
               </section>
 
+              {/* Highlights (Main Content) */}
+              {highlights.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 flex-shrink-0" />
+                    <h2 className="text-2xl font-black text-slate-900">Course Highlights</h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {highlights.map((item, i) => (
+                      <div key={i} className="flex gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-rose-50 to-orange-50 border border-orange-100 flex items-center justify-center text-orange-500">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-900 block mb-1">{item.title}</span>
+                          <span className="text-sm text-slate-600 leading-relaxed">{item.description}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
 
 
               {/* Skills & Tech Stack */}
@@ -232,29 +255,6 @@ export default async function PackageDetailPage({ params }: Props) {
                   isEnrolled={isEnrolled}
                 />
                 
-                {/* Highlights (Sidebar) */}
-                {highlights.length > 0 && (
-                  <div className="mt-8 p-8 sm:p-10 bg-white border border-slate-100 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-2xl rounded-full pointer-events-none" />
-                    <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 block" />
-                      Course Highlights
-                    </h3>
-                    <div className="space-y-5 relative z-10">
-                      {highlights.map((item, i) => (
-                        <div key={i} className="flex gap-3 text-sm">
-                          <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-rose-50 to-orange-50 border border-orange-100 flex items-center justify-center text-orange-500">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 block mb-1">{item.title}</span>
-                            <span className="text-slate-500 leading-snug">{item.description}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
