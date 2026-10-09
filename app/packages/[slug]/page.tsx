@@ -56,7 +56,15 @@ export default async function PackageDetailPage({ params }: Props) {
 
   const pkgJson = pkg.toJSON() as any;
   const liveClasses = pkgJson.liveClasses || [];
-  const whatYoullLearn: string[] = pkgJson.whatYoullLearn || [];
+  let whatYoullLearn: string[] = [];
+  if (Array.isArray(pkgJson.whatYoullLearn)) {
+    whatYoullLearn = pkgJson.whatYoullLearn;
+  } else if (typeof pkgJson.whatYoullLearn === 'string' && pkgJson.whatYoullLearn.trim().startsWith('[')) {
+    try {
+      whatYoullLearn = JSON.parse(pkgJson.whatYoullLearn);
+    } catch(e) {}
+  }
+  whatYoullLearn = whatYoullLearn.filter(Boolean).filter(i => i.trim() !== '');
   const instructors: any[] = pkgJson.instructors || [];
   const successStories: any[] = pkgJson.successStories || [];
   const courseModules: { title: string; topics: string[] }[] = pkgJson.courseModules || [];

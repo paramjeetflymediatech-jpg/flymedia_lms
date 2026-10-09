@@ -52,9 +52,11 @@ export default function CertificateToggle({ data }: { data: any }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <div>
-                  <p className="font-bold text-white mb-1">{feature.title}</p>
-                  <p className="text-sm text-slate-400 leading-relaxed">{feature.body}</p>
+                <div className="flex items-center">
+                  <p className="font-bold text-white text-sm">{typeof feature === 'string' ? feature : feature.title}</p>
+                  {typeof feature !== 'string' && feature.body && (
+                     <p className="text-sm text-slate-400 leading-relaxed mt-1">{feature.body}</p>
+                  )}
                 </div>
               </li>
             ))}
@@ -67,7 +69,7 @@ export default function CertificateToggle({ data }: { data: any }) {
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
             <div className="relative bg-slate-800 ring-1 ring-slate-700/50 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center p-2">
               <img 
-                src={data.providers[activeIndex].image} 
+                src={data.providers[activeIndex].logo || data.providers[activeIndex].image} 
                 alt={`${data.providers[activeIndex].name} Preview`}
                 className="w-full h-full object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:scale-[1.02]"
               />

@@ -515,13 +515,10 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     if (price !== null && price !== undefined) pkg.price = price;
     if (finalThumbnailUrl !== undefined) pkg.thumbnail = finalThumbnailUrl;
 
-    // What You'll Learn (one per line -> array)
+    // What You'll Learn (JSON array)
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
     if (whatYoullLearnRaw !== null) {
-      pkg.whatYoullLearn = whatYoullLearnRaw
-        .split('\n')
-        .map((s: string) => s.trim())
-        .filter(Boolean);
+      try { pkg.whatYoullLearn = whatYoullLearnRaw.trim() ? JSON.parse(whatYoullLearnRaw) : null; } catch {}
     }
 
     // Instructors (JSON array)
