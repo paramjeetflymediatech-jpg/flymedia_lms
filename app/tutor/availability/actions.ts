@@ -67,6 +67,24 @@ export async function addAvailabilitySlot(date: string, startTime: string, endTi
       return handleResponse(false, "Date, start time, and end time are required");
     }
 
+    if (startTime >= endTime) {
+      return handleResponse(false, "End time must be after start time");
+    }
+
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    if (date < todayString) {
+      return handleResponse(false, "Cannot add availability for past dates");
+    }
+
+    if (date === todayString) {
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (startTime <= currentTime) {
+        return handleResponse(false, "Cannot add slots in the past for today");
+      }
+    }
+
     // Ensure slot does not already exist
     const existingSlot = await TutorAvailability.findOne({
       where: { tutorId: user.id, date, startTime, endTime }

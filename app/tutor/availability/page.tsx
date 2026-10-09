@@ -44,6 +44,7 @@ export default function AvailabilityCalendarPage() {
 
   // Fetch day slots when selected date changes
   useEffect(() => {
+    setShowAddForm(false);
     if (!selectedDate) {
       setDaySlots([]);
       return;
@@ -131,6 +132,21 @@ export default function AvailabilityCalendarPage() {
     if (startTime >= endTime) {
       Swal.fire('Error', 'End time must be after start time.', 'warning');
       return;
+    }
+    
+    const todayString = formatDateString(new Date());
+    if (selectedDate < todayString) {
+      Swal.fire('Error', 'Cannot add availability for past dates.', 'warning');
+      return;
+    }
+    
+    if (selectedDate === todayString) {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (startTime <= currentTime) {
+        Swal.fire('Error', 'Cannot add slots in the past for today.', 'warning');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -280,7 +296,7 @@ export default function AvailabilityCalendarPage() {
                         {daySlots.length} {daySlots.length === 1 ? 'slot' : 'slots'} available
                       </p>
                     </div>
-                    {!showAddForm && (
+                    {!showAddForm && selectedDate >= formatDateString(new Date()) && (
                       <button 
                         onClick={() => setShowAddForm(true)}
                         className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-xl transition-colors shadow-lg shadow-orange-200"
@@ -291,7 +307,7 @@ export default function AvailabilityCalendarPage() {
                     )}
                   </div>
 
-                  {showAddForm && (
+                  {showAddForm && selectedDate >= formatDateString(new Date()) && (
                     <div className="mb-6 bg-white p-5 rounded-2xl border border-orange-100 shadow-sm animate-in fade-in slide-in-from-top-2">
                       <h4 className="text-sm font-bold text-slate-800 mb-4">Add New Slot</h4>
                       <div className="space-y-4">

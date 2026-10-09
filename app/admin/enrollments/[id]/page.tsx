@@ -5,10 +5,12 @@ import { notFound } from 'next/navigation';
 
 export const revalidate = 0;
 
-export default async function AdminEnrollmentDetailPage({ params }: { params: { id: string } }) {
+export default async function AdminEnrollmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
+  
+  const resolvedParams = await params;
 
-  const enrollmentData = await Enrollment.findByPk(params.id, {
+  const enrollmentData = await Enrollment.findByPk(resolvedParams.id, {
     include: [
       { model: User, attributes: ['id', 'name', 'email', 'avatar'] },
       { 

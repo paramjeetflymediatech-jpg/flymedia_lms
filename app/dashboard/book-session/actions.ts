@@ -88,7 +88,27 @@ export async function bookSessionSlot(slotId: string) {
   try {
     const user = await requireAuth(); // The student booking the session
     
-    // Use a transaction or simply do an atomic update to prevent double-booking
+    // Fetch the slot first to check the time
+    const slot = await TutorAvailability.findByPk(slotId);
+    if (!slot) {
+      return handleResponse(false, "Slot not found");
+    }
+
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    if (slot.date < todayString) {
+      return handleResponse(false, "Cannot book sessions in the past");
+    }
+
+    if (slot.date === todayString) {
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (slot.startTime <= currentTime) {
+        return handleResponse(false, "Cannot book sessions that have already started");
+      }
+    }
+
+    // Use an atomic update to prevent double-booking
     const [affectedRows] = await TutorAvailability.update(
       { isBooked: true, studentId: user.id },
       { 

@@ -183,3 +183,68 @@ export async function sendTutorApprovalEmail(to: string, name: string, setPasswo
     html,
   });
 }
+
+// ── Send tutor rejection email ─────────────────────────────────
+export async function sendTutorRejectionEmail(to: string, name: string) {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update on your Flymedia LMS Tutor Application</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+          <tr>
+            <td style="background:linear-gradient(135deg,#94a3b8 0%,#64748b 100%);padding:36px 40px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">
+                Application Update
+              </h1>
+              <p style="margin:6px 0 0;color:#f1f5f9;font-size:13px;font-weight:500;">Flymedia Technology</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 12px;font-size:24px;font-weight:800;color:#0f172a;">Hello, ${name}</h2>
+              <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+                Thank you for taking the time to apply for a Tutor position at Flymedia LMS. We sincerely appreciate your interest in joining our team.
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+                After careful consideration, we regret to inform you that we will not be moving forward with your application at this time. We receive many applications and unfortunately cannot accept everyone.
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+                We wish you the best of luck in your future endeavors and encourage you to apply again in the future as our needs evolve.
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 24px;"/>
+
+              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+                If you have any questions, feel free to reply to this email.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;">
+                © ${new Date().getFullYear()} Flymedia Technology
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from: FROM,
+    to,
+    subject: 'Update on your Flymedia LMS Tutor Application',
+    html,
+  });
+}

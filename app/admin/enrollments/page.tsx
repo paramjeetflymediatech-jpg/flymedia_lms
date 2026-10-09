@@ -3,6 +3,7 @@ import { Enrollment, User, Package, LiveClass } from '../../../src/db/models';
 import Link from 'next/link';
 import { adminCreateEnrollment, adminDeleteEnrollment } from '../../actions';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
+import EnrollStudentForm from '../../../src/components/admin/EnrollStudentForm';
 import Pagination from '../../../src/components/admin/Pagination';
 import { Op } from 'sequelize';
 
@@ -84,31 +85,7 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
 
       <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm max-w-4xl">
         <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-100 pb-3">Enroll Student</h3>
-        <form action={async (formData) => { 'use server'; await adminCreateEnrollment(formData); }} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Student</label>
-            <select name="userId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white">
-              <option value="">Select Student...</option>
-              {users.map((u: any) => (
-                <option key={u.id} value={u.id}>{u.name || 'No Name'} ({u.email})</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package</label>
-            <select name="packageId" required className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 bg-white">
-              <option value="">Select Package...</option>
-              {packages.map((p: any) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <button type="submit" className="w-full inline-flex items-center justify-center px-6 py-2.5 font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 rounded-xl transition-all shadow-sm text-sm">
-              Enroll Student
-            </button>
-          </div>
-        </form>
+        <EnrollStudentForm users={users} packages={packages} />
       </div>
 
       <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
@@ -117,9 +94,9 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
             <thead className="bg-slate-50 border-b border-slate-100 text-xs uppercase font-bold text-slate-500">
               <tr>
                 <th className="px-6 py-4">Student</th>
+                <th className="px-6 py-4">Course</th>
                 <th className="px-6 py-4">Tutor</th>
                 <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Time</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
@@ -146,15 +123,16 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
                         <div className="text-xs text-slate-500">{enr.User?.email}</div>
                       </td>
                       <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-800">{enr.Package?.title || 'Unknown Course'}</div>
+                      </td>
+                      <td className="px-6 py-4">
                         <span className="font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded">
                           {tutorDisplay}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-medium">
-                        {d.toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-xs">
-                        {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <td className="px-6 py-4">
+                        <div className="font-medium">{d.toLocaleDateString()}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </td>
                       <td className="px-6 py-4">
                         {enr.completedAt ? (
@@ -165,6 +143,13 @@ export default async function AdminEnrollmentsPage({ searchParams }: { searchPar
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
+                          <Link 
+                            href={`/admin/enrollments/${enr.id}`}
+                            className="text-slate-500 hover:text-blue-600 transition-colors p-1"
+                            title="View"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          </Link>
                           <Link 
                             href={`/admin/enrollments/${enr.id}/edit`}
                             className="text-slate-500 hover:text-orange-600 transition-colors p-1"

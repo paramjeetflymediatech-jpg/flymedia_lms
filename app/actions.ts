@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail, sendMail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail } from '../src/lib/mailer';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -962,6 +962,8 @@ export async function rejectTutorApplication(applicationId: string, formData?: F
 
     application.status = 'REJECTED';
     await application.save();
+
+    await sendTutorRejectionEmail(application.email, application.fullName);
 
     revalidatePath('/admin/tutor-applications');
     return { success: true };
