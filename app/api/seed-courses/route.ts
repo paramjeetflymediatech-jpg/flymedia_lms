@@ -388,12 +388,19 @@ Our graphic designing course can help to boost your career in many ways:</p>
       const categorySlug = slugify(course.categoryName);
       let category = await Category.findOne({ where: { slug: categorySlug } });
       
+      const fullCategoryContent = JSON.stringify({
+        htmlContent: course.description,
+        faqs: course.faqs
+      });
+
       if (!category) {
         category = await Category.create({
           name: course.categoryName,
           slug: categorySlug,
-          content: `Explore our ${course.categoryName} courses designed to boost your career.`,
+          content: fullCategoryContent,
         });
+      } else {
+        await category.update({ content: fullCategoryContent });
       }
 
       // Create package if it doesn't exist
@@ -413,21 +420,21 @@ Our graphic designing course can help to boost your career in many ways:</p>
             title: course.title,
             slug: packageSlug,
             category: category.name, // using categoryName as per Package model setup
-            description: course.description,
+            description: `Explore our comprehensive ${course.title} course designed to boost your career.`,
             price: course.price,
             thumbnail: thumbnailStr,
             status: 'PUBLISHED',
             mode: 'ONLINE',
-            faqs: course.faqs,
+            faqs: [],
           }
         });
         if (created) {
           createdPackages++;
         } else {
-          // If it already exists, force update the description and faqs to our beautiful HTML format!
+          // If it already exists, force update the description to the simple fallback
           await pkg.update({
-            description: course.description,
-            faqs: course.faqs,
+            description: `Explore our comprehensive ${course.title} course designed to boost your career.`,
+            faqs: [],
             thumbnail: thumbnailStr
           });
         }

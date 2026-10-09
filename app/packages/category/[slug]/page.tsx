@@ -80,12 +80,24 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
               {category.metaDescription || `Advance your career with our industry-leading ${category.name} training programs and certifications.`}
             </p>
-            
-            {isLegacyHtml && category.content && (
-              <div className="prose prose-lg mx-auto text-left mt-8 bg-white p-8 rounded-3xl shadow-sm border border-slate-100" dangerouslySetInnerHTML={{ __html: category.content }} />
-            )}
           </div>
         </div>
+
+        {/* Gorgeous Content Section (Section Wise) */}
+        {(dynamicContent?.htmlContent || isLegacyHtml) && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+            <div 
+              className="prose prose-lg md:prose-xl max-w-none prose-slate mx-auto 
+                         prose-headings:font-extrabold prose-headings:text-slate-900 prose-headings:tracking-tight
+                         prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-3xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-4
+                         prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-2xl prose-h3:text-slate-800
+                         prose-p:text-slate-600 prose-p:leading-relaxed
+                         prose-ul:mt-6 prose-ul:space-y-3 prose-li:text-slate-600 prose-li:marker:text-orange-500
+                         prose-strong:text-slate-900"
+              dangerouslySetInnerHTML={{ __html: dynamicContent?.htmlContent || category.content }} 
+            />
+          </div>
+        )}
 
         {dynamicContent && dynamicContent.features && dynamicContent.features.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">

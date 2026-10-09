@@ -21,6 +21,7 @@ interface CategoryContent {
   features: Feature[];
   faqs: FAQ[];
   sections: Section[];
+  htmlContent?: string;
 }
 
 export default function CategoryContentEditor({ defaultValue }: { defaultValue?: string }) {
@@ -33,15 +34,17 @@ export default function CategoryContentEditor({ defaultValue }: { defaultValue?:
           features: Array.isArray(parsed.features) ? parsed.features : [],
           faqs: Array.isArray(parsed.faqs) ? parsed.faqs : [],
           sections: Array.isArray(parsed.sections) ? parsed.sections : [],
+          htmlContent: parsed.htmlContent || '',
         };
       } catch (e) {
         // If it was previously HTML from the old RichTextEditor, we gracefully fallback
+        return { features: [], faqs: [], sections: [], htmlContent: defaultValue };
       }
     }
-    return { features: [], faqs: [], sections: [] };
+    return { features: [], faqs: [], sections: [], htmlContent: '' };
   });
 
-  const [activeTab, setActiveTab] = useState<'features' | 'faqs' | 'sections'>('features');
+  const [activeTab, setActiveTab] = useState<'htmlContent' | 'features' | 'sections' | 'faqs'>('htmlContent');
 
   const addFeature = () => setContent(prev => ({ ...prev, features: [...prev.features, { title: '', description: '' }] }));
   const addFAQ = () => setContent(prev => ({ ...prev, faqs: [...prev.faqs, { question: '', answer: '' }] }));
@@ -74,7 +77,7 @@ export default function CategoryContentEditor({ defaultValue }: { defaultValue?:
       <input type="hidden" name="content" value={JSON.stringify(content)} />
       
       <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-slate-200 pb-3">
-        {(['features', 'sections', 'faqs'] as const).map(tab => (
+        {(['htmlContent', 'features', 'sections', 'faqs'] as const).map(tab => (
           <button
             key={tab}
             type="button"
@@ -85,12 +88,28 @@ export default function CategoryContentEditor({ defaultValue }: { defaultValue?:
                 : 'bg-white text-slate-500 hover:bg-slate-100'
             }`}
           >
-            {tab === 'faqs' ? 'Dropdowns' : tab}
+            {tab === 'faqs' ? 'Dropdowns' : tab === 'htmlContent' ? 'Rich Text' : tab}
           </button>
         ))}
       </div>
 
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+        {activeTab === 'htmlContent' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="text-sm font-bold text-slate-700">Rich Text HTML</h5>
+            </div>
+            <textarea
+              value={content.htmlContent || ''}
+              onChange={e => setContent(prev => ({ ...prev, htmlContent: e.target.value }))}
+              placeholder="<h1>Main Heading</h1><p>Description here...</p>"
+              rows={12}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-orange-500"
+            />
+            <p className="text-xs text-slate-500 mt-2">Write raw HTML here to render the gorgeous section-wise content.</p>
+          </div>
+        )}
+
         {activeTab === 'features' && (
           <div>
             <div className="flex justify-between items-center mb-4">
