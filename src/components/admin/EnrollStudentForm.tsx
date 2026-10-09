@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { adminCreateEnrollment } from '../../../app/actions';
 
 interface EnrollStudentFormProps {
-  users: { id: string; name: string; email: string }[];
+  users: { id: string; name: string | null; email: string }[];
   packages: { id: string; title: string }[];
 }
 
