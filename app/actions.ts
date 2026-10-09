@@ -62,7 +62,6 @@ export async function loginAction(prevState: any, formData: FormData) {
 
   redirect(redirectUrl);
 }
-
 export async function registerAction(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;

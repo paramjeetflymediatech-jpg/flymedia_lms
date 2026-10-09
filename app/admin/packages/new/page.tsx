@@ -63,7 +63,7 @@ export default async function CreatePackagePage() {
               >
                 <option value="ONLINE">Online Only</option>
                 <option value="OFFLINE">Offline Only</option>
-                <option value="BOTH">Online & Offline Both</option>
+                {/* <option value="BOTH">Online & Offline Both</option> */}
               </select>
             </div>
             <div>

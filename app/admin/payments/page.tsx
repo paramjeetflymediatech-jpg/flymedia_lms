@@ -1,7 +1,5 @@
 import { requireAdmin } from '../../../src/lib/auth';
 import { Payment } from '../../../src/db/models';
-import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
-import { deletePaymentAction } from '../../actions';
 import Pagination from '../../../src/components/admin/Pagination';
 
 export const revalidate = 0;
@@ -83,7 +81,6 @@ export default async function AdminPaymentsPage({
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Mode</th>
                   <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -103,17 +100,6 @@ export default async function AdminPaymentsPage({
                     <td className="px-6 py-4 text-xs">{p.provider}</td>
                     <td className="px-6 py-4 text-xs text-slate-400">
                       {new Date(p.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <button className="text-slate-400 hover:text-orange-600 transition-colors" title="Edit Payment">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                        <DeleteConfirmButton 
-                          itemType="Payment" 
-                          onDelete={deletePaymentAction.bind(null, p.id)} 
-                        />
-                      </div>
                     </td>
                   </tr>
                 ))}

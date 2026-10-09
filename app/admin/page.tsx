@@ -102,7 +102,8 @@ export default async function AdminDashboardPage() {
 
       <AdminDashboardClient 
         enrollmentData={enrollmentData} 
-        enrollmentsList={enrollments.map((e: any) => e.toJSON())} 
+        enrollmentsList={enrollments.slice(0, 15).map((e: any) => e.toJSON())} 
+        totalEnrollments={enrollments.length}
       />
 
     </div>

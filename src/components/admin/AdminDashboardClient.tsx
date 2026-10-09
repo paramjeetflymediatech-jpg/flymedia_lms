@@ -15,10 +15,12 @@ import {
 
 export default function AdminDashboardClient({ 
   enrollmentData,
-  enrollmentsList
+  enrollmentsList,
+  totalEnrollments = 0
 }: { 
   enrollmentData: any[];
   enrollmentsList: any[];
+  totalEnrollments?: number;
 }) {
   return (
     <div className="space-y-8">
@@ -108,6 +110,14 @@ export default function AdminDashboardClient({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        
+        {totalEnrollments > 15 && (
+          <div className="pt-4 flex justify-center border-t border-slate-50 mt-6">
+            <a href="/admin/enrollments" className="text-orange-600 hover:text-orange-700 font-bold text-sm transition-colors">
+              View all {totalEnrollments} enrollments &rarr;
+            </a>
           </div>
         )}
       </div>

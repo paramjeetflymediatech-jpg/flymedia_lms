@@ -22,7 +22,7 @@ export default function PublicFilterForm({ currentCategory, currentMode = '', cu
       params.delete(key);
     }
     params.delete('page');
-    router.push(`${actionPath}?${params.toString()}`);
+    router.push(`${actionPath}?${params.toString()}`, { scroll: false });
   };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -66,7 +66,7 @@ export default function PublicFilterForm({ currentCategory, currentMode = '', cu
       )}
 
       {hasFilters && (
-        <Link href={actionPath} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold text-center rounded-xl hover:bg-slate-200 transition-colors shadow-sm shrink-0">
+        <Link href={actionPath} scroll={false} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold text-center rounded-xl hover:bg-slate-200 transition-colors shadow-sm shrink-0">
           Clear
         </Link>
       )}
