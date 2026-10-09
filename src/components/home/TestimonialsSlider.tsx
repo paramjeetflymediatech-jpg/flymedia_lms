@@ -19,8 +19,14 @@ export default function TestimonialsSlider({ testimonials }: { testimonials: any
 
   if (!testimonials || testimonials.length === 0) {
     return (
-      <div className="text-center text-slate-500 py-12 bg-white rounded-[2.5rem] border border-slate-200 border-dashed">
-        No testimonials available yet.
+      <div className="text-center p-8 sm:p-16 bg-white rounded-3xl sm:rounded-[3rem] border border-slate-100 max-w-2xl mx-auto shadow-sm">
+        <div className="w-20 h-20 mx-auto bg-orange-50 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner">
+          🌟
+        </div>
+        <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">Our Success Stories</h3>
+        <p className="text-sm sm:text-lg text-slate-500 font-medium leading-relaxed">
+          We are currently gathering the latest success stories from our amazing students. Check back soon to read about their incredible journeys!
+        </p>
       </div>
     );
   }

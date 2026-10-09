@@ -33,7 +33,7 @@ export default async function HomePage() {
   let packages: Package[] = [];
   let testimonials: any[] = [];
   try {
-    packages = await Package.findAll({ limit: 4 });
+    packages = await Package.findAll({ where: { status: 'PUBLISHED' }, limit: 4 });
     const testimonialsData = await Testimonial.findAll({
       where: { isActive: true },
       order: [['createdAt', 'DESC']],
@@ -160,11 +160,14 @@ export default async function HomePage() {
             </div>
 
             {packages.length === 0 ? (
-              <div className="text-center p-8 sm:p-16 bg-slate-50 rounded-3xl sm:rounded-[3rem] border border-slate-100 max-w-2xl mx-auto">
-                <div className="text-4xl mb-4">📭</div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">No Packages Available</h3>
-                <p className="text-sm sm:text-base text-slate-500 mb-6 font-medium">The package catalog is currently being updated. Please check back soon or sync the database.</p>
-                <code className="text-xs px-3 py-2 rounded-lg bg-slate-200 font-mono text-slate-700 font-bold break-all">npm run db:sync</code>
+              <div className="text-center p-8 sm:p-16 bg-white rounded-3xl sm:rounded-[3rem] border border-slate-100 max-w-2xl mx-auto shadow-sm">
+                <div className="w-20 h-20 mx-auto bg-orange-50 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner">
+                  ✨
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">New Programs Coming Soon!</h3>
+                <p className="text-sm sm:text-lg text-slate-500 font-medium leading-relaxed">
+                  Our expert instructors are currently crafting an incredible new lineup of premium courses. Check back shortly to accelerate your career!
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">

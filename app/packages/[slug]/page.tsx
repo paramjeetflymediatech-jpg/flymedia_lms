@@ -35,7 +35,7 @@ export default async function PackageDetailPage({ params }: Props) {
   const user = await getCurrentUser();
 
   const pkg = await Package.findOne({
-    where: { slug },
+    where: { slug, status: 'PUBLISHED' },
     include: [
       {
         model: LiveClass,
