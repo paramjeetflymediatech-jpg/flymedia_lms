@@ -87,6 +87,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/mentors" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
+                  Tutors
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
+                  Contact
+                </Link>
+              </li>
+              <li>
                 <Link href="/become-tutor" className="text-orange-500 hover:text-orange-400 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
                   Become a Tutor
                   <span className="relative flex h-2 w-2">
