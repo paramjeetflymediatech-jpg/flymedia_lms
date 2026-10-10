@@ -141,7 +141,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
         {/* Gorgeous Content Section (Section Wise) */}
         {(dynamicContent?.htmlContent || isLegacyHtml) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-10">
             <div 
               className="prose prose-lg md:prose-xl max-w-none prose-slate mx-auto 
                          prose-headings:font-extrabold prose-headings:text-slate-900 prose-headings:tracking-tight
