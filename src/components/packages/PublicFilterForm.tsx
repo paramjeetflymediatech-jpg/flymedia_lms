@@ -46,7 +46,7 @@ export default function PublicFilterForm({ currentCategory, currentMode = '', cu
         <option value="">All Modes</option>
         <option value="ONLINE">Online Only</option>
         <option value="OFFLINE">Offline Only</option>
-        <option value="BOTH">Online & Offline</option>
+        <option value="BOTH">ONLINE & OFFLINE</option>
       </select>
       
       {/* Search Input (only show on /packages, not on specific category for now, or show everywhere?) */}

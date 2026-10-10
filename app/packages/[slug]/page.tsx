@@ -167,7 +167,7 @@ export default async function PackageDetailPage({ params }: Props) {
                   </span>
                   {pkgJson.mode && (
                     <span className="inline-flex items-center px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider shadow-inner">
-                      {pkgJson.mode === 'ONLINE' ? '🌐 Online Training' : pkgJson.mode === 'OFFLINE' ? '🏫 Campus Training' : '🌐🏫 Online & Offline Training'}
+                      {pkgJson.mode === 'ONLINE' ? '🌐 Online Training' : pkgJson.mode === 'OFFLINE' ? '🏫 Campus Training' : '🌐🏫 ONLINE & OFFLINE' }
                     </span>
                   )}
                   {pkgJson.category && pkgJson.category !== 'Uncategorized' && (

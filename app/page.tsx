@@ -257,7 +257,7 @@ export default async function HomePage() {
                             pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
                             'bg-indigo-500/30 text-indigo-100 border-indigo-400/40'
                           }`}>
-                            {pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}
+                            {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
                           </span>
                         )}
                       </div>

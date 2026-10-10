@@ -175,7 +175,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               >
                 <option value="ONLINE">Online Only</option>
                 <option value="OFFLINE">Offline Only</option>
-                <option value="BOTH">Online & Offline Both</option>
+                <option value="BOTH">ONLINE & OFFLINE</option>
               </select>
             </div>
             <div>
