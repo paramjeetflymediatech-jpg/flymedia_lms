@@ -604,7 +604,20 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     }
     const skillsRaw = formData.get('skills') as string;
     if (skillsRaw !== null) {
-      try { pkg.skills = skillsRaw.trim() ? JSON.parse(skillsRaw) : null; } catch {}
+      try {
+        let parsed = skillsRaw.trim() ? JSON.parse(skillsRaw) : null;
+        if (parsed && Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const file = formData.get(`skill_icon_${i}`) as File | null;
+            const uploadedUrl = await saveLocalFile(file, 'skills');
+            if (uploadedUrl) parsed[i].iconUrl = uploadedUrl;
+            if (typeof parsed[i] === 'string') {
+              parsed[i] = { name: parsed[i], iconUrl: '', link: '' };
+            }
+          }
+        }
+        pkg.skills = parsed;
+      } catch { pkg.skills = null; }
     }
     const techStackRaw = formData.get('techStack') as string;
     if (techStackRaw !== null) {

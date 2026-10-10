@@ -83,53 +83,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           </div>
         </div>
 
-        {/* Gorgeous Content Section (Section Wise) */}
-        {(dynamicContent?.htmlContent || isLegacyHtml) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
-            <div 
-              className="prose prose-lg md:prose-xl max-w-none prose-slate mx-auto 
-                         prose-headings:font-extrabold prose-headings:text-slate-900 prose-headings:tracking-tight
-                         prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-3xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-4
-                         prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-2xl prose-h3:text-slate-800
-                         prose-p:text-slate-600 prose-p:leading-relaxed
-                         prose-ul:mt-6 prose-ul:space-y-3 prose-li:text-slate-600 prose-li:marker:text-orange-500
-                         prose-strong:text-slate-900"
-              dangerouslySetInnerHTML={{ __html: dynamicContent?.htmlContent || category.content }} 
-            />
-          </div>
-        )}
-
-        {dynamicContent && dynamicContent.features && dynamicContent.features.length > 0 && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-            <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-10">Why Choose This Category?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {dynamicContent.features.map((feature: any, idx: number) => (
-                <div key={idx} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-shadow text-center">
-                  <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                  <p className="text-slate-600 leading-relaxed">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {dynamicContent && dynamicContent.sections && dynamicContent.sections.length > 0 && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 space-y-12">
-            {dynamicContent.sections.map((section: any, idx: number) => (
-              <div key={idx} className="bg-slate-50 p-8 md:p-12 rounded-[2.5rem] border border-slate-100 flex flex-col md:flex-row gap-8 items-center">
-                <div className="flex-1 space-y-4">
-                  <h3 className="text-3xl font-extrabold text-slate-900">{section.heading}</h3>
-                  <p className="text-lg text-slate-600 leading-relaxed">{section.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="flex flex-col items-center gap-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">Available Programs</h2>
@@ -184,6 +138,54 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             </div>
           )}
         </div>
+
+        {/* Gorgeous Content Section (Section Wise) */}
+        {(dynamicContent?.htmlContent || isLegacyHtml) && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+            <div 
+              className="prose prose-lg md:prose-xl max-w-none prose-slate mx-auto 
+                         prose-headings:font-extrabold prose-headings:text-slate-900 prose-headings:tracking-tight
+                         prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-3xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-4
+                         prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-2xl prose-h3:text-slate-800
+                         prose-p:text-slate-600 prose-p:leading-relaxed
+                         prose-ul:mt-6 prose-ul:space-y-3 prose-li:text-slate-600 prose-li:marker:text-orange-500
+                         prose-strong:text-slate-900"
+              dangerouslySetInnerHTML={{ __html: dynamicContent?.htmlContent || category.content }} 
+            />
+          </div>
+        )}
+
+        {dynamicContent && dynamicContent.features && dynamicContent.features.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+            <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-10">Why Choose This Category?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {dynamicContent.features.map((feature: any, idx: number) => (
+                <div key={idx} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-shadow text-center">
+                  <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {dynamicContent && dynamicContent.sections && dynamicContent.sections.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 space-y-12">
+            {dynamicContent.sections.map((section: any, idx: number) => (
+              <div key={idx} className="bg-slate-50 p-8 md:p-12 rounded-[2.5rem] border border-slate-100 flex flex-col md:flex-row gap-8 items-center">
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-3xl font-extrabold text-slate-900">{section.heading}</h3>
+                  <p className="text-lg text-slate-600 leading-relaxed">{section.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+      
 
         {dynamicContent && dynamicContent.faqs && dynamicContent.faqs.length > 0 && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">

@@ -254,17 +254,31 @@ export default async function PackageDetailPage({ params }: Props) {
                           const skillName = typeof skill === 'string' ? skill : skill.name;
                           const skillIcon = typeof skill === 'string' ? null : (skill.iconUrl || null);
                           const skillEmoji = typeof skill === 'string' ? null : (skill.emoji || null);
-                          return (
-                            <div key={i} className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                              {skillIcon ? (
-                                <img src={skillIcon} alt={skillName} className="w-5 h-5 object-contain flex-shrink-0" />
-                              ) : skillEmoji ? (
-                                <span className="text-base leading-none flex-shrink-0">{skillEmoji}</span>
-                              ) : null}
-                              <span>{skillName}</span>
-                            </div>
-                          );
-                        })}
+                            const skillLink = typeof skill === 'string' ? null : (skill.link || null);
+                            const ItemWrapper = skillLink ? 'a' : 'div';
+                            const itemProps = skillLink ? { href: skillLink, target: '_blank', rel: 'noopener noreferrer' } : {};
+                            
+                            return (
+                              <ItemWrapper 
+                                key={i} 
+                                {...itemProps}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-default"
+                                style={skillLink ? { cursor: 'pointer' } : {}}
+                              >
+                                {skillIcon ? (
+                                  <img src={skillIcon} alt={skillName} className="w-5 h-5 object-contain flex-shrink-0" />
+                                ) : skillEmoji ? (
+                                  <span className="text-base leading-none flex-shrink-0">{skillEmoji}</span>
+                                ) : null}
+                                <span>{skillName}</span>
+                                {skillLink && (
+                                  <svg className="w-3 h-3 text-slate-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                )}
+                              </ItemWrapper>
+                            );
+                          })}
                       </div>
                     </div>
                   )}

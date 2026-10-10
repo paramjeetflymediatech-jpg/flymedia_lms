@@ -69,12 +69,16 @@ const ALL_TECH: { name: string; icon: string; source: IconSource; emoji: string 
   // --- Video Editing ---
   { name: 'Adobe Premiere Pro', icon: 'adobepremierepro', source: 'simpleicon', emoji: '🎬' },
   { name: 'Adobe After Effects', icon: 'adobeaftereffects', source: 'simpleicon', emoji: '✨' },
+  { name: 'Adobe Audition', icon: 'adobeaudition', source: 'simpleicon', emoji: '🎙️' },
+  { name: 'Adobe Firefly', icon: 'adobefirefly', source: 'simpleicon', emoji: '🔥' },
   { name: 'DaVinci Resolve', icon: 'davinciresolve', source: 'simpleicon', emoji: '🎥' },
   { name: 'Final Cut Pro', icon: 'finalcutpro', source: 'simpleicon', emoji: '🎞️' },
   { name: 'CapCut', icon: 'capcut', source: 'simpleicon', emoji: '✂️' },
   { name: 'OBS Studio', icon: 'obsstudio', source: 'simpleicon', emoji: '📹' },
   { name: 'Filmora', icon: '', source: 'emoji', emoji: '🎬' },
   { name: 'Sony Vegas Pro', icon: '', source: 'emoji', emoji: '🎬' },
+  { name: 'Runway', icon: 'runwayml', source: 'simpleicon', emoji: '🎬' },
+  { name: 'ElevenLabs', icon: 'elevenlabs', source: 'simpleicon', emoji: '🔊' },
 
   // --- Graphic Design ---
   { name: 'Adobe Photoshop', icon: 'adobephotoshop', source: 'simpleicon', emoji: '🖼️' },
@@ -95,16 +99,26 @@ const ALL_TECH: { name: string; icon: string; source: IconSource; emoji: string 
   { name: 'Adobe Animate', icon: '', source: 'emoji', emoji: '🎭' },
   { name: 'Spline', icon: '', source: 'emoji', emoji: '🌀' },
 
-  // --- SEO ---
-  { name: 'Google Search Console', icon: 'googlesearchconsole', source: 'simpleicon', emoji: '🔍' },
-  { name: 'Google Analytics', icon: 'googleanalytics', source: 'simpleicon', emoji: '📊' },
+  // --- SEO & Digital Marketing ---
+  { name: 'Google Search', icon: 'google', source: 'simpleicon', emoji: '🔍' },
+  { name: 'Google Search Console', icon: 'googlesearchconsole', source: 'simpleicon', emoji: '📊' },
+  { name: 'Google Analytics', icon: 'googleanalytics', source: 'simpleicon', emoji: '📈' },
+  { name: 'Google Ads', icon: 'googleads', source: 'simpleicon', emoji: '📣' },
+  { name: 'Google Business Profile', icon: 'googlemybusiness', source: 'simpleicon', emoji: '🏢' },
+  { name: 'Google Maps', icon: 'googlemaps', source: 'simpleicon', emoji: '📍' },
   { name: 'SEMrush', icon: 'semrush', source: 'simpleicon', emoji: '🔎' },
   { name: 'Ahrefs', icon: '', source: 'emoji', emoji: '🔗' },
   { name: 'Moz', icon: '', source: 'emoji', emoji: '📈' },
   { name: 'Yoast SEO', icon: '', source: 'emoji', emoji: '🟢' },
   { name: 'RankMath', icon: '', source: 'emoji', emoji: '📈' },
   { name: 'Ubersuggest', icon: '', source: 'emoji', emoji: '💡' },
-  { name: 'Google Ads', icon: 'googleads', source: 'simpleicon', emoji: '📣' },
+  { name: 'Social Media Platforms', icon: '', source: 'emoji', emoji: '📱' },
+  { name: 'Email Marketing Tools', icon: '', source: 'emoji', emoji: '📧' },
+  { name: 'Analytics & Reporting', icon: '', source: 'emoji', emoji: '📊' },
+  { name: 'Mailchimp', icon: 'mailchimp', source: 'simpleicon', emoji: '🐒' },
+  { name: 'Meta Business Suite', icon: 'meta', source: 'simpleicon', emoji: '📘' },
+  { name: 'ChatGPT', icon: 'openai', source: 'simpleicon', emoji: '🤖' },
+  { name: 'Gemini AI', icon: 'googlegemini', source: 'simpleicon', emoji: '♊' },
 
   // --- Content & Planning ---
   { name: 'Notion', icon: 'notion', source: 'devicon', emoji: '📓' },
@@ -114,6 +128,9 @@ const ALL_TECH: { name: string; icon: string; source: IconSource; emoji: string 
   { name: 'ClickUp', icon: 'clickup', source: 'simpleicon', emoji: '✅' },
   { name: 'Grammarly', icon: 'grammarly', source: 'simpleicon', emoji: '✅' },
   { name: 'ChatGPT', icon: 'openai', source: 'simpleicon', emoji: '🤖' },
+  { name: 'Runway', icon: 'runwayml', source: 'simpleicon', emoji: '🎬' },
+  { name: 'ElevenLabs', icon: 'elevenlabs', source: 'simpleicon', emoji: '🔊' },
+  { name: 'Adobe Firefly', icon: 'adobefirefly', source: 'simpleicon', emoji: '🔥' },
   { name: 'Microsoft Word', icon: 'word', source: 'devicon', emoji: '📘' },
   { name: 'Google Docs', icon: 'google', source: 'devicon', emoji: '📄' },
 
