@@ -35,7 +35,7 @@ export default function PublicFilterForm({ currentCategory, currentMode = '', cu
   const hasFilters = currentSearch || currentMode || (currentCategory && actionPath === '/packages');
 
   return (
-    <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 w-full justify-end">
+    <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 w-full justify-center">
       {currentCategory && actionPath === '/packages' && <input type="hidden" name="category" value={currentCategory} />}
       <select
         name="mode"

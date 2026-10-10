@@ -448,7 +448,7 @@ export default async function HomePage() {
             <GsapReveal animation="zoomIn" delay={0.2}>
               <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-200 h-[450px] group bg-white">
                 <iframe 
-                  src="https://maps.google.com/maps?q=Flymedia%20Technology%20Ludhiana&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                  src="https://maps.google.com/maps?q=Learn%20With%20Flymedia,%20Ludhiana&t=&z=15&ie=UTF8&iwloc=&output=embed" 
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
@@ -470,9 +470,9 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <p className="text-slate-600 text-sm font-medium leading-relaxed mb-4">
-                    Plot no, 20, Vishal Nagar Ext, Vishal Nagar, Ludhiana, Punjab 141001
+                    First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India
                   </p>
-                  <a href="https://share.google/2P0flFSZNu6r5yVZ7" target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors duration-300 text-sm">
+                  <a href="https://www.google.com/maps/dir//Learn+With+Flymedia,+First+Floor,+Plot+20,+Vishal+Nagar+Ext,+opposite+Kashish+Cafe,+Vishal+Nagar,+Jawaddi+Taksal,+Ludhiana,+Punjab+141013,+India/@30.9003452,75.8566733,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x391a83053a2c6f9d:0x1beaed8f1198aa16!2m2!1d75.820215!2d30.8795234?authuser=0&hl=en-GB&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors duration-300 text-sm">
                     Get Directions
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                   </a>

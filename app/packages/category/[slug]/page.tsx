@@ -131,7 +131,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col items-center gap-4 text-center">
             <h2 className="text-2xl font-bold text-slate-900">Available Programs</h2>
             
             <PublicFilterForm 

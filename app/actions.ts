@@ -433,6 +433,25 @@ export async function adminCreatePackage(formData: FormData) {
     const existing = await Package.findOne({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
 
+    let techStackParsed = null;
+    const techStackRaw = formData.get('techStack') as string;
+    if (techStackRaw !== null) {
+      try {
+        let parsed = techStackRaw.trim() ? JSON.parse(techStackRaw) : null;
+        if (parsed && Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const file = formData.get(`tech_icon_${i}`) as File | null;
+            const uploadedUrl = await saveLocalFile(file, 'tech');
+            if (uploadedUrl) parsed[i].iconUrl = uploadedUrl;
+            if (typeof parsed[i] === 'string') {
+              parsed[i] = { name: parsed[i], iconUrl: '' };
+            }
+          }
+        }
+        techStackParsed = parsed;
+      } catch {}
+    }
+
     await Package.create({
       title,
       slug: finalSlug,
@@ -440,8 +459,13 @@ export async function adminCreatePackage(formData: FormData) {
       category,
       price,
       thumbnail: finalThumbnailUrl,
+      videoUrl: formData.get('videoUrl') as string || null,
+      rating: formData.get('rating') ? Number(formData.get('rating')) : 4.9,
+      reviewsCount: formData.get('reviewsCount') as string || '1.2k+',
+      level: formData.get('level') as string || 'Beginner to Advanced',
       status,
       mode,
+      techStack: techStackParsed,
     });
 
     revalidatePath('/admin/packages');
@@ -514,6 +538,18 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     if (mode) pkg.mode = mode;
     if (price !== null && price !== undefined) pkg.price = price;
     if (finalThumbnailUrl !== undefined) pkg.thumbnail = finalThumbnailUrl;
+    
+    const videoUrl = formData.get('videoUrl') as string;
+    if (videoUrl !== null) pkg.videoUrl = videoUrl;
+    
+    const ratingRaw = formData.get('rating');
+    if (ratingRaw !== null) pkg.rating = Number(ratingRaw);
+    
+    const reviewsCountRaw = formData.get('reviewsCount') as string;
+    if (reviewsCountRaw !== null) pkg.reviewsCount = reviewsCountRaw;
+    
+    const levelRaw = formData.get('level') as string;
+    if (levelRaw !== null) pkg.level = levelRaw;
 
     // What You'll Learn (JSON array)
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;

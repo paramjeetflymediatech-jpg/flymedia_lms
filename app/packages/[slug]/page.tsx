@@ -71,8 +71,8 @@ export default async function PackageDetailPage({ params }: Props) {
   
   // New Dynamic Sections
   const highlights: { title: string; description: string }[] = pkgJson.highlights || [];
-  const skills: string[] = pkgJson.skills || [];
-  const techStack: string[] = pkgJson.techStack || [];
+  const skills: any[] = pkgJson.skills || [];
+  const techStack: any[] = pkgJson.techStack || [];
   const projectDetails: { description: string; stages: { title: string; content: string }[] } | null = pkgJson.projectDetails || null;
   const targetAudience: { list: string[]; prerequisites: string } | null = pkgJson.targetAudience || null;
   const faqs: { question: string; answer: string }[] = pkgJson.faqs || [];
@@ -90,56 +90,109 @@ export default async function PackageDetailPage({ params }: Props) {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             {/* Breadcrumb */}
-            <p className="text-sm text-white/40 font-medium mb-6">
+            <p className="text-sm text-white/40 font-medium mb-8">
               <a href="/packages" className="hover:text-white/70 transition-colors">All Courses</a>
               <span className="mx-2">›</span>
               <span className="text-white/60">{pkgJson.title}</span>
             </p>
 
-            {/* Badges */}
-            {/* <div className="flex flex-wrap gap-3 mb-6">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                Live Classes
-              </span>
-              {pkgJson.mode && (
-                <span className={`inline-flex items-center px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider ${
-                  pkgJson.mode === 'ONLINE' ? 'bg-blue-500/20 border-blue-500/30 text-blue-400' :
-                  pkgJson.mode === 'OFFLINE' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' :
-                  'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
-                }`}>
-                  {pkgJson.mode === 'ONLINE' ? '🌐 Online' : pkgJson.mode === 'OFFLINE' ? '🏫 Offline' : '🌐🏫 Hybrid'}
-                </span>
-              )}
-              {pkgJson.category && pkgJson.category !== 'Uncategorized' && (
-                <span className="px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/60 text-xs font-bold uppercase tracking-wider">
-                  {pkgJson.category}
-                </span>
-              )}
-            </div> */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              {/* Left Column - Video/Thumbnail */}
+              <div className="order-2 lg:order-1 relative rounded-2xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-slate-700/50 bg-slate-800 aspect-video flex items-center justify-center">
+                {pkgJson.videoUrl ? (
+                  <iframe 
+                    src={(() => {
+                      const url = pkgJson.videoUrl;
+                      if (!url) return '';
+                      if (url.includes('youtube.com/watch?v=')) {
+                        try {
+                          const videoId = new URL(url).searchParams.get('v');
+                          return `https://www.youtube.com/embed/${videoId}`;
+                        } catch { return url; }
+                      }
+                      if (url.includes('youtu.be/')) {
+                        const videoId = url.split('youtu.be/')[1].split('?')[0];
+                        return `https://www.youtube.com/embed/${videoId}`;
+                      }
+                      return url;
+                    })()}
+                    title={pkgJson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                    className="w-full h-full absolute inset-0"
+                  ></iframe>
+                ) : pkgJson.thumbnail ? (
+                  <img src={pkgJson.thumbnail} alt={pkgJson.title} className="w-full h-full object-cover absolute inset-0" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-500">
+                    <svg className="w-12 h-12 mb-3 opacity-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    <span className="text-sm font-semibold">Course Preview</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Title */}
-            <h1 className="text-3xl md:text-5xl font-black text-white leading-tight tracking-tight max-w-4xl mb-6">
-              {pkgJson.title}
-            </h1>
+              {/* Right Column - Details */}
+              <div className="order-1 lg:order-2 space-y-6">
+                
+                {/* Title */}
+                <h1 className="text-4xl md:text-3xl font-black text-white leading-tight tracking-tight">
+                  {pkgJson.title}
+                </h1>
+                
+                {/* Stats / Rating Row */}
+                <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+                  {pkgJson.rating && (
+                    <div className="flex items-center text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+                      <span className="mr-1">★</span> {pkgJson.rating} <span className="text-amber-400/60 ml-1">({pkgJson.reviewsCount || '0'} Reviews)</span>
+                    </div>
+                  )}
+                  {pkgJson.level && (
+                    <div className="flex items-center text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                      {pkgJson.level}
+                    </div>
+                  )}
+                </div>
 
-            {/* Meta strip */}
-            {/* <div className="flex flex-wrap gap-6 text-sm text-white/60 font-medium">
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                {liveClasses.length} Live Sessions
-              </span>
-              {instructors.length > 0 && (
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" /></svg>
-                  {instructors.length} Expert{instructors.length > 1 ? 's' : ''}
-                </span>
-              )}
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {pkgJson.price && Number(pkgJson.price) > 0 ? `₹${Number(pkgJson.price).toLocaleString('en-IN')}` : 'Free'}
-              </span>
-            </div> */}
+                {/* Description Snippet */}
+                <p className="text-slate-300 text-base md:text-lg leading-relaxed line-clamp-3">
+                  {pkgJson.description.replace(/<[^>]*>?/gm, '').substring(0, 180)}...
+                </p>
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider shadow-inner">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    Live Classes
+                  </span>
+                  {pkgJson.mode && (
+                    <span className="inline-flex items-center px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider shadow-inner">
+                      {pkgJson.mode === 'ONLINE' ? '🌐 Online Training' : pkgJson.mode === 'OFFLINE' ? '🏫 Campus Training' : '🌐🏫 Hybrid Training'}
+                    </span>
+                  )}
+                  {pkgJson.category && pkgJson.category !== 'Uncategorized' && (
+                    <span className="inline-flex items-center px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider shadow-inner">
+                      🏷️ {pkgJson.category}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Row */}
+                <div className="pt-6 flex flex-wrap items-center gap-6 border-t border-slate-700/50">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Course Fee</span>
+                    <span className="text-3xl font-black text-white">
+                      {pkgJson.price && Number(pkgJson.price) > 0 ? `₹${Number(pkgJson.price).toLocaleString('en-IN')}` : 'Free'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex-1 min-w-[200px]">
+                    <PackageEnrollWidget pkg={pkgJson} user={user ? (user as any).toJSON() : null} isEnrolled={isEnrolled} variant="button" />
+                  </div>
+                </div>
+                
+              </div>
+            </div>
           </div>
         </section>
 
@@ -150,19 +203,12 @@ export default async function PackageDetailPage({ params }: Props) {
             {/* ── LEFT COLUMN – Main content ── */}
             <div className="w-full lg:flex-1 space-y-14 min-w-0">
 
-              {/* Thumbnail */}
-              {pkgJson.thumbnail && (
-                <div>
-                  <img
-                    src={pkgJson.thumbnail}
-                    alt={pkgJson.title}
-                    className="w-full rounded-2xl shadow-lg border border-slate-100 object-cover max-h-[480px]"
-                  />
-                </div>
-              )}
-
               {/* Description */}
-              <section>
+              <section className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                  <span className="w-2 h-8 rounded-full bg-gradient-to-b from-orange-500 to-rose-500"></span>
+                  About This Course
+                </h2>
                 <div
                   className="prose prose-slate max-w-none prose-headings:font-black prose-h2:text-2xl prose-a:text-orange-600 prose-li:marker:text-orange-500"
                   dangerouslySetInnerHTML={{ __html: pkgJson.description || '' }}
@@ -203,12 +249,22 @@ export default async function PackageDetailPage({ params }: Props) {
                         <div className="w-1 h-8 rounded-full bg-gradient-to-b from-indigo-500 to-blue-500 flex-shrink-0" />
                         <h2 className="text-2xl font-black text-slate-900">Skills You'll Gain</h2>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {skills.map((skill, i) => (
-                          <span key={i} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200">
-                            {skill}
-                          </span>
-                        ))}
+                      <div className="flex flex-wrap gap-3">
+                        {skills.map((skill, i) => {
+                          const skillName = typeof skill === 'string' ? skill : skill.name;
+                          const skillIcon = typeof skill === 'string' ? null : (skill.iconUrl || null);
+                          const skillEmoji = typeof skill === 'string' ? null : (skill.emoji || null);
+                          return (
+                            <div key={i} className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                              {skillIcon ? (
+                                <img src={skillIcon} alt={skillName} className="w-5 h-5 object-contain flex-shrink-0" />
+                              ) : skillEmoji ? (
+                                <span className="text-base leading-none flex-shrink-0">{skillEmoji}</span>
+                              ) : null}
+                              <span>{skillName}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -218,12 +274,17 @@ export default async function PackageDetailPage({ params }: Props) {
                         <div className="w-1 h-8 rounded-full bg-gradient-to-b from-amber-500 to-yellow-500 flex-shrink-0" />
                         <h2 className="text-2xl font-black text-slate-900">Tech Stack</h2>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {techStack.map((tech, i) => (
-                          <span key={i} className="px-4 py-2 bg-amber-50 text-amber-700 font-bold text-xs rounded-xl border border-amber-200">
-                            {tech}
-                          </span>
-                        ))}
+                      <div className="flex flex-wrap gap-3">
+                        {techStack.map((tech, i) => {
+                          const techName = typeof tech === 'string' ? tech : tech.name;
+                          const techIcon = typeof tech === 'string' ? null : tech.iconUrl;
+                          return (
+                            <div key={i} className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                              {techIcon && <img src={techIcon} alt={techName} className="w-5 h-5 object-contain" />}
+                              <span>{techName}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -254,17 +315,7 @@ export default async function PackageDetailPage({ params }: Props) {
 
             </div>
 
-            {/* ── RIGHT COLUMN – Sticky Enroll Widget ── */}
-            <div className="w-full lg:w-[360px] xl:w-[400px] flex-shrink-0">
-              <div className="sticky top-24">
-                <PackageEnrollWidget
-                  pkg={pkgJson}
-                  user={user ? { id: user.id } : null}
-                  isEnrolled={isEnrolled}
-                />
-                
-              </div>
-            </div>
+
 
           </div>
         </div>
@@ -276,22 +327,22 @@ export default async function PackageDetailPage({ params }: Props) {
           {projectDetails && (
             <section>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-1 h-8 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500 flex-shrink-0" />
+                <div className="w-1 h-8 rounded-full bg-gradient-to-b from-indigo-500 to-blue-500 flex-shrink-0" />
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Your Project</h2>
               </div>
-              <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-7">
+              <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-7">
                 <p className="text-slate-700 text-sm leading-relaxed mb-6 font-medium">
                   {projectDetails.description}
                 </p>
-                <div className="bg-white rounded-2xl border border-emerald-100 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-blue-100 overflow-hidden">
                   <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-emerald-50/50 text-emerald-800 text-xs uppercase font-bold tracking-wider">
+                    <thead className="bg-blue-50/50 text-blue-800 text-xs uppercase font-bold tracking-wider">
                       <tr>
-                        <th className="px-6 py-4 border-b border-emerald-100">Stage</th>
-                        <th className="px-6 py-4 border-b border-emerald-100">What you add to your project</th>
+                        <th className="px-6 py-4 border-b border-blue-100">Stage</th>
+                        <th className="px-6 py-4 border-b border-blue-100">What you add to your project</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-emerald-50/50">
+                    <tbody className="divide-y divide-blue-50/50">
                       {projectDetails.stages.map((stage, i) => (
                         <tr key={i}>
                           <td className="px-6 py-4 font-bold text-slate-900">{stage.title}</td>

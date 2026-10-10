@@ -20,6 +20,8 @@ import SuccessStoriesEditor from '../../../../../src/components/admin/SuccessSto
 import ProjectDetailsEditor from '../../../../../src/components/admin/ProjectDetailsEditor';
 import TargetAudienceEditor from '../../../../../src/components/admin/TargetAudienceEditor';
 import CertificateDataEditor from '../../../../../src/components/admin/CertificateDataEditor';
+import TechSelectEditor from '../../../../../src/components/admin/TechSelectEditor';
+import SkillsEditor from '../../../../../src/components/admin/SkillsEditor';
 
 export const revalidate = 0;
 
@@ -211,6 +213,39 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               </select>
             </div>
           </div>
+            
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Rating (e.g. 4.9)</label>
+                <input
+                  name="rating"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  defaultValue={pkg.rating || 4.9}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Reviews Count (e.g. 1.2k+)</label>
+                <input
+                  name="reviewsCount"
+                  type="text"
+                  defaultValue={pkg.reviewsCount || '1.2k+'}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course Level</label>
+                <input
+                  name="level"
+                  type="text"
+                  defaultValue={pkg.level || 'Beginner to Advanced'}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+            </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package Description</label>
@@ -229,6 +264,15 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                   type="text"
                   defaultValue={pkg.thumbnail}
                   placeholder="Enter image URL"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 mb-4"
+                />
+                
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course Video URL (e.g. YouTube embed)</label>
+                <input
+                  name="videoUrl"
+                  type="text"
+                  defaultValue={pkg.videoUrl || ''}
+                  placeholder="Enter video embed URL"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 />
               </div>
@@ -282,14 +326,14 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Skills You'll Gain
                 </label>
-                <StringArrayEditor initialData={pkg.skills || []} name="skills" label="Skill" />
+                <SkillsEditor initialData={pkg.skills || []} name="skills" />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Tech Stack
                 </label>
-                <StringArrayEditor initialData={pkg.techStack || []} name="techStack" label="Tech" />
+                <TechSelectEditor initialData={pkg.techStack || []} name="techStack" />
               </div>
 
               <div>

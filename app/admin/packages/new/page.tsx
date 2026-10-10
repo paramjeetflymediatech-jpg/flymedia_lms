@@ -14,6 +14,8 @@ import SuccessStoriesEditor from '../../../../src/components/admin/SuccessStorie
 import ProjectDetailsEditor from '../../../../src/components/admin/ProjectDetailsEditor';
 import TargetAudienceEditor from '../../../../src/components/admin/TargetAudienceEditor';
 import CertificateDataEditor from '../../../../src/components/admin/CertificateDataEditor';
+import TechSelectEditor from '../../../../src/components/admin/TechSelectEditor';
+import SkillsEditor from '../../../../src/components/admin/SkillsEditor';
 
 export default async function CreatePackagePage() {
   await requireAdmin();
@@ -101,6 +103,39 @@ export default async function CreatePackagePage() {
               </select>
             </div>
           </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Rating (e.g. 4.9)</label>
+              <input
+                name="rating"
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                defaultValue={4.9}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Reviews Count (e.g. 1.2k+)</label>
+              <input
+                name="reviewsCount"
+                type="text"
+                defaultValue="1.2k+"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course Level</label>
+              <input
+                name="level"
+                type="text"
+                defaultValue="Beginner to Advanced"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Package Description</label>
@@ -118,6 +153,13 @@ export default async function CreatePackagePage() {
                 name="thumbnailUrl"
                 type="text"
                 placeholder="Enter image URL"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 mb-4"
+              />
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course Video URL (e.g. YouTube embed)</label>
+              <input
+                name="videoUrl"
+                type="text"
+                placeholder="Enter video embed URL"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
               />
             </div>
@@ -170,14 +212,14 @@ export default async function CreatePackagePage() {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Skills You'll Gain
               </label>
-              <StringArrayEditor initialData={[]} name="skills" label="Skill" />
+              <SkillsEditor initialData={[]} name="skills" />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Tech Stack
               </label>
-              <StringArrayEditor initialData={[]} name="techStack" label="Tech" />
+              <TechSelectEditor initialData={[]} name="techStack" />
             </div>
 
             <div>

@@ -56,6 +56,10 @@ export default function Footer() {
                 <span className="sr-only">YouTube</span>
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 01-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 01-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 011.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418zM10 15l5-3-5-3v6z" clipRule="evenodd" /></svg>
               </a>
+              <a href="https://www.google.com/search?authuser=0&hl=en-GB&kgmid=%2Fg%2F11xlss0jy2&kgs=43be720997854c62&q=Learn+With+Flymedia&sca_esv=6b69e4b95f4fbd33&shem=dlvs1%2Cepsd1%2Cesd2e%2Cltae%2Crimspwouoe%2Csdpie&shndl=30&source=sh%2Fx%2Floc%2Funi%2Fm1%2F1&sxsrf=APpeQntHLdFEkSe6VaxYqa2QsJZXC53njQ%3A1791608285705" target="_blank" rel="noopener noreferrer" className="text-white transition-all duration-300 hover:-translate-y-1">
+                <span className="sr-only">Google</span>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" /></svg>
+              </a>
             </div>
           </div>
 
@@ -162,8 +166,8 @@ export default function Footer() {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
                 <div className="pt-1 leading-relaxed">
-                  <a href="https://share.google/2P0flFSZNu6r5yVZ7" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-orange-400 block">
-                    Plot no, 20, Vishal Nagar Ext, Vishal Nagar, Ludhiana, Punjab 141001
+                  <a href="https://www.google.com/maps/dir//Learn+With+Flymedia,+First+Floor,+Plot+20,+Vishal+Nagar+Ext,+opposite+Kashish+Cafe,+Vishal+Nagar,+Jawaddi+Taksal,+Ludhiana,+Punjab+141013,+India/@30.9003452,75.8566733,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x391a83053a2c6f9d:0x1beaed8f1198aa16!2m2!1d75.820215!2d30.8795234?authuser=0&hl=en-GB&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-orange-400 block">
+                    First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India
                   </a>
                 </div>
               </li>

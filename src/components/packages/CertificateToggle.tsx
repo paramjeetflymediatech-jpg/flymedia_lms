@@ -7,27 +7,36 @@ export default function CertificateToggle({ data }: { data: any }) {
   if (!data || !data.providers || data.providers.length === 0) return null;
 
   return (
-    <div className="bg-slate-900 rounded-3xl p-6 sm:p-10 relative overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-10 relative overflow-hidden">
       {/* Background elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/20 blur-3xl rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 blur-3xl rounded-full pointer-events-none" />
+      <div className={`absolute top-0 right-0 w-96 h-96 blur-3xl rounded-full pointer-events-none transition-colors duration-700 ${
+        data.providers[activeIndex].name.toLowerCase().includes('ibm') ? 'bg-blue-500/10' : 'bg-orange-500/10'
+      }`} />
+      <div className={`absolute bottom-0 left-0 w-96 h-96 blur-3xl rounded-full pointer-events-none transition-colors duration-700 ${
+        data.providers[activeIndex].name.toLowerCase().includes('ibm') ? 'bg-indigo-500/10' : 'bg-rose-500/10'
+      }`} />
 
       {/* Tabs */}
       <div className="flex justify-center mb-10 relative z-10">
-        <div className="inline-flex bg-slate-800/50 p-1 rounded-full border border-slate-700/50 backdrop-blur-sm">
-          {data.providers.map((provider: any, idx: number) => (
-            <button
-              key={idx}
-              onClick={() => setActiveIndex(idx)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
-                activeIndex === idx
-                  ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {provider.name}
-            </button>
-          ))}
+        <div className="inline-flex bg-slate-100 p-1 rounded-full border border-slate-200">
+          {data.providers.map((provider: any, idx: number) => {
+            const isIbm = provider.name.toLowerCase().includes('ibm');
+            const isActive = activeIndex === idx;
+            
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveIndex(idx)}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
+                  isActive
+                    ? (isIbm ? 'bg-blue-600 text-white shadow-sm' : 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-sm')
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                {provider.name}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -35,43 +44,58 @@ export default function CertificateToggle({ data }: { data: any }) {
         {/* Left side text */}
         <div className="w-full lg:w-1/2 space-y-8">
           <div>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              {data.providers[activeIndex].name} · Completion
+            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-4 ${
+              data.providers[activeIndex].name.toLowerCase().includes('ibm')
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-orange-50 border-orange-200 text-orange-800'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                data.providers[activeIndex].name.toLowerCase().includes('ibm') ? 'bg-blue-500' : 'bg-orange-500'
+              }`} />
+              {data.providers[activeIndex].name} · {data.providers[activeIndex].name.toLowerCase().includes('ibm') ? 'INDUSTRY RECOGNISED' : 'COMPLETION'}
             </span>
-            <h3 className="text-3xl font-black text-white leading-tight">
+            <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
               {data.title}
             </h3>
           </div>
 
           <ul className="space-y-6">
-            {data.features.map((feature: any, idx: number) => (
-              <li key={idx} className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-orange-400">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="flex items-center">
-                  <p className="font-bold text-white text-sm">{typeof feature === 'string' ? feature : feature.title}</p>
-                  {typeof feature !== 'string' && feature.body && (
-                     <p className="text-sm text-slate-400 leading-relaxed mt-1">{feature.body}</p>
-                  )}
-                </div>
-              </li>
-            ))}
+            {data.features.map((feature: any, idx: number) => {
+              const isIbm = data.providers[activeIndex].name.toLowerCase().includes('ibm');
+              return (
+                <li key={idx} className="flex gap-4">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${
+                    isIbm ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-orange-50 border-orange-100 text-orange-600'
+                  }`}>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex items-center">
+                    <div>
+                      <p className="font-semibold text-slate-900 text-sm sm:text-base">{typeof feature === 'string' ? feature : feature.title}</p>
+                      {typeof feature !== 'string' && feature.body && (
+                        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">{feature.body}</p>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
         {/* Right side image */}
         <div className="w-full lg:w-1/2">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-            <div className="relative bg-slate-800 ring-1 ring-slate-700/50 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center p-2">
+            <div className={`absolute -inset-1 rounded-xl blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200 ${
+              data.providers[activeIndex].name.toLowerCase().includes('ibm') ? 'bg-blue-500' : 'bg-orange-500'
+            }`} />
+            <div className="relative bg-white ring-1 ring-slate-100 rounded-lg overflow-hidden  flex items-center justify-center p-3 sm:p-4 shadow-sm transform group-hover:scale-[1.01] transition-transform">
               <img 
                 src={data.providers[activeIndex].logo || data.providers[activeIndex].image} 
                 alt={`${data.providers[activeIndex].name} Preview`}
-                className="w-full h-full object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:scale-[1.02]"
+                className="w-full h-full object-cover rounded-md"
               />
             </div>
           </div>

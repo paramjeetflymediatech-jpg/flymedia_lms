@@ -85,7 +85,7 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
           <tr>
             <td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;color:#94a3b8;">
-                © ${new Date().getFullYear()} Flymedia Technology · Plot no 20, Vishal Nagar Ext, Ludhiana, Punjab 141001
+                © ${new Date().getFullYear()} Flymedia Technology · First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India
               </p>
             </td>
           </tr>

@@ -65,7 +65,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <strong className="block text-slate-900 font-bold mb-1 group-hover:text-orange-600 transition-colors">India Head Office</strong>
-                      <span className="text-sm text-slate-600 leading-relaxed font-medium">Plot no, 20, Vishal Nagar Ext, Vishal Nagar, Ludhiana, Punjab 141001</span>
+                      <span className="text-sm text-slate-600 leading-relaxed font-medium">First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India</span>
                     </div>
                   </div>
 
