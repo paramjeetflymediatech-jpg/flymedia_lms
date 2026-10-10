@@ -231,9 +231,14 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                           <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
                             {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
                           </span>
-                          <span className="font-black text-xl text-slate-900 group-hover:text-orange-600 transition-colors">
-                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            {pkg.duration && (
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{pkg.duration}</span>
+                            )}
+                            <span className="font-black text-xl text-slate-900 group-hover:text-orange-600 transition-colors">
+                              {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>

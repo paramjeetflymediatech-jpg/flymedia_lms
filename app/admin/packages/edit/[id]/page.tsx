@@ -214,7 +214,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
             </div>
           </div>
             
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">Rating (e.g. 4.9)</label>
                 <input
@@ -242,6 +242,16 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                   name="level"
                   type="text"
                   defaultValue={pkg.level || 'Beginner to Advanced'}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Duration</label>
+                <input
+                  name="duration"
+                  type="text"
+                  defaultValue={pkg.duration || '6 Months'}
+                  placeholder="e.g. 6 Months"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 />
               </div>

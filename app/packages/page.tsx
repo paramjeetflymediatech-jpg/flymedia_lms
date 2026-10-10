@@ -4,6 +4,7 @@ import Footer from '../../src/components/layout/Footer';
 import PublicFilterForm from '../../src/components/packages/PublicFilterForm';
 import { Package } from '../../src/db/models';
 import { Op } from 'sequelize';
+import GsapReveal from '../../src/components/animations/GsapReveal';
 
 export const metadata = {
   title: 'Training Programs | Flymedia Technology LMS',
@@ -91,59 +92,57 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {packages.map((pkg) => (
-                  <div
-                    key={pkg.id}
-                    className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full"
-                  >
-                    {pkg.thumbnail && (
-                      <div className="h-48 overflow-hidden relative bg-slate-100">
-                        <img
-                          src={pkg.thumbnail}
-                          alt={pkg.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute top-4 right-4 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-900/80 text-white backdrop-blur">
-                          {pkg.category || 'PROGRAM'}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <div className="space-y-3">
-                        <h2 className="text-xl font-bold text-slate-900 leading-snug flex items-center justify-between">
-                          <span>{pkg.title}</span>
-                          {pkg.mode && (
-                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md ml-2 flex-shrink-0 ${
-                              pkg.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' :
-                              pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
-                              'bg-indigo-100 text-indigo-700'
-                            }`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {packages.map((pkg, idx) => (
+                  <GsapReveal key={pkg.id} animation="slideUp" delay={idx * 0.1} duration={0.8}>
+                    <Link href={`/packages/${pkg.slug}`} className="group block h-full">
+                      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full relative">
+                        <div className="aspect-[16/10] bg-slate-900 relative overflow-hidden">
+                          {pkg.thumbnail ? (
+                            <img src={pkg.thumbnail} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-105 group-hover:opacity-90 transition-all duration-700 ease-out" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                              <svg className="w-16 h-16 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+                          
+                          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                            <span className="px-3 py-1.5 bg-white/95 backdrop-blur-md text-slate-900 text-xs font-black rounded-lg shadow-lg uppercase tracking-wider">
+                              {pkg.category || 'PROGRAM'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-8 flex-1 flex flex-col relative bg-white">
+                          <div className="absolute -top-6 right-6 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-500 z-20">
+                            <svg className="w-5 h-5 -mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                          </div>
+                          
+                          <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-orange-600 transition-colors line-clamp-2 leading-tight">
+                            {pkg.title}
+                          </h3>
+                          <p className="text-slate-500 text-base mb-8 line-clamp-2 flex-1 font-medium leading-relaxed">
+                            {pkg.description?.replace(/<[^>]*>?/gm, '')}
+                          </p>
+                          
+                          <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-auto">
+                            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
                               {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
                             </span>
-                          )}
-                        </h2>
-                      </div>
-
-                      <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-slate-500 font-medium">Price</span>
-                          <span className="text-sm font-semibold text-slate-700">
-                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'FREE'}
-                          </span>
+                            <div className="flex flex-col items-end gap-1">
+                              {pkg.duration && (
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{pkg.duration}</span>
+                              )}
+                              <span className="font-black text-xl text-slate-900 group-hover:text-orange-600 transition-colors">
+                                {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-
-                        <Link
-                          href={`/packages/${pkg.slug}`}
-                          style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
-                          className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white hover:opacity-90 rounded-xl transition-all shadow-lg shadow-rose-500/25"
-                        >
-                          Enroll Now
-                        </Link>
                       </div>
-                    </div>
-                  </div>
+                    </Link>
+                  </GsapReveal>
                 ))}
               </div>
 

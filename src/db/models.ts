@@ -108,6 +108,7 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare rating: CreationOptional<number>;
   declare reviewsCount: CreationOptional<string | null>;
   declare level: CreationOptional<string | null>;
+  declare duration: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   // Eager-loaded association
@@ -140,6 +141,7 @@ Package.init(
     rating: { type: DataTypes.DECIMAL(3, 1), allowNull: false, defaultValue: 4.9 },
     reviewsCount: { type: DataTypes.STRING(50), allowNull: true, defaultValue: '1.2k+' },
     level: { type: DataTypes.STRING(50), allowNull: true, defaultValue: 'Beginner to Advanced' },
+    duration: { type: DataTypes.STRING(50), allowNull: true, defaultValue: '6 Months' },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

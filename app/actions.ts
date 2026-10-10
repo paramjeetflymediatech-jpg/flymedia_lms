@@ -523,6 +523,7 @@ export async function adminCreatePackage(formData: FormData) {
       rating: formData.get('rating') ? Number(formData.get('rating')) : 4.9,
       reviewsCount: formData.get('reviewsCount') as string || '1.2k+',
       level: formData.get('level') as string || 'Beginner to Advanced',
+      duration: formData.get('duration') as string || '6 Months',
       status,
       mode,
       techStack: techStackParsed,
@@ -610,6 +611,10 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     
     const levelRaw = formData.get('level') as string;
     if (levelRaw !== null) pkg.level = levelRaw;
+
+    const durationRaw = formData.get('duration') as string;
+    if (durationRaw !== null) pkg.duration = durationRaw;
+
 
     // What You'll Learn (JSON array)
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
