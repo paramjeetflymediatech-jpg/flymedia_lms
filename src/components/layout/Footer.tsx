@@ -161,7 +161,7 @@ export default function Footer() {
                   <a href="tel:+919888484310" className="transition-colors">+91-97793-24178</a>
                 </div>
               </li>
-              <li className="flex items-start gap-4 group">
+              {/* <li className="flex items-start gap-4 group">
                 <div className="text-white group-hover:scale-110 transition-all shrink-0 mt-0.5">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
@@ -169,6 +169,16 @@ export default function Footer() {
                   <a href="https://www.google.com/maps/dir//Learn+With+Flymedia,+First+Floor,+Plot+20,+Vishal+Nagar+Ext,+opposite+Kashish+Cafe,+Vishal+Nagar,+Jawaddi+Taksal,+Ludhiana,+Punjab+141013,+India/@30.9003452,75.8566733,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x391a83053a2c6f9d:0x1beaed8f1198aa16!2m2!1d75.820215!2d30.8795234?authuser=0&hl=en-GB&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-orange-400 block">
                     First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India
                   </a>
+                </div>
+              </li> */}
+              <li className="flex items-start gap-4 group">
+                <div className="text-white group-hover:scale-110 transition-all shrink-0 mt-0.5">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div className="pt-1 leading-relaxed text-slate-300">
+                  <strong className="text-white block mb-1">Class Timings</strong>
+                  11:00 AM – 1:00 PM<br/>
+                  4:00 PM – 6:00 PM
                 </div>
               </li>
             </ul>

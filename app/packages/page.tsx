@@ -120,7 +120,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                               pkg.mode === 'OFFLINE' ? 'bg-orange-100 text-orange-700' :
                               'bg-indigo-100 text-indigo-700'
                             }`}>
-                              {pkg.mode === 'BOTH' ? 'Online + Offline' : pkg.mode}
+                              {pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}
                             </span>
                           )}
                         </h2>

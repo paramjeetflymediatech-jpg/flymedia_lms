@@ -95,13 +95,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
         )}
       </GsapReveal>
       
-      <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-tight ${heroLayout !== 'centered' ? 'max-w-2xl' : ''}`}>
+      <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight ${heroLayout !== 'centered' ? 'max-w-2xl' : ''}`}>
         <SplitText text={category.name} delay={0.2} />
       </h1>
       
       {category.metaDescription && (
         <GsapReveal animation="slideUp" delay={0.6} duration={1}>
-          <p className={`text-lg sm:text-xl md:text-2xl text-slate-300 font-medium leading-relaxed ${heroLayout === 'centered' ? 'max-w-3xl mx-auto' : 'max-w-2xl'}`}>
+          <p className={`text-base sm:text-lg md:text-xl text-slate-300 font-medium leading-relaxed ${heroLayout === 'centered' ? 'max-w-3xl mx-auto' : 'max-w-2xl'}`}>
             {category.metaDescription}
           </p>
         </GsapReveal>
@@ -114,7 +114,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       <GsapReveal animation={heroLayout === 'image-left' ? 'slideRight' : 'slideLeft'} duration={1} delay={0.4}>
         <div className="relative w-full max-w-lg aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/10 group bg-slate-800/50 backdrop-blur-md">
           {heroImage ? (
-            <img src={heroImage} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src={heroImage} alt={category.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
           ) : (
             <div className="w-full h-full flex items-center justify-center flex-col gap-4 text-slate-500">
               <svg className="w-16 h-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,7 +248,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
         {(dynamicContent?.htmlContent || isLegacyHtml) && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-10">
             <div 
-              className="prose prose-lg md:prose-xl max-w-none prose-slate mx-auto 
+              className="prose max-w-none prose-slate mx-auto whitespace-pre-wrap
                          prose-headings:font-extrabold prose-headings:text-slate-900 prose-headings:tracking-tight
                          prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-3xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-4
                          prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-2xl prose-h3:text-slate-800
@@ -288,10 +288,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
               const secLayout = section.layout || 'centered';
               const textContent = (
                 <div className={`max-w-4xl space-y-6 ${secLayout !== 'centered' ? 'text-left' : 'text-center mx-auto'}`}>
-                  <h3 className={`text-4xl md:text-5xl font-black ${section.bgImage ? 'text-white' : 'text-slate-900'} tracking-tight leading-tight`}>{section.heading}</h3>
+                  <h3 className={`text-2xl md:text-3xl font-black ${section.bgImage ? 'text-white' : 'text-slate-900'} tracking-tight leading-tight`}>{section.heading}</h3>
                   <div className={`w-20 h-1.5 bg-orange-500 rounded-full ${secLayout !== 'centered' ? 'mx-0' : 'mx-auto'}`} />
                   <div 
-                    className={`prose prose-lg md:prose-xl max-w-none font-medium leading-relaxed ${section.bgImage ? 'prose-invert prose-p:text-slate-200 prose-headings:text-white prose-strong:text-white prose-li:text-slate-200' : 'prose-slate prose-p:text-slate-600 prose-headings:text-slate-900 prose-strong:text-slate-900 prose-li:text-slate-600'}`} 
+                    className={`prose max-w-none font-medium leading-relaxed whitespace-pre-wrap ${section.bgImage ? 'prose-invert prose-p:text-slate-200 prose-headings:text-white prose-strong:text-white prose-li:text-slate-200' : 'prose-slate prose-p:text-slate-600 prose-headings:text-slate-900 prose-strong:text-slate-900 prose-li:text-slate-600'}`} 
                     dangerouslySetInnerHTML={{ __html: section.body }} 
                   />
                 </div>
@@ -299,7 +299,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
               const imageContent = section.image && (secLayout === 'image-left' || secLayout === 'image-right') && (
                 <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/20 group">
-                  <img src={section.image} alt={section.heading} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={section.image} alt={section.heading} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
                 </div>
               );
 

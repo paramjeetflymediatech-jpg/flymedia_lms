@@ -196,7 +196,7 @@ export default async function HomePage() {
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500 animate-pulse" />
                     <span>Training Modules</span>
                   </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight sm:leading-[1.1]">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight sm:leading-[1.1]">
                     Explore Our <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent block sm:inline">Premium Tracks</span>
                   </h2>
                   <p className="text-base sm:text-lg text-slate-600 font-medium">
@@ -257,7 +257,7 @@ export default async function HomePage() {
                             pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
                             'bg-indigo-500/30 text-indigo-100 border-indigo-400/40'
                           }`}>
-                            {pkg.mode === 'BOTH' ? 'Hybrid' : pkg.mode}
+                            {pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}
                           </span>
                         )}
                       </div>

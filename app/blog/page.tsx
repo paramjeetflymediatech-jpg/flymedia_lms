@@ -92,7 +92,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                       <img
                         src={post.image || 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80'}
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                       />
                       <div className="absolute top-4 left-4">
                         <span className="px-3 py-1 rounded-full bg-white text-[#1A56DB] text-[10px] font-black uppercase tracking-wider shadow-sm">
