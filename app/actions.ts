@@ -375,7 +375,67 @@ export async function adminUpdateCategory(categoryId: string, formData: FormData
     category.name = name;
     category.slug = customSlug ? slugify(customSlug) : slugify(name);
     category.icon = iconUrl;
-    category.content = content || null;
+    
+    // Handle category content and hero images
+    let parsedContent: any = {};
+    if (content) {
+      try {
+        parsedContent = JSON.parse(content);
+      } catch (e) {}
+    }
+    
+    // Process heroBgImageFile
+    const heroBgFile = formData.get('heroBgImageFile') as File | null;
+    if (heroBgFile && heroBgFile.size > 0) {
+      const bytes = await heroBgFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const fileName = `${Date.now()}-bg-${heroBgFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+      parsedContent.heroBgImage = `/uploads/categories/${fileName}`;
+    }
+
+    // Process heroImageFile
+    const heroImgFile = formData.get('heroImageFile') as File | null;
+    if (heroImgFile && heroImgFile.size > 0) {
+      const bytes = await heroImgFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const fileName = `${Date.now()}-img-${heroImgFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+      parsedContent.heroImage = `/uploads/categories/${fileName}`;
+    }
+
+    // Process section images
+    if (parsedContent.sections && Array.isArray(parsedContent.sections)) {
+      for (let i = 0; i < parsedContent.sections.length; i++) {
+        const secBgFile = formData.get(`section_bgImageFile_${i}`) as File | null;
+        if (secBgFile && secBgFile.size > 0) {
+          const bytes = await secBgFile.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const fileName = `${Date.now()}-secbg-${i}-${secBgFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+          const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+          fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+          parsedContent.sections[i].bgImage = `/uploads/categories/${fileName}`;
+        }
+        
+        const secImgFile = formData.get(`section_imageFile_${i}`) as File | null;
+        if (secImgFile && secImgFile.size > 0) {
+          const bytes = await secImgFile.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const fileName = `${Date.now()}-secimg-${i}-${secImgFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+          const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'categories');
+          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+          fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+          parsedContent.sections[i].image = `/uploads/categories/${fileName}`;
+        }
+      }
+    }
+
+    category.content = Object.keys(parsedContent).length > 0 ? JSON.stringify(parsedContent) : null;
     category.metaTitle = metaTitle || null;
     category.metaDescription = metaDescription || null;
     category.metaKeywords = metaKeywords || null;
