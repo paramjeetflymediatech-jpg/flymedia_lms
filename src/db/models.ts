@@ -92,7 +92,7 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare price: CreationOptional<number | null>;
   declare thumbnail: CreationOptional<string | null>;
   declare status: CreationOptional<'DRAFT' | 'PUBLISHED'>;
-  declare mode: CreationOptional<'ONLINE' | 'OFFLINE' | 'BOTH'>;
+  declare mode: CreationOptional<'ONLINE' | 'OFFLINE' | 'ONLINE & OFFLINE'>;
   declare whatYoullLearn: CreationOptional<string[] | null>;
   declare instructors: CreationOptional<{ name: string; role: string; bio: string; avatar: string }[] | null>;
   declare successStories: CreationOptional<{ name: string; role: string; quote: string; avatar: string }[] | null>;
