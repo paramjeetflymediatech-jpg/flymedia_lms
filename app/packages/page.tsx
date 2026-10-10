@@ -130,7 +130,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                         <div className="flex flex-col">
                           <span className="text-xs text-slate-500 font-medium">Price</span>
                           <span className="text-sm font-semibold text-slate-700">
-                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'FREE'}
+                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'FREE'}
                           </span>
                         </div>
 

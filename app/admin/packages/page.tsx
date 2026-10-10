@@ -109,7 +109,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
                             {pkg.liveClasses?.length || 0} Live Classes
                           </span>
                           <span className="text-[11px] font-semibold text-slate-500 border-l border-slate-300 pl-2">
-                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'Free'}
+                            {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
                           </span>
                         </div>
                       </div>

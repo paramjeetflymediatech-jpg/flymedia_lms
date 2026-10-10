@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 export default function TestimonialsSlider({ testimonials }: { testimonials: any[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -15,6 +16,15 @@ export default function TestimonialsSlider({ testimonials }: { testimonials: any
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: 400, behavior: 'smooth' });
     }
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
   };
 
   if (!testimonials || testimonials.length === 0) {
@@ -60,37 +70,55 @@ export default function TestimonialsSlider({ testimonials }: { testimonials: any
       {/* Cards Container */}
       <div 
         ref={scrollRef}
-        className={`flex overflow-x-auto gap-8 pb-8 snap-x snap-mandatory scrollbar-hide ${testimonials.length <= 3 ? 'justify-center' : ''}`}
+        className={`flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory scrollbar-hide items-stretch ${testimonials.length <= 3 ? 'md:justify-center' : ''}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {testimonials.map((testimonial) => (
-          <div 
-            key={testimonial.id} 
-            className="w-full md:w-[calc(33.333%-1.33rem)] flex-shrink-0 snap-start bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2"
-          >
-            <div className="flex gap-1 text-orange-400 mb-6">
-              {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-              ))}
-            </div>
-            <p className="text-slate-700 leading-relaxed font-medium mb-8">
-              "{testimonial.content}"
-            </p>
-            <div className="flex items-center gap-4 mt-auto">
-              {testimonial.avatar ? (
-                <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full border-2 border-slate-100 object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full border-2 border-slate-100 bg-slate-100 flex items-center justify-center text-slate-500 font-extrabold text-xl">
-                  {testimonial.name.charAt(0).toUpperCase()}
+        {testimonials.map((testimonial) => {
+          const isExpanded = expandedIds.has(testimonial.id);
+          const isLong = testimonial.content && testimonial.content.length > 150;
+          
+          return (
+            <div 
+              key={testimonial.id} 
+              className="w-[85vw] sm:w-[350px] md:w-[calc(33.333%-1.33rem)] flex-shrink-0 snap-start bg-white border border-slate-200 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 flex flex-col"
+            >
+              <div className="flex gap-1 text-orange-400 mb-6">
+                {[...Array(testimonial.rating || 5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+              </div>
+              <div className="flex-1 mb-8">
+                <p className={`text-slate-700 leading-relaxed font-medium transition-all ${!isExpanded && isLong ? 'line-clamp-4' : ''}`}>
+                  "{testimonial.content}"
+                </p>
+                {isLong && (
+                  <button 
+                    onClick={() => toggleExpand(testimonial.id)} 
+                    className="text-orange-500 font-bold text-sm mt-3 hover:text-orange-600 transition-colors inline-flex items-center gap-1"
+                  >
+                    {isExpanded ? 'Read Less' : 'Read More'}
+                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-4 mt-auto">
+                {testimonial.avatar ? (
+                  <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full border-2 border-slate-100 object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full border-2 border-slate-100 bg-slate-100 flex items-center justify-center text-slate-500 font-extrabold text-xl">
+                    {testimonial.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-extrabold text-slate-900">{testimonial.name}</h4>
+                  <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{testimonial.role}</p>
                 </div>
-              )}
-              <div>
-                <h4 className="font-extrabold text-slate-900">{testimonial.name}</h4>
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{testimonial.role}</p>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

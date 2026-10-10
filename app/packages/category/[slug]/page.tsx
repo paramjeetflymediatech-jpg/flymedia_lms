@@ -175,7 +175,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                         {pkg.mode}
                       </span>
                       <span className="font-extrabold text-slate-900">
-                        {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price)}` : 'Free'}
+                        {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
                       </span>
                     </div>
                   </div>

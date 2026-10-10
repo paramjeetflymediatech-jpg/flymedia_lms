@@ -570,6 +570,32 @@ Testimonial.init(
 );
 
 // ==========================================
+// 17. FAQ MODEL (HOMEPAGE)
+// ==========================================
+export class Faq extends Model<InferAttributes<Faq>, InferCreationAttributes<Faq>> {
+  declare id: CreationOptional<string>;
+  declare question: string;
+  declare answer: string;
+  declare order: CreationOptional<number>;
+  declare isActive: CreationOptional<boolean>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Faq.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    question: { type: DataTypes.STRING, allowNull: false },
+    answer: { type: DataTypes.TEXT, allowNull: false },
+    order: { type: DataTypes.INTEGER, defaultValue: 0 },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'Faq', tableName: 'faqs' }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 

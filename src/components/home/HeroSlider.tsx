@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import gsap from 'gsap';
 
 const SLIDES = [
   {
@@ -43,6 +44,7 @@ const SLIDES = [
 
 export default function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,15 +53,50 @@ export default function HeroSlider() {
     return () => clearInterval(timer);
   }, []);
 
+  // GSAP animation for text change
+  useEffect(() => {
+    if (!contentRef.current) return;
+    
+    const ctx = gsap.context(() => {
+      // Animate H1 words stagger
+      gsap.fromTo(
+        '.animate-hero-word',
+        { opacity: 0, y: 40, rotateX: -30 },
+        { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.05, ease: 'back.out(1.5)' }
+      );
+      // Animate subtitle
+      gsap.fromTo(
+        '.animate-hero-sub',
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.3, ease: 'power3.out' }
+      );
+      // Animate buttons
+      gsap.fromTo(
+        '.animate-hero-btn',
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, delay: 0.4, ease: 'power2.out' }
+      );
+    }, contentRef);
+
+    return () => ctx.revert();
+  }, [currentIndex]);
+
+  const splitText = (text: string, gradientClassName?: string) => {
+    return text.split(' ').map((word, i) => (
+      <span key={i} className="inline-block overflow-hidden mr-2 md:mr-3">
+        <span className={`animate-hero-word inline-block ${gradientClassName || ''}`}>{word}</span>
+      </span>
+    ));
+  };
+
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
       {/* Background Images Slider */}
       {SLIDES.map((slide, index) => (
         <div
           key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out z-0 ${
-            index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out z-0 ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
         >
           {/* Dark Overlay for Text Readability */}
           <div className="absolute inset-0 bg-slate-950/80 z-10" />
@@ -79,17 +116,18 @@ export default function HeroSlider() {
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] z-10 opacity-30" />
 
       {/* Hero Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-10 relative z-20 w-full">
+      <div ref={contentRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-10 relative z-20 w-full">
         {/* <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 border border-orange-500/30 backdrop-blur-md shadow-lg shadow-orange-500/10 hover:bg-white/10 transition-colors cursor-pointer">
           <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
           <span className="text-xs font-bold text-orange-300 uppercase tracking-wider">Summer Training 2026 Admissions Open</span>
         </div> */}
-        
+
         <div key={currentIndex} className="min-h-[160px] sm:min-h-[200px] flex flex-col items-center justify-center">
-          <h1 className="animate-title text-5xl sm:text-7xl font-black tracking-tight max-w-5xl mx-auto leading-[1.1] text-white">
-            Learn <span className="bg-gradient-to-r from-orange-400 via-rose-400 to-amber-400 bg-clip-text text-transparent drop-shadow-sm">{SLIDES[currentIndex].title}</span>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight max-w-5xl mx-auto leading-[1.1] text-white flex flex-wrap justify-center">
+            {splitText('Learn')}
+            {splitText(SLIDES[currentIndex].title, 'bg-gradient-to-r from-orange-400 via-rose-400 to-amber-400 bg-clip-text text-transparent drop-shadow-sm')}
           </h1>
-          <p className="animate-subtitle text-lg sm:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium mt-6">
+          <p className="animate-hero-sub text-lg sm:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium mt-6">
             {SLIDES[currentIndex].subtitle}
           </p>
         </div>
@@ -100,39 +138,22 @@ export default function HeroSlider() {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-12 h-1.5 rounded-full transition-all duration-300 ${
-                index === currentIndex ? 'bg-orange-500 scale-105 shadow-[0_0_10px_rgba(249,115,22,0.6)]' : 'bg-white/20 hover:bg-white/40'
-              }`}
+              className={`w-12 h-1.5 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-orange-500 scale-105 shadow-[0_0_10px_rgba(249,115,22,0.6)]' : 'bg-white/20 hover:bg-white/40'
+                }`}
             />
           ))}
         </div>
 
-        {/* Quick specifications highlights */}
-        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
-          {[
-            { label: 'Duration', value: '30 Days', icon: '⏱️' },
-            { label: 'Mode', value: 'Hybrid', icon: '💻' },
-            { label: 'Location', value: 'Ludhiana', icon: '📍' },
-            { label: 'Timings', value: 'Flexible', icon: '🕒' },
-          ].map((stat, i) => (
-            <div key={i} className="p-5 bg-black/20 border border-white/10 rounded-2xl backdrop-blur-md hover:bg-black/40 transition-colors group">
-              <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">{stat.icon}</span>
-              <span className="block text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">{stat.label}</span>
-              <span className="block text-white font-bold">{stat.value}</span>
-            </div>
-          ))}
-        </div> */}
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-5 pt-8 w-full max-w-xl mx-auto overflow-hidden p-2">
           <Link
             href={SLIDES[currentIndex].link}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 font-extrabold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 rounded-2xl shadow-xl shadow-orange-500/25 transition-all text-lg hover:-translate-y-1"
+            className="animate-hero-btn w-full sm:w-auto flex-1 inline-flex items-center justify-center px-8 sm:px-10 py-4 font-extrabold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 rounded-2xl shadow-xl shadow-orange-500/25 transition-all text-base sm:text-lg hover:-translate-y-1 text-center"
           >
             Explore Programs
           </Link>
           <Link
             href={`/contact?course=${encodeURIComponent(SLIDES[currentIndex].courseValue)}`}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md rounded-2xl transition-all text-lg hover:-translate-y-1"
+            className="animate-hero-btn w-full sm:w-auto flex-1 inline-flex items-center justify-center px-8 sm:px-10 py-4 font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md rounded-2xl transition-all text-base sm:text-lg hover:-translate-y-1 text-center"
           >
             Apply Now
           </Link>
