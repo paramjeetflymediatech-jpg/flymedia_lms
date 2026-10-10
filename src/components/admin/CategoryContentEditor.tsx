@@ -341,12 +341,11 @@ export default function CategoryContentEditor({ defaultValue }: { defaultValue?:
                       )}
                     </div>
                   </div>
-                  <textarea
+                  <Editor
                     value={item.body}
-                    onChange={e => updateSection(index, 'body', e.target.value)}
-                    placeholder="Section Body Content"
-                    rows={4}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
+                    onChange={(e: any) => updateSection(index, 'body', e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg overflow-hidden prose-sm max-w-none"
+                    containerProps={{ style: { minHeight: '150px' } }}
                   />
                 </div>
               </div>

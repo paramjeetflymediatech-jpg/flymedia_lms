@@ -290,7 +290,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 <div className={`max-w-4xl space-y-6 ${secLayout !== 'centered' ? 'text-left' : 'text-center mx-auto'}`}>
                   <h3 className={`text-4xl md:text-5xl font-black ${section.bgImage ? 'text-white' : 'text-slate-900'} tracking-tight leading-tight`}>{section.heading}</h3>
                   <div className={`w-20 h-1.5 bg-orange-500 rounded-full ${secLayout !== 'centered' ? 'mx-0' : 'mx-auto'}`} />
-                  <p className={`text-xl md:text-2xl ${section.bgImage ? 'text-slate-200' : 'text-slate-600'} leading-relaxed font-medium whitespace-pre-line`}>{section.body}</p>
+                  <div 
+                    className={`prose prose-lg md:prose-xl max-w-none font-medium leading-relaxed ${section.bgImage ? 'prose-invert prose-p:text-slate-200 prose-headings:text-white prose-strong:text-white prose-li:text-slate-200' : 'prose-slate prose-p:text-slate-600 prose-headings:text-slate-900 prose-strong:text-slate-900 prose-li:text-slate-600'}`} 
+                    dangerouslySetInnerHTML={{ __html: section.body }} 
+                  />
                 </div>
               );
 
