@@ -19,12 +19,15 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
   const searchParam = resolvedSearchParams?.search as string || '';
   const categoryParam = resolvedSearchParams?.category as string || '';
   const modeParam = resolvedSearchParams?.mode as string || '';
+  const durationParam = resolvedSearchParams?.duration as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 6;
   const offset = (page - 1) * limit;
 
   let packages: any[] = [];
   let totalPages = 1;
+  let totalCount = 0;
+  let allDurations: string[] = [];
 
   try {
     const whereClause: any = {};
@@ -35,22 +38,51 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
       whereClause.category = categoryParam;
     }
     if (modeParam) {
-      whereClause.mode = modeParam;
+      if (modeParam === 'ONLINE') {
+        whereClause.mode = { [Op.in]: ['ONLINE', 'BOTH'] };
+      } else if (modeParam === 'OFFLINE') {
+        whereClause.mode = { [Op.in]: ['OFFLINE', 'BOTH'] };
+      } else {
+        whereClause.mode = modeParam;
+      }
+    }
+    if (durationParam) {
+      whereClause.duration = durationParam;
     }
     
     // Only fetch published packages
     whereClause.status = 'PUBLISHED';
-    const { count, rows } = await Package.findAndCountAll({
-      where: whereClause,
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
-    });
-    packages = rows;
-    totalPages = Math.ceil(count / limit) || 1;
+    const [result, durationRows] = await Promise.all([
+      Package.findAndCountAll({
+        where: whereClause,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      }),
+      Package.findAll({
+        where: { status: 'PUBLISHED' },
+        attributes: ['duration'],
+        raw: true,
+      }),
+    ]);
+
+    packages = result.rows;
+    totalCount = result.count;
+    totalPages = Math.ceil(result.count / limit) || 1;
+    allDurations = Array.from(new Set(durationRows.map((d: any) => d.duration).filter(Boolean)));
   } catch (error) {
     console.error('Failed to query packages list:', error);
   }
+
+  const buildPageUrl = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (modeParam) params.set('mode', modeParam);
+    if (durationParam) params.set('duration', durationParam);
+    if (categoryParam) params.set('category', categoryParam);
+    if (searchParam) params.set('search', searchParam);
+    params.set('page', targetPage.toString());
+    return `/packages?${params.toString()}`;
+  };
 
   return (
     <>
@@ -74,6 +106,8 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
             actionPath="/packages" 
             currentCategory={categoryParam} 
             currentMode={modeParam} 
+            currentDuration={durationParam}
+            durations={allDurations}
             currentSearch={searchParam} 
           />
 
@@ -94,7 +128,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {packages.map((pkg, idx) => (
-                  <GsapReveal key={pkg.id} animation="slideUp" delay={idx * 0.1} duration={0.8}>
+                  <GsapReveal key={`${pkg.id}-${modeParam}-${durationParam}-${page}`} animation="slideUp" delay={idx * 0.05} duration={0.6}>
                     <Link href={`/packages/${pkg.slug}`} className="group block h-full">
                       <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full relative">
                         <div className="aspect-[16/10] bg-slate-900 relative overflow-hidden">
@@ -122,13 +156,14 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                           <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-orange-600 transition-colors line-clamp-2 leading-tight">
                             {pkg.title}
                           </h3>
+                          
                           <p className="text-slate-500 text-base mb-8 line-clamp-2 flex-1 font-medium leading-relaxed">
                             {pkg.description?.replace(/<[^>]*>?/gm, '')}
                           </p>
                           
                           <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-auto">
                             <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
-                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
+                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode=='online'?'ONLINE':"OFFLINE"}
                             </span>
                             <div className="flex flex-col items-end gap-1">
                               {pkg.duration && (
@@ -148,30 +183,64 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-4 mt-12">
-                  {page > 1 ? (
-                    <Link href={`/packages?page=${page - 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}${categoryParam ? `&category=${encodeURIComponent(categoryParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                      Previous
-                    </Link>
-                  ) : (
-                    <span className="px-6 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-400 cursor-not-allowed">
-                      Previous
-                    </span>
-                  )}
-                  
-                  <span className="text-sm font-bold text-slate-500 px-4">
-                    Page {page} of {totalPages}
-                  </span>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-12 border-t border-slate-100">
+                  <p className="text-sm font-semibold text-slate-500 order-2 sm:order-1">
+                    Showing <span className="font-bold text-slate-900">{offset + 1}</span>–<span className="font-bold text-slate-900">{Math.min(offset + limit, totalCount)}</span> of <span className="font-bold text-slate-900">{totalCount}</span> packages
+                  </p>
 
-                  {page < totalPages ? (
-                    <Link href={`/packages?page=${page + 1}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ''}${categoryParam ? `&category=${encodeURIComponent(categoryParam)}` : ''}`} className="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                      Next
-                    </Link>
-                  ) : (
-                    <span className="px-6 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-400 cursor-not-allowed">
-                      Next
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
+                    {/* Previous Button */}
+                    {page > 1 ? (
+                      <Link 
+                        href={buildPageUrl(page - 1)} 
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                        <span>Previous</span>
+                      </Link>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-300 cursor-not-allowed">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                        <span>Previous</span>
+                      </span>
+                    )}
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                        const isActive = p === page;
+                        return (
+                          <Link
+                            key={p}
+                            href={buildPageUrl(p)}
+                            className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${
+                              isActive
+                                ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20'
+                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'
+                            }`}
+                          >
+                            {p}
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    {page < totalPages ? (
+                      <Link 
+                        href={buildPageUrl(page + 1)} 
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                      >
+                        <span>Next</span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                      </Link>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-300 cursor-not-allowed">
+                        <span>Next</span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </>

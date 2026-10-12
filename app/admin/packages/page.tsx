@@ -17,6 +17,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
   const searchParam = resolvedSearchParams?.search as string || '';
   const categoryParam = resolvedSearchParams?.category as string || '';
   const statusParam = resolvedSearchParams?.status as string || '';
+  const durationParam = resolvedSearchParams?.duration as string || '';
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
   const limit = 10;
   const offset = (page - 1) * limit;
@@ -31,25 +32,31 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
   if (statusParam) {
     whereClause.status = statusParam;
   }
+  if (durationParam) {
+    whereClause.duration = durationParam;
+  }
 
-  const categoriesData = await Category.findAll({ order: [['name', 'ASC']] });
+  const [categoriesData, durationRows, result] = await Promise.all([
+    Category.findAll({ order: [['name', 'ASC']] }),
+    Package.findAll({ attributes: ['duration'], raw: true }),
+    Package.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      include: [
+        {
+          model: LiveClass,
+          as: 'liveClasses',
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    }),
+  ]);
+
   const categories = categoriesData.map(c => c.toJSON());
-
-  const { count, rows } = await Package.findAndCountAll({
-    where: whereClause,
-    limit,
-    offset,
-    include: [
-      {
-        model: LiveClass,
-        as: 'liveClasses',
-      },
-    ],
-    order: [['createdAt', 'DESC']],
-  });
-  
-  const packages = rows.map(c => c.toJSON());
-  const totalPages = Math.ceil(count / limit) || 1;
+  const durations = Array.from(new Set(durationRows.map((d: any) => d.duration).filter(Boolean)));
+  const packages = result.rows.map(c => c.toJSON());
+  const totalPages = Math.ceil(result.count / limit) || 1;
 
   return (
     <div className="p-6 md:p-10 space-y-12">
@@ -71,7 +78,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h3 className="text-2xl font-extrabold text-slate-900">Your Packages</h3>
           
-          <PackageFilter categories={categories} />
+          <PackageFilter categories={categories} durations={durations} />
         </div>
 
         {packages.length === 0 ? (
@@ -146,7 +153,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
             <Pagination 
               page={page} 
               totalPages={totalPages} 
-              totalItems={count} 
+              totalItems={result.count} 
               limit={limit} 
               baseUrl="/admin/packages" 
             />

@@ -35,6 +35,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   }
 
   const modeParam = resolvedSearchParams?.mode as string || '';
+  const durationParam = resolvedSearchParams?.duration as string || '';
   const searchParam = resolvedSearchParams?.search as string || '';
 
   const whereClause: any = { 
@@ -42,19 +43,39 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     status: 'PUBLISHED'
   };
   
-  if (modeParam) whereClause.mode = modeParam;
+  if (modeParam) {
+    if (modeParam === 'ONLINE') {
+      whereClause.mode = { [Op.in]: ['ONLINE', 'BOTH'] };
+    } else if (modeParam === 'OFFLINE') {
+      whereClause.mode = { [Op.in]: ['OFFLINE', 'BOTH'] };
+    } else {
+      whereClause.mode = modeParam;
+    }
+  }
+
+  if (durationParam) {
+    whereClause.duration = durationParam;
+  }
   
   // Basic search filter if needed
   if (searchParam) {
     whereClause.title = { [Op.like]: `%${searchParam}%` };
   }
 
-  const packagesData = await Package.findAll({
-    where: whereClause,
-    order: [['createdAt', 'DESC']],
-  });
+  const [packagesData, categoryDurationRows] = await Promise.all([
+    Package.findAll({
+      where: whereClause,
+      order: [['createdAt', 'DESC']],
+    }),
+    Package.findAll({
+      where: { category: category.name, status: 'PUBLISHED' },
+      attributes: ['duration'],
+      raw: true,
+    }),
+  ]);
   
   const packages = packagesData.map(p => p.toJSON());
+  const categoryDurations = Array.from(new Set(categoryDurationRows.map((d: any) => d.duration).filter(Boolean)));
 
   let dynamicContent = null;
   let isLegacyHtml = false;
@@ -179,6 +200,8 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <PublicFilterForm 
               actionPath={`/packages/category/${category.slug}`}
               currentMode={modeParam} 
+              currentDuration={durationParam}
+              durations={categoryDurations}
             />
           </div>
 
@@ -195,7 +218,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {packages.map((pkg, idx) => (
-                <GsapReveal key={pkg.id} animation="slideUp" delay={idx * 0.1} duration={0.8}>
+                <GsapReveal key={`${pkg.id}-${modeParam}-${durationParam}`} animation="slideUp" delay={idx * 0.05} duration={0.6}>
                   <Link href={`/packages/${pkg.slug}`} className="group block h-full">
                     <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full relative">
                       <div className="aspect-[16/10] bg-slate-900 relative overflow-hidden">

@@ -48,28 +48,29 @@ export default function GsapReveal({
         break;
     }
 
-    gsap.fromTo(
-      el,
-      fromVars,
-      {
-        opacity: 1,
-        x: 0,
-        y: 0,
-        scale: 1,
-        duration: duration,
-        delay: delay,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 85%',
-          toggleActions: 'play none none none',
-          // markers: false,
-        },
-      }
-    );
+    const ctx = gsap.context(() => {
+      const tween = gsap.fromTo(
+        el,
+        fromVars,
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          duration: duration,
+          delay: delay,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 95%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+    }, el);
 
     return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
+      ctx.revert();
     };
   }, [animation, delay, duration]);
 

@@ -6,14 +6,16 @@ import Link from 'next/link';
 
 interface PackageFilterProps {
   categories: { id: string; name: string }[];
+  durations?: string[];
 }
 
-export default function PackageFilter({ categories }: PackageFilterProps) {
+export default function PackageFilter({ categories, durations = [] }: PackageFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const currentCategory = searchParams.get('category') || '';
   const currentStatus = searchParams.get('status') || '';
+  const currentDuration = searchParams.get('duration') || '';
   const currentSearch = searchParams.get('search') || '';
   const [searchValue, setSearchValue] = useState(currentSearch);
 
@@ -37,10 +39,10 @@ export default function PackageFilter({ categories }: PackageFilterProps) {
     updateFilters('search', searchValue);
   };
 
-  const hasFilters = currentSearch || currentCategory || currentStatus;
+  const hasFilters = currentSearch || currentCategory || currentStatus || currentDuration;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-2 max-w-3xl w-full sm:justify-end">
+    <div className="flex flex-col sm:flex-row items-center gap-2 max-w-4xl w-full sm:justify-end">
       <select
         value={currentStatus}
         onChange={(e) => updateFilters('status', e.target.value)}
@@ -61,6 +63,19 @@ export default function PackageFilter({ categories }: PackageFilterProps) {
           <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
         ))}
       </select>
+
+      {durations.length > 0 && (
+        <select
+          value={currentDuration}
+          onChange={(e) => updateFilters('duration', e.target.value)}
+          className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm bg-white"
+        >
+          <option value="">All Durations</option>
+          {durations.map((dur) => (
+            <option key={dur} value={dur}>{dur}</option>
+          ))}
+        </select>
+      )}
       
       <div className="flex w-full sm:w-auto flex-1 max-w-xs relative gap-2">
         <input 
