@@ -168,7 +168,7 @@ export const ApiService = {
     amount: number;
     couponCode?: string;
     paymentDetails?: any;
-  }, token: string): Promise<{ success: boolean; transactionId?: string; message?: string; error?: string; alreadyEnrolled?: boolean; course?: any; payment?: any }> {
+  }, token: string): Promise<{ success: boolean; transactionId?: string; message?: string; error?: string; alreadyEnrolled?: boolean; course?: any; payment?: any; redirectUrl?: string; requiresRedirect?: boolean }> {
     try {
       const response = await fetch(`${API_BASE_URL}/payment/checkout`, {
         method: 'POST',
@@ -181,6 +181,31 @@ export const ApiService = {
       return await response.json();
     } catch (e: any) {
       return { success: false, error: e.message || 'Payment network failure' };
+    }
+  },
+
+  /**
+   * Initiates direct PhonePe gateway checkout via website payment API (/api/payment/initiate)
+   */
+  async initiatePhonePePayment(payload: {
+    packageId: string;
+    slug?: string;
+    amount: number;
+    couponCode?: string;
+    batchMode?: string;
+  }, token: string): Promise<{ success: boolean; redirectUrl?: string; error?: string; transactionId?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL.replace('/v1', '')}/payment/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to initiate PhonePe payment' };
     }
   },
 
