@@ -512,6 +512,37 @@ export async function adminCreatePackage(formData: FormData) {
       } catch {}
     }
 
+    // Dynamic fields
+    let benefitsParsed = null;
+    const benefitsRaw = formData.get('benefits') as string;
+    if (benefitsRaw !== null) {
+      try { benefitsParsed = benefitsRaw.trim() ? JSON.parse(benefitsRaw) : null; } catch {}
+    }
+
+    let whatYoullLearnParsed = null;
+    const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
+    if (whatYoullLearnRaw !== null) {
+      try { whatYoullLearnParsed = whatYoullLearnRaw.trim() ? JSON.parse(whatYoullLearnRaw) : null; } catch {}
+    }
+
+    let highlightsParsed = null;
+    const highlightsRaw = formData.get('highlights') as string;
+    if (highlightsRaw !== null) {
+      try { highlightsParsed = highlightsRaw.trim() ? JSON.parse(highlightsRaw) : null; } catch {}
+    }
+
+    let courseModulesParsed = null;
+    const courseModulesRaw = formData.get('courseModules') as string;
+    if (courseModulesRaw !== null) {
+      try { courseModulesParsed = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null; } catch {}
+    }
+
+    let faqsParsed = null;
+    const faqsRaw = formData.get('faqs') as string;
+    if (faqsRaw !== null) {
+      try { faqsParsed = faqsRaw.trim() ? JSON.parse(faqsRaw) : null; } catch {}
+    }
+
     await Package.create({
       title,
       slug: finalSlug,
@@ -527,6 +558,11 @@ export async function adminCreatePackage(formData: FormData) {
       status,
       mode,
       techStack: techStackParsed,
+      benefits: benefitsParsed,
+      whatYoullLearn: whatYoullLearnParsed,
+      highlights: highlightsParsed,
+      courseModules: courseModulesParsed,
+      faqs: faqsParsed,
     });
 
     revalidatePath('/admin/packages');
@@ -615,6 +651,12 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     const durationRaw = formData.get('duration') as string;
     if (durationRaw !== null) pkg.duration = durationRaw;
 
+
+    // Benefits of This Course (JSON array)
+    const benefitsRaw = formData.get('benefits') as string;
+    if (benefitsRaw !== null) {
+      try { pkg.benefits = benefitsRaw.trim() ? JSON.parse(benefitsRaw) : null; } catch { pkg.benefits = null; }
+    }
 
     // What You'll Learn (JSON array)
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;

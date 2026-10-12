@@ -65,6 +65,17 @@ export default async function PackageDetailPage({ params }: Props) {
     } catch(e) {}
   }
   whatYoullLearn = whatYoullLearn.filter(Boolean).filter(i => i.trim() !== '');
+
+  let benefits: string[] = [];
+  if (Array.isArray(pkgJson.benefits)) {
+    benefits = pkgJson.benefits;
+  } else if (typeof pkgJson.benefits === 'string' && pkgJson.benefits.trim().startsWith('[')) {
+    try {
+      benefits = JSON.parse(pkgJson.benefits);
+    } catch(e) {}
+  }
+  benefits = benefits.filter(Boolean).filter((i: string) => typeof i === 'string' && i.trim() !== '');
+
   const instructors: any[] = pkgJson.instructors || [];
   const successStories: any[] = pkgJson.successStories || [];
   const courseModules: { title: string; topics: string[] }[] = pkgJson.courseModules || [];
@@ -214,6 +225,31 @@ export default async function PackageDetailPage({ params }: Props) {
                   dangerouslySetInnerHTML={{ __html: pkgJson.description || '' }}
                 />
               </section>
+
+              {/* Benefits of This Course */}
+              {benefits.length > 0 && (
+                <section className="relative overflow-hidden bg-gradient-to-br from-amber-500/[0.04] via-orange-500/[0.03] to-slate-50 border border-amber-200/60 rounded-3xl p-6 sm:p-8 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1.5 h-8 rounded-full bg-gradient-to-b from-amber-500 to-orange-500 flex-shrink-0" />
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900">Benefits of This Course</h2>
+                      <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Key advantages and career values you unlock with this program</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {benefits.map((benefit: string, i: number) => (
+                      <div key={i} className="flex items-start gap-3.5 bg-white p-4.5 rounded-2xl border border-amber-100/70 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:border-amber-300 hover:shadow-md transition-all">
+                        <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shadow-orange-500/20">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-slate-800 font-bold text-sm leading-snug">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* Highlights (Main Content) */}
               {highlights.length > 0 && (

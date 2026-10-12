@@ -180,6 +180,25 @@ export default async function CreatePackagePage() {
             
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Benefits of This Course
+              </label>
+              <div className="bg-white p-4 border border-slate-200 rounded-xl">
+                <StringArrayEditor 
+                  initialData={[
+                    '100% Practical Training with Live Projects',
+                    'Advanced Digital Marketing Skills',
+                    'Training from 14 years of experience company',
+                    'Internship Opportunity Basis of your learning process',
+                    'Certification after Completion'
+                  ]} 
+                  name="benefits" 
+                  label="Course Benefit" 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 What You'll Learn
               </label>
               <div className="bg-white p-4 border border-slate-200 rounded-xl">

@@ -294,6 +294,19 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
               
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Benefits of This Course
+                </label>
+                <div className="bg-white p-4 border border-slate-200 rounded-xl">
+                  <StringArrayEditor 
+                    initialData={pkg.benefits || []} 
+                    name="benefits" 
+                    label="Course Benefit" 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   What You'll Learn
                 </label>
                 <div className="bg-white p-4 border border-slate-200 rounded-xl">
