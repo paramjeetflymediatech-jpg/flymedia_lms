@@ -466,7 +466,12 @@ export default async function PackageDetailPage({ params }: Props) {
                   </div>
                   <span className="text-sm font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full whitespace-nowrap">
                     {courseModules.length > 0
-                      ? `${courseModules.length} modules · ${courseModules.reduce((a, m) => a + m.topics.length, 0)} lessons`
+                      ? (() => {
+                          const totalLessons = courseModules.reduce((a, m) => a + (m.topics?.length || 0), 0);
+                          return totalLessons > 0
+                            ? `${courseModules.length} modules · ${totalLessons} lessons`
+                            : `${courseModules.length} modules`;
+                        })()
                       : `${liveClasses.length} Sessions`}
                   </span>
                 </div>

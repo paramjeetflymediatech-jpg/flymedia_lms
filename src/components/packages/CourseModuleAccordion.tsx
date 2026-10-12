@@ -8,18 +8,20 @@ interface Module {
 }
 
 export default function CourseModuleAccordion({ modules }: { modules: Module[] }) {
-  const [openIdx, setOpenIdx] = useState<number | null>(0); // first open by default
+  const totalTopics = modules.reduce((acc, m) => acc + (m.topics?.length || 0), 0);
+  const [openIdx, setOpenIdx] = useState<number | null>(() => {
+    const firstWithTopics = modules.findIndex(m => m.topics && m.topics.length > 0);
+    return firstWithTopics !== -1 ? firstWithTopics : null;
+  });
   const [search, setSearch] = useState('');
-
-  const totalTopics = modules.reduce((acc, m) => acc + m.topics.length, 0);
 
   const filtered = search.trim()
     ? modules
         .map(m => ({
           ...m,
-          topics: m.topics.filter(t => t.toLowerCase().includes(search.toLowerCase())),
+          topics: (m.topics || []).filter(t => t.toLowerCase().includes(search.toLowerCase())),
         }))
-        .filter(m => m.topics.length > 0 || m.title.toLowerCase().includes(search.toLowerCase()))
+        .filter(m => (m.topics && m.topics.length > 0) || m.title.toLowerCase().includes(search.toLowerCase()))
     : modules;
 
   return (
@@ -40,7 +42,8 @@ export default function CourseModuleAccordion({ modules }: { modules: Module[] }
 
       {/* Stats */}
       <p className="text-xs text-slate-500 font-medium">
-        {modules.length} modules · {totalTopics} lessons
+        {modules.length} {modules.length === 1 ? 'module' : 'modules'}
+        {totalTopics > 0 && ` · ${totalTopics} ${totalTopics === 1 ? 'lesson' : 'lessons'}`}
       </p>
 
       {/* Accordion */}
@@ -49,13 +52,21 @@ export default function CourseModuleAccordion({ modules }: { modules: Module[] }
           <div className="p-8 text-center text-slate-500 text-sm">No results for "{search}"</div>
         ) : (
           filtered.map((mod, idx) => {
-            const isOpen = openIdx === idx;
+            const hasTopics = Boolean(mod.topics && mod.topics.length > 0);
+            const isOpen = hasTopics && openIdx === idx;
             return (
               <div key={idx}>
                 {/* Module Header */}
                 <button
-                  onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left group"
+                  type="button"
+                  onClick={() => {
+                    if (hasTopics) {
+                      setOpenIdx(isOpen ? null : idx);
+                    }
+                  }}
+                  className={`w-full flex items-center justify-between px-5 py-4 bg-white transition-colors text-left group ${
+                    hasTopics ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'
+                  }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black transition-colors ${
@@ -67,19 +78,23 @@ export default function CourseModuleAccordion({ modules }: { modules: Module[] }
                       {mod.title}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                    <span className="text-xs text-slate-400 font-medium">{mod.topics.length} topics</span>
-                    <svg
-                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-orange-500' : ''}`}
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  {hasTopics && (
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                      <span className="text-xs text-slate-400 font-medium">
+                        {mod.topics.length} {mod.topics.length === 1 ? 'topic' : 'topics'}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-orange-500' : ''}`}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  )}
                 </button>
 
                 {/* Topics list */}
-                {isOpen && (
+                {isOpen && hasTopics && (
                   <div className="bg-slate-50/70 border-t border-slate-100">
                     {mod.topics.map((topic, ti) => {
                       const highlighted = search.trim()
