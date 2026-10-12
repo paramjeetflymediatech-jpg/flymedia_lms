@@ -143,11 +143,11 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                             </div>
                           )}
                           
-                          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                          {/* <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                             <span className="px-3 py-1.5 bg-white/95 backdrop-blur-md text-slate-900 text-xs font-black rounded-lg shadow-lg uppercase tracking-wider">
                               {pkg.category || 'PROGRAM'}
                             </span>
-                          </div>
+                          </div> */}
                         </div>
                         
                         <div className="p-8 flex-1 flex flex-col relative bg-white">
