@@ -39,6 +39,7 @@ import {
   Pencil,
   UserPlus,
 } from 'lucide-react-native';
+import { formatImageUrl } from '../utils/imageUrl';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'users' | 'tools';
 
@@ -769,11 +770,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     <View key={pkg.id || pkg.slug} style={styles.itemCard}>
                       <View style={styles.itemCardContentRow}>
                         <Image
-                          source={{
-                            uri:
-                              pkg.thumbnail ||
-                              'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
-                          }}
+                          source={{ uri: formatImageUrl(pkg.thumbnail) }}
                           style={styles.packageCardThumb}
                           resizeMode="cover"
                         />

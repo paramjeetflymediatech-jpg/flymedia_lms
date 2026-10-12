@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Course } from '../../types';
 import { Colors, Shadows } from '../../theme/colors';
 import { Star, Clock, Users, ChevronRight } from 'lucide-react-native';
+import { formatImageUrl } from '../../utils/imageUrl';
 
 interface CourseCardProps {
   course: Course;
@@ -10,9 +11,8 @@ interface CourseCardProps {
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
-  const imageUrl =
-    course.thumbnail ||
-    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+  const imageUrl = formatImageUrl(course.thumbnail);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <TouchableOpacity
@@ -23,11 +23,20 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
       {/* Course Thumbnail Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: imageUrl }}
+          source={{
+            uri: imgError
+              ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
+              : imageUrl,
+          }}
           style={styles.thumbnail}
           resizeMode="cover"
+          onError={() => setImgError(true)}
         />
-        <View style={styles.badgeOverlay}>
+      </View>
+
+      <View style={styles.cardBody}>
+        {/* Category Pill & Highlight Badge */}
+        <View style={styles.topRow}>
           <View style={styles.categoryPill}>
             <Text style={styles.categoryText}>{course.category}</Text>
           </View>
@@ -37,71 +46,71 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
             </View>
           )}
         </View>
-      </View>
 
-      {/* Course Title */}
-      <Text style={styles.title} numberOfLines={2}>
-        {course.title}
-      </Text>
+        {/* Course Title */}
+        <Text style={styles.title} numberOfLines={2}>
+          {course.title}
+        </Text>
 
-      {/* Description Snippet */}
-      <Text style={styles.description} numberOfLines={2}>
-        {course.description}
-      </Text>
+        {/* Description Snippet */}
+        <Text style={styles.description} numberOfLines={2}>
+          {course.description}
+        </Text>
 
-      {/* Meta stats: Rating, Duration, Students */}
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Star size={14} color="#f59e0b" fill="#f59e0b" />
-          <Text style={styles.statText}>{course.rating}</Text>
+        {/* Meta stats: Rating, Duration, Students */}
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Star size={14} color="#f59e0b" fill="#f59e0b" />
+            <Text style={styles.statText}>{course.rating}</Text>
+          </View>
+          <View style={styles.statDot} />
+          <View style={styles.statItem}>
+            <Clock size={14} color={Colors.textMuted} />
+            <Text style={styles.statText}>{course.duration}</Text>
+          </View>
+          <View style={styles.statDot} />
+          <View style={styles.statItem}>
+            <Users size={14} color={Colors.textMuted} />
+            <Text style={styles.statText}>{course.studentsCount}+</Text>
+          </View>
         </View>
-        <View style={styles.statDot} />
-        <View style={styles.statItem}>
-          <Clock size={14} color={Colors.textMuted} />
-          <Text style={styles.statText}>{course.duration}</Text>
-        </View>
-        <View style={styles.statDot} />
-        <View style={styles.statItem}>
-          <Users size={14} color={Colors.textMuted} />
-          <Text style={styles.statText}>{course.studentsCount}+</Text>
-        </View>
-      </View>
 
-      {/* Tech Stack Chips preview */}
-      {Array.isArray(course.techStack) && course.techStack.length > 0 && (
-        <View style={styles.techStackRow}>
-          {course.techStack.slice(0, 4).map((tech: any, i) => {
-            const label = typeof tech === 'object' && tech !== null ? tech.name || '' : String(tech || '');
-            if (!label) return null;
-            return (
-              <View key={i} style={styles.techChip}>
-                <Text style={styles.techChipText}>{label}</Text>
+        {/* Tech Stack Chips preview */}
+        {Array.isArray(course.techStack) && course.techStack.length > 0 && (
+          <View style={styles.techStackRow}>
+            {course.techStack.slice(0, 4).map((tech: any, i) => {
+              const label = typeof tech === 'object' && tech !== null ? tech.name || '' : String(tech || '');
+              if (!label) return null;
+              return (
+                <View key={i} style={styles.techChip}>
+                  <Text style={styles.techChipText}>{label}</Text>
+                </View>
+              );
+            })}
+            {course.techStack.length > 4 && (
+              <View style={styles.techChipMore}>
+                <Text style={styles.techChipMoreText}>+{course.techStack.length - 4}</Text>
               </View>
-            );
-          })}
-          {course.techStack.length > 4 && (
-            <View style={styles.techChipMore}>
-              <Text style={styles.techChipMoreText}>+{course.techStack.length - 4}</Text>
-            </View>
-          )}
-        </View>
-      )}
+            )}
+          </View>
+        )}
 
-      {/* Divider */}
-      <View style={styles.divider} />
+        {/* Divider */}
+        <View style={styles.divider} />
 
-      {/* Price & Action Row */}
-      <View style={styles.footerRow}>
-        <View>
-          <Text style={styles.feeLabel}>Total Program Fee</Text>
-          <Text style={styles.priceText}>
-            ₹{course.price.toLocaleString('en-IN')}
-          </Text>
-        </View>
-        
-        <View style={styles.actionBtn}>
-          <Text style={styles.actionBtnText}>Explore Syllabus</Text>
-          <ChevronRight size={16} color={Colors.textWhite} />
+        {/* Price & Action Row */}
+        <View style={styles.footerRow}>
+          <View>
+            <Text style={styles.feeLabel}>Total Program Fee</Text>
+            <Text style={styles.priceText}>
+              ₹{course.price.toLocaleString('en-IN')}
+            </Text>
+          </View>
+          
+          <View style={styles.actionBtn}>
+            <Text style={styles.actionBtnText}>Explore Syllabus</Text>
+            <ChevronRight size={16} color={Colors.textWhite} />
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -112,35 +121,23 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: 16,
     marginVertical: 8,
     borderWidth: 1,
     borderColor: Colors.border,
+    overflow: 'hidden',
     ...Shadows.small,
   },
   imageContainer: {
-    height: 140,
-    marginHorizontal: -16,
-    marginTop: -16,
-    marginBottom: 12,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    overflow: 'hidden',
-    position: 'relative',
-    backgroundColor: '#1e293b',
+    width: '100%',
+    height: 190,
+    backgroundColor: '#0f172a',
   },
   thumbnail: {
     width: '100%',
     height: '100%',
   },
-  badgeOverlay: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  cardBody: {
+    padding: 16,
   },
   topRow: {
     flexDirection: 'row',

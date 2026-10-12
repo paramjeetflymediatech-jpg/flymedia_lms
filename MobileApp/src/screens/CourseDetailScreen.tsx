@@ -27,6 +27,7 @@ import {
   Sparkles,
   Award,
 } from 'lucide-react-native';
+import { formatImageUrl } from '../utils/imageUrl';
 
 interface CourseDetailScreenProps {
   route: any;
@@ -191,20 +192,17 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           {/* Course Package Image */}
           <View style={styles.heroImageContainer}>
             <Image
-              source={{
-                uri:
-                  course.thumbnail ||
-                  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
-              }}
+              source={{ uri: formatImageUrl(course.thumbnail) }}
               style={styles.heroImage}
               resizeMode="cover"
             />
           </View>
 
-          <View style={styles.badgeRow}>
-            <View style={styles.categoryPill}>
-              <Text style={styles.categoryText}>{course.category}</Text>
-            </View>
+          <View style={styles.heroCardBody}>
+            <View style={styles.badgeRow}>
+              <View style={styles.categoryPill}>
+                <Text style={styles.categoryText}>{course.category}</Text>
+              </View>
             {course.badge && (
               <View style={styles.badgePill}>
                 <Sparkles size={12} color={Colors.primaryOrange} />
@@ -256,6 +254,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
             </View>
           </View>
         </View>
+      </View>
 
         {/* PROGRAM HIGHLIGHTS */}
         {highlights.length > 0 && (
@@ -487,25 +486,23 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: Colors.surface,
     borderRadius: 20,
-    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
+    overflow: 'hidden',
     ...Shadows.small,
     marginBottom: 20,
   },
   heroImageContainer: {
-    height: 180,
-    marginHorizontal: -20,
-    marginTop: -20,
-    marginBottom: 16,
-    borderTopLeftRadius: 19,
-    borderTopRightRadius: 19,
-    overflow: 'hidden',
+    width: '100%',
+    height: 220,
     backgroundColor: '#0f172a',
   },
   heroImage: {
     width: '100%',
     height: '100%',
+  },
+  heroCardBody: {
+    padding: 20,
   },
   badgeRow: {
     flexDirection: 'row',

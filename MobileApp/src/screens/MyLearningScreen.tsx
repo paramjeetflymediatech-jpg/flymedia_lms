@@ -20,6 +20,7 @@ import {
   LogIn,
   GraduationCap,
 } from 'lucide-react-native';
+import { formatImageUrl } from '../utils/imageUrl';
 
 interface MyLearningScreenProps {
   navigation: any;
@@ -123,23 +124,20 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
               enrollments.map(enr => (
                 <View key={enr.id} style={styles.courseItemCard}>
                   <Image
-                    source={{
-                      uri:
-                        enr.thumbnail ||
-                        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80',
-                    }}
+                    source={{ uri: formatImageUrl(enr.thumbnail) }}
                     style={styles.courseThumbBanner}
                     resizeMode="cover"
                   />
 
-                  <View style={styles.courseHeader}>
-                    <View style={styles.categoryPill}>
-                      <Text style={styles.categoryText}>{enr.category}</Text>
+                  <View style={styles.courseItemBody}>
+                    <View style={styles.courseHeader}>
+                      <View style={styles.categoryPill}>
+                        <Text style={styles.categoryText}>{enr.category}</Text>
+                      </View>
+                      <Text style={styles.enrolledDate}>Started: {enr.enrolledAt}</Text>
                     </View>
-                    <Text style={styles.enrolledDate}>Started: {enr.enrolledAt}</Text>
-                  </View>
 
-                  <Text style={styles.courseTitle}>{enr.courseTitle}</Text>
+                    <Text style={styles.courseTitle}>{enr.courseTitle}</Text>
 
                   {/* Progress bar */}
                   <View style={styles.progressContainer}>
@@ -213,7 +211,8 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                     </TouchableOpacity>
                   </View>
                 </View>
-              ))
+              </View>
+            ))
             )}
           </View>
         )}
@@ -314,21 +313,19 @@ const styles = StyleSheet.create({
   courseItemCard: {
     backgroundColor: Colors.surface,
     borderRadius: 18,
-    padding: 18,
     borderWidth: 1,
     borderColor: Colors.border,
+    overflow: 'hidden',
     marginBottom: 16,
     ...Shadows.small,
   },
   courseThumbBanner: {
-    height: 120,
-    marginHorizontal: -18,
-    marginTop: -18,
-    marginBottom: 14,
-    borderTopLeftRadius: 17,
-    borderTopRightRadius: 17,
-    overflow: 'hidden',
-    backgroundColor: '#1e293b',
+    width: '100%',
+    height: 180,
+    backgroundColor: '#0f172a',
+  },
+  courseItemBody: {
+    padding: 18,
   },
   courseHeader: {
     flexDirection: 'row',
