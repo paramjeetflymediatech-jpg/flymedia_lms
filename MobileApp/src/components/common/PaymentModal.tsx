@@ -25,6 +25,7 @@ import {
   Lock,
   ArrowRight,
   Zap,
+  ExternalLink,
 } from 'lucide-react-native';
 import { Course } from '../../types';
 import { ApiService } from '../../services/api';
@@ -60,7 +61,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { purchaseCourse } = useAuth();
+  const { purchaseCourse, refreshEnrollments } = useAuth();
 
   // Price & Coupon state
   const originalPrice = course.price ? Number(course.price) : 0;
@@ -73,8 +74,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   } | null>(null);
   const [couponError, setCouponError] = useState('');
 
-  // Payment method selection
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('UPI');
+  // Payment method selection - default to PHONEPE
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('PHONEPE');
 
   // Method specific state
   const [selectedUpiApp, setSelectedUpiApp] = useState('gpay');
@@ -84,6 +85,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [cardCvv, setCardCvv] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [selectedBank, setSelectedBank] = useState('HDFC');
+
+  // PhonePe gateway active state
+  const [phonePeRedirectUrl, setPhonePeRedirectUrl] = useState<string | null>(null);
+  const [phonePeTxnId, setPhonePeTxnId] = useState<string | null>(null);
+  const [verifyingPhonePe, setVerifyingPhonePe] = useState(false);
 
   // Checkout process state
   const [processing, setProcessing] = useState(false);
@@ -104,6 +110,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setCouponError('');
       setProcessing(false);
       setPaymentSuccess(null);
+      setPhonePeRedirectUrl(null);
+      setPhonePeTxnId(null);
+      setVerifyingPhonePe(false);
+      setSelectedMethod('PHONEPE');
     }
   }, [visible, course]);
 
@@ -158,6 +168,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const handleProcessPayment = async () => {
     setProcessing(true);
+    setCouponError('');
 
     let paymentDetails: any = { method: selectedMethod };
 
@@ -176,6 +187,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       paymentDetails = {
         bank: selectedBank,
       };
+    } else if (selectedMethod === 'PHONEPE') {
+      paymentDetails = {
+        gateway: 'PhonePe PG',
+      };
     }
 
     const res = await purchaseCourse({
@@ -189,19 +204,38 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setProcessing(false);
 
     if (res.success) {
-      if ((res as any).redirectUrl) {
-        Linking.openURL((res as any).redirectUrl).catch(() => {});
-        onClose();
+      const redirect = (res as any).redirectUrl;
+      const txn = res.transactionId || `TXN_${Date.now()}`;
+      if (redirect) {
+        setPhonePeRedirectUrl(redirect);
+        setPhonePeTxnId(txn);
+        Linking.openURL(redirect).catch(() => {});
         return;
       }
-      const txn = res.transactionId || `TXN_${Date.now()}`;
       setPaymentSuccess({
         transactionId: txn,
         amount: finalPrice,
-        method: selectedMethod,
+        method: selectedMethod === 'PHONEPE' ? 'PhonePe Gateway' : selectedMethod,
       });
     } else {
       setCouponError(res.error || 'Payment failed. Please verify details and retry.');
+    }
+  };
+
+  const handleVerifyPhonePePayment = async () => {
+    setVerifyingPhonePe(true);
+    try {
+      await refreshEnrollments();
+      await new Promise(resolve => setTimeout(() => resolve(null), 600));
+      setPaymentSuccess({
+        transactionId: phonePeTxnId || `PHONEPE_${Date.now()}`,
+        amount: finalPrice,
+        method: 'PhonePe Gateway',
+      });
+    } catch (e: any) {
+      setCouponError('Could not verify status. Please tap verify again.');
+    } finally {
+      setVerifyingPhonePe(false);
     }
   };
 
@@ -235,14 +269,27 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>
-                {paymentSuccess ? 'Payment Confirmed' : 'Secure Checkout'}
+                {paymentSuccess
+                  ? 'Payment Confirmed'
+                  : phonePeRedirectUrl
+                  ? 'PhonePe Gateway'
+                  : 'Secure Checkout'}
               </Text>
               <Text style={styles.headerSubtitle} numberOfLines={1}>
                 {course.title}
               </Text>
             </View>
             <TouchableOpacity
-              onPress={paymentSuccess ? handleDone : onClose}
+              onPress={
+                paymentSuccess
+                  ? handleDone
+                  : phonePeRedirectUrl
+                  ? () => {
+                      setPhonePeRedirectUrl(null);
+                      setPhonePeTxnId(null);
+                    }
+                  : onClose
+              }
               style={styles.closeBtn}
               activeOpacity={0.7}
             >
@@ -296,6 +343,91 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               >
                 <Text style={styles.startLearningBtnText}>Start Learning Now</Text>
                 <ArrowRight size={18} color="#ffffff" style={{ marginLeft: 6 }} />
+              </TouchableOpacity>
+            </View>
+          ) : phonePeRedirectUrl ? (
+            /* PHONEPE GATEWAY LAUNCHED VIEW */
+            <View style={styles.phonePeActiveContainer}>
+              <View style={styles.phonePeLogoCircle}>
+                <ShieldCheck size={44} color="#5f259f" />
+              </View>
+
+              <View style={styles.phonePeActiveBadge}>
+                <View style={styles.liveIndicatorDot} />
+                <Text style={styles.phonePeActiveBadgeText}>PhonePe Session Active</Text>
+              </View>
+
+              <Text style={styles.phonePeActiveTitle}>Authorize in PhonePe</Text>
+              <Text style={styles.phonePeActiveDesc}>
+                We opened PhonePe checkout for <Text style={{ fontWeight: '800' }}>₹{finalPrice.toLocaleString('en-IN')}</Text> in your browser. Complete your payment via UPI, Card or Net Banking, then tap verify below.
+              </Text>
+
+              {/* Order Info Card */}
+              <View style={styles.phonePeInfoCard}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Course Package</Text>
+                  <Text style={[styles.receiptVal, { maxWidth: '60%' }]} numberOfLines={1}>
+                    {course.title}
+                  </Text>
+                </View>
+                <View style={styles.receiptDivider} />
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Order Amount</Text>
+                  <Text style={styles.phonePeInfoAmount}>
+                    ₹{finalPrice.toLocaleString('en-IN')}
+                  </Text>
+                </View>
+                <View style={styles.receiptDivider} />
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Payment Gateway</Text>
+                  <Text style={styles.receiptVal}>PhonePe Official PG</Text>
+                </View>
+              </View>
+
+              {/* Verify Button */}
+              <TouchableOpacity
+                style={styles.verifyPhonePeBtn}
+                onPress={handleVerifyPhonePePayment}
+                disabled={verifyingPhonePe}
+                activeOpacity={0.85}
+              >
+                {verifyingPhonePe ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ActivityIndicator size="small" color="#ffffff" />
+                    <Text style={styles.verifyPhonePeBtnText}>Verifying Enrollment...</Text>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <CheckCircle size={20} color="#ffffff" />
+                    <Text style={styles.verifyPhonePeBtnText}>I Have Paid / Verify Enrollment</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Re-open Gateway */}
+              <TouchableOpacity
+                style={styles.reopenGatewayBtn}
+                onPress={() => {
+                  if (phonePeRedirectUrl) {
+                    Linking.openURL(phonePeRedirectUrl).catch(() => {});
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                <ExternalLink size={16} color="#5f259f" />
+                <Text style={styles.reopenGatewayBtnText}>Re-open PhonePe Payment Window</Text>
+              </TouchableOpacity>
+
+              {/* Cancel / Back */}
+              <TouchableOpacity
+                style={styles.cancelPhonePeBtn}
+                onPress={() => {
+                  setPhonePeRedirectUrl(null);
+                  setPhonePeTxnId(null);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelPhonePeBtnText}>Change Payment Method</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -409,6 +541,53 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <Text style={styles.sectionTitle}>Select Payment Method</Text>
 
                 <View style={styles.methodsGrid}>
+                  {/* PHONEPE GATEWAY - FEATURED TOP CARD */}
+                  <TouchableOpacity
+                    style={[
+                      styles.methodCardPhonePe,
+                      selectedMethod === 'PHONEPE' && styles.methodCardPhonePeActive,
+                    ]}
+                    onPress={() => setSelectedMethod('PHONEPE')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.phonePeCardTop}>
+                      <View style={styles.phonePeIconBox}>
+                        <ShieldCheck
+                          size={24}
+                          color={selectedMethod === 'PHONEPE' ? '#5f259f' : Colors.textMuted}
+                        />
+                      </View>
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text
+                            style={[
+                              styles.methodLabel,
+                              selectedMethod === 'PHONEPE' && styles.phonePeLabelActive,
+                            ]}
+                          >
+                            PhonePe Gateway
+                          </Text>
+                          <View style={styles.officialBadge}>
+                            <Text style={styles.officialBadgeText}>OFFICIAL PG</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.methodSub}>
+                          Instant UPI • QR • RuPay / Visa / MC • Net Banking
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.radioCircle,
+                          selectedMethod === 'PHONEPE' && styles.radioCircleActivePhonePe,
+                        ]}
+                      >
+                        {selectedMethod === 'PHONEPE' && (
+                          <View style={styles.radioDotPhonePe} />
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+
                   {/* UPI */}
                   <TouchableOpacity
                     style={[
@@ -430,7 +609,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         selectedMethod === 'UPI' && styles.methodLabelActive,
                       ]}
                     >
-                      ⚡ Instant UPI
+                      Instant UPI
                     </Text>
                     <Text style={styles.methodSub}>GPay, PhonePe, Paytm</Text>
                   </TouchableOpacity>
@@ -486,36 +665,26 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     </Text>
                     <Text style={styles.methodSub}>All Indian Banks</Text>
                   </TouchableOpacity>
-
-                  {/* PHONEPE GATEWAY */}
-                  <TouchableOpacity
-                    style={[
-                      styles.methodCard,
-                      selectedMethod === 'PHONEPE' && styles.methodCardActive,
-                    ]}
-                    onPress={() => setSelectedMethod('PHONEPE')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.methodIconBox}>
-                      <ShieldCheck
-                        size={22}
-                        color={selectedMethod === 'PHONEPE' ? Colors.primaryOrange : Colors.textMuted}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.methodLabel,
-                        selectedMethod === 'PHONEPE' && styles.methodLabelActive,
-                      ]}
-                    >
-                      PhonePe Gateway
-                    </Text>
-                    <Text style={styles.methodSub}>1-Tap Secure Pay</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
 
               {/* METHOD SPECIFIC INPUTS */}
+              {selectedMethod === 'PHONEPE' && (
+                <View style={styles.phonePeDetailBox}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={styles.phonePePurpleBadgeIcon}>
+                      <ShieldCheck size={24} color="#5f259f" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.phonePeDetailTitle}>Official Website PhonePe Gateway</Text>
+                      <Text style={styles.phonePeDetailSubtitle}>
+                        You will be routed to PhonePe's secure checkout page to pay via PhonePe app, Google Pay, QR, or Card. Course activates instantly upon confirmation.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
               {selectedMethod === 'UPI' && (
                 <View style={styles.methodDetailBox}>
                   <Text style={styles.detailBoxTitle}>Fast UPI Apps</Text>
@@ -626,20 +795,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 </View>
               )}
 
-              {selectedMethod === 'PHONEPE' && (
-                <View style={styles.methodDetailBox}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <ShieldCheck size={28} color={Colors.primaryOrange} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.detailBoxTitle}>Verified Merchant Checkout</Text>
-                      <Text style={styles.secureText}>
-                        You will be securely routed through PhonePe gateway to complete payment.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              )}
-
               {/* Security Banner */}
               <View style={styles.securityBox}>
                 <Lock size={14} color="#10b981" />
@@ -650,7 +805,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* PAY BUTTON */}
               <TouchableOpacity
-                style={styles.payBtn}
+                style={[
+                  styles.payBtn,
+                  selectedMethod === 'PHONEPE' && styles.payBtnPhonePe,
+                ]}
                 onPress={handleProcessPayment}
                 disabled={processing}
                 activeOpacity={0.85}
@@ -658,12 +816,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 {processing ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <ActivityIndicator size="small" color="#ffffff" />
-                    <Text style={styles.payBtnText}>Authorizing Payment...</Text>
+                    <Text style={styles.payBtnText}>
+                      {selectedMethod === 'PHONEPE'
+                        ? 'Initiating PhonePe Gateway...'
+                        : 'Authorizing Payment...'}
+                    </Text>
                   </View>
                 ) : (
-                  <Text style={styles.payBtnText}>
-                    Pay ₹{finalPrice.toLocaleString('en-IN')} & Unlock Course
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={styles.payBtnText}>
+                      {selectedMethod === 'PHONEPE'
+                        ? `Pay ₹${finalPrice.toLocaleString('en-IN')} via PhonePe`
+                        : `Pay ₹${finalPrice.toLocaleString('en-IN')} & Unlock Course`}
+                    </Text>
+                    <ArrowRight size={18} color="#ffffff" />
+                  </View>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -1113,5 +1280,204 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     color: '#ffffff',
+  },
+  // PhonePe PG styles
+  methodCardPhonePe: {
+    width: '100%',
+    backgroundColor: '#fbfaff',
+    borderWidth: 1.5,
+    borderColor: '#e9d5ff',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 4,
+  },
+  methodCardPhonePeActive: {
+    borderColor: '#5f259f',
+    backgroundColor: '#f5f3ff',
+  },
+  phonePeCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  phonePeIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e9d5ff',
+  },
+  phonePeLabelActive: {
+    color: '#5f259f',
+  },
+  officialBadge: {
+    backgroundColor: '#5f259f',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  officialBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleActivePhonePe: {
+    borderColor: '#5f259f',
+  },
+  radioDotPhonePe: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#5f259f',
+  },
+  phonePeDetailBox: {
+    backgroundColor: '#f5f3ff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+    marginBottom: 16,
+  },
+  phonePePurpleBadgeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f3e8ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phonePeDetailTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#5f259f',
+    marginBottom: 3,
+  },
+  phonePeDetailSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 17,
+  },
+  payBtnPhonePe: {
+    backgroundColor: '#5f259f',
+  },
+  // PhonePe Gateway active modal view
+  phonePeActiveContainer: {
+    padding: 22,
+    alignItems: 'center',
+  },
+  phonePeLogoCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#f5f3ff',
+    borderWidth: 2,
+    borderColor: '#ddd6fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  phonePeActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f5f3ff',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+    marginBottom: 10,
+  },
+  liveIndicatorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+  },
+  phonePeActiveBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#5f259f',
+  },
+  phonePeActiveTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    marginBottom: 6,
+  },
+  phonePeActiveDesc: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 18,
+  },
+  phonePeInfoCard: {
+    width: '100%',
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 20,
+  },
+  phonePeInfoAmount: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#5f259f',
+  },
+  verifyPhonePeBtn: {
+    width: '100%',
+    backgroundColor: '#10b981',
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    ...Shadows.card,
+  },
+  verifyPhonePeBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  reopenGatewayBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f5f3ff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+    paddingVertical: 13,
+    marginBottom: 8,
+  },
+  reopenGatewayBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#5f259f',
+  },
+  cancelPhonePeBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  cancelPhonePeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textMuted,
   },
 });

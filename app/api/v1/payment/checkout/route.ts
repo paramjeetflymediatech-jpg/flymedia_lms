@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         const clientVersion = Number(process.env.PHONEPE_SALT_INDEX) || 1;
         const isProd = process.env.PHONEPE_ENV?.toUpperCase() === 'PRODUCTION';
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://course.flymediatech.com';
         const redirectUrl = `${baseUrl}/api/payment/callback?transactionId=${transactionId}`;
 
         const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, isProd ? Env.PRODUCTION : Env.SANDBOX);

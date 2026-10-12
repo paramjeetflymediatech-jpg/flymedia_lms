@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized: please sign in to purchase course' }, { status: 401 });
     }
 
-    const { packageId, slug, batchMode } = await req.json();
+    const { packageId, slug, batchMode, amount: customAmount } = await req.json();
     if (!packageId && !slug) {
       return NextResponse.json({ error: 'Package ID or slug is required' }, { status: 400 });
     }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
-    const amount = Number(pkg.price);
+    const amount = customAmount && Number(customAmount) > 0 ? Number(customAmount) : Number(pkg.price);
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: 'Invalid amount for paid package' }, { status: 400 });
     }
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       provider: 'PHONEPE',
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://course.flymediatech.com';
     const redirectUrl = `${baseUrl}/api/payment/callback?transactionId=${transactionId}`;
 
     const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, isProd ? Env.PRODUCTION : Env.SANDBOX);
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       .build();
 
     const response = await client.pay(request);
-    
+
     if (response && response.redirectUrl) {
       return NextResponse.json({
         success: true,

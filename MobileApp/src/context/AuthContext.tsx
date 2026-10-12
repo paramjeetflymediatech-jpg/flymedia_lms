@@ -18,7 +18,7 @@ interface AuthContextType {
     amount: number;
     couponCode?: string;
     paymentDetails?: any;
-  }) => Promise<{ success: boolean; error?: string; requireAuth?: boolean; transactionId?: string; payment?: any }>;
+  }) => Promise<{ success: boolean; error?: string; requireAuth?: boolean; transactionId?: string; payment?: any; redirectUrl?: string; requiresRedirect?: boolean }>;
   submitCallback: (name: string, phone: string, course: string) => Promise<boolean>;
 }
 
@@ -28,8 +28,8 @@ const AuthContext = createContext<AuthContextType>({
   enrollments: [],
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
-  logout: async () => {},
-  refreshEnrollments: async () => {},
+  logout: async () => { },
+  refreshEnrollments: async () => { },
   enrollCourse: async () => ({ success: false }),
   purchaseCourse: async () => ({ success: false }),
   submitCallback: async () => false,
@@ -184,6 +184,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, requireAuth: true, error: 'Please sign in to complete purchase.' };
     }
 
+    if (payload.paymentMethod === 'PHONEPE') {
+      try {
+        const phonePeRes = await ApiService.initiatePhonePePayment(
+          {
+            packageId: (payload.course as any).databaseId || payload.course.id,
+            slug: payload.course.slug || payload.course.id,
+            amount: payload.amount,
+            couponCode: payload.couponCode,
+          },
+          user.token
+        );
+        if (phonePeRes.success && phonePeRes.redirectUrl) {
+          return {
+            success: true,
+            redirectUrl: phonePeRes.redirectUrl,
+            requiresRedirect: true,
+            transactionId: `TXN_${Date.now()}`,
+          };
+        }
+      } catch (err) {
+        console.warn('Direct PhonePe initiate failed, falling back to unified checkout:', err);
+      }
+    }
+
     const res = await ApiService.checkoutCourse(
       {
         packageId: (payload.course as any).databaseId || payload.course.id,
@@ -204,6 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         transactionId: res.transactionId,
         payment: res.payment,
         redirectUrl: (res as any).redirectUrl,
+        requiresRedirect: (res as any).requiresRedirect,
       };
     }
     return { success: false, error: res.error || res.message || 'Failed to process payment.' };
