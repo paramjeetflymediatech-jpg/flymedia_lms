@@ -175,4 +175,76 @@ export const ApiService = {
     }
     return null;
   },
+
+  /**
+   * Admin: Get stats and overview
+   */
+  async getAdminStats(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to load admin stats' };
+    }
+  },
+
+  /**
+   * Admin: Get all student inquiries / leads
+   */
+  async getAdminLeads(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/leads`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, leads: [] };
+    }
+  },
+
+  /**
+   * Admin: Update lead status
+   */
+  async updateLeadStatus(id: string, status: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/leads`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, status }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update lead' };
+    }
+  },
+
+  /**
+   * Admin: Create new course package
+   */
+  async createCourse(courseData: any, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/courses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(courseData),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to create course' };
+    }
+  },
 };

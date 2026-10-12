@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme/colors';
 import { CallbackModal } from '../components/common/CallbackModal';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +38,10 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
   const { courseId, course: passedCourse } = route.params || {};
   const [course, setCourse] = useState<Course | null>(passedCourse || null);
   const [loading, setLoading] = useState<boolean>(!passedCourse);
+
+  const insets = useSafeAreaInsets();
+  const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
+  const bottomPadding = Math.max(insets.bottom, 12);
 
   const { user, enrollCourse, enrollments } = useAuth();
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
@@ -147,7 +153,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
   return (
     <View style={styles.screen}>
       {/* TOP NAV BAR */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: topPadding + 6 }]}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
@@ -298,11 +304,15 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           <View style={styles.sectionWrap}>
             <Text style={styles.sectionHeading}>Skills You Will Master</Text>
             <View style={styles.chipsContainer}>
-              {skills.map((skill, sIdx) => (
-                <View key={sIdx} style={styles.skillChip}>
-                  <Text style={styles.skillChipText}>{skill}</Text>
-                </View>
-              ))}
+              {skills.map((skill: any, sIdx) => {
+                const label = typeof skill === 'object' && skill !== null ? skill.name || '' : String(skill || '');
+                if (!label) return null;
+                return (
+                  <View key={sIdx} style={styles.skillChip}>
+                    <Text style={styles.skillChipText}>{label}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
         )}
@@ -312,11 +322,15 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           <View style={styles.sectionWrap}>
             <Text style={styles.sectionHeading}>Tools & Technologies</Text>
             <View style={styles.chipsContainer}>
-              {techStack.map((tech, tIdx) => (
-                <View key={tIdx} style={styles.techChip}>
-                  <Text style={styles.techChipText}>{tech}</Text>
-                </View>
-              ))}
+              {techStack.map((tech: any, tIdx) => {
+                const label = typeof tech === 'object' && tech !== null ? tech.name || '' : String(tech || '');
+                if (!label) return null;
+                return (
+                  <View key={tIdx} style={styles.techChip}>
+                    <Text style={styles.techChipText}>{label}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
         )}
@@ -325,7 +339,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
       </ScrollView>
 
       {/* BOTTOM ACTION BAR */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
         <TouchableOpacity
           style={styles.demoBtn}
           onPress={() => setCallbackModalVisible(true)}

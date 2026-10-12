@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../theme/colors';
-import { Phone, Sparkles } from 'lucide-react-native';
+import { Phone } from 'lucide-react-native';
 
 interface HeaderProps {
   onCallPress?: () => void;
@@ -9,8 +10,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onCallPress, subtitle }) => {
+  const insets = useSafeAreaInsets();
+  const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: topPadding + 6 }]}>
       <View style={styles.brandRow}>
         <View style={styles.logoBadge}>
           <Text style={styles.logoLetter}>F</Text>
@@ -43,10 +47,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 14,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 10,
   },
   brandRow: {
     flexDirection: 'row',
@@ -92,10 +102,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primaryOrange,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
-    gap: 4,
+    gap: 5,
   },
   callButtonText: {
     color: Colors.textWhite,

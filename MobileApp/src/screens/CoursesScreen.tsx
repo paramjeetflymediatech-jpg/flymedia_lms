@@ -59,8 +59,14 @@ export const CoursesScreen: React.FC<CoursesScreenProps> = ({ navigation }) => {
     const techStack = course.techStack || [];
     const matchesQuery =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      techStack.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      skills.some((s: any) => {
+        const label = typeof s === 'object' && s !== null ? s.name || '' : String(s || '');
+        return label.toLowerCase().includes(searchQuery.toLowerCase());
+      }) ||
+      techStack.some((t: any) => {
+        const label = typeof t === 'object' && t !== null ? t.name || '' : String(t || '');
+        return label.toLowerCase().includes(searchQuery.toLowerCase());
+      });
     return matchesCategory && matchesQuery;
   });
 

@@ -57,18 +57,24 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
       </View>
 
       {/* Tech Stack Chips preview */}
-      <View style={styles.techStackRow}>
-        {course.techStack.slice(0, 4).map((tech, i) => (
-          <View key={i} style={styles.techChip}>
-            <Text style={styles.techChipText}>{tech}</Text>
-          </View>
-        ))}
-        {course.techStack.length > 4 && (
-          <View style={styles.techChipMore}>
-            <Text style={styles.techChipMoreText}>+{course.techStack.length - 4}</Text>
-          </View>
-        )}
-      </View>
+      {Array.isArray(course.techStack) && course.techStack.length > 0 && (
+        <View style={styles.techStackRow}>
+          {course.techStack.slice(0, 4).map((tech: any, i) => {
+            const label = typeof tech === 'object' && tech !== null ? tech.name || '' : String(tech || '');
+            if (!label) return null;
+            return (
+              <View key={i} style={styles.techChip}>
+                <Text style={styles.techChipText}>{label}</Text>
+              </View>
+            );
+          })}
+          {course.techStack.length > 4 && (
+            <View style={styles.techChipMore}>
+              <Text style={styles.techChipMoreText}>+{course.techStack.length - 4}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Divider */}
       <View style={styles.divider} />

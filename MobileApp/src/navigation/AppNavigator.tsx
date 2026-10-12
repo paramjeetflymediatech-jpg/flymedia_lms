@@ -7,7 +7,10 @@ import { CourseDetailScreen } from '../screens/CourseDetailScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { MentorsScreen } from '../screens/MentorsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { Colors } from '../theme/colors';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Home,
   BookOpen,
@@ -20,6 +23,9 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -29,9 +35,9 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6,
+          height: 54 + bottomInset,
+          paddingBottom: bottomInset,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -98,6 +104,13 @@ export function AppNavigator() {
         component={CourseDetailScreen}
         options={{
           animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="AdminDashboard"
+        component={AdminDashboardScreen}
+        options={{
+          animation: 'slide_from_bottom',
         }}
       />
     </Stack.Navigator>

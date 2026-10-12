@@ -125,11 +125,15 @@ export const MentorsScreen: React.FC = () => {
                 {/* Skill chips */}
                 {m.skills && m.skills.length > 0 && (
                   <View style={styles.skillsRow}>
-                    {m.skills.map((s, idx) => (
-                      <View key={idx} style={styles.skillBadge}>
-                        <Text style={styles.skillBadgeText}>{s}</Text>
-                      </View>
-                    ))}
+                    {m.skills.map((s: any, idx) => {
+                      const label = typeof s === 'object' && s !== null ? s.name || '' : String(s || '');
+                      if (!label) return null;
+                      return (
+                        <View key={idx} style={styles.skillBadge}>
+                          <Text style={styles.skillBadgeText}>{label}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
                 )}
 

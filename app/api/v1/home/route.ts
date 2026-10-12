@@ -45,8 +45,12 @@ export async function GET() {
         { title: 'Live Instructor-Led Classes', description: 'Learn in real-time from senior mentors.' },
         { title: '100% Practical Project Work', description: 'Real industry brief and software.' }
       ],
-      skills: pkg.skills || ['Core Concepts', 'Practical Application', 'Live Project'],
-      techStack: pkg.techStack || ['Industry Tools', 'Git'],
+      skills: Array.isArray(pkg.skills) && pkg.skills.length > 0
+        ? pkg.skills.map((s: any) => typeof s === 'object' && s !== null ? s.name || '' : String(s || '')).filter(Boolean)
+        : ['Core Concepts', 'Practical Application', 'Live Project'],
+      techStack: Array.isArray(pkg.techStack) && pkg.techStack.length > 0
+        ? pkg.techStack.map((t: any) => typeof t === 'object' && t !== null ? t.name || '' : String(t || '')).filter(Boolean)
+        : ['Industry Tools', 'Git'],
       modules: pkg.courseModules || [
         { title: 'Stage 1: Core Fundamentals', topics: ['Foundation concepts', 'Hands-on practice'] }
       ],

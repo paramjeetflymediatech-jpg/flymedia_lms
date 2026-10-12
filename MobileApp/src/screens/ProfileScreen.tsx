@@ -21,9 +21,14 @@ import {
   ShieldCheck,
   CheckCircle,
   ExternalLink,
+  ArrowRight,
 } from 'lucide-react-native';
 
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  navigation: any;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user, login, register, logout } = useAuth();
 
   const [isLoginTab, setIsLoginTab] = useState(true);
@@ -95,6 +100,32 @@ export const ProfileScreen: React.FC = () => {
                 <Text style={styles.roleText}>{user.role} ACCOUNT</Text>
               </View>
             </View>
+
+            {/* ADMIN CONTROL PANEL SECTION */}
+            {user.role === 'ADMIN' && (
+              <View style={styles.adminHubCard}>
+                <View style={styles.adminHubHeader}>
+                  <View style={styles.adminIconCircle}>
+                    <ShieldCheck size={20} color={Colors.textWhite} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.adminHubTitle}>Administrator Hub</Text>
+                    <Text style={styles.adminHubSub}>
+                      Manage student leads, create new courses, and view stats
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.openAdminBtn}
+                  onPress={() => navigation.navigate('AdminDashboard')}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.openAdminBtnText}>Open Admin Control Center</Text>
+                  <ArrowRight size={16} color={Colors.textWhite} />
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* CAMPUS & HELPLINE CARD */}
             <View style={styles.infoSection}>
@@ -297,6 +328,51 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 16,
     marginBottom: 20,
+  },
+  adminHubCard: {
+    backgroundColor: Colors.darkSurface,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 20,
+    ...Shadows.small,
+  },
+  adminHubHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  adminIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminHubTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textWhite,
+    marginBottom: 2,
+  },
+  adminHubSub: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 16,
+  },
+  openAdminBtn: {
+    backgroundColor: Colors.primaryOrange,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  openAdminBtnText: {
+    color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '800',
   },
   sectionTitle: {
     fontSize: 16,
