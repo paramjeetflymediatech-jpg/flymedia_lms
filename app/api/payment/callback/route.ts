@@ -18,8 +18,8 @@ async function handleCallback(req: Request) {
 
     if (!txnId && req.method === 'POST') {
       try {
-        const formData = await req.formData();
-        const txid = formData.get('transactionId');
+        const formData: any = await req.formData();
+        const txid = typeof formData.get === 'function' ? formData.get('transactionId') : formData['transactionId'];
         if (txid) txnId = txid.toString();
       } catch (e) {
         console.error("Failed to parse POST body", e);
