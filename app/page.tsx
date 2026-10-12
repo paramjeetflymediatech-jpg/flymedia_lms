@@ -245,9 +245,9 @@ export default async function HomePage() {
 
                         {/* Top Badges */}
                         <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                          <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/95 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
+                          {/* <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/95 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
                             PROGRAM
-                          </span>
+                          </span> */}
                           {pkg.mode && (
                             <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm border ${pkg.mode === 'ONLINE' ? 'bg-blue-500/30 text-blue-100 border-blue-400/40' :
                                 pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
