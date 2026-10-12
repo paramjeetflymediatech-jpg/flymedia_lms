@@ -1,0 +1,72 @@
+import { NextResponse } from 'next/server';
+import { Coupon } from '../../../../../src/db/models';
+import { getAuthUserFromRequest } from '../../auth/jwt';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+  try {
+    const authPayload = await getAuthUserFromRequest(request);
+    if (!authPayload || authPayload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const coupons = await Coupon.findAll({
+      order: [['createdAt', 'DESC']],
+    });
+
+    return NextResponse.json({
+      success: true,
+      coupons,
+    });
+  } catch (error: any) {
+    console.error('Admin coupons GET error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to fetch coupons' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const authPayload = await getAuthUserFromRequest(request);
+    if (!authPayload || authPayload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { code, discountPercent, discountAmount, maxUses } = await request.json();
+    if (!code) {
+      return NextResponse.json(
+        { success: false, error: 'Coupon code is required' },
+        { status: 400 }
+      );
+    }
+
+    const coupon = await Coupon.create({
+      code: code.toUpperCase().trim(),
+      discountPercent: discountPercent ? Number(discountPercent) : null,
+      discountAmount: discountAmount ? Number(discountAmount) : null,
+      maxUses: maxUses ? Number(maxUses) : 100,
+      usedCount: 0,
+      isActive: true,
+    });
+
+    return NextResponse.json({
+      success: true,
+      coupon,
+    });
+  } catch (error: any) {
+    console.error('Admin coupon create error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to create coupon' },
+      { status: 500 }
+    );
+  }
+}

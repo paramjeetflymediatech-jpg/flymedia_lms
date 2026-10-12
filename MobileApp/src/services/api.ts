@@ -234,7 +234,7 @@ export const ApiService = {
    */
   async createCourse(courseData: any, token: string) {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/courses`, {
+      const response = await fetch(`${API_BASE_URL}/admin/packages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -245,6 +245,147 @@ export const ApiService = {
       return await response.json();
     } catch (e: any) {
       return { success: false, error: e.message || 'Failed to create course' };
+    }
+  },
+
+  /**
+   * Admin: Get all course packages
+   */
+  async getAdminPackages(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/packages`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, packages: [] };
+    }
+  },
+
+  /**
+   * Admin: Delete package
+   */
+  async deleteAdminPackage(id: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/packages?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete package' };
+    }
+  },
+
+  /**
+   * Admin: Get all student enrollments
+   */
+  async getAdminEnrollments(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/enrollments`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, enrollments: [] };
+    }
+  },
+
+  /**
+   * Admin: Get all users
+   */
+  async getAdminUsers(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, users: [] };
+    }
+  },
+
+  /**
+   * Admin: Get categories
+   */
+  async getAdminCategories(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, categories: [] };
+    }
+  },
+
+  /**
+   * Admin: Create category
+   */
+  async createAdminCategory(data: { name: string; description?: string }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to create category' };
+    }
+  },
+
+  /**
+   * Admin: Get coupons
+   */
+  async getAdminCoupons(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/coupons`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, coupons: [] };
+    }
+  },
+
+  /**
+   * Admin: Create coupon
+   */
+  async createAdminCoupon(data: { code: string; discountPercent?: number; discountAmount?: number }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/coupons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to create coupon' };
     }
   },
 };

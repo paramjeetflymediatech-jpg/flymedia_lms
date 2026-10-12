@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Package, Inquiry, Enrollment, User } from '../../../../../src/db/models';
+import { Package, Inquiry, Enrollment, User, Category, Coupon } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 
 export const dynamic = 'force-dynamic';
@@ -14,11 +14,13 @@ export async function GET(request: Request) {
       );
     }
 
-    const [totalCourses, totalLeads, totalEnrollments, totalUsers, recentLeads] = await Promise.all([
-      Package.count({ where: { status: 'PUBLISHED' } }),
+    const [totalCourses, totalLeads, totalEnrollments, totalUsers, totalCategories, totalCoupons, recentLeads] = await Promise.all([
+      Package.count(),
       Inquiry.count(),
       Enrollment.count(),
       User.count({ where: { role: 'STUDENT' } }),
+      Category.count(),
+      Coupon.count(),
       Inquiry.findAll({
         order: [['createdAt', 'DESC']],
         limit: 10,
@@ -32,6 +34,8 @@ export async function GET(request: Request) {
         totalLeads,
         totalEnrollments,
         totalUsers,
+        totalCategories,
+        totalCoupons,
       },
       recentLeads,
     });
