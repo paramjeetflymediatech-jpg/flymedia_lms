@@ -142,6 +142,48 @@ export const ApiService = {
   },
 
   /**
+   * Validates promo coupon code and calculates discount
+   */
+  async validateCoupon(code: string, amount: number): Promise<{ success: boolean; valid?: boolean; discountAmount?: number; finalAmount?: number; coupon?: any; error?: string; message?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment/coupon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, amount }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to validate coupon' };
+    }
+  },
+
+  /**
+   * Processes course purchase with selected payment method
+   */
+  async checkoutCourse(payload: {
+    packageId: string;
+    paymentMethod: string;
+    amount: number;
+    couponCode?: string;
+    paymentDetails?: any;
+  }, token: string): Promise<{ success: boolean; transactionId?: string; message?: string; error?: string; alreadyEnrolled?: boolean; course?: any; payment?: any }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Payment network failure' };
+    }
+  },
+
+
+  /**
    * Verifies current session from API
    */
   async getMe(token: string) {

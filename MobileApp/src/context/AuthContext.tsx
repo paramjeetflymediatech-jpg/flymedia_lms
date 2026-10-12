@@ -12,6 +12,13 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshEnrollments: () => Promise<void>;
   enrollCourse: (course: Course) => Promise<{ success: boolean; error?: string; requireAuth?: boolean }>;
+  purchaseCourse: (payload: {
+    course: Course;
+    paymentMethod: string;
+    amount: number;
+    couponCode?: string;
+    paymentDetails?: any;
+  }) => Promise<{ success: boolean; error?: string; requireAuth?: boolean; transactionId?: string; payment?: any }>;
   submitCallback: (name: string, phone: string, course: string) => Promise<boolean>;
 }
 
@@ -24,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   refreshEnrollments: async () => {},
   enrollCourse: async () => ({ success: false }),
+  purchaseCourse: async () => ({ success: false }),
   submitCallback: async () => false,
 });
 
@@ -161,6 +169,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.message || 'Failed to enroll in course' };
   };
 
+  const purchaseCourse = async (payload: {
+    course: Course;
+    paymentMethod: string;
+    amount: number;
+    couponCode?: string;
+    paymentDetails?: any;
+  }) => {
+    if (!user || !user.token) {
+      return { success: false, requireAuth: true, error: 'Please sign in to complete purchase.' };
+    }
+
+    const res = await ApiService.checkoutCourse(
+      {
+        packageId: payload.course.id,
+        paymentMethod: payload.paymentMethod,
+        amount: payload.amount,
+        couponCode: payload.couponCode,
+        paymentDetails: payload.paymentDetails,
+      },
+      user.token
+    );
+
+    if (res.success) {
+      await refreshEnrollments();
+      return {
+        success: true,
+        transactionId: res.transactionId,
+        payment: res.payment,
+      };
+    }
+    return { success: false, error: res.error || res.message || 'Failed to process payment.' };
+  };
+
   const submitCallback = async (name: string, phone: string, course: string) => {
     return await ApiService.submitInquiry({ name, phone, course });
   };
@@ -176,6 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshEnrollments,
         enrollCourse,
+        purchaseCourse,
         submitCallback,
       }}
     >
