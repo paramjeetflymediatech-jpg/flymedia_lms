@@ -33,9 +33,21 @@ export async function verifyAuthToken(token: string) {
 
 export async function getAuthUserFromRequest(request: Request) {
   const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    const verified = await verifyAuthToken(token);
+    if (verified) return verified;
   }
-  const token = authHeader.substring(7).trim();
-  return await verifyAuthToken(token);
+
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader) {
+    const match = cookieHeader.match(/lms-session=([^;]+)/);
+    if (match && match[1]) {
+      const token = decodeURIComponent(match[1]);
+      return await verifyAuthToken(token);
+    }
+  }
+
+  return null;
 }
+

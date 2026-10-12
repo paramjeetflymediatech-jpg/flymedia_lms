@@ -52,4 +52,11 @@ export const Shadows = {
     shadowRadius: 10,
     elevation: 6,
   },
+  card: {
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
 };

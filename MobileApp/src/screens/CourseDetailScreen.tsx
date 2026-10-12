@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme/colors';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { PaymentModal } from '../components/common/PaymentModal';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
 import { Course } from '../types';
@@ -45,6 +46,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
 
   const { user, enrollCourse, enrollments } = useAuth();
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [expandedModule, setExpandedModule] = useState<number | null>(0);
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Sign In / Register',
-            onPress: () => navigation.navigate('ProfileTab'),
+            onPress: () => navigation.navigate('Main', { screen: 'ProfileTab' }),
           },
         ]
       );
@@ -86,13 +88,20 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
     }
 
     if (isEnrolled) {
-      navigation.navigate('MyLearningTab');
+      navigation.navigate('Main', { screen: 'MyLearningTab' });
       return;
     }
 
+    // If paid course -> Open Payment Modal with UPI, Cards, Net Banking & Coupons
+    if (course.price && Number(course.price) > 0) {
+      setPaymentModalVisible(true);
+      return;
+    }
+
+    // Free course enrollment flow
     Alert.alert(
-      'Enroll in Program',
-      `Would you like to enroll in "${course.title}" for ₹${(course.price || 0).toLocaleString('en-IN')}?`,
+      'Enroll in Free Course',
+      `Would you like to enroll in "${course.title}" for free?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -106,7 +115,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
                 [
                   {
                     text: 'Go to My Learning',
-                    onPress: () => navigation.navigate('MyLearningTab'),
+                    onPress: () => navigation.navigate('Main', { screen: 'MyLearningTab' }),
                   },
                 ]
               );
@@ -354,7 +363,11 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           activeOpacity={0.85}
         >
           <Text style={styles.enrollBtnText}>
-            {isEnrolled ? 'Open My Learning' : 'Enroll Now'}
+            {isEnrolled
+              ? 'Open My Learning'
+              : course.price && Number(course.price) > 0
+              ? `Buy Now • ₹${Number(course.price).toLocaleString('en-IN')}`
+              : 'Enroll Free'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -363,6 +376,16 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         visible={callbackModalVisible}
         onClose={() => setCallbackModalVisible(false)}
         defaultCourse={course.title}
+      />
+
+      <PaymentModal
+        visible={paymentModalVisible}
+        course={course}
+        onClose={() => setPaymentModalVisible(false)}
+        onSuccess={() => {
+          setPaymentModalVisible(false);
+          navigation.navigate('Main', { screen: 'MyLearningTab' });
+        }}
       />
     </View>
   );
