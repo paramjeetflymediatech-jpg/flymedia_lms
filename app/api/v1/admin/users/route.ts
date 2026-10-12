@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     const users = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone', 'role', 'createdAt'],
+      attributes: ['id', 'name', 'email', 'role', 'createdAt', 'rating'],
       order: [['createdAt', 'DESC']],
       limit: 100,
     });

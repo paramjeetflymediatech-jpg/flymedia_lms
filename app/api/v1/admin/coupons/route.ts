@@ -51,11 +51,7 @@ export async function POST(request: Request) {
 
     const coupon = await Coupon.create({
       code: code.toUpperCase().trim(),
-      discountPercent: discountPercent ? Number(discountPercent) : null,
-      discountAmount: discountAmount ? Number(discountAmount) : null,
-      maxUses: maxUses ? Number(maxUses) : 100,
-      usedCount: 0,
-      isActive: true,
+      discountPercentage: discountPercent ? Number(discountPercent) : 10,
     });
 
     return NextResponse.json({

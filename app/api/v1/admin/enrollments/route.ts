@@ -18,22 +18,31 @@ export async function GET(request: Request) {
       include: [
         {
           model: Package,
-          as: 'package',
           attributes: ['id', 'title', 'slug', 'price', 'category'],
+          required: false,
         },
         {
           model: User,
-          as: 'user',
-          attributes: ['id', 'name', 'email', 'phone', 'role'],
+          attributes: ['id', 'name', 'email', 'role'],
+          required: false,
         },
       ],
       order: [['createdAt', 'DESC']],
       limit: 100,
     });
 
+    const formattedEnrollments = enrollments.map((enr: any) => {
+      const e = enr.toJSON ? enr.toJSON() : enr;
+      return {
+        ...e,
+        package: e.Package || e.package || null,
+        user: e.User || e.user || null,
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      enrollments,
+      enrollments: formattedEnrollments,
     });
   } catch (error: any) {
     console.error('Admin enrollments GET error:', error);

@@ -94,7 +94,7 @@ export async function POST(request: Request) {
         { title: 'Stage 1: Core Fundamentals', topics: ['Foundation & Concepts', 'Hands-on practice'] },
         { title: 'Stage 2: Advanced Real-world Projects', topics: ['Project Architecture', 'Deployment'] },
       ],
-    });
+    } as any);
 
     return NextResponse.json({
       success: true,

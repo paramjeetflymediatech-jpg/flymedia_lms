@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const category = await Category.create({
       name,
       slug,
-      description: description || '',
+      content: description || '',
     });
 
     return NextResponse.json({

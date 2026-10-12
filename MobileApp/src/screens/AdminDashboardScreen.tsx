@@ -101,6 +101,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     loadAllAdminData();
   }, []);
 
+  const navigateToTab = (tab: AdminTab) => {
+    setSearchQuery('');
+    setLeadFilter('ALL');
+    setActiveTab(tab);
+  };
+
   const loadAllAdminData = async () => {
     if (!user || !user.token) return;
     try {
@@ -115,13 +121,47 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           ApiService.getAdminCoupons(user.token),
         ]);
 
-      if (statsRes.success && statsRes.stats) setStats(statsRes.stats);
-      if (pkgsRes.success && pkgsRes.packages) setPackages(pkgsRes.packages);
-      if (leadsRes.success && leadsRes.leads) setLeads(leadsRes.leads);
-      if (enrollRes.success && enrollRes.enrollments) setEnrollments(enrollRes.enrollments);
-      if (usersRes.success && usersRes.users) setUsersList(usersRes.users);
-      if (catsRes.success && catsRes.categories) setCategories(catsRes.categories);
-      if (couponsRes.success && couponsRes.coupons) setCoupons(couponsRes.coupons);
+      let finalPackages = Array.isArray(pkgsRes?.packages) ? pkgsRes.packages : [];
+      let finalLeads = Array.isArray(leadsRes?.leads) ? leadsRes.leads : [];
+      let finalEnrollments = Array.isArray(enrollRes?.enrollments) ? enrollRes.enrollments : [];
+      let finalUsers = Array.isArray(usersRes?.users) ? usersRes.users : [];
+      let finalCategories = Array.isArray(catsRes?.categories) ? catsRes.categories : [];
+      let finalCoupons = Array.isArray(couponsRes?.coupons) ? couponsRes.coupons : [];
+
+      // Fallback for packages and categories from public home endpoint if admin returned empty
+      if (finalPackages.length === 0 || finalCategories.length === 0) {
+        try {
+          const homeRes = await ApiService.getHomeData();
+          if (finalPackages.length === 0 && Array.isArray(homeRes.courses) && homeRes.courses.length > 0) {
+            finalPackages = homeRes.courses;
+          }
+          if (finalCategories.length === 0 && Array.isArray(homeRes.categories) && homeRes.categories.length > 0) {
+            finalCategories = homeRes.categories.map((c: any) => typeof c === 'string' ? { id: c, name: c } : c);
+          }
+        } catch (_) {}
+      }
+
+      // Fallback for leads from stats endpoint's recentLeads
+      if (finalLeads.length === 0 && Array.isArray(statsRes?.recentLeads) && statsRes.recentLeads.length > 0) {
+        finalLeads = statsRes.recentLeads;
+      }
+
+      setPackages(finalPackages);
+      setLeads(finalLeads);
+      setEnrollments(finalEnrollments);
+      setUsersList(finalUsers);
+      setCategories(finalCategories);
+      setCoupons(finalCoupons);
+
+      // Keep stats cards aligned with the loaded data so overview cards match actual list contents
+      setStats({
+        totalCourses: Math.max(statsRes.stats?.totalCourses || 0, finalPackages.length),
+        totalLeads: Math.max(statsRes.stats?.totalLeads || 0, finalLeads.length),
+        totalEnrollments: Math.max(statsRes.stats?.totalEnrollments || 0, finalEnrollments.length),
+        totalUsers: Math.max(statsRes.stats?.totalUsers || 0, finalUsers.length),
+        totalCategories: Math.max(statsRes.stats?.totalCategories || 0, finalCategories.length),
+        totalCoupons: Math.max(statsRes.stats?.totalCoupons || 0, finalCoupons.length),
+      });
     } catch (e) {
       console.warn('Error loading admin data:', e);
     } finally {
@@ -396,7 +436,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 <View style={styles.statsGrid}>
                   <TouchableOpacity
                     style={styles.statCard}
-                    onPress={() => setActiveTab('courses')}
+                    onPress={() => navigateToTab('courses')}
                     activeOpacity={0.8}
                   >
                     <View style={[styles.statIconWrap, { backgroundColor: '#fff7ed' }]}>
@@ -408,7 +448,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
                   <TouchableOpacity
                     style={styles.statCard}
-                    onPress={() => setActiveTab('leads')}
+                    onPress={() => navigateToTab('leads')}
                     activeOpacity={0.8}
                   >
                     <View style={[styles.statIconWrap, { backgroundColor: '#eff6ff' }]}>
@@ -420,7 +460,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
                   <TouchableOpacity
                     style={styles.statCard}
-                    onPress={() => setActiveTab('enrollments')}
+                    onPress={() => navigateToTab('enrollments')}
                     activeOpacity={0.8}
                   >
                     <View style={[styles.statIconWrap, { backgroundColor: '#f0fdf4' }]}>
@@ -432,7 +472,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
                   <TouchableOpacity
                     style={styles.statCard}
-                    onPress={() => setActiveTab('users')}
+                    onPress={() => navigateToTab('users')}
                     activeOpacity={0.8}
                   >
                     <View style={[styles.statIconWrap, { backgroundColor: '#fdf2f8' }]}>
@@ -466,63 +506,73 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 {/* RECENT LEADS PREVIEW */}
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>Latest Student Inquiries</Text>
-                  <TouchableOpacity onPress={() => setActiveTab('leads')}>
+                  <TouchableOpacity onPress={() => navigateToTab('leads')}>
                     <Text style={styles.seeAllText}>View All ({leads.length})</Text>
                   </TouchableOpacity>
                 </View>
 
-                {leads.slice(0, 3).map(lead => (
-                  <View key={lead.id} style={styles.leadCard}>
-                    <View style={styles.leadTopRow}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.leadName}>{lead.name || 'Student Lead'}</Text>
-                        <Text style={styles.leadTime}>
-                          {new Date(lead.createdAt).toLocaleDateString()}
-                        </Text>
-                      </View>
-                      <View
-                        style={[
-                          styles.statusPill,
-                          lead.status === 'RESOLVED' && styles.statusResolved,
-                          lead.status === 'CONTACTED' && styles.statusContacted,
-                        ]}
-                      >
-                        <Text
+                {leads.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <PhoneCall size={32} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Inquiries Yet</Text>
+                    <Text style={styles.emptyStateSub}>
+                      Student leads from the app & website will appear here with instant call and WhatsApp actions.
+                    </Text>
+                  </View>
+                ) : (
+                  leads.slice(0, 3).map(lead => (
+                    <View key={lead.id} style={styles.leadCard}>
+                      <View style={styles.leadTopRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.leadName}>{lead.name || 'Student Lead'}</Text>
+                          <Text style={styles.leadTime}>
+                            {new Date(lead.createdAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <View
                           style={[
-                            styles.statusText,
-                            lead.status === 'RESOLVED' && styles.statusResolvedText,
-                            lead.status === 'CONTACTED' && styles.statusContactedText,
+                            styles.statusPill,
+                            lead.status === 'RESOLVED' && styles.statusResolved,
+                            lead.status === 'CONTACTED' && styles.statusContacted,
                           ]}
                         >
-                          {lead.status}
-                        </Text>
+                          <Text
+                            style={[
+                              styles.statusText,
+                              lead.status === 'RESOLVED' && styles.statusResolvedText,
+                              lead.status === 'CONTACTED' && styles.statusContactedText,
+                            ]}
+                          >
+                            {lead.status}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {lead.message ? (
+                        <View style={styles.messageBox}>
+                          <Text style={styles.messageText}>{lead.message}</Text>
+                        </View>
+                      ) : null}
+
+                      <View style={styles.leadActionRow}>
+                        <TouchableOpacity
+                          style={styles.leadCallBtn}
+                          onPress={() => handleCallStudent(lead.phone)}
+                        >
+                          <Phone size={14} color={Colors.textWhite} />
+                          <Text style={styles.leadCallBtnText}>Call: {lead.phone}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.leadWhatsAppBtn}
+                          onPress={() => handleWhatsAppStudent(lead.phone, lead.name)}
+                        >
+                          <MessageCircle size={14} color="#16a34a" />
+                          <Text style={styles.leadWhatsAppBtnText}>WhatsApp</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
-
-                    {lead.message ? (
-                      <View style={styles.messageBox}>
-                        <Text style={styles.messageText}>{lead.message}</Text>
-                      </View>
-                    ) : null}
-
-                    <View style={styles.leadActionRow}>
-                      <TouchableOpacity
-                        style={styles.leadCallBtn}
-                        onPress={() => handleCallStudent(lead.phone)}
-                      >
-                        <Phone size={14} color={Colors.textWhite} />
-                        <Text style={styles.leadCallBtnText}>Call: {lead.phone}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.leadWhatsAppBtn}
-                        onPress={() => handleWhatsAppStudent(lead.phone, lead.name)}
-                      >
-                        <MessageCircle size={14} color="#16a34a" />
-                        <Text style={styles.leadWhatsAppBtnText}>WhatsApp</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))}
+                  ))
+                )}
               </View>
             )}
 
@@ -549,35 +599,63 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   </TouchableOpacity>
                 </View>
 
-                {filteredPackages.map(pkg => (
-                  <View key={pkg.id} style={styles.itemCard}>
-                    <View style={styles.itemCardTop}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.itemCardTitle}>{pkg.title}</Text>
-                        <Text style={styles.itemCardCategory}>
-                          {pkg.category} • {pkg.duration}
-                        </Text>
-                      </View>
-                      <View style={styles.statusPillPublished}>
-                        <Text style={styles.statusPillPublishedText}>{pkg.status}</Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.itemCardPrice}>
-                      ₹{(Number(pkg.price) || 0).toLocaleString('en-IN')}
+                {filteredPackages.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <BookOpen size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Courses Found</Text>
+                    <Text style={styles.emptyStateSub}>
+                      {searchQuery
+                        ? `No courses matching "${searchQuery}"`
+                        : 'No course programs are currently listed.'}
                     </Text>
-
-                    <View style={styles.itemCardActions}>
+                    {searchQuery ? (
                       <TouchableOpacity
-                        style={styles.deleteBtn}
-                        onPress={() => handleDeletePackage(pkg.id, pkg.title)}
+                        style={styles.emptyResetBtn}
+                        onPress={() => setSearchQuery('')}
                       >
-                        <Trash2 size={14} color={Colors.error} />
-                        <Text style={styles.deleteBtnText}>Delete</Text>
+                        <Text style={styles.emptyResetBtnText}>Clear Search Filter</Text>
                       </TouchableOpacity>
-                    </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.emptyActionBtn}
+                        onPress={() => setAddCourseModal(true)}
+                      >
+                        <PlusCircle size={16} color={Colors.textWhite} />
+                        <Text style={styles.emptyActionBtnText}>Create First Course</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                ))}
+                ) : (
+                  filteredPackages.map(pkg => (
+                    <View key={pkg.id || pkg.slug} style={styles.itemCard}>
+                      <View style={styles.itemCardTop}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.itemCardTitle}>{pkg.title}</Text>
+                          <Text style={styles.itemCardCategory}>
+                            {pkg.category || 'Professional Track'} • {pkg.duration || 'Flexible'}
+                          </Text>
+                        </View>
+                        <View style={styles.statusPillPublished}>
+                          <Text style={styles.statusPillPublishedText}>{pkg.status || 'PUBLISHED'}</Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.itemCardPrice}>
+                        ₹{(Number(pkg.price) || 0).toLocaleString('en-IN')}
+                      </Text>
+
+                      <View style={styles.itemCardActions}>
+                        <TouchableOpacity
+                          style={styles.deleteBtn}
+                          onPress={() => handleDeletePackage(pkg.id || pkg.slug, pkg.title)}
+                        >
+                          <Trash2 size={14} color={Colors.error} />
+                          <Text style={styles.deleteBtnText}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
               </View>
             )}
 
@@ -604,128 +682,170 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   ))}
                 </View>
 
-                {filteredLeads.map(lead => (
-                  <View key={lead.id} style={styles.leadCard}>
-                    <View style={styles.leadTopRow}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.leadName}>{lead.name || 'Student Lead'}</Text>
-                        <Text style={styles.leadTime}>
-                          {new Date(lead.createdAt).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </Text>
-                      </View>
+                {filteredLeads.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <PhoneCall size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Leads Found</Text>
+                    <Text style={styles.emptyStateSub}>
+                      {leadFilter !== 'ALL' || searchQuery
+                        ? 'No inquiries matching the selected filter or search keyword.'
+                        : 'New student inquiries submitted across your mobile app and website will appear here.'}
+                    </Text>
+                    {(leadFilter !== 'ALL' || searchQuery) && (
                       <TouchableOpacity
-                        style={[
-                          styles.statusPill,
-                          lead.status === 'RESOLVED' && styles.statusResolved,
-                          lead.status === 'CONTACTED' && styles.statusContacted,
-                        ]}
-                        onPress={() => handleUpdateLeadStatus(lead.id, lead.status)}
+                        style={styles.emptyResetBtn}
+                        onPress={() => {
+                          setLeadFilter('ALL');
+                          setSearchQuery('');
+                        }}
                       >
-                        <Text
-                          style={[
-                            styles.statusText,
-                            lead.status === 'RESOLVED' && styles.statusResolvedText,
-                            lead.status === 'CONTACTED' && styles.statusContactedText,
-                          ]}
-                        >
-                          {lead.status} ▾
-                        </Text>
+                        <Text style={styles.emptyResetBtnText}>Reset Filters & Show All</Text>
                       </TouchableOpacity>
-                    </View>
-
-                    {lead.message ? (
-                      <View style={styles.messageBox}>
-                        <Text style={styles.messageText}>{lead.message}</Text>
-                      </View>
-                    ) : null}
-
-                    <View style={styles.leadActionRow}>
-                      <TouchableOpacity
-                        style={styles.leadCallBtn}
-                        onPress={() => handleCallStudent(lead.phone)}
-                      >
-                        <Phone size={14} color={Colors.textWhite} />
-                        <Text style={styles.leadCallBtnText}>Call: {lead.phone}</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.leadWhatsAppBtn}
-                        onPress={() => handleWhatsAppStudent(lead.phone, lead.name)}
-                      >
-                        <MessageCircle size={14} color="#16a34a" />
-                        <Text style={styles.leadWhatsAppBtnText}>WhatsApp</Text>
-                      </TouchableOpacity>
-                    </View>
+                    )}
                   </View>
-                ))}
+                ) : (
+                  filteredLeads.map(lead => (
+                    <View key={lead.id} style={styles.leadCard}>
+                      <View style={styles.leadTopRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.leadName}>{lead.name || 'Student Lead'}</Text>
+                          <Text style={styles.leadTime}>
+                            {new Date(lead.createdAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={[
+                            styles.statusPill,
+                            lead.status === 'RESOLVED' && styles.statusResolved,
+                            lead.status === 'CONTACTED' && styles.statusContacted,
+                          ]}
+                          onPress={() => handleUpdateLeadStatus(lead.id, lead.status)}
+                        >
+                          <Text
+                            style={[
+                              styles.statusText,
+                              lead.status === 'RESOLVED' && styles.statusResolvedText,
+                              lead.status === 'CONTACTED' && styles.statusContactedText,
+                            ]}
+                          >
+                            {lead.status} ▾
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {lead.message ? (
+                        <View style={styles.messageBox}>
+                          <Text style={styles.messageText}>{lead.message}</Text>
+                        </View>
+                      ) : null}
+
+                      <View style={styles.leadActionRow}>
+                        <TouchableOpacity
+                          style={styles.leadCallBtn}
+                          onPress={() => handleCallStudent(lead.phone)}
+                        >
+                          <Phone size={14} color={Colors.textWhite} />
+                          <Text style={styles.leadCallBtnText}>Call: {lead.phone}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.leadWhatsAppBtn}
+                          onPress={() => handleWhatsAppStudent(lead.phone, lead.name)}
+                        >
+                          <MessageCircle size={14} color="#16a34a" />
+                          <Text style={styles.leadWhatsAppBtnText}>WhatsApp</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
               </View>
             )}
 
             {/* ================= ENROLLMENTS TAB ================= */}
             {activeTab === 'enrollments' && (
               <View>
-                {enrollments.map(enr => (
-                  <View key={enr.id} style={styles.itemCard}>
-                    <View style={styles.itemCardTop}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.itemCardTitle}>
-                          {enr.user ? enr.user.name : 'Enrolled Student'}
-                        </Text>
-                        <Text style={styles.itemCardCategory}>
-                          {enr.user?.email || 'N/A'} • {enr.user?.phone || ''}
-                        </Text>
-                      </View>
-                      <View style={styles.statusPillPublished}>
-                        <Text style={styles.statusPillPublishedText}>{enr.status || 'ACTIVE'}</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.enrCourseRow}>
-                      <BookOpen size={14} color={Colors.primaryOrange} />
-                      <Text style={styles.enrCourseTitle}>
-                        {enr.package ? enr.package.title : 'Program Enrollment'}
-                      </Text>
-                    </View>
-
-                    <Text style={styles.enrDateText}>
-                      Enrolled on {new Date(enr.createdAt).toLocaleDateString()}
+                {enrollments.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <GraduationCap size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Student Enrollments Yet</Text>
+                    <Text style={styles.emptyStateSub}>
+                      When students purchase or join courses, their registration records, payment timestamps, and details will appear here.
                     </Text>
                   </View>
-                ))}
+                ) : (
+                  enrollments.map(enr => {
+                    const studentName = enr.user?.name || enr.User?.name || 'Enrolled Student';
+                    const studentEmail = enr.user?.email || enr.User?.email || 'Verified Account';
+                    const courseTitle = enr.package?.title || enr.Package?.title || 'LMS Career Program';
+                    const enrollDate = enr.createdAt || enr.enrolledAt ? new Date(enr.createdAt || enr.enrolledAt).toLocaleDateString() : 'Active';
+
+                    return (
+                      <View key={enr.id} style={styles.itemCard}>
+                        <View style={styles.itemCardTop}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.itemCardTitle}>{studentName}</Text>
+                            <Text style={styles.itemCardCategory}>{studentEmail}</Text>
+                          </View>
+                          <View style={styles.statusPillPublished}>
+                            <Text style={styles.statusPillPublishedText}>{enr.status || 'ENROLLED'}</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.enrCourseRow}>
+                          <BookOpen size={14} color={Colors.primaryOrange} />
+                          <Text style={styles.enrCourseTitle}>{courseTitle}</Text>
+                        </View>
+
+                        <Text style={styles.enrDateText}>Enrolled on {enrollDate}</Text>
+                      </View>
+                    );
+                  })
+                )}
               </View>
             )}
 
             {/* ================= USERS TAB ================= */}
             {activeTab === 'users' && (
               <View>
-                {usersList.map(u => (
-                  <View key={u.id} style={styles.userCard}>
-                    <View style={styles.userAvatar}>
-                      <Text style={styles.userAvatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.userNameText}>{u.name}</Text>
-                      <Text style={styles.userEmailText}>{u.email}</Text>
-                      <Text style={styles.userJoinedText}>
-                        Joined {new Date(u.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.roleBadge,
-                        u.role === 'ADMIN' && styles.roleBadgeAdmin,
-                        u.role === 'TUTOR' && styles.roleBadgeTutor,
-                      ]}
-                    >
-                      <Text style={styles.roleBadgeText}>{u.role}</Text>
-                    </View>
+                {usersList.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <Users size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Registered Users</Text>
+                    <Text style={styles.emptyStateSub}>
+                      All students, tutors, and system accounts will be listed here.
+                    </Text>
                   </View>
-                ))}
+                ) : (
+                  usersList.map(u => (
+                    <View key={u.id} style={styles.userCard}>
+                      <View style={styles.userAvatar}>
+                        <Text style={styles.userAvatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.userNameText}>{u.name || 'User'}</Text>
+                        <Text style={styles.userEmailText}>{u.email || 'N/A'}</Text>
+                        <Text style={styles.userJoinedText}>
+                          Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Recently'}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.roleBadge,
+                          u.role === 'ADMIN' && styles.roleBadgeAdmin,
+                          u.role === 'TUTOR' && styles.roleBadgeTutor,
+                        ]}
+                      >
+                        <Text style={styles.roleBadgeText}>{u.role || 'STUDENT'}</Text>
+                      </View>
+                    </View>
+                  ))
+                )}
               </View>
             )}
 
@@ -744,14 +864,24 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.toolsListWrap}>
-                  {categories.map(cat => (
-                    <View key={cat.id} style={styles.categoryItem}>
-                      <Tag size={16} color={Colors.primaryOrange} />
-                      <Text style={styles.categoryItemName}>{cat.name}</Text>
-                    </View>
-                  ))}
-                </View>
+                {categories.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <Tag size={32} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Categories</Text>
+                    <Text style={styles.emptyStateSub}>
+                      Add categories like "Web Development", "AI", or "Digital Marketing" to organize your curriculum.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.toolsListWrap}>
+                    {categories.map(cat => (
+                      <View key={cat.id || cat.slug} style={styles.categoryItem}>
+                        <Tag size={16} color={Colors.primaryOrange} />
+                        <Text style={styles.categoryItemName}>{cat.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
 
                 {/* COUPONS SECTION */}
                 <View style={[styles.toolsSectionHeader, { marginTop: 24 }]}>
@@ -765,21 +895,34 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.toolsListWrap}>
-                  {coupons.map(cp => (
-                    <View key={cp.id} style={styles.couponItem}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.couponCodeText}>{cp.code}</Text>
-                        <Text style={styles.couponDetailText}>
-                          {cp.discountPercent ? `${cp.discountPercent}% Off` : `₹${cp.discountAmount} Off`} • {cp.usedCount} used
-                        </Text>
-                      </View>
-                      <View style={styles.couponActivePill}>
-                        <Text style={styles.couponActiveText}>ACTIVE</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
+                {coupons.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <Ticket size={32} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Active Coupons</Text>
+                    <Text style={styles.emptyStateSub}>
+                      Tap "Create Coupon" above to generate promotional coupon codes for students.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.toolsListWrap}>
+                    {coupons.map(cp => {
+                      const discountVal = cp.discountPercentage || cp.discountPercent || 10;
+                      return (
+                        <View key={cp.id || cp.code} style={styles.couponItem}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.couponCodeText}>{cp.code}</Text>
+                            <Text style={styles.couponDetailText}>
+                              {discountVal}% Discount Promo
+                            </Text>
+                          </View>
+                          <View style={styles.couponActivePill}>
+                            <Text style={styles.couponActiveText}>ACTIVE</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
             )}
 
@@ -1662,6 +1805,60 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   modalSaveBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textWhite,
+  },
+  emptyStateBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 44,
+    paddingHorizontal: 24,
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginTop: 12,
+  },
+  emptyStateSub: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  emptyResetBtn: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  emptyResetBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+  },
+  emptyActionBtn: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    backgroundColor: Colors.primaryOrange,
+    borderRadius: 12,
+  },
+  emptyActionBtnText: {
     fontSize: 13,
     fontWeight: '800',
     color: Colors.textWhite,

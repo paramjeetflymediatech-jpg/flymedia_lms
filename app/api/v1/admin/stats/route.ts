@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       Coupon.count(),
       Inquiry.findAll({
         order: [['createdAt', 'DESC']],
-        limit: 10,
+        limit: 50,
       }),
     ]);
 
