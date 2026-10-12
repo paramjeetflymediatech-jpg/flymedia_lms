@@ -38,8 +38,15 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const durationParam = resolvedSearchParams?.duration as string || '';
   const searchParam = resolvedSearchParams?.search as string || '';
 
+  const categoryNameAlternatives = [category.name];
+  if (category.name === 'Graphic Design') {
+    categoryNameAlternatives.push('Graphic Designing');
+  } else if (category.name === 'Graphic Designing') {
+    categoryNameAlternatives.push('Graphic Design');
+  }
+
   const whereClause: any = { 
-    category: category.name,
+    category: { [Op.in]: categoryNameAlternatives },
     status: 'PUBLISHED'
   };
   
@@ -65,10 +72,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const [packagesData, categoryDurationRows] = await Promise.all([
     Package.findAll({
       where: whereClause,
-      order: [['createdAt', 'DESC']],
+      order: [
+        ['duration', 'ASC'],
+        ['createdAt', 'DESC']
+      ],
     }),
     Package.findAll({
-      where: { category: category.name, status: 'PUBLISHED' },
+      where: { category: { [Op.in]: categoryNameAlternatives }, status: 'PUBLISHED' },
       attributes: ['duration'],
       raw: true,
     }),
