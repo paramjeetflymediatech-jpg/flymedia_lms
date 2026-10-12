@@ -18,9 +18,17 @@ export async function GET(request: Request) {
       order: [['createdAt', 'DESC']],
     });
 
+    const formatted = packages.map(p => {
+      const json = p.toJSON();
+      if (!json.thumbnail) {
+        json.thumbnail = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+      }
+      return json;
+    });
+
     return NextResponse.json({
       success: true,
-      packages,
+      packages: formatted,
     });
   } catch (error: any) {
     console.error('Admin packages GET error:', error);
@@ -53,6 +61,7 @@ export async function POST(request: Request) {
       skills,
       techStack,
       status,
+      thumbnail,
     } = body;
 
     if (!title || !description) {
@@ -78,6 +87,7 @@ export async function POST(request: Request) {
       title,
       slug: finalSlug,
       category: category || 'Web Development',
+      thumbnail: thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
       description,
       price: price ? Number(price) : 25000,
       duration: duration || '12 Weeks',

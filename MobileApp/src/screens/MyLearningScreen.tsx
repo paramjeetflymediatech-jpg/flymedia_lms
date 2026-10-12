@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Image,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -121,6 +122,16 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
             ) : (
               enrollments.map(enr => (
                 <View key={enr.id} style={styles.courseItemCard}>
+                  <Image
+                    source={{
+                      uri:
+                        enr.thumbnail ||
+                        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80',
+                    }}
+                    style={styles.courseThumbBanner}
+                    resizeMode="cover"
+                  />
+
                   <View style={styles.courseHeader}>
                     <View style={styles.categoryPill}>
                       <Text style={styles.categoryText}>{enr.category}</Text>
@@ -308,6 +319,16 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: 16,
     ...Shadows.small,
+  },
+  courseThumbBanner: {
+    height: 120,
+    marginHorizontal: -18,
+    marginTop: -18,
+    marginBottom: 14,
+    borderTopLeftRadius: 17,
+    borderTopRightRadius: 17,
+    overflow: 'hidden',
+    backgroundColor: '#1e293b',
   },
   courseHeader: {
     flexDirection: 'row',

@@ -30,6 +30,7 @@ export interface Course {
   modules: CourseModule[];
   faqs: CourseFaq[];
   badge?: string;
+  thumbnail?: string;
 }
 
 export interface User {
@@ -46,6 +47,7 @@ export interface Enrollment {
   courseId: string;
   courseTitle: string;
   category: string;
+  thumbnail?: string;
   enrolledAt: string;
   progressPercent: number;
   completedLessons: number;

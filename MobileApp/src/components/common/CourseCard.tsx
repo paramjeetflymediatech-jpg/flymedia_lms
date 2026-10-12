@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Course } from '../../types';
 import { Colors, Shadows } from '../../theme/colors';
 import { Star, Clock, Users, ChevronRight } from 'lucide-react-native';
@@ -10,22 +10,33 @@ interface CourseCardProps {
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
+  const imageUrl =
+    course.thumbnail ||
+    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+
   return (
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
       activeOpacity={0.88}
     >
-      {/* Top Banner Badges */}
-      <View style={styles.topRow}>
-        <View style={styles.categoryPill}>
-          <Text style={styles.categoryText}>{course.category}</Text>
-        </View>
-        {course.badge && (
-          <View style={styles.highlightBadge}>
-            <Text style={styles.highlightBadgeText}>{course.badge}</Text>
+      {/* Course Thumbnail Image */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.thumbnail}
+          resizeMode="cover"
+        />
+        <View style={styles.badgeOverlay}>
+          <View style={styles.categoryPill}>
+            <Text style={styles.categoryText}>{course.category}</Text>
           </View>
-        )}
+          {course.badge && (
+            <View style={styles.highlightBadge}>
+              <Text style={styles.highlightBadgeText}>{course.badge}</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Course Title */}
@@ -106,6 +117,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     ...Shadows.small,
+  },
+  imageContainer: {
+    height: 140,
+    marginHorizontal: -16,
+    marginTop: -16,
+    marginBottom: 12,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#1e293b',
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  badgeOverlay: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   topRow: {
     flexDirection: 'row',

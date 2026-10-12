@@ -12,6 +12,7 @@ import {
   RefreshControl,
   Linking,
   Platform,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme/colors';
@@ -93,6 +94,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [coursePrice, setCoursePrice] = useState('');
   const [courseDuration, setCourseDuration] = useState('12 Weeks');
   const [courseDesc, setCourseDesc] = useState('');
+  const [courseThumbnail, setCourseThumbnail] = useState('');
   const [courseSkills, setCourseSkills] = useState('React, Node.js, Express, MongoDB');
   const [courseTech, setCourseTech] = useState('JavaScript, Git, Postman');
 
@@ -209,6 +211,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     const payload = {
       title: courseTitle.trim(),
       category: courseCategory,
+      thumbnail: courseThumbnail.trim() || undefined,
       price: coursePrice ? Number(coursePrice) : 25000,
       duration: courseDuration || '12 Weeks',
       description: courseDesc.trim(),
@@ -225,6 +228,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       setAddCourseModal(false);
       setCourseTitle('');
       setCourseDesc('');
+      setCourseThumbnail('');
       setCoursePrice('');
       loadAllAdminData();
     } else {
@@ -763,30 +767,43 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 ) : (
                   filteredPackages.map(pkg => (
                     <View key={pkg.id || pkg.slug} style={styles.itemCard}>
-                      <View style={styles.itemCardTop}>
+                      <View style={styles.itemCardContentRow}>
+                        <Image
+                          source={{
+                            uri:
+                              pkg.thumbnail ||
+                              'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
+                          }}
+                          style={styles.packageCardThumb}
+                          resizeMode="cover"
+                        />
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.itemCardTitle}>{pkg.title}</Text>
-                          <Text style={styles.itemCardCategory}>
-                            {pkg.category || 'Professional Track'} • {pkg.duration || 'Flexible'}
+                          <View style={styles.itemCardTop}>
+                            <View style={{ flex: 1, marginRight: 6 }}>
+                              <Text style={styles.itemCardTitle}>{pkg.title}</Text>
+                              <Text style={styles.itemCardCategory}>
+                                {pkg.category || 'Professional Track'} • {pkg.duration || 'Flexible'}
+                              </Text>
+                            </View>
+                            <View style={styles.statusPillPublished}>
+                              <Text style={styles.statusPillPublishedText}>{pkg.status || 'PUBLISHED'}</Text>
+                            </View>
+                          </View>
+
+                          <Text style={styles.itemCardPrice}>
+                            ₹{(Number(pkg.price) || 0).toLocaleString('en-IN')}
                           </Text>
-                        </View>
-                        <View style={styles.statusPillPublished}>
-                          <Text style={styles.statusPillPublishedText}>{pkg.status || 'PUBLISHED'}</Text>
-                        </View>
-                      </View>
 
-                      <Text style={styles.itemCardPrice}>
-                        ₹{(Number(pkg.price) || 0).toLocaleString('en-IN')}
-                      </Text>
-
-                      <View style={styles.itemCardActions}>
-                        <TouchableOpacity
-                          style={styles.deleteBtn}
-                          onPress={() => handleDeletePackage(pkg.id || pkg.slug, pkg.title)}
-                        >
-                          <Trash2 size={14} color={Colors.error} />
-                          <Text style={styles.deleteBtnText}>Delete</Text>
-                        </TouchableOpacity>
+                          <View style={styles.itemCardActions}>
+                            <TouchableOpacity
+                              style={styles.deleteBtn}
+                              onPress={() => handleDeletePackage(pkg.id || pkg.slug, pkg.title)}
+                            >
+                              <Trash2 size={14} color={Colors.error} />
+                              <Text style={styles.deleteBtnText}>Delete</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </View>
                     </View>
                   ))
@@ -1218,6 +1235,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   placeholderTextColor={Colors.textLight}
                   value={courseDuration}
                   onChangeText={setCourseDuration}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Thumbnail Image URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://images.unsplash.com/... (optional)"
+                  placeholderTextColor={Colors.textLight}
+                  value={courseThumbnail}
+                  onChangeText={setCourseThumbnail}
+                  autoCapitalize="none"
                 />
               </View>
 
@@ -1906,6 +1935,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: 12,
     ...Shadows.small,
+  },
+  itemCardContentRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  packageCardThumb: {
+    width: 68,
+    height: 68,
+    borderRadius: 12,
+    backgroundColor: '#1e293b',
   },
   itemCardTop: {
     flexDirection: 'row',
