@@ -80,14 +80,65 @@ export default async function PackageDetailPage({ params }: Props) {
   const successStories: any[] = pkgJson.successStories || [];
   const courseModules: { title: string; topics: string[] }[] = pkgJson.courseModules || [];
   
-  // New Dynamic Sections
-  const highlights: { title: string; description: string }[] = pkgJson.highlights || [];
-  const skills: any[] = pkgJson.skills || [];
-  const techStack: any[] = pkgJson.techStack || [];
-  const projectDetails: { description: string; stages: { title: string; content: string }[] } | null = pkgJson.projectDetails || null;
-  const targetAudience: { list: string[]; prerequisites: string } | null = pkgJson.targetAudience || null;
-  const faqs: { question: string; answer: string }[] = pkgJson.faqs || [];
-  const certificateData: any = pkgJson.certificateData || null;
+  // Dynamic Sections with safe parsing
+  const highlights: { title: string; description: string }[] = Array.isArray(pkgJson.highlights) 
+    ? pkgJson.highlights 
+    : (typeof pkgJson.highlights === 'string' ? (() => { try { return JSON.parse(pkgJson.highlights); } catch { return []; } })() : []);
+
+  const skills: any[] = Array.isArray(pkgJson.skills)
+    ? pkgJson.skills
+    : (typeof pkgJson.skills === 'string' ? (() => { try { return JSON.parse(pkgJson.skills); } catch { return []; } })() : []);
+
+  const techStack: any[] = Array.isArray(pkgJson.techStack)
+    ? pkgJson.techStack
+    : (typeof pkgJson.techStack === 'string' ? (() => { try { return JSON.parse(pkgJson.techStack); } catch { return []; } })() : []);
+
+  let projectDetails: { description: string; stages: { title: string; content: string }[] } | null = pkgJson.projectDetails || null;
+  if (typeof projectDetails === 'string') {
+    try { projectDetails = JSON.parse(projectDetails); } catch { projectDetails = null; }
+  }
+  // Only keep projectDetails if it has description or at least one stage with content
+  if (projectDetails) {
+    const hasDesc = !!projectDetails.description?.trim();
+    const hasStages = Array.isArray(projectDetails.stages) && projectDetails.stages.some(s => s?.title?.trim() || s?.content?.trim());
+    if (!hasDesc && !hasStages) {
+      projectDetails = null;
+    }
+  }
+
+  let targetAudience: { list: string[]; prerequisites: string } | null = pkgJson.targetAudience || null;
+  if (typeof targetAudience === 'string') {
+    try { targetAudience = JSON.parse(targetAudience); } catch { targetAudience = null; }
+  }
+  // Only keep targetAudience if it has audience list items or prerequisites
+  if (targetAudience) {
+    const list = Array.isArray(targetAudience.list) ? targetAudience.list.filter(Boolean).filter(i => typeof i === 'string' && i.trim() !== '') : [];
+    const prerequisites = targetAudience.prerequisites?.trim() || '';
+    if (list.length === 0 && !prerequisites) {
+      targetAudience = null;
+    } else {
+      targetAudience = { list, prerequisites };
+    }
+  }
+
+  const faqs: { question: string; answer: string }[] = Array.isArray(pkgJson.faqs)
+    ? pkgJson.faqs
+    : (typeof pkgJson.faqs === 'string' ? (() => { try { return JSON.parse(pkgJson.faqs); } catch { return []; } })() : []);
+
+  let certificateData: any = pkgJson.certificateData || null;
+  if (typeof certificateData === 'string') {
+    try { certificateData = JSON.parse(certificateData); } catch { certificateData = null; }
+  }
+  // Only keep certificateData if providers array has items or features has items
+  if (certificateData) {
+    const providers = Array.isArray(certificateData.providers) ? certificateData.providers.filter((p: any) => p && (p.name?.trim() || p.logo || p.image)) : [];
+    const features = Array.isArray(certificateData.features) ? certificateData.features.filter(Boolean) : [];
+    if (providers.length === 0 && features.length === 0) {
+      certificateData = null;
+    } else {
+      certificateData = { ...certificateData, providers, features };
+    }
+  }
 
   return (
     <>
