@@ -132,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   return (
     <>
       <Header />
-      <main className="flex-1 bg-white min-h-screen pb-24">
+      <main className="flex-1 bg-white min-h-screen">
         {/* Dynamic Category Hero Section */}
         <div className="relative pt-16 pb-24 lg:pt-10 lg:pb-16 overflow-hidden bg-slate-900 border-b border-slate-800 min-h-[60vh] flex items-center">
           {/* Background Image or Glows */}

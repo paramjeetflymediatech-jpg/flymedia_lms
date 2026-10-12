@@ -104,6 +104,7 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare targetAudience: CreationOptional<{ list: string[]; prerequisites: string } | null>;
   declare faqs: CreationOptional<{ question: string; answer: string }[] | null>;
   declare certificateData: CreationOptional<{ title: string; features: { title: string; body: string }[]; providers: { name: string; image: string }[] } | null>;
+  declare benefits: CreationOptional<string[] | null>;
   declare videoUrl: CreationOptional<string | null>;
   declare rating: CreationOptional<number>;
   declare reviewsCount: CreationOptional<string | null>;
@@ -138,6 +139,7 @@ Package.init(
     targetAudience: { type: DataTypes.JSON, allowNull: true },
     faqs: { type: DataTypes.JSON, allowNull: true },
     certificateData: { type: DataTypes.JSON, allowNull: true },
+    benefits: { type: DataTypes.JSON, allowNull: true },
     rating: { type: DataTypes.DECIMAL(3, 1), allowNull: false, defaultValue: 4.9 },
     reviewsCount: { type: DataTypes.STRING(50), allowNull: true, defaultValue: '1.2k+' },
     level: { type: DataTypes.STRING(50), allowNull: true, defaultValue: 'Beginner to Advanced' },
