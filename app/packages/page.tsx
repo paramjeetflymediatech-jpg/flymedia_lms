@@ -57,7 +57,10 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
         where: whereClause,
         limit,
         offset,
-        order: [['createdAt', 'DESC']],
+        order: [
+          ['duration', 'ASC'],
+          ['createdAt', 'DESC']
+        ],
       }),
       Package.findAll({
         where: { status: 'PUBLISHED' },
@@ -163,7 +166,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
                           
                           <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-auto">
                             <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
-                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode=='online'?'ONLINE':"OFFLINE"}
+                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode=='online'?'ONLINE':"OFFLINE" }
                             </span>
                             <div className="flex flex-col items-end gap-1">
                               {pkg.duration && (
