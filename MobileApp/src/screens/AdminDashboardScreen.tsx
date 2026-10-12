@@ -35,6 +35,8 @@ import {
   Search,
   CheckCircle,
   Layers,
+  Pencil,
+  UserPlus,
 } from 'lucide-react-native';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'users' | 'tools';
@@ -71,14 +73,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [categories, setCategories] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
 
-  // Search queries
+  // Search queries & Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [leadFilter, setLeadFilter] = useState<'ALL' | 'NEW' | 'CONTACTED' | 'RESOLVED'>('ALL');
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'STUDENT' | 'TUTOR' | 'ADMIN'>('ALL');
 
   // Modals
   const [addCourseModal, setAddCourseModal] = useState(false);
   const [addCategoryModal, setAddCategoryModal] = useState(false);
   const [addCouponModal, setAddCouponModal] = useState(false);
+  const [addUserModal, setAddUserModal] = useState(false);
+  const [editUserModal, setEditUserModal] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // New Course Form
@@ -97,6 +103,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [newCouponCode, setNewCouponCode] = useState('');
   const [newCouponPercent, setNewCouponPercent] = useState('15');
 
+  // New User Form
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'STUDENT' | 'TUTOR' | 'ADMIN'>('STUDENT');
+
+  // Edit User Form
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserRole, setEditUserRole] = useState<'STUDENT' | 'TUTOR' | 'ADMIN'>('STUDENT');
+  const [editUserPassword, setEditUserPassword] = useState('');
+
   useEffect(() => {
     loadAllAdminData();
   }, []);
@@ -104,6 +122,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const navigateToTab = (tab: AdminTab) => {
     setSearchQuery('');
     setLeadFilter('ALL');
+    setUserRoleFilter('ALL');
     setActiveTab(tab);
   };
 
@@ -314,6 +333,121 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+  });
+
+  // User CRUD Handlers
+  const handleCreateUser = async () => {
+    if (!newUserName.trim() || !newUserEmail.trim() || !newUserPassword.trim()) {
+      Alert.alert('Required Fields', 'Please enter Name, Email, and Password.');
+      return;
+    }
+    if (!user || !user.token) return;
+
+    setSubmitting(true);
+    const res = await ApiService.createAdminUser(
+      {
+        name: newUserName.trim(),
+        email: newUserEmail.trim(),
+        password: newUserPassword.trim(),
+        role: newUserRole,
+      },
+      user.token
+    );
+    setSubmitting(false);
+
+    if (res.success && res.user) {
+      setUsersList(prev => [res.user, ...prev]);
+      setStats(prev => ({ ...prev, totalUsers: (prev.totalUsers || 0) + 1 }));
+      setAddUserModal(false);
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserRole('STUDENT');
+      Alert.alert('Success 🎉', `User "${res.user.name}" created successfully.`);
+    } else {
+      Alert.alert('Error', res.error || 'Failed to create user');
+    }
+  };
+
+  const handleOpenEditUser = (targetUser: any) => {
+    setSelectedUserForEdit(targetUser);
+    setEditUserName(targetUser.name || '');
+    setEditUserEmail(targetUser.email || '');
+    setEditUserRole(targetUser.role || 'STUDENT');
+    setEditUserPassword('');
+    setEditUserModal(true);
+  };
+
+  const handleSaveEditUser = async () => {
+    if (!selectedUserForEdit || !user || !user.token) return;
+    if (!editUserName.trim() || !editUserEmail.trim()) {
+      Alert.alert('Required Fields', 'Name and Email cannot be empty.');
+      return;
+    }
+
+    setSubmitting(true);
+    const res = await ApiService.updateAdminUser(
+      {
+        id: selectedUserForEdit.id,
+        name: editUserName.trim(),
+        email: editUserEmail.trim(),
+        role: editUserRole,
+        password: editUserPassword.trim() || undefined,
+      },
+      user.token
+    );
+    setSubmitting(false);
+
+    if (res.success && res.user) {
+      setUsersList(prev =>
+        prev.map(u => (u.id === selectedUserForEdit.id ? { ...u, ...res.user } : u))
+      );
+      setEditUserModal(false);
+      setSelectedUserForEdit(null);
+      Alert.alert('Success', 'User profile updated successfully.');
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = (targetUser: any) => {
+    if (!user || !user.token) return;
+    if (user.id === targetUser.id) {
+      Alert.alert('Action Denied', 'You cannot delete your own admin account.');
+      return;
+    }
+
+    Alert.alert(
+      'Delete User',
+      `Are you sure you want to delete "${targetUser.name || targetUser.email}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await ApiService.deleteAdminUser(targetUser.id, user.token);
+            if (res.success) {
+              setUsersList(prev => prev.filter(u => u.id !== targetUser.id));
+              setStats(prev => ({ ...prev, totalUsers: Math.max(0, (prev.totalUsers || 1) - 1) }));
+              Alert.alert('Deleted', 'User account deleted successfully.');
+            } else {
+              Alert.alert('Error', res.error || 'Failed to delete user');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Filtered users
+  const filteredUsers = usersList.filter(u => {
+    const matchRole = userRoleFilter === 'ALL' || u.role === userRoleFilter;
+    const matchQuery =
+      searchQuery === '' ||
+      (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchRole && matchQuery;
   });
 
   return (
@@ -813,35 +947,120 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= USERS TAB ================= */}
             {activeTab === 'users' && (
               <View>
-                {usersList.length === 0 ? (
-                  <View style={styles.emptyStateBox}>
-                    <Users size={40} color={Colors.textLight} />
-                    <Text style={styles.emptyStateTitle}>No Registered Users</Text>
-                    <Text style={styles.emptyStateSub}>
-                      All students, tutors, and system accounts will be listed here.
-                    </Text>
+                {/* TOP ACTION ROW: Search & Add User */}
+                <View style={styles.tabHeaderActionRow}>
+                  <View style={styles.searchBarBox}>
+                    <Search size={16} color={Colors.textMuted} />
+                    <TextInput
+                      style={styles.searchBarInput}
+                      placeholder="Search users..."
+                      placeholderTextColor={Colors.textLight}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                    />
                   </View>
-                ) : (
-                  usersList.map(u => (
-                    <View key={u.id} style={styles.userCard}>
-                      <View style={styles.userAvatar}>
-                        <Text style={styles.userAvatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.userNameText}>{u.name || 'User'}</Text>
-                        <Text style={styles.userEmailText}>{u.email || 'N/A'}</Text>
-                        <Text style={styles.userJoinedText}>
-                          Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Recently'}
-                        </Text>
-                      </View>
-                      <View
+                  <TouchableOpacity
+                    style={styles.newBtn}
+                    onPress={() => setAddUserModal(true)}
+                  >
+                    <UserPlus size={16} color={Colors.textWhite} />
+                    <Text style={styles.newBtnText}>Add User</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* ROLE FILTER PILLS */}
+                <View style={styles.filterPillsRow}>
+                  {(['ALL', 'STUDENT', 'TUTOR', 'ADMIN'] as const).map(role => (
+                    <TouchableOpacity
+                      key={role}
+                      style={[styles.filterPill, userRoleFilter === role && styles.filterPillActive]}
+                      onPress={() => setUserRoleFilter(role)}
+                    >
+                      <Text
                         style={[
-                          styles.roleBadge,
-                          u.role === 'ADMIN' && styles.roleBadgeAdmin,
-                          u.role === 'TUTOR' && styles.roleBadgeTutor,
+                          styles.filterPillText,
+                          userRoleFilter === role && styles.filterPillTextActive,
                         ]}
                       >
-                        <Text style={styles.roleBadgeText}>{u.role || 'STUDENT'}</Text>
+                        {role}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {filteredUsers.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <Users size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Users Found</Text>
+                    <Text style={styles.emptyStateSub}>
+                      {userRoleFilter !== 'ALL' || searchQuery
+                        ? 'No accounts match your search or role filter criteria.'
+                        : 'No user accounts available yet. Tap "+ Add User" above to create student, tutor, or admin accounts.'}
+                    </Text>
+                    {userRoleFilter !== 'ALL' || searchQuery ? (
+                      <TouchableOpacity
+                        style={styles.emptyResetBtn}
+                        onPress={() => {
+                          setUserRoleFilter('ALL');
+                          setSearchQuery('');
+                        }}
+                      >
+                        <Text style={styles.emptyResetBtnText}>Reset User Filters</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.emptyActionBtn}
+                        onPress={() => setAddUserModal(true)}
+                      >
+                        <UserPlus size={16} color={Colors.textWhite} />
+                        <Text style={styles.emptyActionBtnText}>Add First User</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : (
+                  filteredUsers.map(u => (
+                    <View key={u.id} style={styles.userCard}>
+                      <View style={styles.userCardTopRow}>
+                        <View style={styles.userAvatar}>
+                          <Text style={styles.userAvatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.userNameText}>{u.name || 'User'}</Text>
+                          <Text style={styles.userEmailText}>{u.email || 'N/A'}</Text>
+                          <Text style={styles.userJoinedText}>
+                            Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Recently'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.roleBadge,
+                            u.role === 'ADMIN' && styles.roleBadgeAdmin,
+                            u.role === 'TUTOR' && styles.roleBadgeTutor,
+                          ]}
+                        >
+                          <Text style={styles.roleBadgeText}>{u.role || 'STUDENT'}</Text>
+                        </View>
+                      </View>
+
+                      {/* USER ACTION BUTTONS: EDIT & DELETE */}
+                      <View style={styles.userActionRow}>
+                        <TouchableOpacity
+                          style={styles.userEditBtn}
+                          onPress={() => handleOpenEditUser(u)}
+                          activeOpacity={0.8}
+                        >
+                          <Pencil size={13} color={Colors.primaryOrange} />
+                          <Text style={styles.userEditBtnText}>Edit</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.userDeleteBtn}
+                          onPress={() => handleDeleteUser(u)}
+                          activeOpacity={0.8}
+                        >
+                          <Trash2 size={13} color={Colors.error} />
+                          <Text style={styles.userDeleteBtnText}>Delete</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   ))
@@ -1130,6 +1349,208 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 <Text style={styles.modalSaveBtnText}>Create Code</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: ADD USER ================= */}
+      <Modal
+        visible={addUserModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setAddUserModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Add / Invite User</Text>
+                <Text style={styles.modalSub}>Create a new student, tutor, or admin account</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setAddUserModal(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. John Doe"
+                  placeholderTextColor={Colors.textLight}
+                  value={newUserName}
+                  onChangeText={setNewUserName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="student@flymediatech.com"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={newUserEmail}
+                  onChangeText={setNewUserEmail}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Initial Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Minimum 6 characters"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                  value={newUserPassword}
+                  onChangeText={setNewUserPassword}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Account Role</Text>
+                <View style={styles.rolePickerRow}>
+                  {(['STUDENT', 'TUTOR', 'ADMIN'] as const).map(role => (
+                    <TouchableOpacity
+                      key={role}
+                      style={[
+                        styles.rolePickerItem,
+                        newUserRole === role && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setNewUserRole(role)}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          newUserRole === role && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        {role}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitBtn}
+                onPress={handleCreateUser}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={Colors.textWhite} />
+                ) : (
+                  <Text style={styles.submitBtnText}>Create Account</Text>
+                )}
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: EDIT USER ================= */}
+      <Modal
+        visible={editUserModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setEditUserModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Edit User Profile</Text>
+                <Text style={styles.modalSub}>Update user permissions, name, or reset password</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setEditUserModal(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. John Doe"
+                  placeholderTextColor={Colors.textLight}
+                  value={editUserName}
+                  onChangeText={setEditUserName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="student@flymediatech.com"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={editUserEmail}
+                  onChangeText={setEditUserEmail}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Account Role</Text>
+                <View style={styles.rolePickerRow}>
+                  {(['STUDENT', 'TUTOR', 'ADMIN'] as const).map(role => (
+                    <TouchableOpacity
+                      key={role}
+                      style={[
+                        styles.rolePickerItem,
+                        editUserRole === role && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setEditUserRole(role)}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          editUserRole === role && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        {role}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Reset Password (Optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Leave empty to keep existing password"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                  value={editUserPassword}
+                  onChangeText={setEditUserPassword}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitBtn}
+                onPress={handleSaveEditUser}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={Colors.textWhite} />
+                ) : (
+                  <Text style={styles.submitBtnText}>Save User Changes</Text>
+                )}
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1553,14 +1974,17 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
     borderColor: Colors.border,
     marginBottom: 10,
+    ...Shadows.small,
+  },
+  userCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   userAvatar: {
@@ -1607,6 +2031,75 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: Colors.textPrimary,
+  },
+  userActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  userEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  userEditBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+  },
+  userDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  userDeleteBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.error,
+  },
+  rolePickerRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  rolePickerItem: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceSubtle,
+    alignItems: 'center',
+  },
+  rolePickerItemActive: {
+    borderColor: Colors.primaryOrange,
+    backgroundColor: '#fff7ed',
+  },
+  rolePickerItemText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  rolePickerItemTextActive: {
+    color: Colors.primaryOrange,
+    fontWeight: '800',
   },
   toolsSectionHeader: {
     flexDirection: 'row',

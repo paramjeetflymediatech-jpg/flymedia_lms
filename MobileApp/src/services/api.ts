@@ -318,6 +318,68 @@ export const ApiService = {
   },
 
   /**
+   * Admin: Create new user
+   */
+  async createAdminUser(
+    userData: { name: string; email: string; password: string; role: 'STUDENT' | 'TUTOR' | 'ADMIN' },
+    token: string
+  ) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to create user' };
+    }
+  },
+
+  /**
+   * Admin: Update existing user
+   */
+  async updateAdminUser(
+    userData: { id: string; name: string; email: string; role: 'STUDENT' | 'TUTOR' | 'ADMIN'; password?: string },
+    token: string
+  ) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update user' };
+    }
+  },
+
+  /**
+   * Admin: Delete user
+   */
+  async deleteAdminUser(id: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete user' };
+    }
+  },
+
+  /**
    * Admin: Get categories
    */
   async getAdminCategories(token: string) {
