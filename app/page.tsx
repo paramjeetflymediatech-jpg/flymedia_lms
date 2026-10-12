@@ -76,7 +76,7 @@ export default async function HomePage() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-16 md:gap-24 items-start">
-            
+
             {/* Sticky Left Sidebar (H1 & Tags) */}
             <div className="md:w-1/3 md:sticky md:top-32 space-y-8">
               <GsapReveal animation="slideRight">
@@ -101,11 +101,11 @@ export default async function HomePage() {
 
             {/* Right Side Scrolling Content */}
             <div className="md:w-2/3 space-y-32">
-              
+
               {/* Scrubbed About Text */}
               <div className="text-2xl sm:text-3xl md:text-4xl font-bold leading-relaxed tracking-tight">
-                <GsapScrubText 
-                  text="At Flymedia Technology, under the guidance of professionals, we provide courses that are based on a quality concept. We focus on providing concept-based courses rather than cramming how to use the latest technology. We teach graphic design, web design, MERN stack, digital marketing and video editing using the latest tools." 
+                <GsapScrubText
+                  text="At Flymedia Technology, under the guidance of professionals, we provide courses that are based on a quality concept. We focus on providing concept-based courses rather than cramming how to use the latest technology. We teach graphic design, web design, MERN stack, digital marketing and video editing using the latest tools."
                 />
               </div>
 
@@ -118,7 +118,7 @@ export default async function HomePage() {
               <div className="group relative">
                 {/* Animated border glow */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-rose-500 rounded-[3rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                
+
                 <div className="relative bg-slate-950 p-8 sm:p-10 md:p-16 rounded-[2.5rem] overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/20 blur-[100px] rounded-full" />
                   <div className="relative z-10 space-y-8">
@@ -163,7 +163,7 @@ export default async function HomePage() {
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Hands-on Training</h4>
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed flex-1">We believe that students can gain more skills if they do the practice on their own. Our courses are designed to be fully hands-on so that students can gain the skills and understand the concept in detail. Gaining the skills by doing hands-on practice allows the student to solve real-life scenarios.</p>
               </div>
-              
+
               <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors h-auto min-h-[450px] lg:min-h-[500px] flex flex-col">
                 <div className="w-16 h-16 bg-rose-500/20 text-rose-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -171,7 +171,7 @@ export default async function HomePage() {
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Expert Trainers</h4>
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed flex-1">Our trainers are expert IT professionals who have years of experience guiding students in online AI courses in India. Students get the opportunity to gain skills related to IT and AI, along with web designing, graphic designing or any of the courses they opt for.</p>
               </div>
-              
+
               <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors h-auto min-h-[450px] lg:min-h-[500px] flex flex-col pr-8">
                 <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
@@ -227,81 +227,84 @@ export default async function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                 {packages.map((pkg, idx) => (
                   <GsapReveal key={pkg.id} animation="slideUp" delay={idx * 0.1}>
-                  <Link 
-                    href={`/packages/${pkg.slug}`} 
-                    className="group flex flex-col h-full bg-white rounded-[2rem] border border-slate-100 shadow-md hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
-                  >
-                    {/* Image Header */}
-                    <div className="h-56 sm:h-64 relative overflow-hidden bg-slate-900 w-full">
-                      {pkg.thumbnail ? (
-                        <img
-                          src={pkg.thumbnail}
-                          alt={pkg.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-300 text-5xl">📚</div>
-                      )}
-                      
-                      {/* Gradient overlay for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/20 to-transparent opacity-80" />
-                      
-                      {/* Top Badges */}
-                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                        <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/95 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
-                          PROGRAM
-                        </span>
-                        {pkg.mode && (
-                          <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm border ${
-                            pkg.mode === 'ONLINE' ? 'bg-blue-500/30 text-blue-100 border-blue-400/40' :
-                            pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
-                            'bg-indigo-500/30 text-indigo-100 border-indigo-400/40'
-                          }`}>
-                            {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
-                          </span>
+                    <Link
+                      href={`/packages/${pkg.slug}`}
+                      className="group flex flex-col h-full bg-white rounded-[2rem] border border-slate-100 shadow-md hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+                    >
+                      {/* Image Header */}
+                      <div className="w-full relative">
+                        {pkg.thumbnail ? (
+                          <img
+                            src={pkg.thumbnail}
+                            alt={pkg.title}
+                            className="w-full h-auto block"
+                          />
+                        ) : (
+                          <div className="w-full aspect-video flex items-center justify-center text-slate-300 text-5xl bg-slate-900">📚</div>
                         )}
-                      </div>
 
-                      {/* Bottom Image Info */}
-                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                         <div className="flex items-center gap-1.5 text-white/90 text-sm font-bold">
-                            <svg className="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                        {/* Top Badges */}
+                        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                          <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/95 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
+                            PROGRAM
+                          </span>
+                          {pkg.mode && (
+                            <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm border ${pkg.mode === 'ONLINE' ? 'bg-blue-500/30 text-blue-100 border-blue-400/40' :
+                                pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
+                                  'bg-indigo-500/30 text-indigo-100 border-indigo-400/40'
+                              }`}>
+                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
+                            </span>
+                          )}
+                        </div>
+                           {/* Bottom Image Info */}
+                        <div className="absolute -bottom-2.5 left-4 flex items-center gap-2 z-10">
+                          {/* <div className="flex items-center gap-1.5 text-white text-xs font-bold bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
+                            <svg className="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                             4.9
-                         </div>
-                         {pkg.duration && (
-                           <div className="flex items-center gap-1.5 text-white/90 text-sm font-bold">
-                             <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                             {pkg.duration}
-                           </div>
-                         )}
-                      </div>
-                    </div>
+                          </div> */}
+                          {pkg.duration && (
+                            <div className="flex items-center gap-1.5 text-white text-xs font-bold bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
+                              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              {pkg.duration}
+                            </div>
+                          )}
+                        </div>
 
-                    {/* Content Body */}
-                    <div className="p-6 md:p-8 flex-1 flex flex-col relative bg-white">
-                      {/* Price Badge (floating) */}
-                      <div className="absolute -top-6 right-6 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-black px-4 py-2 rounded-xl shadow-lg shadow-orange-500/30 transform group-hover:-translate-y-1 transition-transform">
-                        {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
+                     
                       </div>
+                      
 
-                      <div className="flex-1 space-y-4 pt-2">
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-orange-600 transition-colors line-clamp-2">
-                          {pkg.title}
-                        </h3>
-                        <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-3">
-                          {pkg.description?.replace(/<[^>]*>?/gm, '')}
-                        </p>
-                      </div>
+                      {/* Content Body */}
+                      <div className="p-6 md:p-8 flex-1 flex flex-col relative bg-white">
+                        {/* Price Badge (floating) */}
+                        <div className="absolute -top-6 right-6 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-black px-4 py-2 rounded-xl shadow-lg shadow-orange-500/30 transform group-hover:-translate-y-1 transition-transform">
+                          {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
+                        </div>
 
-                      {/* Footer CTA */}
-                      <div className="mt-8 flex items-center justify-between text-sm font-bold text-slate-900 border-t border-slate-100 pt-5">
-                        <span className="group-hover:text-orange-600 transition-colors">View Details</span>
-                        <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-orange-50 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
-                          <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                        </span>
+                        <div className="flex-1 space-y-4 pt-2">
+                          <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-orange-600 transition-colors line-clamp-2">
+                            {pkg.title}
+                          </h3>
+                          
+                          <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-3">
+                            {pkg.description?.replace(/<[^>]*>?/gm, '')}
+                          </p>
+                          
+                        </div>
+                        
+
+                        {/* Footer CTA */}
+                        <div className="mt-8 flex items-center justify-between text-sm font-bold text-slate-900 border-t border-slate-100 pt-5">
+                          <span className="group-hover:text-orange-600 transition-colors">View Details</span>
+                          <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-orange-50 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
+                            <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                          </span>
+                        </div>
+                        
                       </div>
-                    </div>
-                  </Link>
+                      
+                    </Link>
                   </GsapReveal>
                 ))}
               </div>
@@ -386,7 +389,7 @@ export default async function HomePage() {
         {testimonials.length > 0 && (
           <section className="py-20 bg-slate-50 relative overflow-hidden border-t border-slate-100">
             <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] pointer-events-none" />
-            
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
               <GsapReveal animation="slideUp">
                 <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -408,7 +411,7 @@ export default async function HomePage() {
         {faqs.length > 0 && (
           <section className="py-20 bg-white relative overflow-hidden border-t border-slate-100">
             <div className="absolute top-0 right-0 -mr-32 -mt-32 w-[500px] h-[500px] rounded-full bg-orange-50/50 blur-3xl pointer-events-none" />
-            
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-start">
                 <GsapReveal animation="slideRight" className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
@@ -426,7 +429,7 @@ export default async function HomePage() {
                     Find answers to the most common questions about our courses, schedule, and certification process. Can't find what you're looking for? Reach out to our team.
                   </p>
                 </GsapReveal>
-                
+
                 <GsapReveal animation="slideLeft" delay={0.2} className="lg:col-span-7">
                   <FaqAccordion faqs={faqs} />
                 </GsapReveal>
@@ -435,7 +438,7 @@ export default async function HomePage() {
           </section>
         )}
 
-    
+
 
         {/* Location / Map Section */}
         <section className="py-20 bg-slate-50 relative overflow-hidden">
@@ -450,20 +453,20 @@ export default async function HomePage() {
                 </p>
               </div>
             </GsapReveal>
-            
+
             <GsapReveal animation="zoomIn" delay={0.2}>
               <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-200 h-[450px] group bg-white">
-                <iframe 
-                  src="https://maps.google.com/maps?q=Learn%20With%20Flymedia,%20Ludhiana&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen={true} 
-                  loading="lazy" 
+                <iframe
+                  src="https://maps.google.com/maps?q=Learn%20With%20Flymedia,%20Ludhiana&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 w-full h-full"
                 ></iframe>
-                
+
                 {/* Floating Info Card */}
                 <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl shadow-black/10 max-w-sm border border-slate-100">
                   <div className="flex items-center gap-4 mb-4">

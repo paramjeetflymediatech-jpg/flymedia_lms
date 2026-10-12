@@ -160,31 +160,51 @@ export default async function PackageDetailPage({ params }: Props) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               {/* Left Column - Video/Thumbnail */}
-              <div className="order-2 lg:order-1 relative rounded-2xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-slate-700/50 bg-slate-800 aspect-video flex items-center justify-center">
+              <div className={`order-2 lg:order-1 relative rounded-2xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-slate-700/50 ${pkgJson.videoUrl || !pkgJson.thumbnail ? 'aspect-video bg-slate-900 flex items-center justify-center' : 'w-full'}`}>
                 {pkgJson.videoUrl ? (
-                  <iframe 
-                    src={(() => {
-                      const url = pkgJson.videoUrl;
-                      if (!url) return '';
-                      if (url.includes('youtube.com/watch?v=')) {
-                        try {
-                          const videoId = new URL(url).searchParams.get('v');
+                  /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(pkgJson.videoUrl) ? (
+                    <video 
+                      src={pkgJson.videoUrl} 
+                      controls 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <iframe 
+                      src={(() => {
+                        const url = pkgJson.videoUrl;
+                        if (!url) return '';
+                        if (url.includes('youtube.com/shorts/')) {
+                          const videoId = url.split('youtube.com/shorts/')[1].split(/[?&]/)[0];
                           return `https://www.youtube.com/embed/${videoId}`;
-                        } catch { return url; }
-                      }
-                      if (url.includes('youtu.be/')) {
-                        const videoId = url.split('youtu.be/')[1].split('?')[0];
-                        return `https://www.youtube.com/embed/${videoId}`;
-                      }
-                      return url;
-                    })()}
-                    title={pkgJson.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                    className="w-full h-full absolute inset-0"
-                  ></iframe>
+                        }
+                        if (url.includes('youtube.com/watch')) {
+                          try {
+                            const videoId = new URL(url).searchParams.get('v');
+                            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+                          } catch { return url; }
+                        }
+                        if (url.includes('youtu.be/')) {
+                          const videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
+                          return `https://www.youtube.com/embed/${videoId}`;
+                        }
+                        if (url.includes('vimeo.com/')) {
+                          const videoId = url.split('vimeo.com/')[1].split(/[?&]/)[0];
+                          return `https://player.vimeo.com/video/${videoId}`;
+                        }
+                        return url;
+                      })()}
+                      title={pkgJson.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      className="w-full h-full absolute inset-0 border-0"
+                    ></iframe>
+                  )
                 ) : pkgJson.thumbnail ? (
-                  <img src={pkgJson.thumbnail} alt={pkgJson.title} className="w-full h-full object-cover absolute inset-0" />
+                  <img 
+                    src={pkgJson.thumbnail} 
+                    alt={pkgJson.title} 
+                    className="w-full h-auto block rounded-2xl" 
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-500">
                     <svg className="w-12 h-12 mb-3 opacity-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
