@@ -9,35 +9,35 @@ const SLIDES = [
     image: '/mern_stack_bg.png',
     title: 'MERN Stack Development',
     subtitle: 'Master full-stack JavaScript with React, Node, Express, and MongoDB.',
-    link: '/packages/full-stack-mern-developer-program-with-ai',
+    link: '/packages/mern-stack-development',
     courseValue: 'MERN Stack'
   },
   {
     image: '/graphic_design_bg.png',
     title: 'Graphic Design',
     subtitle: 'Create stunning visual experiences and digital art with industry-standard tools.',
-    link: '/packages/graphic-design',
+    link: '/packages/6-month-graphic-designing-master-course',
     courseValue: 'Graphic Designing'
   },
   {
     image: '/video_editing_bg.png',
     title: 'Video Editing',
     subtitle: 'Produce cinematic masterpieces with professional non-linear editing workflows.',
-    link: '/packages/video-editing',
+    link: '/packages/video-editing-course',
     courseValue: 'Video Editing'
   },
   {
     image: '/web_development_bg.png',
     title: 'Web Development',
     subtitle: 'Build modern, responsive, and scalable web applications from scratch.',
-    link: '/packages/web-development',
+    link: '/packages/web-development-with-wordpress-6-months',
     courseValue: 'Web Development'
   },
   {
     image: '/digital_marketing_bg.png',
     title: 'Digital Marketing',
     subtitle: 'Dominate search engines and drive massive ROI with data-driven campaigns.',
-    link: '/packages/digital-marketing',
+    link: '/packages/digital-marketing-course',
     courseValue: 'Digital Marketing'
   }
 ];
@@ -56,7 +56,7 @@ export default function HeroSlider() {
   // GSAP animation for text change
   useEffect(() => {
     if (!contentRef.current) return;
-    
+
     const ctx = gsap.context(() => {
       // Animate H1 words stagger
       gsap.fromTo(
