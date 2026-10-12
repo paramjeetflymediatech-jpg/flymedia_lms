@@ -161,7 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, requireAuth: true, error: 'Please sign in to enroll in this course.' };
     }
 
-    const res = await ApiService.enrollCourse(course.id, user.token);
+    const res = await ApiService.enrollCourse(
+      (course as any).databaseId || course.id,
+      user.token,
+      course.title
+    );
     if (res.success) {
       await refreshEnrollments();
       return { success: true };
@@ -182,7 +186,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const res = await ApiService.checkoutCourse(
       {
-        packageId: payload.course.id,
+        packageId: (payload.course as any).databaseId || payload.course.id,
+        slug: payload.course.slug || payload.course.id,
+        courseTitle: payload.course.title,
         paymentMethod: payload.paymentMethod,
         amount: payload.amount,
         couponCode: payload.couponCode,

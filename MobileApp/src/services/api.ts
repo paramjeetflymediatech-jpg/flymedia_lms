@@ -125,7 +125,7 @@ export const ApiService = {
   /**
    * Enrolls in a course on the server
    */
-  async enrollCourse(courseId: string, token: string): Promise<{ success: boolean; message?: string }> {
+  async enrollCourse(courseId: string, token: string, courseTitle?: string): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/enrollments`, {
         method: 'POST',
@@ -133,7 +133,7 @@ export const ApiService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ slug: courseId, packageId: courseId }),
+        body: JSON.stringify({ slug: courseId, packageId: courseId, courseTitle }),
       });
       return await response.json();
     } catch (e: any) {
@@ -162,6 +162,8 @@ export const ApiService = {
    */
   async checkoutCourse(payload: {
     packageId: string;
+    slug?: string;
+    courseTitle?: string;
     paymentMethod: string;
     amount: number;
     couponCode?: string;

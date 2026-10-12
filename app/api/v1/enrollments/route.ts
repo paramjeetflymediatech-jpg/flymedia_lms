@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Enrollment, Package, LiveClass } from '../../../../src/db/models';
 import { getAuthUserFromRequest } from '../auth/jwt';
+import { Op } from 'sequelize';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,14 +69,31 @@ export async function POST(request: Request) {
       );
     }
 
-    const { packageId, slug } = await request.json();
+    const { packageId, slug, courseTitle } = await request.json();
     let targetPackage = null;
+    const packageAttributes = ['id', 'title', 'slug', 'price', 'category', 'status'] as any;
 
     if (packageId) {
-      targetPackage = await Package.findByPk(packageId);
+      targetPackage = await Package.findByPk(packageId, { attributes: packageAttributes }).catch(() => null);
+      if (!targetPackage) {
+        targetPackage = await Package.findOne({ where: { slug: packageId }, attributes: packageAttributes });
+      }
     }
     if (!targetPackage && slug) {
-      targetPackage = await Package.findOne({ where: { slug } });
+      targetPackage = await Package.findOne({ where: { slug }, attributes: packageAttributes });
+    }
+    if (!targetPackage && courseTitle) {
+      targetPackage = await Package.findOne({
+        where: { title: { [Op.like]: `%${String(courseTitle).trim()}%` } },
+        attributes: packageAttributes,
+      });
+    }
+    if (!targetPackage && (packageId || slug)) {
+      const term = String(packageId || slug).trim();
+      targetPackage = await Package.findOne({
+        where: { title: { [Op.like]: `%${term}%` } },
+        attributes: packageAttributes,
+      });
     }
 
     if (!targetPackage) {
