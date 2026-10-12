@@ -242,38 +242,7 @@ export default async function HomePage() {
                         ) : (
                           <div className="w-full aspect-video flex items-center justify-center text-slate-300 text-5xl bg-slate-900">📚</div>
                         )}
-
-                        {/* Top Badges */}
-                        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                          {/* <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-white/95 text-slate-900 backdrop-blur-md uppercase tracking-wider shadow-sm">
-                            PROGRAM
-                          </span> */}
-                          {pkg.mode && (
-                            <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm border ${pkg.mode === 'ONLINE' ? 'bg-blue-500/30 text-blue-100 border-blue-400/40' :
-                                pkg.mode === 'OFFLINE' ? 'bg-orange-500/30 text-orange-100 border-orange-400/40' :
-                                  'bg-indigo-500/30 text-indigo-100 border-indigo-400/40'
-                              }`}>
-                              {pkg.mode === 'BOTH' ? 'ONLINE & OFFLINE' : pkg.mode}
-                            </span>
-                          )}
-                        </div>
-                           {/* Bottom Image Info */}
-                        <div className="absolute -bottom-2.5 left-4 flex items-center gap-2 z-10">
-                          {/* <div className="flex items-center gap-1.5 text-white text-xs font-bold bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
-                            <svg className="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                            4.9
-                          </div> */}
-                          {pkg.duration && (
-                            <div className="flex items-center gap-1.5 text-white text-xs font-bold bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
-                              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                              {pkg.duration}
-                            </div>
-                          )}
-                        </div>
-
-                     
                       </div>
-                      
 
                       {/* Content Body */}
                       <div className="p-6 md:p-8 flex-1 flex flex-col relative bg-white">
@@ -282,7 +251,14 @@ export default async function HomePage() {
                           {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
                         </div>
 
-                        <div className="flex-1 space-y-4 pt-2">
+                        <div className="flex-1 space-y-3 pt-2">
+                          {pkg.duration && (
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                              <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              <span>{pkg.duration}</span>
+                            </div>
+                          )}
+
                           <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-orange-600 transition-colors line-clamp-2">
                             {pkg.title}
                           </h3>
@@ -290,18 +266,28 @@ export default async function HomePage() {
                           <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-3">
                             {pkg.description?.replace(/<[^>]*>?/gm, '')}
                           </p>
-                          
                         </div>
-                        
 
-                        {/* Footer CTA */}
-                        <div className="mt-8 flex items-center justify-between text-sm font-bold text-slate-900 border-t border-slate-100 pt-5">
-                          <span className="group-hover:text-orange-600 transition-colors">View Details</span>
-                          <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-orange-50 group-hover:border-orange-200 group-hover:text-orange-600 transition-colors">
-                            <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                          </span>
+                        {/* Footer CTA & Mode */}
+                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                          {pkg.mode ? (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] font-bold text-slate-600 tracking-wide">
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                pkg.mode === 'ONLINE' ? 'bg-emerald-500' :
+                                pkg.mode === 'OFFLINE' ? 'bg-amber-500' :
+                                'bg-orange-500'
+                              }`} />
+                              <span>{pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}</span>
+                            </div>
+                          ) : <div />}
+
+                          <div className="flex items-center gap-2 text-sm font-bold text-slate-900 group-hover:text-orange-600 transition-colors shrink-0">
+                            {/* <span>View Details</span> */}
+                            <span className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-orange-500 group-hover:border-orange-500 group-hover:text-white transition-all duration-300">
+                              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                            </span>
+                          </div>
                         </div>
-                        
                       </div>
                       
                     </Link>
