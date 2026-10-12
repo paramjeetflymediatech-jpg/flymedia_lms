@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Enrollment, Package, LiveClass } from '../../../../src/db/models';
+import { Enrollment, Package, LiveClass, Payment } from '../../../../src/db/models';
 import { getAuthUserFromRequest } from '../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -114,6 +114,29 @@ export async function POST(request: Request) {
         message: 'Already enrolled in this course',
         enrollmentId: existing.id,
       });
+    }
+
+    // For paid courses, enforce that user must purchase via the payment API
+    const isPaid = targetPackage.price && Number(targetPackage.price) > 0;
+    if (isPaid) {
+      const verifiedPayment = await Payment.findOne({
+        where: {
+          userId: authUser.userId,
+          packageId: targetPackage.id,
+          status: 'SUCCESS',
+        },
+      });
+
+      if (!verifiedPayment) {
+        return NextResponse.json(
+          {
+            success: false,
+            requirePayment: true,
+            error: `This course requires payment of ₹${Number(targetPackage.price).toLocaleString('en-IN')}. Please purchase this course via the payment API.`,
+          },
+          { status: 402 }
+        );
+      }
     }
 
     const newEnrollment = await Enrollment.create({

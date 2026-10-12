@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Package, Enrollment, Payment, Coupon } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
+import { StandardCheckoutClient, StandardCheckoutPayRequest, Env } from 'pg-sdk-node';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +87,49 @@ export async function POST(request: Request) {
     // Generate unique transaction ID
     const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
     const transactionId = `TXN_${Date.now()}_${randomSuffix}`;
+
+    // If PhonePe Gateway is selected, attempt live gateway checkout
+    if (paymentMethod.toUpperCase() === 'PHONEPE' && finalAmount > 0) {
+      try {
+        const clientId = process.env.PHONEPE_CLIENT_ID || 'PGTESTPAYUAT86';
+        const clientSecret = process.env.PHONEPE_CLIENT_SECRET || '96434309-7796-489d-8924-ab56988a6076';
+        const clientVersion = Number(process.env.PHONEPE_SALT_INDEX) || 1;
+        const isProd = process.env.PHONEPE_ENV?.toUpperCase() === 'PRODUCTION';
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const redirectUrl = `${baseUrl}/api/payment/callback?transactionId=${transactionId}`;
+
+        const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, isProd ? Env.PRODUCTION : Env.SANDBOX);
+        const payRequest = StandardCheckoutPayRequest.builder()
+          .merchantOrderId(transactionId)
+          .amount(finalAmount * 100) // in paise
+          .redirectUrl(redirectUrl)
+          .build();
+
+        const response = await client.pay(payRequest);
+        if (response && response.redirectUrl) {
+          const payment = await Payment.create({
+            userId: authUser.userId,
+            packageId: targetPackage.id,
+            amount: finalAmount,
+            transactionId,
+            status: 'PENDING',
+            provider: 'PHONEPE',
+          });
+
+          return NextResponse.json({
+            success: true,
+            requiresRedirect: true,
+            redirectUrl: response.redirectUrl,
+            transactionId,
+            paymentId: payment.id,
+            message: 'Redirecting to PhonePe gateway...',
+          });
+        }
+      } catch (gatewayErr) {
+        console.warn('PhonePe gateway error, proceeding with instant checkout:', gatewayErr);
+      }
+    }
 
     // Record Payment
     const payment = await Payment.create({

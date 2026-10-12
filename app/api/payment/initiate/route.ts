@@ -1,21 +1,41 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '../../../../src/lib/auth';
+import { getAuthUserFromRequest } from '../../v1/auth/jwt';
 import { Package, Payment } from '../../../../src/db/models';
 import { StandardCheckoutClient, StandardCheckoutPayRequest, Env } from 'pg-sdk-node';
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let userId: string | null = null;
+    const authUser = await getAuthUserFromRequest(req);
+    if (authUser) {
+      userId = authUser.userId;
+    } else {
+      const user = await requireAuth();
+      if (user) userId = user.id;
     }
 
-    const { packageId, batchMode } = await req.json();
-    if (!packageId) {
-      return NextResponse.json({ error: 'Package ID is required' }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized: please sign in to purchase course' }, { status: 401 });
     }
 
-    const pkg = await Package.findByPk(packageId);
+    const { packageId, slug, batchMode } = await req.json();
+    if (!packageId && !slug) {
+      return NextResponse.json({ error: 'Package ID or slug is required' }, { status: 400 });
+    }
+
+    const packageAttributes = ['id', 'title', 'slug', 'price', 'category', 'status'] as any;
+    let pkg = null;
+    if (packageId) {
+      pkg = await Package.findByPk(packageId, { attributes: packageAttributes }).catch(() => null);
+      if (!pkg) {
+        pkg = await Package.findOne({ where: { slug: packageId }, attributes: packageAttributes });
+      }
+    }
+    if (!pkg && slug) {
+      pkg = await Package.findOne({ where: { slug }, attributes: packageAttributes });
+    }
+
     if (!pkg) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
@@ -34,7 +54,7 @@ export async function POST(req: Request) {
 
     // Create Payment Record (PENDING)
     await Payment.create({
-      userId: user.id,
+      userId,
       packageId: pkg.id,
       amount,
       transactionId,

@@ -203,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: true,
         transactionId: res.transactionId,
         payment: res.payment,
+        redirectUrl: (res as any).redirectUrl,
       };
     }
     return { success: false, error: res.error || res.message || 'Failed to process payment.' };

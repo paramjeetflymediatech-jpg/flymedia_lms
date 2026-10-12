@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import { Colors, Shadows } from '../../theme/colors';
 import {
@@ -188,6 +189,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setProcessing(false);
 
     if (res.success) {
+      if ((res as any).redirectUrl) {
+        Linking.openURL((res as any).redirectUrl).catch(() => {});
+        onClose();
+        return;
+      }
       const txn = res.transactionId || `TXN_${Date.now()}`;
       setPaymentSuccess({
         transactionId: txn,
