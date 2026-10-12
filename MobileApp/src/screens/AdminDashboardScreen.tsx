@@ -412,6 +412,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
   const handleDeleteUser = (targetUser: any) => {
     if (!user || !user.token) return;
+    const token = user.token;
     if (user.id === targetUser.id) {
       Alert.alert('Action Denied', 'You cannot delete your own admin account.');
       return;
@@ -426,7 +427,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const res = await ApiService.deleteAdminUser(targetUser.id, user.token);
+            const res = await ApiService.deleteAdminUser(targetUser.id, token);
             if (res.success) {
               setUsersList(prev => prev.filter(u => u.id !== targetUser.id));
               setStats(prev => ({ ...prev, totalUsers: Math.max(0, (prev.totalUsers || 1) - 1) }));
