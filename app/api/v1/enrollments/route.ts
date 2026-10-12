@@ -36,6 +36,7 @@ export async function GET(request: Request) {
         id: enr.id,
         courseId: pkg?.slug || pkg?.id || enr.packageId,
         courseTitle: pkg?.title || 'Enrolled Course',
+        thumbnail: pkg?.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
         category: pkg?.category || 'Web Development',
         enrolledAt: enr.enrolledAt ? new Date(enr.enrolledAt).toISOString().split('T')[0] : 'Recent',
         progressPercent: enr.completedAt ? 100 : 25,

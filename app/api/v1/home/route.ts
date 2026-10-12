@@ -33,6 +33,7 @@ export async function GET() {
       databaseId: pkg.id,
       slug: pkg.slug,
       title: pkg.title,
+      thumbnail: pkg.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
       category: pkg.category || 'General',
       description: pkg.description ? pkg.description.replace(/<[^>]*>?/gm, '') : '',
       price: pkg.price ? Number(pkg.price) : 0,

@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme/colors';
@@ -187,6 +188,19 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
       >
         {/* HERO BANNER CARD */}
         <View style={styles.heroCard}>
+          {/* Course Package Image */}
+          <View style={styles.heroImageContainer}>
+            <Image
+              source={{
+                uri:
+                  course.thumbnail ||
+                  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+              }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          </View>
+
           <View style={styles.badgeRow}>
             <View style={styles.categoryPill}>
               <Text style={styles.categoryText}>{course.category}</Text>
@@ -478,6 +492,20 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     ...Shadows.small,
     marginBottom: 20,
+  },
+  heroImageContainer: {
+    height: 180,
+    marginHorizontal: -20,
+    marginTop: -20,
+    marginBottom: 16,
+    borderTopLeftRadius: 19,
+    borderTopRightRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: '#0f172a',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
   badgeRow: {
     flexDirection: 'row',
