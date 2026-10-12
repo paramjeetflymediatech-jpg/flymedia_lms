@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '../../../../src/lib/auth';
+import { getCurrentUser } from '@/src/lib/auth';
 import { getAuthUserFromRequest } from '../../auth/jwt';
-import { Payment, Enrollment } from '../../../../src/db/models';
+import { Payment, Enrollment } from '@/src/db/models';
 import { StandardCheckoutClient, Env } from 'pg-sdk-node';
 
 export async function POST(req: Request) {
