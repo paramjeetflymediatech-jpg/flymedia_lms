@@ -80,7 +80,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Sign In / Register',
-            onPress: () => navigation.navigate('ProfileTab'),
+            onPress: () => navigation.navigate('Main', { screen: 'ProfileTab' }),
           },
         ]
       );
@@ -88,7 +88,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
     }
 
     if (isEnrolled) {
-      navigation.navigate('MyLearningTab');
+      navigation.navigate('Main', { screen: 'MyLearningTab' });
       return;
     }
 
@@ -115,7 +115,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
                 [
                   {
                     text: 'Go to My Learning',
-                    onPress: () => navigation.navigate('MyLearningTab'),
+                    onPress: () => navigation.navigate('Main', { screen: 'MyLearningTab' }),
                   },
                 ]
               );
@@ -384,7 +384,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         onClose={() => setPaymentModalVisible(false)}
         onSuccess={() => {
           setPaymentModalVisible(false);
-          navigation.navigate('MyLearningTab');
+          navigation.navigate('Main', { screen: 'MyLearningTab' });
         }}
       />
     </View>
