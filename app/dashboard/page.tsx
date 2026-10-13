@@ -145,9 +145,28 @@ export default async function StudentDashboardPage() {
                   </div>
                   <div className="pt-2">
                     {nextClass.meetLink ? (
-                      <a href={nextClass.meetLink} target="_blank" rel="noreferrer" className="inline-block px-6 py-2 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white text-sm font-semibold rounded-lg  transition-colors shadow-sm">
-                        Join on Google Meet
-                      </a>
+                      (() => {
+                        const classStartTime = new Date(nextClass.startTime);
+                        const classEndTime = new Date(classStartTime.getTime() + (nextClass.duration || 60) * 60000);
+                        const isPast = !isNaN(classEndTime.getTime()) ? classEndTime < new Date() : false;
+
+                        if (isPast) {
+                          return (
+                            <button
+                              disabled
+                              className="inline-block px-6 py-2 bg-slate-100 text-slate-400 text-sm font-semibold rounded-lg border border-slate-200 cursor-not-allowed"
+                            >
+                              Class Ended
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <a href={nextClass.meetLink} target="_blank" rel="noreferrer" className="inline-block px-6 py-2 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                            Join on Google Meet
+                          </a>
+                        );
+                      })()
                     ) : (
                       <span className="text-sm text-slate-400 italic">Meet link not provided yet</span>
                     )}

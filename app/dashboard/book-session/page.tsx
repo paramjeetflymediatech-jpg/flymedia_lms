@@ -249,14 +249,27 @@ export default function BookSessionPage() {
               <h2 className="text-xl font-bold text-slate-800">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h2>
-              <div className="flex gap-1">
-                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </button>
-              </div>
+              {(() => {
+                const now = new Date();
+                const isCurrentOrPastMonth = (currentDate.getFullYear() < now.getFullYear()) || (currentDate.getFullYear() === now.getFullYear() && currentDate.getMonth() <= now.getMonth());
+                return (
+                  <div className="flex gap-1">
+                    <button 
+                      disabled={isCurrentOrPastMonth}
+                      onClick={() => !isCurrentOrPastMonth && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} 
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isCurrentOrPastMonth ? 'bg-slate-50 text-slate-300 cursor-not-allowed opacity-50' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'
+                      }`}
+                      title={isCurrentOrPastMonth ? "Cannot browse past months" : "Previous month"}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-7 mb-2">
@@ -265,9 +278,12 @@ export default function BookSessionPage() {
 
             <div className="grid grid-cols-7 gap-1">
               {generateCalendarGrid().map((day, idx) => {
+                const now = new Date();
+                const todayString = formatDateString(now);
                 const isSelected = selectedDate === day.dateString;
                 const hasSlots = monthSlots.includes(day.dateString);
-                const isToday = formatDateString(new Date()) === day.dateString;
+                const isToday = todayString === day.dateString;
+                const isPastDate = day.dateString < todayString;
 
                 return (
                   <button
@@ -276,14 +292,14 @@ export default function BookSessionPage() {
                     disabled={!day.isCurrentMonth}
                     className={`
                       relative flex flex-col items-center justify-center py-2 rounded-xl transition-all border
-                      ${!day.isCurrentMonth ? 'text-slate-200 bg-transparent border-transparent cursor-not-allowed' : 'text-slate-700 bg-white hover:bg-orange-50 hover:text-orange-700 hover:border-orange-100'}
+                      ${!day.isCurrentMonth ? 'text-slate-200 bg-transparent border-transparent cursor-not-allowed' : isPastDate ? 'text-slate-400 bg-slate-50/50 border-slate-100 hover:bg-slate-100' : 'text-slate-700 bg-white hover:bg-orange-50 hover:text-orange-700 hover:border-orange-100'}
                       ${isSelected ? '!bg-orange-600 !text-white !border-orange-600 shadow-md shadow-purple-200' : ''}
                       ${isToday && !isSelected ? '!border-orange-200 text-orange-700 font-black' : ''}
                     `}
                   >
                     <span className="text-sm font-bold">{day.dayNum}</span>
                     {hasSlots && (
-                      <div className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-orange-500'}`}></div>
+                      <div className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : isPastDate ? 'bg-slate-300' : 'bg-orange-500'}`}></div>
                     )}
                   </button>
                 );
@@ -296,55 +312,93 @@ export default function BookSessionPage() {
             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex-1 flex flex-col">
               {selectedDate ? (
                 <>
-                  <div className="mb-6 pb-4 border-b border-slate-100">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </h3>
-                    <p className="text-slate-500 text-sm font-medium mt-1">
-                      {daySlots.length} available {daySlots.length === 1 ? 'slot' : 'slots'}
-                    </p>
-                  </div>
+                  {(() => {
+                    const now = new Date();
+                    const todayString = formatDateString(now);
+                    const isSelectedDateInPast = selectedDate < todayString;
+                    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                    {isLoadingDay ? (
-                      <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div></div>
-                    ) : daySlots.length === 0 ? (
-                      <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-300 mb-4"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <p className="text-slate-500 font-bold">No availability on this date</p>
-                        <p className="text-sm text-slate-400 mt-1">Please select another date from the calendar.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {daySlots.map((slot) => (
-                          <div key={slot.id} className="p-5 rounded-2xl bg-white border-2 border-slate-100 hover:border-orange-200 transition-colors flex flex-col">
-                            <div className="flex items-center gap-3 mb-4">
-                               <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                               </div>
-                               <div>
-                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Session Time</p>
-                                 <span className="font-bold text-slate-700 text-sm">
-                                   {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                                 </span>
-                               </div>
-                            </div>
-                            <button 
-                              onClick={() => handleBookSlot(slot.id)}
-                              disabled={bookingSlotId === slot.id}
-                              className="mt-auto w-full py-2.5 rounded-xl font-bold text-white bg-orange-600 hover:bg-orange-700 transition-colors flex justify-center items-center gap-2 shadow-sm shadow-purple-200 disabled:opacity-50"
-                            >
-                              {bookingSlotId === slot.id ? (
-                                <span className="animate-pulse">Booking...</span>
-                              ) : (
-                                <>Book Now <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
-                              )}
-                            </button>
+                    return (
+                      <>
+                        <div className="mb-6 pb-4 border-b border-slate-100">
+                          <h3 className="text-xl font-bold text-slate-900">
+                            {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                          </h3>
+                          <p className="text-slate-500 text-sm font-medium mt-1">
+                            {daySlots.length} available {daySlots.length === 1 ? 'slot' : 'slots'}
+                          </p>
+                        </div>
+
+                        {isSelectedDateInPast && (
+                          <div className="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-xs font-semibold text-amber-800">
+                            <svg className="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            This date is in the past. Slots on previous dates cannot be joined or booked.
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                          {isLoadingDay ? (
+                            <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div></div>
+                          ) : daySlots.length === 0 ? (
+                            <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-300 mb-4"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><polyline points="12 6 12 12 16 14"/></svg>
+                              <p className="text-slate-500 font-bold">No availability on this date</p>
+                              <p className="text-sm text-slate-400 mt-1">Please select another date from the calendar.</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {daySlots.map((slot) => {
+                                const isSlotExpired = Boolean(slot.isPast) || isSelectedDateInPast || (selectedDate === todayString && slot.startTime <= currentTime);
+
+                                return (
+                                  <div key={slot.id} className={`p-5 rounded-2xl bg-white border-2 transition-colors flex flex-col ${isSlotExpired ? 'border-slate-100 bg-slate-50/60 opacity-80' : 'border-slate-100 hover:border-orange-200'}`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${isSlotExpired ? 'bg-slate-100 text-slate-400' : 'bg-orange-50 text-orange-600'}`}>
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        </div>
+                                        <div>
+                                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Session Time</p>
+                                          <span className={`font-bold text-sm ${isSlotExpired ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                            {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {isSlotExpired && (
+                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">
+                                          Expired
+                                        </span>
+                                      )}
+                                    </div>
+                                    <button 
+                                      onClick={() => !isSlotExpired && handleBookSlot(slot.id)}
+                                      disabled={isSlotExpired || bookingSlotId === slot.id}
+                                      className={`mt-auto w-full py-2.5 rounded-xl font-bold transition-all flex justify-center items-center gap-2 shadow-sm ${
+                                        isSlotExpired
+                                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none'
+                                          : 'text-white bg-orange-600 hover:bg-orange-700 shadow-purple-200'
+                                      }`}
+                                    >
+                                      {bookingSlotId === slot.id ? (
+                                        <span className="animate-pulse">Booking...</span>
+                                      ) : isSlotExpired ? (
+                                        <>
+                                          <span>Slot Expired</span>
+                                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                        </>
+                                      ) : (
+                                        <>Book Now <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
+                                      )}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">

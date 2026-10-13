@@ -72,21 +72,28 @@ export default async function StudentCoursesPage() {
 
   oneOnOneSessions.forEach((sessionModel) => {
     const session = sessionModel.toJSON() as any;
-    const startTimeDate = new Date(`${session.date}T${session.startTime}:00`);
-    const endTimeDate = new Date(`${session.date}T${session.endTime}:00`);
-    const duration = (endTimeDate.getTime() - startTimeDate.getTime()) / 60000;
+    const dateStr = session.date instanceof Date 
+      ? session.date.toISOString().split('T')[0] 
+      : String(session.date).split('T')[0];
+
+    const startTimeDate = new Date(`${dateStr}T${session.startTime}:00`);
+    const endTimeDate = new Date(`${dateStr}T${session.endTime}:00`);
+    const duration = (!isNaN(endTimeDate.getTime()) && !isNaN(startTimeDate.getTime()))
+      ? (endTimeDate.getTime() - startTimeDate.getTime()) / 60000
+      : 60;
 
     const classData = {
       id: session.id,
       title: '1-on-1 Session',
-      startTime: startTimeDate.toISOString(),
+      startTime: !isNaN(startTimeDate.getTime()) ? startTimeDate.toISOString() : `${dateStr}T${session.startTime}:00`,
       duration: duration,
       meetLink: session.meetLink || null,
       status: session.status || 'SCHEDULED',
-      packageTitle: `1-on-1 with ${session.tutor?.name}`,
+      packageTitle: `1-on-1 with ${session.tutor?.name || 'Tutor'}`,
       packageSlug: '#', 
       packageThumbnail: session.tutor?.avatar || null,
       isOneOnOne: true,
+      rawDate: dateStr,
     };
 
     if (classData.status === 'COMPLETED') {
@@ -94,7 +101,9 @@ export default async function StudentCoursesPage() {
     } else if (classData.status === 'CANCELLED') {
       cancelledClasses.push(classData);
     } else if (classData.status === 'SCHEDULED') {
-      if (now > endTimeDate) {
+      const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const isPastSession = !isNaN(endTimeDate.getTime()) ? now > endTimeDate : dateStr < todayString;
+      if (isPastSession) {
         missedClasses.push(classData);
       } else {
         upcomingClasses.push(classData);

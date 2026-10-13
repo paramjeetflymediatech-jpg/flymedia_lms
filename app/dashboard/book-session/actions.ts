@@ -45,20 +45,44 @@ export async function getTutorMonthAvailability(tutorId: string, year: number, m
   try {
     await requireAuth();
     
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
+    // Only look for unbooked slots on or after today so previous dates do not show slot indicators
+    const queryStartDate = startDate < todayString ? todayString : startDate;
+
+    if (queryStartDate > endDate) {
+      // Month is entirely in the past
+      return handleResponse(true, "Fetched month slots successfully", []);
+    }
+
     const slots = await TutorAvailability.findAll({
       where: {
         tutorId,
-        date: { [Op.between]: [startDate, endDate] },
+        date: { [Op.between]: [queryStartDate, endDate] },
         isBooked: false // Only show indicators for days that have UNBOOKED slots
       },
-      attributes: ['date'],
+      attributes: ['date', 'startTime'],
     });
 
-    const datesWithSlots = [...new Set(slots.map(s => s.get('date')))];
+    // For today, only count dates that have at least one slot that hasn't started yet
+    const validDates = slots
+      .filter(s => {
+        const slotDate = s.get('date');
+        const slotTime = s.get('startTime');
+        if (slotDate === todayString) {
+          return slotTime > currentTime;
+        }
+        return slotDate >= todayString;
+      })
+      .map(s => s.get('date'));
+
+    const datesWithSlots = [...new Set(validDates)];
     return handleResponse(true, "Fetched month slots successfully", datesWithSlots);
   } catch (error) {
     console.error("Error fetching month availability:", error);
@@ -73,10 +97,24 @@ export async function getTutorDayAvailability(tutorId: string, date: string) {
     const slots = await TutorAvailability.findAll({
       where: { tutorId, date, isBooked: false },
       order: [['startTime', 'ASC']],
-      attributes: ['id', 'startTime', 'endTime'],
+      attributes: ['id', 'startTime', 'endTime', 'date'],
     });
 
-    return handleResponse(true, "Fetched day slots successfully", slots.map(s => s.get({ plain: true })));
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const formattedSlots = slots.map(s => {
+      const plain = s.get({ plain: true });
+      const slotDate = plain.date || date;
+      const isPast = slotDate < todayString || (slotDate === todayString && plain.startTime <= currentTime);
+      return {
+        ...plain,
+        isPast,
+      };
+    });
+
+    return handleResponse(true, "Fetched day slots successfully", formattedSlots);
   } catch (error) {
     console.error("Error fetching day availability:", error);
     return handleResponse(false, "Failed to fetch day slots");
