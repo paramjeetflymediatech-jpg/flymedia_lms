@@ -26,7 +26,7 @@ export async function getAvailabilitySlots(date: string) {
             {
               model: User,
               as: 'student',
-              attributes: ['id', 'name', 'email', 'image'],
+              attributes: ['id', 'name', 'email', 'avatar'],
             },
           ],
           required: false,
@@ -44,7 +44,7 @@ export async function getAvailabilitySlots(date: string) {
         id: b.student?.id || b.id,
         name: b.student?.name || 'Student',
         email: b.student?.email || '',
-        image: b.student?.image || null,
+        avatar: b.student?.avatar || null,
         bookedAt: b.createdAt,
       }));
 
