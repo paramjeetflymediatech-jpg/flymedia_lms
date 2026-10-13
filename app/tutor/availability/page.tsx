@@ -168,6 +168,8 @@ export default function AvailabilityCalendarPage() {
     });
   };
 
+  const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
+
   const handleDeleteSlot = (id: string, bookedCount?: number) => {
     if ((bookedCount || 0) > 0) {
       Swal.fire('Error', `Cannot delete this slot: ${bookedCount} student(s) have already booked it.`, 'error');
@@ -340,34 +342,73 @@ export default function AvailabilityCalendarPage() {
                         <p className="text-slate-500 font-bold">No slots set</p>
                       </div>
                     ) : (
-                      daySlots.map((slot) => (
-                        <div key={slot.id} className="group flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-orange-200 transition-colors">
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                (slot.bookedCount || 0) >= 100
-                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                  : (slot.bookedCount || 0) > 0
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                {(slot.bookedCount || 0) > 0 ? `${slot.bookedCount}/100 Students Booked` : "Available (0/100)"}
-                              </span>
+                      daySlots.map((slot) => {
+                        const isExpanded = expandedSlotId === slot.id;
+                        const students = slot.students || [];
+                        return (
+                          <div key={slot.id} className="group flex flex-col p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-orange-200 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                    (slot.bookedCount || 0) >= 100
+                                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                      : (slot.bookedCount || 0) > 0
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-slate-100 text-slate-600'
+                                  }`}>
+                                    {(slot.bookedCount || 0) > 0 ? `${slot.bookedCount}/100 Students Booked` : "Available (0/100)"}
+                                  </span>
+                                  {students.length > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedSlotId(isExpanded ? null : slot.id)}
+                                      className="text-[11px] font-bold text-orange-600 hover:text-orange-700 underline"
+                                    >
+                                      {isExpanded ? "Hide Students" : `View Students (${students.length})`}
+                                    </button>
+                                  )}
+                                </div>
+                                <span className="font-bold text-slate-700">
+                                  {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                                </span>
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteSlot(slot.id, slot.bookedCount)}
+                                disabled={isPending || (slot.bookedCount || 0) > 0}
+                                className={`p-2 rounded-lg transition-colors ${(slot.bookedCount || 0) > 0 ? 'opacity-30 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-500'}`}
+                                title={(slot.bookedCount || 0) > 0 ? "Cannot delete slot with booked students" : "Delete slot"}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                              </button>
                             </div>
-                            <span className="font-bold text-slate-700">
-                              {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                            </span>
+
+                            {/* Enrolled Students List */}
+                            {isExpanded && students.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in duration-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Enrolled Students ({students.length}/100)
+                                  </p>
+                                </div>
+                                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                  {students.map((st: any, idx: number) => (
+                                    <div key={st.id || idx} className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center text-[10px]">
+                                          {st.name?.charAt(0)?.toUpperCase() || 'S'}
+                                        </div>
+                                        <span className="font-bold text-slate-800">{st.name}</span>
+                                      </div>
+                                      <span className="text-slate-400 text-[11px] font-medium">{st.email}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <button 
-                            onClick={() => handleDeleteSlot(slot.id, slot.bookedCount)}
-                            disabled={isPending || (slot.bookedCount || 0) > 0}
-                            className={`p-2 rounded-lg transition-colors ${(slot.bookedCount || 0) > 0 ? 'opacity-30 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-500'}`}
-                            title={(slot.bookedCount || 0) > 0 ? "Cannot delete slot with booked students" : "Delete slot"}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                          </button>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </>

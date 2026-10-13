@@ -87,6 +87,9 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const [meetLinkInput, setMeetLinkInput] = useState('');
   const [savingLink, setSavingLink] = useState(false);
 
+  // View Enrolled Students Modal
+  const [selectedSlotForStudents, setSelectedSlotForStudents] = useState<any | null>(null);
+
   // 14 days date selector
   const datesList = React.useMemo(() => {
     const list: { fullDate: string; dayName: string; dayNum: number; monthName: string }[] = [];
@@ -746,15 +749,23 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
 
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             {isFull ? (
-                              <View style={[styles.bookedSlotBadge, { backgroundColor: '#fee2e2' }]}>
+                              <TouchableOpacity
+                                style={[styles.bookedSlotBadge, { backgroundColor: '#fee2e2' }]}
+                                onPress={() => setSelectedSlotForStudents(slot)}
+                                activeOpacity={0.7}
+                              >
                                 <CheckCircle size={12} color="#dc2626" />
                                 <Text style={[styles.bookedSlotBadgeText, { color: '#dc2626' }]}>Full (100/100)</Text>
-                              </View>
+                              </TouchableOpacity>
                             ) : hasBookings ? (
-                              <View style={styles.bookedSlotBadge}>
+                              <TouchableOpacity
+                                style={styles.bookedSlotBadge}
+                                onPress={() => setSelectedSlotForStudents(slot)}
+                                activeOpacity={0.7}
+                              >
                                 <Users size={12} color="#059669" />
-                                <Text style={styles.bookedSlotBadgeText}>{bookedCount} Booked</Text>
-                              </View>
+                                <Text style={styles.bookedSlotBadgeText}>{bookedCount} Booked (View)</Text>
+                              </TouchableOpacity>
                             ) : (
                               <View style={styles.availableSlotBadge}>
                                 <Text style={styles.availableSlotBadgeText}>Available</Text>
@@ -901,6 +912,77 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL: VIEW ENROLLED STUDENTS */}
+      <Modal visible={!!selectedSlotForStudents} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { maxHeight: '75%' }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Enrolled Students</Text>
+                {selectedSlotForStudents && (
+                  <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2, fontWeight: '600' }}>
+                    {formatSlotTime(selectedSlotForStudents.startTime)} - {formatSlotTime(selectedSlotForStudents.endTime)} • {selectedSlotForStudents.bookedCount || 0}/100 Booked
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity onPress={() => setSelectedSlotForStudents(null)} style={styles.modalCloseBtn}>
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ padding: 16 }}>
+              {selectedSlotForStudents?.students && selectedSlotForStudents.students.length > 0 ? (
+                selectedSlotForStudents.students.map((st: any, idx: number) => (
+                  <View
+                    key={st.id || idx}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: '#f8fafc',
+                      padding: 12,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      borderWidth: 1,
+                      borderColor: '#e2e8f0',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: Colors.roseLight || '#fce7f3',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: Colors.primaryRose }}>
+                          {st.name?.charAt(0)?.toUpperCase() || 'S'}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.textPrimary }}>
+                          {st.name || 'Student'}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: Colors.textMuted }}>
+                          {st.email || 'No email provided'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: Colors.textMuted, paddingVertical: 20 }}>
+                  No student details available.
+                </Text>
+              )}
+            </ScrollView>
           </View>
         </View>
       </Modal>

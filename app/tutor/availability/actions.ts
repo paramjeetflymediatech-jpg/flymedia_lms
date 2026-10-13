@@ -1,7 +1,7 @@
 "use server";
 
 import { requireTutor } from "../../../src/lib/auth";
-import { TutorAvailability, TutorSlotBooking } from "../../../src/db/models";
+import { TutorAvailability, TutorSlotBooking, User } from "../../../src/db/models";
 import { revalidatePath } from "next/cache";
 import { Op } from 'sequelize';
 
@@ -21,7 +21,14 @@ export async function getAvailabilitySlots(date: string) {
         {
           model: TutorSlotBooking,
           as: 'bookings',
-          attributes: ['id', 'status'],
+          attributes: ['id', 'status', 'createdAt'],
+          include: [
+            {
+              model: User,
+              as: 'student',
+              attributes: ['id', 'name', 'email', 'image'],
+            },
+          ],
           required: false,
         },
       ],
@@ -33,6 +40,14 @@ export async function getAvailabilitySlots(date: string) {
       const bookings = (plain as any).bookings || [];
       const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
       const count = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      const students = activeBookings.map((b: any) => ({
+        id: b.student?.id || b.id,
+        name: b.student?.name || 'Student',
+        email: b.student?.email || '',
+        image: b.student?.image || null,
+        bookedAt: b.createdAt,
+      }));
+
       return {
         id: plain.id,
         startTime: plain.startTime,
@@ -40,6 +55,7 @@ export async function getAvailabilitySlots(date: string) {
         bookedCount: count,
         maxStudents: 100,
         isBooked: count >= 100,
+        students,
       };
     });
 

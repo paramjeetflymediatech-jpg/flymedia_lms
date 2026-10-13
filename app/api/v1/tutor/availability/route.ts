@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { TutorAvailability, TutorSlotBooking } from '../../../../../src/db/models';
+import { TutorAvailability, TutorSlotBooking, User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -29,7 +29,14 @@ export async function GET(request: Request) {
         {
           model: TutorSlotBooking,
           as: 'bookings',
-          attributes: ['id', 'status'],
+          attributes: ['id', 'status', 'createdAt'],
+          include: [
+            {
+              model: User,
+              as: 'student',
+              attributes: ['id', 'name', 'email', 'image'],
+            },
+          ],
           required: false,
         },
       ],
@@ -40,11 +47,20 @@ export async function GET(request: Request) {
       const bookings = (plain as any).bookings || [];
       const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
       const count = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      const students = activeBookings.map((b: any) => ({
+        id: b.student?.id || b.id,
+        name: b.student?.name || 'Student',
+        email: b.student?.email || '',
+        image: b.student?.image || null,
+        bookedAt: b.createdAt,
+      }));
+
       return {
         ...plain,
         bookedCount: count,
         maxStudents: 100,
         isBooked: count >= 100,
+        students,
       };
     });
 
