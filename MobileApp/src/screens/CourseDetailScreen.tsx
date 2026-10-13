@@ -26,6 +26,8 @@ import {
   ChevronUp,
   Sparkles,
   Award,
+  GraduationCap,
+  ArrowRight,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../utils/imageUrl';
 
@@ -69,7 +71,16 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
     }
   }, [courseId, passedCourse]);
 
-  const isEnrolled = course ? enrollments.some(e => e.courseId === course.id) : false;
+  const currentEnrollment = course
+    ? enrollments.find(
+        e =>
+          e.courseId === course.id ||
+          e.courseId === course.slug ||
+          (e.courseTitle && course.title && e.courseTitle.trim().toLowerCase() === course.title.trim().toLowerCase()) ||
+          ((course as any).databaseId && e.courseId === (course as any).databaseId)
+      )
+    : null;
+  const isEnrolled = Boolean(currentEnrollment);
 
   const handleEnroll = async () => {
     if (!course) return;
@@ -203,58 +214,72 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
               <View style={styles.categoryPill}>
                 <Text style={styles.categoryText}>{course.category}</Text>
               </View>
-            {course.badge && (
-              <View style={styles.badgePill}>
-                <Sparkles size={12} color={Colors.primaryOrange} />
-                <Text style={styles.badgeText}>{course.badge}</Text>
+              {course.badge && (
+                <View style={styles.badgePill}>
+                  <Sparkles size={12} color={Colors.primaryOrange} />
+                  <Text style={styles.badgeText}>{course.badge}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.title}>{course.title}</Text>
+            <Text style={styles.description}>{course.description}</Text>
+
+            {/* Quick Info Grid */}
+            <View style={styles.infoGrid}>
+              <View style={styles.infoCol}>
+                <View style={styles.infoIconRow}>
+                  <Star size={14} color="#f59e0b" fill="#f59e0b" />
+                  <Text style={styles.infoVal}>{course.rating}</Text>
+                </View>
+                <Text style={styles.infoSub}>Rating</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoCol}>
+                <View style={styles.infoIconRow}>
+                  <Clock size={14} color={Colors.primaryOrange} />
+                  <Text style={styles.infoVal}>{course.duration}</Text>
+                </View>
+                <Text style={styles.infoSub}>Duration</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoCol}>
+                <View style={styles.infoIconRow}>
+                  <Award size={14} color={Colors.success} />
+                  <Text style={styles.infoVal}>Certified</Text>
+                </View>
+                <Text style={styles.infoSub}>Credential</Text>
+              </View>
+            </View>
+
+            {/* Fee or Enrolled status */}
+            {isEnrolled ? (
+              <View style={styles.priceContainerEnrolled}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={styles.enrolledCheckCircle}>
+                    <CheckCircle size={20} color="#059669" />
+                  </View>
+                  <View>
+                    <Text style={styles.feeLabel}>Enrollment Status</Text>
+                    <Text style={styles.enrolledActiveStatus}>Active • Already Enrolled</Text>
+                  </View>
+                </View>
+                  
+              </View>
+            ) : (
+              <View style={styles.priceContainer}>
+                <View>
+                  <Text style={styles.feeLabel}>Total Program Fee</Text>
+                  <Text style={styles.priceValue}>
+                    ₹{(course.price || 0).toLocaleString('en-IN')}
+                  </Text>
+                </View>
+                <View style={styles.emiTag}>
+                  <Text style={styles.emiTagText}>EMI & Scholarships Avail.</Text>
+                </View>
               </View>
             )}
           </View>
-
-          <Text style={styles.title}>{course.title}</Text>
-          <Text style={styles.description}>{course.description}</Text>
-
-          {/* Quick Info Grid */}
-          <View style={styles.infoGrid}>
-            <View style={styles.infoCol}>
-              <View style={styles.infoIconRow}>
-                <Star size={14} color="#f59e0b" fill="#f59e0b" />
-                <Text style={styles.infoVal}>{course.rating}</Text>
-              </View>
-              <Text style={styles.infoSub}>Rating</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoCol}>
-              <View style={styles.infoIconRow}>
-                <Clock size={14} color={Colors.primaryOrange} />
-                <Text style={styles.infoVal}>{course.duration}</Text>
-              </View>
-              <Text style={styles.infoSub}>Duration</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoCol}>
-              <View style={styles.infoIconRow}>
-                <Award size={14} color={Colors.success} />
-                <Text style={styles.infoVal}>Certified</Text>
-              </View>
-              <Text style={styles.infoSub}>Credential</Text>
-            </View>
-          </View>
-
-          {/* Fee summary */}
-          <View style={styles.priceContainer}>
-            <View>
-              <Text style={styles.feeLabel}>Total Program Fee</Text>
-              <Text style={styles.priceValue}>
-                ₹{(course.price || 0).toLocaleString('en-IN')}
-              </Text>
-            </View>
-            <View style={styles.emiTag}>
-              <Text style={styles.emiTagText}>EMI & Scholarships Avail.</Text>
-            </View>
-          </View>
         </View>
-      </View>
 
         {/* PROGRAM HIGHLIGHTS */}
         {highlights.length > 0 && (
@@ -362,27 +387,49 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
 
       {/* BOTTOM ACTION BAR */}
       <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
-        <TouchableOpacity
-          style={styles.demoBtn}
-          onPress={() => setCallbackModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.demoBtnText}>Book Free Demo</Text>
-        </TouchableOpacity>
+        {isEnrolled ? (
+          <View style={styles.bottomBarEnrolled}>
+            <View style={styles.bottomBarEnrolledInfo}>
+              <View style={styles.bottomBarEnrolledIconWrap}>
+                <CheckCircle size={18} color="#059669" />
+              </View>
+              <View style={{ marginLeft: 8 }}>
+                <Text style={styles.bottomBarEnrolledTitle}>Already Enrolled</Text>
+                <Text style={styles.bottomBarEnrolledSub}>Access in My Learning</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.openMyLearningActionBtn}
+              onPress={() => navigation.navigate('Main', { screen: 'MyLearningTab' })}
+              activeOpacity={0.85}
+            >
+              <GraduationCap size={16} color={Colors.textWhite} />
+              <Text style={styles.openMyLearningActionBtnText}>Go to Class</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.demoBtn}
+              onPress={() => setCallbackModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.demoBtnText}>Book Free Demo</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.enrollBtn, isEnrolled && styles.enrolledBtn]}
-          onPress={handleEnroll}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.enrollBtnText}>
-            {isEnrolled
-              ? 'Open My Learning'
-              : course.price && Number(course.price) > 0
-              ? `Buy Now • ₹${Number(course.price).toLocaleString('en-IN')}`
-              : 'Enroll Free'}
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.enrollBtn}
+              onPress={handleEnroll}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.enrollBtnText}>
+                {course.price && Number(course.price) > 0
+                  ? `Buy Now • ₹${Number(course.price).toLocaleString('en-IN')}`
+                  : 'Enroll Free'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <CallbackModal
@@ -783,6 +830,135 @@ const styles = StyleSheet.create({
   },
   enrollBtnText: {
     fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textWhite,
+  },
+  /* ALREADY ENROLLED STYLES */
+  alreadyEnrolledBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5', // emerald-50
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 6,
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0', // emerald-200
+  },
+  alreadyEnrolledIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#d1fae5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alreadyEnrolledTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#065f46',
+  },
+  alreadyEnrolledSub: {
+    fontSize: 11,
+    color: '#047857',
+    marginTop: 1,
+  },
+  alreadyEnrolledGoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#059669',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 9,
+  },
+  alreadyEnrolledGoBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textWhite,
+  },
+  priceContainerEnrolled: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0',
+  },
+  enrolledCheckCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#d1fae5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  enrolledActiveStatus: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#065f46',
+    marginTop: 1,
+  },
+  lifetimeAccessBadge: {
+    backgroundColor: '#d1fae5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#6ee7b7',
+  },
+  lifetimeAccessBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  bottomBarEnrolled: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  bottomBarEnrolledInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bottomBarEnrolledIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  bottomBarEnrolledTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#065f46',
+  },
+  bottomBarEnrolledSub: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  openMyLearningActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#059669',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 14,
+    ...Shadows.small,
+  },
+  openMyLearningActionBtnText: {
+    fontSize: 13,
     fontWeight: '800',
     color: Colors.textWhite,
   },

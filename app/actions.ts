@@ -1322,7 +1322,11 @@ export async function adminCreateSeo(formData: FormData) {
     });
 
     revalidatePath('/admin/seo');
-    revalidatePath(pagePath);
+    if (pagePath === 'GLOBAL') {
+      revalidatePath('/', 'layout');
+    } else {
+      revalidatePath(pagePath);
+    }
     return { success: true };
   } catch (error) {
     console.error('Create SEO error:', error);
@@ -1375,8 +1379,15 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
     await seo.save();
 
     revalidatePath('/admin/seo');
-    revalidatePath(oldPath);
-    if (oldPath !== pagePath) revalidatePath(pagePath);
+    if (oldPath === 'GLOBAL' || pagePath === 'GLOBAL') {
+      revalidatePath('/', 'layout');
+    }
+    if (oldPath !== 'GLOBAL') {
+      revalidatePath(oldPath);
+    }
+    if (pagePath !== 'GLOBAL' && oldPath !== pagePath) {
+      revalidatePath(pagePath);
+    }
 
     return { success: true };
   } catch (error) {
@@ -1396,7 +1407,11 @@ export async function adminDeleteSeo(seoId: string) {
     await seo.destroy();
 
     revalidatePath('/admin/seo');
-    revalidatePath(pagePath);
+    if (pagePath === 'GLOBAL') {
+      revalidatePath('/', 'layout');
+    } else {
+      revalidatePath(pagePath);
+    }
     return { success: true };
   } catch (error) {
     console.error('Delete SEO error:', error);
