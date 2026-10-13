@@ -16,6 +16,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (authUser.role === 'TUTOR') {
+      return NextResponse.json(
+        { success: false, error: 'Tutors cannot purchase courses. Please use a student account.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { packageId, slug, courseTitle, paymentMethod = 'UPI', couponCode, paymentDetails } = body;
 

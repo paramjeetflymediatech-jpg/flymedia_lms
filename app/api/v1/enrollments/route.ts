@@ -80,6 +80,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (authUser.role === 'TUTOR') {
+      return NextResponse.json(
+        { success: false, error: 'Tutors cannot enroll in courses. Please use a student account.' },
+        { status: 403 }
+      );
+    }
+
     const { packageId, slug, courseTitle } = await request.json();
     let targetPackage = null;
     const packageAttributes = ['id', 'title', 'slug', 'price', 'category', 'status'] as any;

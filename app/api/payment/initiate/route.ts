@@ -7,16 +7,25 @@ import { StandardCheckoutClient, StandardCheckoutPayRequest, Env } from 'pg-sdk-
 export async function POST(req: Request) {
   try {
     let userId: string | null = null;
+    let userRole: string | null = null;
     const authUser = await getAuthUserFromRequest(req);
     if (authUser) {
       userId = authUser.userId;
+      userRole = authUser.role;
     } else {
       const user = await requireAuth();
-      if (user) userId = user.id;
+      if (user) {
+        userId = user.id;
+        userRole = user.role;
+      }
     }
 
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized: please sign in to purchase course' }, { status: 401 });
+    }
+
+    if (userRole === 'TUTOR') {
+      return NextResponse.json({ error: 'Tutors cannot purchase courses. Please use a student account.' }, { status: 403 });
     }
 
     const { packageId, slug, batchMode, amount: customAmount } = await req.json();

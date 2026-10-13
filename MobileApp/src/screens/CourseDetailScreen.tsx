@@ -81,6 +81,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
       )
     : null;
   const isEnrolled = Boolean(currentEnrollment);
+  const isTutor = user?.role === 'TUTOR';
 
   const handleEnroll = async () => {
     if (!course) return;
@@ -96,6 +97,14 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
             onPress: () => navigation.navigate('Main', { screen: 'ProfileTab' }),
           },
         ]
+      );
+      return;
+    }
+
+    if (isTutor) {
+      Alert.alert(
+        'Instructor Account',
+        'You are logged in as a Tutor. Course purchasing and demo bookings are available for student accounts only.'
       );
       return;
     }
@@ -185,12 +194,14 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         <Text style={styles.topBarTitle} numberOfLines={1}>
           {course.title}
         </Text>
-        <TouchableOpacity
-          style={styles.helpBtn}
-          onPress={() => setCallbackModalVisible(true)}
-        >
-          <Text style={styles.helpBtnText}>Counseling</Text>
-        </TouchableOpacity>
+        {!isTutor && (
+          <TouchableOpacity
+            style={styles.helpBtn}
+            onPress={() => setCallbackModalVisible(true)}
+          >
+            <Text style={styles.helpBtnText}>Counseling</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
@@ -252,7 +263,19 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
             </View>
 
             {/* Fee or Enrolled status */}
-            {isEnrolled ? (
+            {isTutor ? (
+              <View style={styles.priceContainerTutor}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={styles.tutorCheckCircle}>
+                    <Award size={20} color="#b45309" />
+                  </View>
+                  <View>
+                    <Text style={styles.feeLabel}>Account Type</Text>
+                    <Text style={styles.tutorActiveStatus}>Instructor View • Student Program</Text>
+                  </View>
+                </View>
+              </View>
+            ) : isEnrolled ? (
               <View style={styles.priceContainerEnrolled}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={styles.enrolledCheckCircle}>
@@ -387,7 +410,19 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
 
       {/* BOTTOM ACTION BAR */}
       <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
-        {isEnrolled ? (
+        {isTutor ? (
+          <View style={styles.tutorBottomBar}>
+            <View style={styles.tutorBottomBarLeft}>
+              <View style={styles.tutorBottomBarBadge}>
+                <Award size={18} color="#b45309" />
+              </View>
+              <View style={{ marginLeft: 10, flex: 1 }}>
+                <Text style={styles.tutorBottomBarTitle}>Instructor Account</Text>
+                <Text style={styles.tutorBottomBarSub}>Demo bookings and course purchases are for students only</Text>
+              </View>
+            </View>
+          </View>
+        ) : isEnrolled ? (
           <View style={styles.bottomBarEnrolled}>
             <View style={styles.bottomBarEnrolledInfo}>
               <View style={styles.bottomBarEnrolledIconWrap}>
@@ -961,5 +996,67 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: Colors.textWhite,
+  },
+  /* TUTOR VIEW STYLES */
+  priceContainerTutor: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fffbeb', // amber-50
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
+    borderWidth: 1.5,
+    borderColor: '#fde68a', // amber-200
+  },
+  tutorCheckCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#fef3c7', // amber-100
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tutorActiveStatus: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#92400e', // amber-800
+    marginTop: 1,
+  },
+  tutorBottomBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fffbeb',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: '#fde68a',
+  },
+  tutorBottomBarLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tutorBottomBarBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#fef3c7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  tutorBottomBarTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#92400e',
+  },
+  tutorBottomBarSub: {
+    fontSize: 11,
+    color: '#b45309',
   },
 });

@@ -9,6 +9,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (user.role === 'TUTOR') {
+      return NextResponse.json({ error: 'Tutors cannot enroll in courses. Please use a student account.' }, { status: 403 });
+    }
+
     const { packageId, batchMode } = await req.json();
     if (!packageId) {
       return NextResponse.json({ error: 'Package ID is required' }, { status: 400 });

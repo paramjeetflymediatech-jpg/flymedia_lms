@@ -13,6 +13,7 @@ import { Header } from '../components/common/Header';
 import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
 import { ApiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Course, Testimonial, FaqItem } from '../types';
 import {
   Sparkles,
@@ -33,6 +34,9 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const { user } = useAuth();
+  const isTutor = user?.role === 'TUTOR';
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<string[]>(['All']);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -126,14 +130,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <ArrowRight size={16} color={Colors.textWhite} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.secondaryCta}
-              onPress={() => setCallbackModalVisible(true)}
-              activeOpacity={0.85}
-            >
-              <PhoneCall size={16} color={Colors.primaryOrange} />
-              <Text style={styles.secondaryCtaText}>Book Free Demo</Text>
-            </TouchableOpacity>
+            {!isTutor && (
+              <TouchableOpacity
+                style={styles.secondaryCta}
+                onPress={() => setCallbackModalVisible(true)}
+                activeOpacity={0.85}
+              >
+                <PhoneCall size={16} color={Colors.primaryOrange} />
+                <Text style={styles.secondaryCtaText}>Book Free Demo</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Stats Bar */}

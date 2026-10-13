@@ -49,6 +49,11 @@ export default function PackageEnrollWidget({
       return;
     }
 
+    if (user.role === 'TUTOR') {
+      alert('You are logged in as a Tutor. Course purchasing is available for student accounts only.');
+      return;
+    }
+
     if (!originalPrice || originalPrice === 0) {
       // Free package
       handleFreeEnroll();
@@ -59,6 +64,10 @@ export default function PackageEnrollWidget({
   };
 
   const handleFreeEnroll = async () => {
+    if (user?.role === 'TUTOR') {
+      alert('You are logged in as a Tutor. Course enrollment is available for student accounts only.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/payment/free-enroll', {
@@ -168,10 +177,21 @@ export default function PackageEnrollWidget({
     }
   };
 
+  const isTutor = user?.role === 'TUTOR';
+
   const buttonContent = (
     <div className="relative z-10 w-full">
       {user ? (
-        isEnrolled ? (
+        isTutor ? (
+          <div className="p-4 sm:p-5 bg-amber-50 border border-amber-200/90 rounded-2xl text-center space-y-1.5 shadow-sm">
+            <div className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center justify-center gap-1.5">
+              <span>🛡️ Instructor Account</span>
+            </div>
+            <p className="text-xs text-amber-700 font-medium">
+              Course purchasing and demo bookings are available for student accounts only.
+            </p>
+          </div>
+        ) : isEnrolled ? (
           <Link
             href={`/dashboard`}
             className="w-full inline-flex items-center justify-center px-6 py-5 font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-2xl transition-all shadow-md group"
