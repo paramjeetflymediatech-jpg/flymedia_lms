@@ -30,7 +30,7 @@ const SLIDES = [
     image: '/web_development_bg.png',
     title: 'Web Development',
     subtitle: 'Build modern, responsive, and scalable web applications from scratch.',
-    link: '/packages/web-development-with-wordpress-6-months',
+    link: '/packages/6-month-web-development-with-wordpress',
     courseValue: 'Web Development'
   },
   {

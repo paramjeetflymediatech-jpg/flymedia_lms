@@ -144,7 +144,7 @@ const packagesToSeed = [
   },
   {
     title: 'Web Development with WordPress',
-    slug: 'web-development-with-wordpress-6-months',
+    slug: '6-month-web-development-with-wordpress',
     description: '<p>This 6-month practical Web Development program is designed for students and freshers who want to learn both Front-End and Back-End Web Development, with a strong focus on WordPress website development. Students will learn how to design, develop, customize, manage, and maintain professional websites through practical training and live projects.</p>',
     category: 'web-development',
     price: 60000,
