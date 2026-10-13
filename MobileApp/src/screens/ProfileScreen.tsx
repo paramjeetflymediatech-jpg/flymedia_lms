@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -245,6 +246,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
 
             <View style={styles.authCard}>
+              <View style={styles.authLogoWrap}>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={styles.authLogo}
+                  resizeMode="contain"
+                />
+              </View>
+
               <Text style={styles.authTitle}>
                 {isLoginTab ? 'Welcome to Flymedia LMS' : 'Join Flymedia Academy'}
               </Text>
@@ -547,7 +556,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   authTabTextActive: {
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
   },
   authCard: {
     backgroundColor: Colors.surface,
@@ -556,6 +565,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     ...Shadows.small,
+  },
+  authLogoWrap: {
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingTop: 4,
+  },
+  authLogo: {
+    width: 175,
+    height: 40,
   },
   authTitle: {
     fontSize: 18,
@@ -590,12 +608,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   authSubmitBtn: {
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
     marginTop: 6,
-    ...Shadows.orange,
+    ...Shadows.brand,
   },
   authSubmitBtnText: {
     color: Colors.textWhite,

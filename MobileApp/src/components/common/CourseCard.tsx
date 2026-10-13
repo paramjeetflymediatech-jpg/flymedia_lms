@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Course } from '../../types';
 import { Colors, Shadows } from '../../theme/colors';
-import { Star, Clock, Users, ChevronRight } from 'lucide-react-native';
+import { Star, Clock, Users, ChevronRight, Zap } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
 interface CourseCardProps {
@@ -18,7 +18,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
-      activeOpacity={0.88}
+      activeOpacity={0.9}
     >
       {/* Course Thumbnail Image */}
       <View style={styles.imageContainer}>
@@ -32,20 +32,30 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
           resizeMode="cover"
           onError={() => setImgError(true)}
         />
+        <View style={styles.imageOverlayGradient} />
+
+        {/* Floating Category Tag on Image */}
+        <View style={styles.floatingCategoryPill}>
+          <Text style={styles.floatingCategoryText}>{course.category || 'PROGRAM'}</Text>
+        </View>
+
+        {/* Live Badge */}
+        <View style={styles.floatingModeBadge}>
+          <View style={styles.livePulseDot} />
+          <Text style={styles.floatingModeText}>
+            {course.mode === 'BOTH' ? 'HYBRID' : course.mode === 'OFFLINE' ? 'CAMPUS' : 'LIVE'}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.cardBody}>
-        {/* Category Pill & Highlight Badge */}
-        <View style={styles.topRow}>
-          <View style={styles.categoryPill}>
-            <Text style={styles.categoryText}>{course.category}</Text>
+        {/* Highlight Badge if exists */}
+        {course.badge && (
+          <View style={styles.highlightBadge}>
+            <Zap size={11} color={Colors.primaryOrange} />
+            <Text style={styles.highlightBadgeText}>{course.badge}</Text>
           </View>
-          {course.badge && (
-            <View style={styles.highlightBadge}>
-              <Text style={styles.highlightBadgeText}>{course.badge}</Text>
-            </View>
-          )}
-        </View>
+        )}
 
         {/* Course Title */}
         <Text style={styles.title} numberOfLines={2}>
@@ -60,18 +70,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
         {/* Meta stats: Rating, Duration, Students */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Star size={14} color="#f59e0b" fill="#f59e0b" />
-            <Text style={styles.statText}>{course.rating}</Text>
+            <Star size={13} color="#f59e0b" fill="#f59e0b" />
+            <Text style={styles.statTextBold}>{course.rating}</Text>
           </View>
           <View style={styles.statDot} />
           <View style={styles.statItem}>
-            <Clock size={14} color={Colors.textMuted} />
+            <Clock size={13} color={Colors.textMuted} />
             <Text style={styles.statText}>{course.duration}</Text>
           </View>
           <View style={styles.statDot} />
           <View style={styles.statItem}>
-            <Users size={14} color={Colors.textMuted} />
-            <Text style={styles.statText}>{course.studentsCount}+</Text>
+            <Users size={13} color={Colors.textMuted} />
+            <Text style={styles.statText}>{course.studentsCount}+ enrolled</Text>
           </View>
         </View>
 
@@ -101,15 +111,17 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
         {/* Price & Action Row */}
         <View style={styles.footerRow}>
           <View>
-            <Text style={styles.feeLabel}>Total Program Fee</Text>
+            <Text style={styles.feeLabel}>Program Fee</Text>
             <Text style={styles.priceText}>
-              ₹{course.price.toLocaleString('en-IN')}
+              {course.price && Number(course.price) > 0
+                ? `₹${Number(course.price).toLocaleString('en-IN')}`
+                : 'Free'}
             </Text>
           </View>
-          
+
           <View style={styles.actionBtn}>
-            <Text style={styles.actionBtnText}>Explore Syllabus</Text>
-            <ChevronRight size={16} color={Colors.textWhite} />
+            <Text style={styles.actionBtnText}>View Details</Text>
+            <ChevronRight size={15} color={Colors.textWhite} />
           </View>
         </View>
       </View>
@@ -119,67 +131,111 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    marginVertical: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    marginVertical: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#eef2f6',
     overflow: 'hidden',
-    ...Shadows.small,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 4,
   },
   imageContainer: {
     width: '100%',
-    height: 190,
+    height: 185,
     backgroundColor: '#0f172a',
+    position: 'relative',
   },
   thumbnail: {
     width: '100%',
     height: '100%',
   },
+  imageOverlayGradient: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(15, 23, 42, 0.15)',
+  },
+  floatingCategoryPill: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  floatingCategoryText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  floatingModeBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  livePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  floatingModeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0f172a',
+    letterSpacing: 0.5,
+  },
   cardBody: {
     padding: 16,
   },
-  topRow: {
+  highlightBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  categoryPill: {
-    backgroundColor: Colors.surfaceSubtle,
-    paddingHorizontal: 10,
+    gap: 4,
+    backgroundColor: '#fdf2f8',
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-  },
-  highlightBadge: {
-    backgroundColor: Colors.orangeLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 153, 0, 0.3)',
+    borderColor: 'rgba(230, 8, 112, 0.25)',
   },
   highlightBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
+    textTransform: 'uppercase',
   },
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: Colors.textPrimary,
-    lineHeight: 22,
+    color: '#0f172a',
+    lineHeight: 23,
     marginBottom: 6,
   },
   description: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: '#64748b',
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -196,14 +252,19 @@ const styles = StyleSheet.create({
   statDot: {
     width: 3,
     height: 3,
-    borderRadius: 2,
-    backgroundColor: Colors.textLight,
+    borderRadius: 1.5,
+    backgroundColor: '#cbd5e1',
     marginHorizontal: 8,
+  },
+  statTextBold: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0f172a',
   },
   statText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontWeight: '500',
+    color: '#64748b',
   },
   techStackRow: {
     flexDirection: 'row',
@@ -221,21 +282,23 @@ const styles = StyleSheet.create({
   },
   techChipText: {
     fontSize: 10,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontWeight: '700',
+    color: '#475569',
   },
   techChipMore: {
     paddingHorizontal: 6,
     paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#fff7ed',
   },
   techChipMoreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.primaryOrange,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: '#f1f5f9',
     marginBottom: 12,
   },
   footerRow: {
@@ -245,27 +308,35 @@ const styles = StyleSheet.create({
   },
   feeLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
-    fontWeight: '600',
+    color: '#94a3b8',
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 2,
   },
   priceText: {
     fontSize: 18,
     fontWeight: '900',
-    color: Colors.primaryOrange,
+    color: '#0f172a',
+    letterSpacing: 0.2,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.textPrimary,
+    backgroundColor: Colors.primaryRose,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 9,
+    borderRadius: 12,
     gap: 4,
+    shadowColor: Colors.primaryRose,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionBtnText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textWhite,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 });

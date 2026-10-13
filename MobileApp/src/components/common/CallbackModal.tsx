@@ -78,7 +78,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
           ) : (
             <View>
               <View style={styles.headerIconWrap}>
-                <PhoneCall size={26} color={Colors.primaryOrange} />
+                <PhoneCall size={26} color={Colors.primaryRose} />
               </View>
               <Text style={styles.title}>Book Free Counseling</Text>
               <Text style={styles.subtitle}>
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   submitButton: {
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 6,
-    ...Shadows.orange,
+    ...Shadows.brand,
   },
   submitButtonDisabled: {
     opacity: 0.6,

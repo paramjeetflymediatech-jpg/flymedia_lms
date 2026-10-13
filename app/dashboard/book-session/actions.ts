@@ -1,7 +1,7 @@
 "use server";
 
 import { requireAuth } from "../../../src/lib/auth";
-import { User, TutorAvailability, Enrollment } from "../../../src/db/models";
+import { User, TutorAvailability, TutorSlotBooking, Enrollment } from "../../../src/db/models";
 import { revalidatePath } from "next/cache";
 import { Op } from 'sequelize';
 
@@ -66,20 +66,30 @@ export async function getTutorMonthAvailability(tutorId: string, year: number, m
         tutorId,
         date: { [Op.between]: [queryStartDate, endDate] },
       },
-      attributes: ['date', 'startTime', 'isBooked', 'studentId'],
+      include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          attributes: ['studentId', 'status'],
+          required: false,
+        },
+      ],
+      attributes: ['date', 'startTime', 'isBooked', 'bookedCount', 'studentId'],
     });
 
-    // Show indicator if date has unbooked future slot OR if it has a slot booked by this student
+    // Show indicator if date has slots with available capacity (< 100) OR if it has a slot booked by this student
     const validDates = slots
       .filter(s => {
         const slotDate = s.get('date');
         const slotTime = s.get('startTime');
-        const isBooked = Boolean(s.get('isBooked'));
-        const isMyBooking = isBooked && s.get('studentId') === user.id;
+        const bookings = (s as any).bookings || [];
+        const isMyBooking = bookings.some((b: any) => b.studentId === user.id && b.status !== 'CANCELLED') || s.studentId === user.id;
 
         if (isMyBooking) return true; // Always highlight days where this student booked a session
 
-        if (isBooked) return false; // Don't highlight days where slots are taken by other users
+        const activeBookingsCount = bookings.filter((b: any) => b.status !== 'CANCELLED').length || (s.bookedCount || 0);
+        const isFull = activeBookingsCount >= 100;
+        if (isFull) return false; // Don't highlight days where slots are 100% full
 
         if (slotDate === todayString) {
           return slotTime > currentTime;
@@ -103,7 +113,15 @@ export async function getTutorDayAvailability(tutorId: string, date: string) {
     const slots = await TutorAvailability.findAll({
       where: { tutorId, date },
       order: [['startTime', 'ASC']],
-      attributes: ['id', 'startTime', 'endTime', 'date', 'isBooked', 'studentId'],
+      include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          attributes: ['studentId', 'status'],
+          required: false,
+        },
+      ],
+      attributes: ['id', 'startTime', 'endTime', 'date', 'isBooked', 'bookedCount', 'maxStudents', 'studentId'],
     });
 
     const now = new Date();
@@ -114,17 +132,27 @@ export async function getTutorDayAvailability(tutorId: string, date: string) {
       const plain = s.get({ plain: true });
       const slotDate = plain.date || date;
       const isPast = slotDate < todayString || (slotDate === todayString && plain.startTime <= currentTime);
-      const isBooked = Boolean(plain.isBooked);
-      const isBookedByMe = isBooked && plain.studentId === user.id;
+      
+      const bookings = (plain as any).bookings || [];
+      const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
+      const bookedCount = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      const isBookedByMe = Boolean(
+        activeBookings.some((b: any) => b.studentId === user.id) || plain.studentId === user.id
+      );
+      const isFull = bookedCount >= 100;
+      const availableSeats = Math.max(0, 100 - bookedCount);
 
       return {
         id: plain.id,
         startTime: plain.startTime,
         endTime: plain.endTime,
         date: slotDate,
-        isBooked,
+        isBooked: isFull,
         isBookedByMe,
         isPast,
+        bookedCount,
+        maxStudents: 100,
+        availableSeats,
       };
     });
 
@@ -135,7 +163,7 @@ export async function getTutorDayAvailability(tutorId: string, date: string) {
   }
 }
 
-// 4. Book a slot
+// 4. Book a slot (Supports up to 100 students)
 export async function bookSessionSlot(slotId: string) {
   try {
     const user = await requireAuth(); // The student booking the session
@@ -160,25 +188,51 @@ export async function bookSessionSlot(slotId: string) {
       }
     }
 
-    // Use an atomic update to prevent double-booking
-    const [affectedRows] = await TutorAvailability.update(
-      { isBooked: true, studentId: user.id },
-      { 
-        where: { 
-          id: slotId, 
-          isBooked: false // Important: Only update if it's currently NOT booked
-        } 
-      }
-    );
+    // Check if student has already booked this slot
+    const existingBooking = await TutorSlotBooking.findOne({
+      where: {
+        slotId,
+        studentId: user.id,
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+    });
 
-    if (affectedRows === 0) {
-      return handleResponse(false, "This slot is no longer available.");
+    if (existingBooking || slot.studentId === user.id) {
+      return handleResponse(false, "You have already booked this session.");
     }
 
+    // Check current bookings count (Max 100 students)
+    const currentCount = await TutorSlotBooking.count({
+      where: {
+        slotId,
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+    });
+
+    if (currentCount >= 100) {
+      return handleResponse(false, "This session is fully booked (maximum 100 students reached).");
+    }
+
+    // Create booking record
+    await TutorSlotBooking.create({
+      slotId,
+      studentId: user.id,
+      status: 'SCHEDULED',
+    });
+
+    const newCount = currentCount + 1;
+    await slot.update({
+      bookedCount: newCount,
+      isBooked: newCount >= 100,
+      studentId: slot.studentId || user.id,
+    });
+
     revalidatePath("/dashboard/book-session");
+    revalidatePath("/dashboard/courses");
     return handleResponse(true, "Session booked successfully!");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error booking session:", error);
-    return handleResponse(false, "Failed to book session");
+    return handleResponse(false, error.message || "Failed to book session");
   }
 }
+

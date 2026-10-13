@@ -1,7 +1,7 @@
 "use server";
 
 import { requireTutor } from "../../../src/lib/auth";
-import { TutorAvailability } from "../../../src/db/models";
+import { TutorAvailability, TutorSlotBooking } from "../../../src/db/models";
 import { revalidatePath } from "next/cache";
 import { Op } from 'sequelize';
 
@@ -17,10 +17,33 @@ export async function getAvailabilitySlots(date: string) {
     const slots = await TutorAvailability.findAll({
       where: { tutorId: user.id, date },
       order: [['startTime', 'ASC']],
-      attributes: ['id', 'startTime', 'endTime', 'isBooked'],
+      include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          attributes: ['id', 'status'],
+          required: false,
+        },
+      ],
+      attributes: ['id', 'startTime', 'endTime', 'isBooked', 'bookedCount', 'maxStudents'],
     });
 
-    return handleResponse(true, "Fetched slots successfully", slots.map(s => s.get({ plain: true })));
+    const formatted = slots.map(s => {
+      const plain = s.get({ plain: true });
+      const bookings = (plain as any).bookings || [];
+      const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
+      const count = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      return {
+        id: plain.id,
+        startTime: plain.startTime,
+        endTime: plain.endTime,
+        bookedCount: count,
+        maxStudents: 100,
+        isBooked: count >= 100,
+      };
+    });
+
+    return handleResponse(true, "Fetched slots successfully", formatted);
   } catch (error) {
     console.error("Error fetching availability slots:", error);
     return handleResponse(false, "Failed to fetch availability slots");
@@ -141,8 +164,12 @@ export async function deleteAvailabilitySlot(slotId: string) {
       return handleResponse(false, "Time slot not found");
     }
 
-    if (slot.isBooked) {
-      return handleResponse(false, "Cannot delete a time slot that is already booked");
+    const bookingsCount = await TutorSlotBooking.count({
+      where: { slotId, status: { [Op.ne]: 'CANCELLED' } },
+    });
+
+    if (bookingsCount > 0 || (slot.bookedCount && slot.bookedCount > 0)) {
+      return handleResponse(false, `Cannot delete slot: ${bookingsCount || slot.bookedCount} student(s) have already booked it.`);
     }
 
     await slot.destroy();

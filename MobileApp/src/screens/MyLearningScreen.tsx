@@ -78,8 +78,15 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
         {!user ? (
           /* AUTHENTICATION GATE WHEN LOGGED OUT */
           <View style={styles.authGateCard}>
+            <View style={{ alignItems: 'center', marginBottom: 14 }}>
+              <Image
+                source={require('../assets/logo.png')}
+                style={{ width: 170, height: 40 }}
+                resizeMode="contain"
+              />
+            </View>
             <View style={styles.iconCircle}>
-              <GraduationCap size={44} color={Colors.primaryOrange} />
+              <GraduationCap size={40} color={Colors.primaryOrange} />
             </View>
             <Text style={styles.authGateTitle}>Sign In to Access Learning</Text>
             <Text style={styles.authGateSub}>
@@ -292,12 +299,12 @@ const styles = StyleSheet.create({
   loginActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 14,
     gap: 8,
-    ...Shadows.orange,
+    ...Shadows.brand,
   },
   loginActionBtnText: {
     color: Colors.textWhite,
@@ -486,11 +493,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     paddingVertical: 10,
     borderRadius: 10,
     gap: 6,
-    ...Shadows.orange,
+    ...Shadows.brand,
   },
   joinClassBtnText: {
     color: Colors.textWhite,

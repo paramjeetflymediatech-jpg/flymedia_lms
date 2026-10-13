@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { TutorAvailability, User } from '../../../../../src/db/models';
+import { TutorAvailability, TutorSlotBooking, User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -27,25 +27,44 @@ export async function GET(request: Request) {
     const slots = await TutorAvailability.findAll({
       where: { tutorId, date: queryDate },
       order: [['startTime', 'ASC']],
-      attributes: ['id', 'startTime', 'endTime', 'date', 'isBooked', 'studentId', 'meetLink', 'status'],
+      include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          attributes: ['studentId', 'status'],
+          required: false,
+        },
+      ],
+      attributes: ['id', 'startTime', 'endTime', 'date', 'isBooked', 'bookedCount', 'maxStudents', 'studentId', 'meetLink', 'status'],
     });
 
     const formattedSlots = slots.map((s) => {
       const plain = s.get({ plain: true });
       const slotDate = plain.date || queryDate;
       const isPast = slotDate < todayString || (slotDate === todayString && plain.startTime <= currentTime);
-      const isBooked = Boolean(plain.isBooked);
-      const isBookedByMe = Boolean(isBooked && currentUserId && plain.studentId === currentUserId);
+      
+      const bookings = (plain as any).bookings || [];
+      const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
+      const bookedCount = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      const isBookedByMe = Boolean(
+        (currentUserId && activeBookings.some((b: any) => b.studentId === currentUserId)) ||
+        (currentUserId && plain.studentId === currentUserId)
+      );
+      const isFull = bookedCount >= 100;
+      const availableSeats = Math.max(0, 100 - bookedCount);
 
       return {
         id: plain.id,
         startTime: plain.startTime,
         endTime: plain.endTime,
         date: slotDate,
-        isBooked,
+        isBooked: isFull,
         isBookedByMe,
         isPast,
         status: plain.status,
+        bookedCount,
+        maxStudents: 100,
+        availableSeats,
       };
     });
 
@@ -78,10 +97,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Slot not found' }, { status: 404 });
     }
 
-    if (slot.isBooked) {
-      return NextResponse.json({ success: false, error: 'This slot is already booked' }, { status: 400 });
-    }
-
     const now = new Date();
     const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -90,9 +105,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Cannot book slots in the past' }, { status: 400 });
     }
 
-    await slot.update({
-      isBooked: true,
+    // Check if this student already booked this slot
+    const existingBooking = await TutorSlotBooking.findOne({
+      where: {
+        slotId,
+        studentId: authUser.userId,
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+    });
+
+    if (existingBooking || slot.studentId === authUser.userId) {
+      return NextResponse.json({ success: false, error: 'You have already booked this session' }, { status: 400 });
+    }
+
+    // Check capacity (Max 100 students)
+    const currentBookingsCount = await TutorSlotBooking.count({
+      where: {
+        slotId,
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+    });
+
+    if (currentBookingsCount >= 100) {
+      return NextResponse.json({ success: false, error: 'This session is fully booked (maximum 100 students reached)' }, { status: 400 });
+    }
+
+    // Create booking
+    await TutorSlotBooking.create({
+      slotId,
       studentId: authUser.userId,
+      status: 'SCHEDULED',
+    });
+
+    const newCount = currentBookingsCount + 1;
+    await slot.update({
+      bookedCount: newCount,
+      isBooked: newCount >= 100,
+      studentId: slot.studentId || authUser.userId,
       status: 'SCHEDULED',
     });
 
@@ -104,8 +153,11 @@ export async function POST(request: Request) {
         date: slot.date,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        isBooked: true,
+        isBooked: newCount >= 100,
         isBookedByMe: true,
+        bookedCount: newCount,
+        maxStudents: 100,
+        availableSeats: Math.max(0, 100 - newCount),
       },
     });
   } catch (error: any) {
@@ -113,3 +165,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message || 'Failed to book slot' }, { status: 500 });
   }
 }
+

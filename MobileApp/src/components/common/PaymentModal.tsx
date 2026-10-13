@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   summaryTotalAmount: {
     fontSize: 22,
     fontWeight: '900',
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
   },
   // Error Banner with Alert Icon
   errorBannerContainer: {
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   receiptValHighlight: {
     fontSize: 17,
     fontWeight: '900',
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
   },
   receiptDivider: {
     height: 1,

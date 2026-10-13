@@ -31,6 +31,7 @@ export interface Course {
   faqs: CourseFaq[];
   badge?: string;
   thumbnail?: string;
+  mode?: string;
 }
 
 export interface User {

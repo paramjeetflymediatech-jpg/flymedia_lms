@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { LiveClass, Package, Enrollment, User, TutorAvailability } from '../../../../../src/db/models';
+import { LiveClass, Package, Enrollment, User, TutorAvailability, TutorSlotBooking } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -47,10 +47,22 @@ export async function GET(request: Request) {
       order: [['startTime', 'DESC']],
     });
 
-    // 2. Fetch 1-on-1 Sessions booked with this tutor
+    // 2. Fetch Sessions booked with this tutor
     const oneOnOneSessions = await TutorAvailability.findAll({
-      where: { tutorId, isBooked: true },
+      where: {
+        tutorId,
+        [Op.or]: [
+          { isBooked: true },
+          { bookedCount: { [Op.gt]: 0 } },
+          { studentId: { [Op.ne]: null } },
+        ],
+      },
       include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          include: [{ model: User, as: 'student', attributes: ['id', 'name', 'avatar', 'email'] }],
+        },
         {
           model: User,
           as: 'student',
@@ -96,37 +108,45 @@ export async function GET(request: Request) {
       });
     });
 
-    // 1-on-1 Sessions
+    // Tutor Sessions (Up to 100 students)
     oneOnOneSessions.forEach((sess: any) => {
       const startDateTime = new Date(`${sess.date}T${sess.startTime}:00`);
       const endDateTime = new Date(`${sess.date}T${sess.endTime}:00`);
       const isPast = startDateTime < now;
       const duration = Math.round((endDateTime.getTime() - startDateTime.getTime()) / 60000) || 60;
 
-      if (sess.student) {
-        if (!studentsMap.has(sess.student.id)) {
-          studentsMap.set(sess.student.id, {
-            id: sess.student.id,
-            name: sess.student.name || 'Student',
-            email: sess.student.email || '',
-            avatar: resolveFullImageUrl(sess.student.avatar),
-            enrolledIn: '1-on-1 Mentorship',
+      const bookedStudents = (sess.bookings || [])
+        .map((b: any) => b.student)
+        .filter(Boolean);
+      if (sess.student && !bookedStudents.some((st: any) => st.id === sess.student.id)) {
+        bookedStudents.unshift(sess.student);
+      }
+      const studentsCount = bookedStudents.length || sess.bookedCount || 1;
+
+      bookedStudents.forEach((st: any) => {
+        if (!studentsMap.has(st.id)) {
+          studentsMap.set(st.id, {
+            id: st.id,
+            name: st.name || 'Student',
+            email: st.email || '',
+            avatar: resolveFullImageUrl(st.avatar),
+            enrolledIn: 'Tutor Mentorship',
           });
         }
-      }
+      });
 
       formattedClasses.push({
         id: sess.id,
         isOneOnOne: true,
-        title: `1-on-1 Session with ${sess.student?.name || 'Student'}`,
+        title: `Tutor Session (${studentsCount}/100 Students)`,
         packageTitle: 'Personalized Coaching',
         startTime: startDateTime.toISOString(),
         duration,
         meetLink: sess.meetLink || null,
         status: sess.status || (isPast ? 'COMPLETED' : 'SCHEDULED'),
-        studentsCount: 1,
-        studentName: sess.student?.name || 'Assigned Student',
-        studentAvatar: resolveFullImageUrl(sess.student?.avatar),
+        studentsCount,
+        studentName: bookedStudents.length > 0 ? (bookedStudents.length === 1 ? bookedStudents[0].name : `${studentsCount} Students Booked`) : 'Enrolled Students',
+        studentAvatar: resolveFullImageUrl(bookedStudents[0]?.avatar),
         date: sess.date,
         slotTime: `${sess.startTime} - ${sess.endTime}`,
       });

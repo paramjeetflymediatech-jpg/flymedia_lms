@@ -1,6 +1,7 @@
 import { requireAuth } from '../../../src/lib/auth';
-import { LiveClass, Package, Enrollment, User, TutorAvailability } from '../../../src/db/models';
+import { LiveClass, Package, Enrollment, User, TutorAvailability, TutorSlotBooking } from '../../../src/db/models';
 import TutorClassRow from '../../../src/components/tutor/TutorClassRow';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
@@ -31,10 +32,24 @@ export default async function TutorClassesPage() {
   
   const liveClassesList = classesData.map(c => c.toJSON() as any);
 
-  // Fetch all 1-on-1 sessions (TutorAvailability) booked by students with this tutor
+  // Fetch all sessions (TutorAvailability) booked by students with this tutor
   const oneOnOneSessions = await TutorAvailability.findAll({
-    where: { tutorId: user.id, isBooked: true },
-    include: [{ model: User, as: 'student', attributes: ['name', 'avatar'] }]
+    where: {
+      tutorId: user.id,
+      [Op.or]: [
+        { isBooked: true },
+        { bookedCount: { [Op.gt]: 0 } },
+        { studentId: { [Op.ne]: null } },
+      ],
+    },
+    include: [
+      {
+        model: TutorSlotBooking,
+        as: 'bookings',
+        include: [{ model: User, as: 'student', attributes: ['id', 'name', 'avatar'] }],
+      },
+      { model: User, as: 'student', attributes: ['id', 'name', 'avatar'] },
+    ],
   });
 
   const oneOnOneList = oneOnOneSessions.map((sessionModel) => {
@@ -43,20 +58,27 @@ export default async function TutorClassesPage() {
     const endTimeDate = new Date(`${session.date}T${session.endTime}:00`);
     const duration = (endTimeDate.getTime() - startTimeDate.getTime()) / 60000;
 
+    const bookedStudents = (session.bookings || [])
+      .map((b: any) => b.student)
+      .filter(Boolean);
+    if (session.student && !bookedStudents.some((st: any) => st.id === session.student.id)) {
+      bookedStudents.unshift(session.student);
+    }
+    const studentsCount = bookedStudents.length || session.bookedCount || 1;
+
     return {
       id: session.id,
-      title: '1-on-1 Session',
+      title: `Tutor Session (${studentsCount}/100 Students)`,
       startTime: startTimeDate.toISOString(),
       duration: duration,
       meetLink: session.meetLink || null,
       status: session.status || 'SCHEDULED',
       isOneOnOne: true,
+      studentsCount,
       Package: {
-        title: `1-on-1 Session`,
-        enrollments: [
-          { User: session.student }
-        ]
-      }
+        title: `Tutor Session (${studentsCount} Enrolled)`,
+        enrollments: bookedStudents.map((st: any) => ({ User: st })),
+      },
     };
   });
 

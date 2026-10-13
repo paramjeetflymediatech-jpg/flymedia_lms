@@ -168,9 +168,9 @@ export default function AvailabilityCalendarPage() {
     });
   };
 
-  const handleDeleteSlot = (id: string, isBooked: boolean) => {
-    if (isBooked) {
-      Swal.fire('Error', 'Cannot delete a booked slot.', 'error');
+  const handleDeleteSlot = (id: string, bookedCount?: number) => {
+    if ((bookedCount || 0) > 0) {
+      Swal.fire('Error', `Cannot delete this slot: ${bookedCount} student(s) have already booked it.`, 'error');
       return;
     }
 
@@ -343,18 +343,26 @@ export default function AvailabilityCalendarPage() {
                       daySlots.map((slot) => (
                         <div key={slot.id} className="group flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-orange-200 transition-colors">
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                              {slot.isBooked ? <span className="text-emerald-500">Booked</span> : "Available"}
-                            </span>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                (slot.bookedCount || 0) >= 100
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                  : (slot.bookedCount || 0) > 0
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {(slot.bookedCount || 0) > 0 ? `${slot.bookedCount}/100 Students Booked` : "Available (0/100)"}
+                              </span>
+                            </div>
                             <span className="font-bold text-slate-700">
                               {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                             </span>
                           </div>
                           <button 
-                            onClick={() => handleDeleteSlot(slot.id, slot.isBooked)}
-                            disabled={isPending || slot.isBooked}
-                            className={`p-2 rounded-lg transition-colors ${slot.isBooked ? 'opacity-30 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-500'}`}
-                            title={slot.isBooked ? "Cannot delete booked slot" : "Delete slot"}
+                            onClick={() => handleDeleteSlot(slot.id, slot.bookedCount)}
+                            disabled={isPending || (slot.bookedCount || 0) > 0}
+                            className={`p-2 rounded-lg transition-colors ${(slot.bookedCount || 0) > 0 ? 'opacity-30 cursor-not-allowed' : 'text-slate-400 hover:bg-red-50 hover:text-red-500'}`}
+                            title={(slot.bookedCount || 0) > 0 ? "Cannot delete slot with booked students" : "Delete slot"}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                           </button>

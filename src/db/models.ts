@@ -433,7 +433,7 @@ Review.init(
 // ==========================================
 // 13. TUTOR AVAILABILITY MODEL
 // ==========================================
-export class TutorAvailability extends Model<InferAttributes<TutorAvailability>, InferCreationAttributes<TutorAvailability>> {
+export class TutorAvailability extends Model<InferAttributes<TutorAvailability, { omit: 'bookings' }>, InferCreationAttributes<TutorAvailability, { omit: 'bookings' }>> {
   declare id: CreationOptional<string>;
   declare tutorId: ForeignKey<User['id']>;
   declare studentId: CreationOptional<ForeignKey<User['id']> | null>;
@@ -441,10 +441,13 @@ export class TutorAvailability extends Model<InferAttributes<TutorAvailability>,
   declare startTime: string; // e.g. '10:00'
   declare endTime: string; // e.g. '11:00'
   declare isBooked: CreationOptional<boolean>;
+  declare maxStudents: CreationOptional<number>;
+  declare bookedCount: CreationOptional<number>;
   declare meetLink: CreationOptional<string | null>;
   declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  declare bookings?: NonAttribute<TutorSlotBooking[]>;
 }
 
 TutorAvailability.init(
@@ -456,6 +459,8 @@ TutorAvailability.init(
     startTime: { type: DataTypes.STRING(20), allowNull: false },
     endTime: { type: DataTypes.STRING(20), allowNull: false },
     isBooked: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    maxStudents: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 100 },
+    bookedCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     meetLink: { type: DataTypes.STRING(1024), allowNull: true },
     status: { type: DataTypes.ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'SCHEDULED' },
     createdAt: DataTypes.DATE,
@@ -473,6 +478,43 @@ TutorAvailability.init(
     ]
   }
 );
+
+// ==========================================
+// 13B. TUTOR SLOT BOOKING MODEL (Max 100 students)
+// ==========================================
+export class TutorSlotBooking extends Model<InferAttributes<TutorSlotBooking>, InferCreationAttributes<TutorSlotBooking>> {
+  declare id: CreationOptional<string>;
+  declare slotId: ForeignKey<TutorAvailability['id']>;
+  declare studentId: ForeignKey<User['id']>;
+  declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+  declare slot?: NonAttribute<TutorAvailability>;
+  declare student?: NonAttribute<User>;
+}
+
+TutorSlotBooking.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    slotId: { type: DataTypes.UUID, allowNull: false, references: { model: 'tutor_availabilities', key: 'id' }, onDelete: 'CASCADE' },
+    studentId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    status: { type: DataTypes.ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'SCHEDULED' },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'TutorSlotBooking',
+    tableName: 'tutor_slot_bookings',
+    indexes: [
+      {
+        unique: true,
+        fields: ['slotId', 'studentId'],
+      },
+    ],
+  }
+);
+
 
 // ==========================================
 // 14. BLOG POST MODEL
@@ -663,7 +705,16 @@ TutorAvailability.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
 User.hasMany(TutorAvailability, { as: 'bookedSessions', foreignKey: 'studentId', onDelete: 'SET NULL' });
 TutorAvailability.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
 
+// TutorAvailability has many TutorSlotBookings (Up to 100 students)
+TutorAvailability.hasMany(TutorSlotBooking, { as: 'bookings', foreignKey: 'slotId', onDelete: 'CASCADE' });
+TutorSlotBooking.belongsTo(TutorAvailability, { as: 'slot', foreignKey: 'slotId' });
+
+// User has many TutorSlotBookings
+User.hasMany(TutorSlotBooking, { as: 'slotBookings', foreignKey: 'studentId', onDelete: 'CASCADE' });
+TutorSlotBooking.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
+
 // User has many BlogPosts
 User.hasMany(BlogPost, { as: 'blogPosts', foreignKey: 'authorId', onDelete: 'CASCADE' });
 BlogPost.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
+
 

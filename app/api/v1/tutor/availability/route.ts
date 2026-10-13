@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { TutorAvailability } from '../../../../../src/db/models';
+import { TutorAvailability, TutorSlotBooking } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -25,11 +25,32 @@ export async function GET(request: Request) {
         date: queryDate,
       },
       order: [['startTime', 'ASC']],
+      include: [
+        {
+          model: TutorSlotBooking,
+          as: 'bookings',
+          attributes: ['id', 'status'],
+          required: false,
+        },
+      ],
+    });
+
+    const formatted = slots.map((s) => {
+      const plain = s.get({ plain: true });
+      const bookings = (plain as any).bookings || [];
+      const activeBookings = bookings.filter((b: any) => b.status !== 'CANCELLED');
+      const count = activeBookings.length > 0 ? activeBookings.length : (plain.bookedCount || 0);
+      return {
+        ...plain,
+        bookedCount: count,
+        maxStudents: 100,
+        isBooked: count >= 100,
+      };
     });
 
     return NextResponse.json({
       success: true,
-      slots: slots.map((s) => s.get({ plain: true })),
+      slots: formatted,
     });
   } catch (error: any) {
     console.error('Tutor availability GET error:', error);
@@ -112,6 +133,17 @@ export async function DELETE(request: Request) {
 
     if (!slot) {
       return NextResponse.json({ success: false, error: 'Slot not found' }, { status: 404 });
+    }
+
+    const bookingsCount = await TutorSlotBooking.count({
+      where: { slotId, status: { [Op.ne]: 'CANCELLED' } },
+    });
+
+    if (bookingsCount > 0 || (slot.bookedCount && slot.bookedCount > 0)) {
+      return NextResponse.json(
+        { success: false, error: `Cannot delete slot: ${bookingsCount || slot.bookedCount} student(s) have already booked it.` },
+        { status: 400 }
+      );
     }
 
     await slot.destroy();

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Enrollment, Package, LiveClass, Certificate, TutorAvailability, User } from '../../../../../src/db/models';
+import { Enrollment, Package, LiveClass, Certificate, TutorAvailability, TutorSlotBooking, User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -45,9 +45,20 @@ export async function GET(request: Request) {
       order: [['createdAt', 'DESC']],
     });
 
-    // 2. Fetch Booked 1-on-1 Sessions
+    // 2. Fetch Booked Sessions (via TutorSlotBooking or direct studentId)
+    const studentBookings = await TutorSlotBooking.findAll({
+      where: { studentId: userId, status: { [Op.ne]: 'CANCELLED' } },
+      attributes: ['slotId'],
+    });
+    const bookedSlotIds = studentBookings.map((b) => b.slotId);
+
     const bookedSessions = await TutorAvailability.findAll({
-      where: { studentId: userId },
+      where: {
+        [Op.or]: [
+          { studentId: userId },
+          ...(bookedSlotIds.length > 0 ? [{ id: { [Op.in]: bookedSlotIds } }] : []),
+        ],
+      },
       include: [
         {
           model: User,

@@ -383,8 +383,10 @@ export default function BookSessionPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {daySlots.map((slot) => {
                                 const isBookedByMe = Boolean(slot.isBookedByMe);
-                                const isBookedByOther = Boolean(slot.isBooked) && !isBookedByMe;
+                                const bookedCount = slot.bookedCount || 0;
+                                const isFullyBooked = bookedCount >= 100 && !isBookedByMe;
                                 const isSlotExpired = !isBookedByMe && (Boolean(slot.isPast) || isSelectedDateInPast || (selectedDate === todayString && slot.startTime <= currentTime));
+                                const availableSeats = Math.max(0, 100 - bookedCount);
 
                                 let cardClasses = "p-5 rounded-2xl bg-white border-2 transition-all flex flex-col ";
                                 let iconClasses = "p-2 rounded-lg ";
@@ -394,7 +396,7 @@ export default function BookSessionPage() {
                                   cardClasses += "border-emerald-300 bg-emerald-50/30 shadow-sm ring-1 ring-emerald-200/50";
                                   iconClasses += "bg-emerald-100 text-emerald-700";
                                   timeClasses += "text-emerald-950";
-                                } else if (isBookedByOther) {
+                                } else if (isFullyBooked) {
                                   cardClasses += "border-slate-200 bg-slate-50/70 opacity-75";
                                   iconClasses += "bg-slate-100 text-slate-400";
                                   timeClasses += "text-slate-500";
@@ -420,7 +422,14 @@ export default function BookSessionPage() {
                                           )}
                                         </div>
                                         <div>
-                                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Session Time</p>
+                                          <div className="flex items-center gap-2 mb-0.5">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Session Time</p>
+                                            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
+                                              isFullyBooked ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'
+                                            }`}>
+                                              {isFullyBooked ? 'Full (100/100)' : `${availableSeats} seats left`}
+                                            </span>
+                                          </div>
                                           <span className={timeClasses}>
                                             {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                                           </span>
@@ -433,12 +442,12 @@ export default function BookSessionPage() {
                                           Booked by You
                                         </span>
                                       )}
-                                      {isBookedByOther && (
-                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">
-                                          Already Booked
+                                      {isFullyBooked && (
+                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md border border-rose-200">
+                                          Fully Booked (100)
                                         </span>
                                       )}
-                                      {!slot.isBooked && isSlotExpired && (
+                                      {!isBookedByMe && !isFullyBooked && isSlotExpired && (
                                         <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">
                                           Expired
                                         </span>
@@ -460,12 +469,12 @@ export default function BookSessionPage() {
                                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                                         </Link>
                                       </div>
-                                    ) : isBookedByOther ? (
+                                    ) : isFullyBooked ? (
                                       <button 
                                         disabled
                                         className="mt-auto w-full py-2.5 rounded-xl font-bold bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none flex justify-center items-center gap-2"
                                       >
-                                        <span>Already Booked</span>
+                                        <span>Fully Booked (100/100)</span>
                                         <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                       </button>
                                     ) : isSlotExpired ? (
@@ -485,7 +494,7 @@ export default function BookSessionPage() {
                                         {bookingSlotId === slot.id ? (
                                           <span className="animate-pulse">Booking...</span>
                                         ) : (
-                                          <>Book Now <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
+                                          <>Book Now ({availableSeats} Left) <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
                                         )}
                                       </button>
                                     )}

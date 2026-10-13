@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { requireAuth } from '../../../src/lib/auth';
-import { Enrollment, Package, LiveClass, TutorAvailability, User } from '../../../src/db/models';
+import { Enrollment, Package, LiveClass, TutorAvailability, TutorSlotBooking, User } from '../../../src/db/models';
 import CoursesTabs from '../../../src/components/dashboard/CoursesTabs';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
@@ -26,9 +27,20 @@ export default async function StudentCoursesPage() {
     order: [['enrolledAt', 'DESC']],
   });
 
-  // Fetch all 1-on-1 sessions (TutorAvailability) booked by this user
+  // Fetch all sessions booked by this user either directly or via TutorSlotBooking
+  const studentBookings = await TutorSlotBooking.findAll({
+    where: { studentId: user.id, status: { [Op.ne]: 'CANCELLED' } },
+    attributes: ['slotId'],
+  });
+  const bookedSlotIds = studentBookings.map(b => b.slotId);
+
   const oneOnOneSessions = await TutorAvailability.findAll({
-    where: { studentId: user.id },
+    where: {
+      [Op.or]: [
+        { studentId: user.id },
+        ...(bookedSlotIds.length > 0 ? [{ id: { [Op.in]: bookedSlotIds } }] : []),
+      ],
+    },
     include: [{ model: User, as: 'tutor', attributes: ['name', 'avatar'] }]
   });
 

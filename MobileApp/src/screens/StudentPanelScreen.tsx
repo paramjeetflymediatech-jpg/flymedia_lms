@@ -183,9 +183,20 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
             setBookingSlotId(null);
             if (res && res.success) {
               Alert.alert('Success 🎉', 'Your session has been successfully booked!');
-              // Update slot state in-place so student sees it booked by them
               setAvailableSlots(prev =>
-                prev.map(s => (s.id === slotId ? { ...s, isBooked: true, isBookedByMe: true } : s))
+                prev.map(s => {
+                  if (s.id === slotId) {
+                    const newCount = (s.bookedCount || 0) + 1;
+                    return {
+                      ...s,
+                      isBooked: newCount >= 100,
+                      isBookedByMe: true,
+                      bookedCount: newCount,
+                      availableSeats: Math.max(0, 100 - newCount),
+                    };
+                  }
+                  return s;
+                })
               );
               // Refresh full dashboard
               loadDashboardData();
@@ -723,8 +734,10 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
                   <View style={styles.slotsGrid}>
                     {availableSlots.map((slot) => {
                       const isBookedByMe = Boolean(slot.isBookedByMe);
-                      const isBookedByOther = Boolean(slot.isBooked) && !isBookedByMe;
+                      const bookedCount = slot.bookedCount || 0;
+                      const isFullyBooked = bookedCount >= 100 && !isBookedByMe;
                       const isExpired = Boolean(slot.isPast);
+                      const availableSeats = Math.max(0, 100 - bookedCount);
 
                       return (
                         <View
@@ -732,34 +745,39 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
                           style={[
                             styles.slotItemCard,
                             isBookedByMe && styles.slotItemCardBookedByMe,
-                            (isBookedByOther || isExpired) && styles.slotItemCardDisabled,
+                            (isFullyBooked || isExpired) && styles.slotItemCardDisabled,
                           ]}
                         >
                           <View style={styles.slotTimeWrap}>
                             <Clock
                               size={14}
-                              color={isBookedByMe ? '#059669' : isBookedByOther || isExpired ? Colors.textMuted : Colors.primaryOrange}
+                              color={isBookedByMe ? '#059669' : isFullyBooked || isExpired ? Colors.textMuted : Colors.primaryOrange}
                             />
-                            <Text
-                              style={[
-                                styles.slotTimeText,
-                                isBookedByMe && { color: '#065f46', fontWeight: '800' },
-                                (isBookedByOther || isExpired) && { color: Colors.textMuted, textDecorationLine: isExpired ? 'line-through' : 'none' },
-                              ]}
-                            >
-                              {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
-                            </Text>
+                            <View>
+                              <Text
+                                style={[
+                                  styles.slotTimeText,
+                                  isBookedByMe && { color: '#065f46', fontWeight: '800' },
+                                  (isFullyBooked || isExpired) && { color: Colors.textMuted, textDecorationLine: isExpired ? 'line-through' : 'none' },
+                                ]}
+                              >
+                                {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
+                              </Text>
+                              <Text style={styles.slotCapacityText}>
+                                {isFullyBooked ? 'Full (100/100)' : `${availableSeats} seats left`}
+                              </Text>
+                            </View>
                           </View>
 
                           {/* Action Button */}
                           {isBookedByMe ? (
                             <View style={styles.slotBadgeBookedByMe}>
                               <CheckCircle size={12} color="#059669" />
-                              <Text style={styles.slotBadgeTextBookedByMe}>Booked by You</Text>
+                              <Text style={styles.slotBadgeTextBookedByMe}>Booked</Text>
                             </View>
-                          ) : isBookedByOther ? (
+                          ) : isFullyBooked ? (
                             <View style={styles.slotBadgeBookedOther}>
-                              <Text style={styles.slotBadgeTextBookedOther}>Already Booked</Text>
+                              <Text style={styles.slotBadgeTextBookedOther}>Fully Booked (100)</Text>
                             </View>
                           ) : isExpired ? (
                             <View style={styles.slotBadgeExpired}>
@@ -1585,6 +1603,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  slotCapacityText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginTop: 2,
   },
   bookSlotBtn: {
     backgroundColor: '#ea580c',

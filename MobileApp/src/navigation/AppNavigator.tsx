@@ -11,8 +11,9 @@ import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { StudentPanelScreen } from '../screens/StudentPanelScreen';
 import { TutorPanelScreen } from '../screens/TutorPanelScreen';
 import { Colors } from '../theme/colors';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
 import {
   Home,
   BookOpen,
@@ -24,26 +25,60 @@ import {
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+function TabIconItem({
+  Icon,
+  color,
+  focused,
+}: {
+  Icon: any;
+  color: string;
+  focused: boolean;
+}) {
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 44,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: focused ? 'rgba(230, 8, 112, 0.12)' : 'transparent',
+      }}
+    >
+      <Icon size={20} color={color} strokeWidth={focused ? 2.4 : 1.8} />
+    </View>
+  );
+}
+
 function MainTabs() {
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+  const { user } = useAuth();
+  const isTutor = user?.role === 'TUTOR';
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primaryOrange,
+        tabBarActiveTintColor: Colors.primaryRose,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          height: 54 + bottomInset,
-          paddingBottom: bottomInset,
+          backgroundColor: '#ffffff',
+          borderTopColor: '#f1f5f9',
+          borderTopWidth: 1,
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset + 4,
           paddingTop: 8,
+          shadowColor: '#0f172a',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 10,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '700',
+          marginTop: 2,
         },
       }}
     >
@@ -52,7 +87,9 @@ function MainTabs() {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIconItem Icon={Home} color={color} focused={focused} />
+          ),
         }}
       />
       <Tab.Screen
@@ -60,33 +97,43 @@ function MainTabs() {
         component={CoursesScreen}
         options={{
           tabBarLabel: 'Courses',
-          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="MyLearningTab"
-        component={MyLearningScreen}
-        options={{
-          tabBarLabel: 'Learning',
-          tabBarIcon: ({ color, size }) => (
-            <GraduationCap size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIconItem Icon={BookOpen} color={color} focused={focused} />
           ),
         }}
       />
-      <Tab.Screen
-        name="MentorsTab"
-        component={MentorsScreen}
-        options={{
-          tabBarLabel: 'Mentors',
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
-        }}
-      />
+      {!isTutor && (
+        <Tab.Screen
+          name="MyLearningTab"
+          component={MyLearningScreen}
+          options={{
+            tabBarLabel: 'Learning',
+            tabBarIcon: ({ color, focused }) => (
+              <TabIconItem Icon={GraduationCap} color={color} focused={focused} />
+            ),
+          }}
+        />
+      )}
+      {!isTutor && (
+        <Tab.Screen
+          name="MentorsTab"
+          component={MentorsScreen}
+          options={{
+            tabBarLabel: 'Mentors',
+            tabBarIcon: ({ color, focused }) => (
+              <TabIconItem Icon={Users} color={color} focused={focused} />
+            ),
+          }}
+        />
+      )}
       <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIconItem Icon={User} color={color} focused={focused} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -94,41 +141,51 @@ function MainTabs() {
 }
 
 export function AppNavigator() {
+  const { user } = useAuth();
+  const isTutor = user?.role === 'TUTOR';
+
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Main" component={MainTabs} />
-      <Stack.Screen
-        name="CourseDetail"
-        component={CourseDetailScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="AdminDashboard"
-        component={AdminDashboardScreen}
-        options={{
-          animation: 'slide_from_bottom',
-        }}
-      />
-      <Stack.Screen
-        name="StudentPanel"
-        component={StudentPanelScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="TutorPanel"
-        component={TutorPanelScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
+      {isTutor ? (
+        <Stack.Screen name="TutorPanel" component={TutorPanelScreen} />
+      ) : (
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen
+            name="CourseDetail"
+            component={CourseDetailScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="AdminDashboard"
+            component={AdminDashboardScreen}
+            options={{
+              animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen
+            name="StudentPanel"
+            component={StudentPanelScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="TutorPanel"
+            component={TutorPanelScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
+      )}
     </Stack.Navigator>
   );
 }
+

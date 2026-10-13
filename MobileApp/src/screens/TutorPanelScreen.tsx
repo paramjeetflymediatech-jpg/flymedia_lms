@@ -35,6 +35,7 @@ import {
   AlertCircle,
   RotateCcw,
   BookOpen,
+  LogOut,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../utils/imageUrl';
 
@@ -45,7 +46,7 @@ interface TutorPanelScreenProps {
 }
 
 export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
   const bottomPadding = Math.max(insets.bottom, 16);
@@ -268,31 +269,66 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     return `${hour}:${minute} ${ampm}`;
   };
 
+  const handleLogout = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out of your Tutor account?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+        },
+      },
+    ]);
+  };
+
   return (
-    <View style={[styles.screen, { paddingTop: topPadding }]}>
+    <View style={styles.screen}>
       {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-
-        <View style={styles.headerTitleWrap}>
-          <View style={styles.portalBadge}>
-            <Sparkles size={12} color="#2563eb" />
-            <Text style={styles.portalBadgeText}>TUTOR CONTROL CENTER</Text>
+      <View style={[styles.headerContainer, { paddingTop: topPadding + 6 }]}>
+        <View style={styles.headerTopRow}>
+          <View style={styles.brandGroup}>
+            {navigation.canGoBack && navigation.canGoBack() && (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backBtn}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <ArrowLeft size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            )}
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <View style={styles.tutorBadge}>
+              <Sparkles size={11} color={Colors.primaryRose} />
+              <Text style={styles.tutorBadgeText}>TUTOR</Text>
+            </View>
           </View>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {user?.name ? `Coach ${user.name.split(' ')[0]}'s Portal` : 'Tutor Portal'}
-          </Text>
-        </View>
 
-        <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
-          <RotateCcw size={18} color={Colors.textSecondary} />
-        </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={onRefresh}
+              style={styles.iconActionBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
+            >
+              <RotateCcw size={16} color={Colors.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={styles.logoutPillBtn}
+              activeOpacity={0.82}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <LogOut size={13} color="#dc2626" />
+              <Text style={styles.logoutPillText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* SEGMENTED TAB BAR */}
@@ -331,14 +367,14 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
       {/* BODY CONTENT */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color={Colors.primaryRose} />
           <Text style={styles.loadingText}>Loading tutor dashboard...</Text>
         </View>
       ) : (
         <ScrollView
           style={styles.contentContainer}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 32 }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primaryRose]} />}
           showsVerticalScrollIndicator={false}
         >
           {/* TAB 1: OVERVIEW */}
@@ -688,37 +724,50 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 ) : (
                   <View style={{ gap: 8 }}>
                     {slots.map((slot) => {
-                      const isBooked = Boolean(slot.isBooked);
+                      const bookedCount = slot.bookedCount || 0;
+                      const isFull = bookedCount >= 100;
+                      const hasBookings = bookedCount > 0;
                       return (
                         <View
                           key={slot.id}
-                          style={[styles.slotItemCard, isBooked && styles.slotItemCardBooked]}
+                          style={[styles.slotItemCard, hasBookings && styles.slotItemCardBooked]}
                         >
                           <View style={styles.slotTimeWrap}>
-                            <Clock size={16} color={isBooked ? '#059669' : '#2563eb'} />
-                            <Text style={styles.slotTimeText}>
-                              {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
-                            </Text>
+                            <Clock size={16} color={hasBookings ? '#059669' : Colors.primaryRose} />
+                            <View>
+                              <Text style={styles.slotTimeText}>
+                                {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
+                              </Text>
+                              <Text style={{ fontSize: 10, fontWeight: '700', color: hasBookings ? '#059669' : Colors.textMuted, marginTop: 2 }}>
+                                {hasBookings ? `${bookedCount}/100 Students Booked` : '0/100 Students Booked (Open)'}
+                              </Text>
+                            </View>
                           </View>
 
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            {isBooked ? (
+                            {isFull ? (
+                              <View style={[styles.bookedSlotBadge, { backgroundColor: '#fee2e2' }]}>
+                                <CheckCircle size={12} color="#dc2626" />
+                                <Text style={[styles.bookedSlotBadgeText, { color: '#dc2626' }]}>Full (100/100)</Text>
+                              </View>
+                            ) : hasBookings ? (
                               <View style={styles.bookedSlotBadge}>
-                                <CheckCircle size={12} color="#059669" />
-                                <Text style={styles.bookedSlotBadgeText}>Booked by Student</Text>
+                                <Users size={12} color="#059669" />
+                                <Text style={styles.bookedSlotBadgeText}>{bookedCount} Booked</Text>
                               </View>
                             ) : (
-                              <>
-                                <View style={styles.availableSlotBadge}>
-                                  <Text style={styles.availableSlotBadgeText}>Available</Text>
-                                </View>
-                                <TouchableOpacity
-                                  style={styles.deleteSlotBtn}
-                                  onPress={() => handleDeleteSlot(slot.id)}
-                                >
-                                  <Trash2 size={16} color="#ef4444" />
-                                </TouchableOpacity>
-                              </>
+                              <View style={styles.availableSlotBadge}>
+                                <Text style={styles.availableSlotBadgeText}>Available</Text>
+                              </View>
+                            )}
+
+                            {!hasBookings && (
+                              <TouchableOpacity
+                                style={styles.deleteSlotBtn}
+                                onPress={() => handleDeleteSlot(slot.id)}
+                              >
+                                <Trash2 size={16} color="#ef4444" />
+                              </TouchableOpacity>
                             )}
                           </View>
                         </View>
@@ -864,60 +913,114 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
+  headerContainer: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
+  },
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+  },
+  brandGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    paddingRight: 8,
   },
   backBtn: {
-    padding: 6,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 2,
   },
-  headerTitleWrap: {
-    flex: 1,
-    marginLeft: 8,
+  logoImage: {
+    width: 128,
+    height: 29,
   },
-  portalBadge: {
+  tutorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#fdf2f8',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.25)',
   },
-  portalBadgeText: {
+  tutorBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#2563eb',
-    letterSpacing: 0.5,
+    color: Colors.primaryRose,
+    letterSpacing: 0.4,
   },
-  headerTitle: {
-    fontSize: 17,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconActionBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutPillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 18,
+  },
+  logoutPillText: {
+    fontSize: 12,
     fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  refreshBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: Colors.background,
+    color: '#dc2626',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#ffffff',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: '#f1f5f9',
+    gap: 6,
   },
   tabItem: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 10,
   },
   activeTabItem: {
-    backgroundColor: '#eff6ff', // blue-50
+    backgroundColor: '#fdf2f8',
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.25)',
   },
   tabText: {
     fontSize: 12,
@@ -925,7 +1028,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   activeTabText: {
-    color: '#2563eb',
+    color: Colors.primaryRose,
     fontWeight: '800',
   },
   contentContainer: {
@@ -952,19 +1055,21 @@ const styles = StyleSheet.create({
   /* TUTOR HERO CARD */
   tutorHeroCard: {
     borderRadius: 20,
-    backgroundColor: '#1e40af', // Blue-800
+    backgroundColor: Colors.darkSurface,
     overflow: 'hidden',
     padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     ...Shadows.medium,
   },
   heroGlow: {
     position: 'absolute',
     top: -40,
     right: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(230, 8, 112, 0.22)',
   },
   heroContent: {
     position: 'relative',
@@ -977,7 +1082,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 6,
     lineHeight: 18,
   },
@@ -990,12 +1095,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    backgroundColor: Colors.primaryRose,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   heroPrimaryBtnText: {
     color: Colors.textWhite,
@@ -1003,15 +1106,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   heroSecondaryBtn: {
-    backgroundColor: Colors.textWhite,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   heroSecondaryBtnText: {
-    color: '#1e40af',
+    color: Colors.textWhite,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   /* STATS GRID */
   statsGrid: {
