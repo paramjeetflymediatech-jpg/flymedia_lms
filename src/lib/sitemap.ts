@@ -40,8 +40,8 @@ export async function getAllSitemapUrls(): Promise<SitemapEntry[]> {
   // 1. Static High-Priority Routes
   addUrl('/', { changeFrequency: 'daily', priority: 1.0 });
   addUrl('/packages', { changeFrequency: 'daily', priority: 0.9 });
-  addUrl('/blog', { changeFrequency: 'daily', priority: 0.8 });
-  addUrl('/mentors', { changeFrequency: 'weekly', priority: 0.8 });
+  // addUrl('/blog', { changeFrequency: 'daily', priority: 0.8 });
+  // addUrl('/mentors', { changeFrequency: 'weekly', priority: 0.8 });
   addUrl('/become-tutor', { changeFrequency: 'monthly', priority: 0.7 });
   addUrl('/about', { changeFrequency: 'monthly', priority: 0.7 });
   addUrl('/contact', { changeFrequency: 'monthly', priority: 0.7 });
@@ -67,10 +67,11 @@ export async function getAllSitemapUrls(): Promise<SitemapEntry[]> {
     }
 
     // 3. Dynamic Published Blog Posts
-    const posts = await BlogPost.findAll({
-      where: { status: 'PUBLISHED' },
-      attributes: ['slug', 'updatedAt'],
-    });
+    const posts:any[] = []
+    //  await BlogPost.findAll({
+    //   where: { status: 'PUBLISHED' },
+    //   attributes: ['slug', 'updatedAt'],
+    // });
     for (const post of posts) {
       if (post.slug) {
         addUrl(`/blog/${post.slug}`, {
@@ -96,10 +97,11 @@ export async function getAllSitemapUrls(): Promise<SitemapEntry[]> {
     }
 
     // 5. Dynamic Mentors / Tutors
-    const tutors = await User.findAll({
-      where: { role: 'TUTOR' },
-      attributes: ['id', 'updatedAt'],
-    });
+    const tutors:any[] = []
+    // await User.findAll({
+    //   where: { role: 'TUTOR' },
+    //   attributes: ['id', 'updatedAt'],
+    // });
     for (const tutor of tutors) {
       if (tutor.id) {
         addUrl(`/mentors/${tutor.id}`, {

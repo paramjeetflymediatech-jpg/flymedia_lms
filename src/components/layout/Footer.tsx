@@ -95,11 +95,11 @@ export default function Footer() {
                   Create Account
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/mentors" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Tutors
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/contact" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Contact
@@ -120,11 +120,11 @@ export default function Footer() {
                   Our Story
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/blog" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Tech Blog
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/faq" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Help Center

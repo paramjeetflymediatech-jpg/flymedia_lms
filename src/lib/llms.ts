@@ -22,26 +22,26 @@ function stripHtml(html?: string | null): string {
 export async function generateLlmsTxt(): Promise<string> {
   const baseUrl = getBaseUrl();
 
-  const [packages, blogs, categories, mentors, globalSeo] = await Promise.all([
+  const [packages,  categories,  globalSeo] = await Promise.all([
     Package.findAll({
       where: { status: 'PUBLISHED' },
       attributes: ['title', 'slug', 'description', 'level', 'duration', 'skills', 'price'],
       order: [['createdAt', 'DESC']],
     }),
-    BlogPost.findAll({
-      where: { status: 'PUBLISHED' },
-      attributes: ['title', 'slug', 'excerpt', 'category', 'updatedAt'],
-      order: [['createdAt', 'DESC']],
-    }),
+    // BlogPost.findAll({
+    //   where: { status: 'PUBLISHED' },
+    //   attributes: ['title', 'slug', 'excerpt', 'category', 'updatedAt'],
+    //   order: [['createdAt', 'DESC']],
+    // }),
     Category.findAll({
       attributes: ['name', 'slug', 'metaDescription'],
       order: [['name', 'ASC']],
     }),
-    User.findAll({
-      where: { role: 'TUTOR' },
-      attributes: ['id', 'name', 'professionTitle', 'bio', 'skills'],
-      order: [['createdAt', 'DESC']],
-    }),
+    // User.findAll({
+    //   where: { role: 'TUTOR' },
+    //   attributes: ['id', 'name', 'professionTitle', 'bio', 'skills'],
+    //   order: [['createdAt', 'DESC']],
+    // }),
     SeoSetting.findOne({ where: { pagePath: 'GLOBAL' } }),
   ]);
 
@@ -81,28 +81,28 @@ export async function generateLlmsTxt(): Promise<string> {
   }
 
   // 3. Blog & Articles
-  if (blogs.length > 0) {
-    out += `\n## Blog & Engineering Guides\n`;
-    for (const b of blogs) {
-      const excerpt = stripHtml(b.excerpt);
-      out += `- [${b.title}](${baseUrl}/blog/${b.slug})${excerpt ? `: ${excerpt}` : ''}\n`;
-    }
-  }
+  // if (blogs.length > 0) {
+  //   out += `\n## Blog & Engineering Guides\n`;
+  //   for (const b of blogs) {
+  //     const excerpt = stripHtml(b.excerpt);
+  //     out += `- [${b.title}](${baseUrl}/blog/${b.slug})${excerpt ? `: ${excerpt}` : ''}\n`;
+  //   }
+  // }
 
   // 4. Mentors & Instructors
-  if (mentors.length > 0) {
-    out += `\n## Mentors & Instructors\n`;
-    for (const m of mentors) {
-      const title = m.professionTitle ? ` - ${m.professionTitle}` : '';
-      const skillsStr = Array.isArray(m.skills) && m.skills.length > 0 ? ` (Skills: ${m.skills.join(', ')})` : '';
-      out += `- [${m.name || 'Mentor'}](${baseUrl}/mentors/${m.id})${title}${skillsStr}\n`;
-    }
-  }
+  // if (mentors.length > 0) {
+    // out += `\n## Mentors & Instructors\n`;
+    // for (const m of mentors) {
+    //   const title = m.professionTitle ? ` - ${m.professionTitle}` : '';
+    //   const skillsStr = Array.isArray(m.skills) && m.skills.length > 0 ? ` (Skills: ${m.skills.join(', ')})` : '';
+    //   out += `- [${m.name || 'Mentor'}](${baseUrl}/mentors/${m.id})${title}${skillsStr}\n`;
+    // }
+  // }
 
   // 5. Core Navigation Links
   out += `\n## Core Platform Links\n`;
   out += `- [All Courses](${baseUrl}/packages): Explore all training packages and bootcamps\n`;
-  out += `- [Mentors Directory](${baseUrl}/mentors): Connect with instructors and industry mentors\n`;
+  // out += `- [Mentors Directory](${baseUrl}/mentors): Connect with instructors and industry mentors\n`;
   out += `- [Become a Tutor](${baseUrl}/become-tutor): Apply to teach and mentor students\n`;
   out += `- [About Us](${baseUrl}/about): Learn about Flymedia Academy\n`;
   out += `- [Contact](${baseUrl}/contact): Student support and inquiries\n`;
@@ -125,22 +125,22 @@ export async function generateLlmsTxt(): Promise<string> {
 export async function generateLlmsFullTxt(): Promise<string> {
   const baseUrl = getBaseUrl();
 
-  const [packages, blogs, categories, mentors, globalSeo] = await Promise.all([
+  const [packages,   categories,   globalSeo] = await Promise.all([
     Package.findAll({
       where: { status: 'PUBLISHED' },
       order: [['createdAt', 'DESC']],
     }),
-    BlogPost.findAll({
-      where: { status: 'PUBLISHED' },
-      order: [['createdAt', 'DESC']],
-    }),
+    // BlogPost.findAll({
+    //   where: { status: 'PUBLISHED' },
+    //   order: [['createdAt', 'DESC']],
+    // }),
     Category.findAll({
       order: [['name', 'ASC']],
     }),
-    User.findAll({
-      where: { role: 'TUTOR' },
-      order: [['createdAt', 'DESC']],
-    }),
+    // User.findAll({
+    //   where: { role: 'TUTOR' },
+    //   order: [['createdAt', 'DESC']],
+    // }),
     SeoSetting.findOne({ where: { pagePath: 'GLOBAL' } }),
   ]);
 
@@ -186,14 +186,14 @@ export async function generateLlmsFullTxt(): Promise<string> {
     out += `\n`;
   }
 
-  if (mentors.length > 0) {
-    out += `## Mentors & Faculty\n`;
-    for (const m of mentors) {
-      out += `- ${m.name || 'Mentor'} (${m.professionTitle || 'Instructor'})\n`;
-      if (m.bio) out += `  Bio: ${stripHtml(m.bio)}\n`;
-    }
-    out += `\n`;
-  }
+  // if (mentors.length > 0) {
+  //   out += `## Mentors & Faculty\n`;
+  //   for (const m of mentors) {
+  //     out += `- ${m.name || 'Mentor'} (${m.professionTitle || 'Instructor'})\n`;
+  //     if (m.bio) out += `  Bio: ${stripHtml(m.bio)}\n`;
+  //   }
+  //   out += `\n`;
+  // }
 
   return out;
 }
