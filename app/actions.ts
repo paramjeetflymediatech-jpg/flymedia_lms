@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers } from '../src/lib/mailer';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -952,21 +952,24 @@ export async function submitInquiryAction(formData: FormData) {
       status: 'NEW',
     });
 
-    // Notify the admin
-    sendMail({
-      to: 'anujguptaflymedia@gmail.com', // Using your email from .env
-      subject: `New Contact Inquiry from ${name}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #0f172a;">New Contact Inquiry</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone}</p>
-          <p><strong>Message:</strong></p>
-          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${message}</div>
-        </div>
-      `,
-    }).catch((e: any) => console.error("Failed to send inquiry email:", e));
+    // Notify configured admin/superadmin receivers from env
+    const adminReceivers = getAdminReceivers();
+    if (adminReceivers.length > 0) {
+      sendMail({
+        to: adminReceivers,
+        subject: `New Contact Inquiry from ${name}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #0f172a;">New Contact Inquiry</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Message:</strong></p>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${message}</div>
+          </div>
+        `,
+      }).catch((e: any) => console.error("Failed to send inquiry email:", e));
+    }
 
     // Send confirmation email to the user
     sendMail({
@@ -1017,22 +1020,25 @@ export async function submitTutorApplication(formData: FormData) {
       status: 'PENDING',
     });
 
-    // Notify the admin
-    sendMail({
-      to: 'anujguptaflymedia@gmail.com',
-      subject: `New Tutor Application: ${fullName}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #0f172a;">New Tutor Application</h2>
-          <p><strong>Name:</strong> ${fullName}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone}</p>
-          <p><strong>Expertise:</strong> ${expertise}</p>
-          <p><strong>Experience:</strong></p>
-          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${experience}</div>
-        </div>
-      `,
-    }).catch((e: any) => console.error("Failed to send admin email for tutor application:", e));
+    // Notify configured admin/superadmin receivers from env
+    const adminReceivers = getAdminReceivers();
+    if (adminReceivers.length > 0) {
+      sendMail({
+        to: adminReceivers,
+        subject: `New Tutor Application: ${fullName}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #0f172a;">New Tutor Application</h2>
+            <p><strong>Name:</strong> ${fullName}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Expertise:</strong> ${expertise}</p>
+            <p><strong>Experience:</strong></p>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${experience}</div>
+          </div>
+        `,
+      }).catch((e: any) => console.error("Failed to send admin email for tutor application:", e));
+    }
 
     // Send confirmation email to the applicant
     sendMail({
