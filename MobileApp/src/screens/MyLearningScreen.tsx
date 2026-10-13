@@ -19,6 +19,7 @@ import {
   Calendar,
   LogIn,
   GraduationCap,
+  ChevronRight,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../utils/imageUrl';
 
@@ -104,6 +105,24 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                 Role: <Text style={styles.roleTag}>{user.role}</Text> • {user.email}
               </Text>
             </View>
+
+            {/* FULL STUDENT PANEL SHORTCUT */}
+            <TouchableOpacity
+              style={styles.openStudentPanelBtn}
+              onPress={() => navigation.navigate('StudentPanel')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.openStudentPanelLeft}>
+                <View style={styles.openStudentPanelIcon}>
+                  <Calendar size={18} color={Colors.textWhite} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.openStudentPanelTitle}>Student Dashboard & 1-on-1 Sessions</Text>
+                  <Text style={styles.openStudentPanelSub}>Book tutors, join live sessions, and track learning</Text>
+                </View>
+              </View>
+              <ChevronRight size={18} color={Colors.primaryOrange} />
+            </TouchableOpacity>
 
             {/* ENROLLMENTS LIST */}
             {enrollments.length === 0 ? (
@@ -309,6 +328,43 @@ const styles = StyleSheet.create({
   roleTag: {
     color: Colors.primaryOrange,
     fontWeight: '700',
+  },
+  openStudentPanelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff7ed',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#fed7aa',
+    marginBottom: 20,
+    ...Shadows.small,
+  },
+  openStudentPanelLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginRight: 8,
+  },
+  openStudentPanelIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#ea580c',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  openStudentPanelTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  openStudentPanelSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   courseItemCard: {
     backgroundColor: Colors.surface,

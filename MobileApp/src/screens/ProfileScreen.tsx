@@ -22,6 +22,8 @@ import {
   CheckCircle,
   ExternalLink,
   ArrowRight,
+  GraduationCap,
+  Users,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -100,6 +102,58 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 <Text style={styles.roleText}>{user.role} ACCOUNT</Text>
               </View>
             </View>
+
+            {/* STUDENT LEARNING PANEL SECTION */}
+            {(user.role === 'STUDENT' || user.role === 'ADMIN') && (
+              <View style={styles.studentHubCard}>
+                <View style={styles.hubHeader}>
+                  <View style={[styles.hubIconCircle, { backgroundColor: '#ea580c' }]}>
+                    <GraduationCap size={20} color={Colors.textWhite} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.hubTitle}>Student Learning Panel</Text>
+                    <Text style={styles.hubSub}>
+                      Access enrolled packages, view live batch classes, and book 1-on-1 sessions
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.openHubBtn, { backgroundColor: '#ea580c' }]}
+                  onPress={() => navigation.navigate('StudentPanel')}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.openHubBtnText}>Open Student Dashboard & Sessions</Text>
+                  <ArrowRight size={16} color={Colors.textWhite} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* TUTOR MANAGEMENT PANEL SECTION */}
+            {(user.role === 'TUTOR' || user.role === 'ADMIN') && (
+              <View style={styles.tutorHubCard}>
+                <View style={styles.hubHeader}>
+                  <View style={[styles.hubIconCircle, { backgroundColor: '#2563eb' }]}>
+                    <Users size={20} color={Colors.textWhite} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.hubTitle}>Tutor Management Panel</Text>
+                    <Text style={styles.hubSub}>
+                      Manage class schedules, set 1-on-1 availability slots, launch meetings, and view students
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.openHubBtn, { backgroundColor: '#2563eb' }]}
+                  onPress={() => navigation.navigate('TutorPanel')}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.openHubBtnText}>Open Tutor Control Center</Text>
+                  <ArrowRight size={16} color={Colors.textWhite} />
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* ADMIN CONTROL PANEL SECTION */}
             {user.role === 'ADMIN' && (
@@ -328,6 +382,60 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 16,
     marginBottom: 20,
+  },
+  studentHubCard: {
+    backgroundColor: '#fff7ed', // orange-50
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#fed7aa', // orange-200
+    ...Shadows.small,
+  },
+  tutorHubCard: {
+    backgroundColor: '#eff6ff', // blue-50
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#bfdbfe', // blue-200
+    ...Shadows.small,
+  },
+  hubHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  hubIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hubTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  hubSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+  },
+  openHubBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  openHubBtnText: {
+    color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '800',
   },
   adminHubCard: {
     backgroundColor: Colors.darkSurface,

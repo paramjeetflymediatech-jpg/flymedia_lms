@@ -538,4 +538,140 @@ export const ApiService = {
       return { success: false, error: e.message || 'Failed to create coupon' };
     }
   },
+
+  // ==========================================
+  // STUDENT PANEL APIs
+  // ==========================================
+  async getStudentDashboard(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/dashboard`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async getStudentTutors() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/tutors`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, tutors: [] };
+    }
+  },
+
+  async getStudentSlots(tutorId: string, date: string, token?: string) {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const response = await fetch(`${API_BASE_URL}/student/availability?tutorId=${encodeURIComponent(tutorId)}&date=${encodeURIComponent(date)}`, {
+        headers,
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, slots: [] };
+    }
+  },
+
+  async bookStudentSlot(slotId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ slotId }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  // ==========================================
+  // TUTOR PANEL APIs
+  // ==========================================
+  async getTutorDashboard(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tutor/dashboard`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async getTutorSlots(date: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tutor/availability?date=${encodeURIComponent(date)}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, slots: [] };
+    }
+  },
+
+  async addTutorSlot(data: { date: string; startTime: string; endTime: string }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tutor/availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async deleteTutorSlot(slotId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tutor/availability?slotId=${encodeURIComponent(slotId)}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async updateTutorClass(data: { sessionId: string; isOneOnOne: boolean; meetLink?: string; status?: string }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tutor/classes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
 };

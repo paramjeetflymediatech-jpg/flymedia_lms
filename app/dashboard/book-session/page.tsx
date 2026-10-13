@@ -100,10 +100,15 @@ export default function BookSessionPage() {
         startTransition(async () => {
           const res = await bookSessionSlot(slotId);
           if (res.success) {
-            Swal.fire('Booked!', res.message, 'success');
-            // Remove the booked slot from the UI
-            setDaySlots(prev => prev.filter(s => s.id !== slotId));
-            // If it was the last slot for that day, we should technically remove the indicator, but we can just leave it or refetch
+            Swal.fire({
+              title: 'Booked!',
+              text: res.message,
+              icon: 'success',
+              confirmButtonColor: '#ea580c',
+            });
+            // Keep the slot displayed and mark it as booked by this student
+            setDaySlots(prev => prev.map(s => s.id === slotId ? { ...s, isBooked: true, isBookedByMe: true } : s));
+            setMonthSlots(prev => prev.includes(selectedDate) ? prev : [...prev, selectedDate]);
           } else {
             Swal.fire('Error', res.message, 'error');
           }
@@ -318,15 +323,44 @@ export default function BookSessionPage() {
                     const isSelectedDateInPast = selectedDate < todayString;
                     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+                    const availableSlots = daySlots.filter((s) => {
+                      const isExpired = Boolean(s.isPast) || isSelectedDateInPast || (selectedDate === todayString && s.startTime <= currentTime);
+                      return !s.isBooked && !isExpired;
+                    });
+                    const myBookedSlots = daySlots.filter((s) => Boolean(s.isBookedByMe));
+
                     return (
                       <>
-                        <div className="mb-6 pb-4 border-b border-slate-100">
-                          <h3 className="text-xl font-bold text-slate-900">
-                            {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                          </h3>
-                          <p className="text-slate-500 text-sm font-medium mt-1">
-                            {daySlots.length} available {daySlots.length === 1 ? 'slot' : 'slots'}
-                          </p>
+                        <div className="mb-6 pb-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-900">
+                              {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                            </h3>
+                            <div className="text-slate-500 text-sm font-medium mt-1 flex items-center gap-2 flex-wrap">
+                              <span>
+                                {availableSlots.length} available {availableSlots.length === 1 ? 'slot' : 'slots'}
+                              </span>
+                              {myBookedSlots.length > 0 && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-xs border border-emerald-200">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                    {myBookedSlots.length} booked by you
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {myBookedSlots.length > 0 && (
+                            <Link
+                              href="/dashboard/courses"
+                              className="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs"
+                            >
+                              <span>View My Sessions</span>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </Link>
+                          )}
                         </div>
 
                         {isSelectedDateInPast && (
@@ -348,48 +382,113 @@ export default function BookSessionPage() {
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {daySlots.map((slot) => {
-                                const isSlotExpired = Boolean(slot.isPast) || isSelectedDateInPast || (selectedDate === todayString && slot.startTime <= currentTime);
+                                const isBookedByMe = Boolean(slot.isBookedByMe);
+                                const isBookedByOther = Boolean(slot.isBooked) && !isBookedByMe;
+                                const isSlotExpired = !isBookedByMe && (Boolean(slot.isPast) || isSelectedDateInPast || (selectedDate === todayString && slot.startTime <= currentTime));
+
+                                let cardClasses = "p-5 rounded-2xl bg-white border-2 transition-all flex flex-col ";
+                                let iconClasses = "p-2 rounded-lg ";
+                                let timeClasses = "font-bold text-sm ";
+
+                                if (isBookedByMe) {
+                                  cardClasses += "border-emerald-300 bg-emerald-50/30 shadow-sm ring-1 ring-emerald-200/50";
+                                  iconClasses += "bg-emerald-100 text-emerald-700";
+                                  timeClasses += "text-emerald-950";
+                                } else if (isBookedByOther) {
+                                  cardClasses += "border-slate-200 bg-slate-50/70 opacity-75";
+                                  iconClasses += "bg-slate-100 text-slate-400";
+                                  timeClasses += "text-slate-500";
+                                } else if (isSlotExpired) {
+                                  cardClasses += "border-slate-100 bg-slate-50/60 opacity-80";
+                                  iconClasses += "bg-slate-100 text-slate-400";
+                                  timeClasses += "text-slate-400 line-through";
+                                } else {
+                                  cardClasses += "border-slate-100 hover:border-orange-200";
+                                  iconClasses += "bg-orange-50 text-orange-600";
+                                  timeClasses += "text-slate-700";
+                                }
 
                                 return (
-                                  <div key={slot.id} className={`p-5 rounded-2xl bg-white border-2 transition-colors flex flex-col ${isSlotExpired ? 'border-slate-100 bg-slate-50/60 opacity-80' : 'border-slate-100 hover:border-orange-200'}`}>
+                                  <div key={slot.id} className={cardClasses}>
                                     <div className="flex items-center justify-between mb-4">
                                       <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${isSlotExpired ? 'bg-slate-100 text-slate-400' : 'bg-orange-50 text-orange-600'}`}>
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        <div className={iconClasses}>
+                                          {isBookedByMe ? (
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                          ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                          )}
                                         </div>
                                         <div>
                                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Session Time</p>
-                                          <span className={`font-bold text-sm ${isSlotExpired ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                          <span className={timeClasses}>
                                             {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                                           </span>
                                         </div>
                                       </div>
-                                      {isSlotExpired && (
+
+                                      {isBookedByMe && (
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-md border border-emerald-200 shadow-xs">
+                                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                          Booked by You
+                                        </span>
+                                      )}
+                                      {isBookedByOther && (
+                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">
+                                          Already Booked
+                                        </span>
+                                      )}
+                                      {!slot.isBooked && isSlotExpired && (
                                         <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">
                                           Expired
                                         </span>
                                       )}
                                     </div>
-                                    <button 
-                                      onClick={() => !isSlotExpired && handleBookSlot(slot.id)}
-                                      disabled={isSlotExpired || bookingSlotId === slot.id}
-                                      className={`mt-auto w-full py-2.5 rounded-xl font-bold transition-all flex justify-center items-center gap-2 shadow-sm ${
-                                        isSlotExpired
-                                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none'
-                                          : 'text-white bg-orange-600 hover:bg-orange-700 shadow-purple-200'
-                                      }`}
-                                    >
-                                      {bookingSlotId === slot.id ? (
-                                        <span className="animate-pulse">Booking...</span>
-                                      ) : isSlotExpired ? (
-                                        <>
-                                          <span>Slot Expired</span>
-                                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                                        </>
-                                      ) : (
-                                        <>Book Now <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
-                                      )}
-                                    </button>
+
+                                    {/* Action Button */}
+                                    {isBookedByMe ? (
+                                      <div className="mt-auto space-y-2 pt-2">
+                                        <div className="w-full py-2.5 rounded-xl font-bold bg-emerald-600 text-white flex justify-center items-center gap-2 shadow-sm shadow-emerald-200 select-none">
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                          <span>Booked</span>
+                                        </div>
+                                        <Link
+                                          href="/dashboard/courses"
+                                          className="w-full py-1 text-center text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center justify-center gap-1 transition-colors"
+                                        >
+                                          <span>View in My Sessions</span>
+                                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                        </Link>
+                                      </div>
+                                    ) : isBookedByOther ? (
+                                      <button 
+                                        disabled
+                                        className="mt-auto w-full py-2.5 rounded-xl font-bold bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none flex justify-center items-center gap-2"
+                                      >
+                                        <span>Already Booked</span>
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                      </button>
+                                    ) : isSlotExpired ? (
+                                      <button 
+                                        disabled
+                                        className="mt-auto w-full py-2.5 rounded-xl font-bold bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none flex justify-center items-center gap-2"
+                                      >
+                                        <span>Slot Expired</span>
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                      </button>
+                                    ) : (
+                                      <button 
+                                        onClick={() => handleBookSlot(slot.id)}
+                                        disabled={bookingSlotId === slot.id}
+                                        className="mt-auto w-full py-2.5 rounded-xl font-bold transition-all flex justify-center items-center gap-2 shadow-sm text-white bg-orange-600 hover:bg-orange-700 shadow-orange-200 active:scale-[0.98]"
+                                      >
+                                        {bookingSlotId === slot.id ? (
+                                          <span className="animate-pulse">Booking...</span>
+                                        ) : (
+                                          <>Book Now <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg></>
+                                        )}
+                                      </button>
+                                    )}
                                   </div>
                                 );
                               })}

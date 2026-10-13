@@ -8,6 +8,8 @@ import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { MentorsScreen } from '../screens/MentorsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
+import { StudentPanelScreen } from '../screens/StudentPanelScreen';
+import { TutorPanelScreen } from '../screens/TutorPanelScreen';
 import { Colors } from '../theme/colors';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -111,6 +113,20 @@ export function AppNavigator() {
         component={AdminDashboardScreen}
         options={{
           animation: 'slide_from_bottom',
+        }}
+      />
+      <Stack.Screen
+        name="StudentPanel"
+        component={StudentPanelScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="TutorPanel"
+        component={TutorPanelScreen}
+        options={{
+          animation: 'slide_from_right',
         }}
       />
     </Stack.Navigator>

@@ -43,7 +43,7 @@ export async function checkStudentEligibility() {
 // 2. Fetch availability slots for an entire month to show indicators on the calendar
 export async function getTutorMonthAvailability(tutorId: string, year: number, month: number) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     
     const now = new Date();
     const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -53,7 +53,7 @@ export async function getTutorMonthAvailability(tutorId: string, year: number, m
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
-    // Only look for unbooked slots on or after today so previous dates do not show slot indicators
+    // Only look for slots on or after today so previous dates do not show slot indicators
     const queryStartDate = startDate < todayString ? todayString : startDate;
 
     if (queryStartDate > endDate) {
@@ -65,16 +65,22 @@ export async function getTutorMonthAvailability(tutorId: string, year: number, m
       where: {
         tutorId,
         date: { [Op.between]: [queryStartDate, endDate] },
-        isBooked: false // Only show indicators for days that have UNBOOKED slots
       },
-      attributes: ['date', 'startTime'],
+      attributes: ['date', 'startTime', 'isBooked', 'studentId'],
     });
 
-    // For today, only count dates that have at least one slot that hasn't started yet
+    // Show indicator if date has unbooked future slot OR if it has a slot booked by this student
     const validDates = slots
       .filter(s => {
         const slotDate = s.get('date');
         const slotTime = s.get('startTime');
+        const isBooked = Boolean(s.get('isBooked'));
+        const isMyBooking = isBooked && s.get('studentId') === user.id;
+
+        if (isMyBooking) return true; // Always highlight days where this student booked a session
+
+        if (isBooked) return false; // Don't highlight days where slots are taken by other users
+
         if (slotDate === todayString) {
           return slotTime > currentTime;
         }
@@ -90,14 +96,14 @@ export async function getTutorMonthAvailability(tutorId: string, year: number, m
   }
 }
 
-// 3. Fetch specific unbooked time slots for a chosen day
+// 3. Fetch specific time slots for a chosen day
 export async function getTutorDayAvailability(tutorId: string, date: string) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const slots = await TutorAvailability.findAll({
-      where: { tutorId, date, isBooked: false },
+      where: { tutorId, date },
       order: [['startTime', 'ASC']],
-      attributes: ['id', 'startTime', 'endTime', 'date'],
+      attributes: ['id', 'startTime', 'endTime', 'date', 'isBooked', 'studentId'],
     });
 
     const now = new Date();
@@ -108,8 +114,16 @@ export async function getTutorDayAvailability(tutorId: string, date: string) {
       const plain = s.get({ plain: true });
       const slotDate = plain.date || date;
       const isPast = slotDate < todayString || (slotDate === todayString && plain.startTime <= currentTime);
+      const isBooked = Boolean(plain.isBooked);
+      const isBookedByMe = isBooked && plain.studentId === user.id;
+
       return {
-        ...plain,
+        id: plain.id,
+        startTime: plain.startTime,
+        endTime: plain.endTime,
+        date: slotDate,
+        isBooked,
+        isBookedByMe,
         isPast,
       };
     });
