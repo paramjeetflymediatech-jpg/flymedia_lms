@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { LiveClass, TutorAvailability } from '../../../../src/db/models';
-import { getAuthUserFromRequest } from '../auth/jwt';
+import { LiveClass, TutorAvailability } from '../../../../../src/db/models';
+import { getAuthUserFromRequest } from '../../auth/jwt';
 
 export const dynamic = 'force-dynamic';
 

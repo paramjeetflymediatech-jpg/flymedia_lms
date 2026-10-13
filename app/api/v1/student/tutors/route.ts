@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { User, TutorAvailability } from '../../../../src/db/models';
+import { User, TutorAvailability } from '../../../../../src/db/models';
 import { Op } from 'sequelize';
 
 export const dynamic = 'force-dynamic';

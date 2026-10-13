@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { LiveClass, Package, Enrollment, User, TutorAvailability } from '../../../../src/db/models';
-import { getAuthUserFromRequest } from '../auth/jwt';
+import { LiveClass, Package, Enrollment, User, TutorAvailability } from '../../../../../src/db/models';
+import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
 export const dynamic = 'force-dynamic';
