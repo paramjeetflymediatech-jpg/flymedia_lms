@@ -13,12 +13,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [],
-      afterFiles: [
-        {
-          source: '/sitemap.xml',
-          destination: '/sitemap/0.xml',
-        },
-      ],
+      afterFiles: [],
       fallback: [
         {
           source: '/uploads/:path*',
