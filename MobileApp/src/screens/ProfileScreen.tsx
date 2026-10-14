@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -70,9 +71,29 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
+    const doLogout = async () => {
+      try {
+        await logout();
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const win = (globalThis as any).window;
+      const confirmed =
+        win && win.confirm
+          ? win.confirm('Are you sure you want to sign out?')
+          : true;
+      if (confirmed) {
+        await doLogout();
+      }
+      return;
+    }
+
     Alert.alert('Log Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log Out', style: 'destructive', onPress: logout },
+      { text: 'Log Out', style: 'destructive', onPress: doLogout },
     ]);
   };
 
@@ -105,7 +126,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
 
             {/* STUDENT LEARNING PANEL SECTION */}
-            {(user.role === 'STUDENT' || user.role === 'ADMIN') && (
+            {user.role === 'STUDENT' && (
               <View style={styles.studentHubCard}>
                 <View style={styles.hubHeader}>
                   <View style={[styles.hubIconCircle, { backgroundColor: '#ea580c' }]}>
@@ -131,7 +152,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             )}
 
             {/* TUTOR MANAGEMENT PANEL SECTION */}
-            {(user.role === 'TUTOR' || user.role === 'ADMIN') && (
+            {user.role === 'TUTOR' && (
               <View style={styles.tutorHubCard}>
                 <View style={styles.hubHeader}>
                   <View style={[styles.hubIconCircle, { backgroundColor: '#2563eb' }]}>

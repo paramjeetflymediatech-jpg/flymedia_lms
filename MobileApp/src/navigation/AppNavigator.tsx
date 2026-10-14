@@ -7,9 +7,9 @@ import { CourseDetailScreen } from '../screens/CourseDetailScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { MentorsScreen } from '../screens/MentorsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
+import { AdminDashboardScreen } from '../screens/admin';
 import { StudentPanelScreen } from '../screens/StudentPanelScreen';
-import { TutorPanelScreen } from '../screens/TutorPanelScreen';
+import { TutorPanelScreen } from '../screens/tutor';
 import { Colors } from '../theme/colors';
 import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -55,6 +55,7 @@ function MainTabs() {
   const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
   const { user } = useAuth();
   const isTutor = user?.role === 'TUTOR';
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
     <Tab.Navigator
@@ -102,7 +103,7 @@ function MainTabs() {
           ),
         }}
       />
-      {!isTutor && (
+      {!isTutor && !isAdmin && (
         <Tab.Screen
           name="MyLearningTab"
           component={MyLearningScreen}
@@ -114,7 +115,7 @@ function MainTabs() {
           }}
         />
       )}
-      {!isTutor && (
+      {!isTutor && !isAdmin && (
         <Tab.Screen
           name="MentorsTab"
           component={MentorsScreen}
@@ -143,14 +144,20 @@ function MainTabs() {
 export function AppNavigator() {
   const { user } = useAuth();
   const isTutor = user?.role === 'TUTOR';
+  const isAdmin = user?.role === 'ADMIN';
+
+  const userKey = user ? (isAdmin ? 'admin' : isTutor ? 'tutor' : 'user') : 'guest';
 
   return (
     <Stack.Navigator
+      key={userKey}
       screenOptions={{
         headerShown: false,
       }}
     >
-      {isTutor ? (
+      {isAdmin ? (
+        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+      ) : isTutor ? (
         <Stack.Screen name="TutorPanel" component={TutorPanelScreen} />
       ) : (
         <>
@@ -163,22 +170,8 @@ export function AppNavigator() {
             }}
           />
           <Stack.Screen
-            name="AdminDashboard"
-            component={AdminDashboardScreen}
-            options={{
-              animation: 'slide_from_bottom',
-            }}
-          />
-          <Stack.Screen
             name="StudentPanel"
             component={StudentPanelScreen}
-            options={{
-              animation: 'slide_from_right',
-            }}
-          />
-          <Stack.Screen
-            name="TutorPanel"
-            component={TutorPanelScreen}
             options={{
               animation: 'slide_from_right',
             }}
