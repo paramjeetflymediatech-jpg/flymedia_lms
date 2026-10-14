@@ -65,6 +65,8 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
                 <option value="/faq">/faq - Help Center & FAQ</option>
                 <option value="/mentors">/mentors - Mentors & Instructors</option>
                 <option value="/become-tutor">/become-tutor - Become an Instructor</option>
+                <option value="/register">/register - Student Registration / Sign Up</option>
+                <option value="/login">/login - Student & User Login</option>
                 <option value="/terms">/terms - Terms of Service</option>
                 <option value="/privacy">/privacy - Privacy Policy</option>
                 <option value="/cookies">/cookies - Cookie Policy</option>

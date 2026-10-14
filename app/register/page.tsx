@@ -1,10 +1,23 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import RegisterForm from './RegisterForm';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
+
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/register', {
+    title: 'Register & Create Account | Flymedia Technology LMS',
+    description: 'Sign up for Flymedia Technology LMS to explore industry-aligned training programs, attend live mentor sessions, and get certified.',
+  });
+}
 
 export default function RegisterPage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <PageSeoScripts path="/register" />
       <Header />
       <main className="flex-1 flex flex-col bg-white">
         <div className="flex-1 flex flex-row-reverse bg-white min-h-[calc(100vh-80px)]">
