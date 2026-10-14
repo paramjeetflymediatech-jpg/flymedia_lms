@@ -1,20 +1,50 @@
 import { requireAdmin } from '../../../src/lib/auth';
 import { SeoSetting } from '../../../src/db/models';
 import DeleteConfirmButton from '../../../src/components/admin/DeleteConfirmButton';
-import { adminCreateSeo, adminDeleteSeo } from '../../actions';
+import Pagination from '../../../src/components/admin/Pagination';
+import { adminDeleteSeo } from '../../actions';
 import Link from 'next/link';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
-export default async function AdminSeoPage() {
+export default async function AdminSeoPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ search?: string; page?: string }>;
+}) {
   await requireAdmin();
 
-  const seoData = await SeoSetting.findAll({
-    order: [['pagePath', 'ASC']],
-  });
-  
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const searchParam = ((resolvedSearchParams?.search as string) || '').trim();
+  const pageParam = resolvedSearchParams?.page;
+  const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) || 1 : 1;
+  const limit = 15;
+  const offset = (page - 1) * limit;
+
+  const whereClause: any = {};
+  if (searchParam) {
+    whereClause[Op.or] = [
+      { pagePath: { [Op.like]: `%${searchParam}%` } },
+      { title: { [Op.like]: `%${searchParam}%` } },
+      { description: { [Op.like]: `%${searchParam}%` } },
+      { keywords: { [Op.like]: `%${searchParam}%` } },
+    ];
+  }
+
+  const [{ count, rows: seoData }, globalRecord] = await Promise.all([
+    SeoSetting.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      order: [['pagePath', 'ASC']],
+    }),
+    SeoSetting.findOne({ where: { pagePath: 'GLOBAL' } }),
+  ]);
+
   const seoSettings = seoData.map((s) => s.toJSON());
-  const hasGlobalSeo = seoSettings.some((s) => s.pagePath === 'GLOBAL');
+  const totalPages = Math.ceil(count / limit) || 1;
+  const hasGlobalSeo = !!globalRecord;
 
   return (
     <div className="p-6 md:p-10 space-y-10">
@@ -141,7 +171,53 @@ export default async function AdminSeoPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl">
+      <div className="max-w-7xl space-y-4">
+        {/* Table Toolbar with Search Option */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-xs">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">SEO Records</h2>
+            <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200">
+              {count} {count === 1 ? 'entry' : 'entries'}
+            </span>
+            {searchParam && (
+              <span className="text-xs text-orange-600 bg-orange-50 font-semibold px-2.5 py-1 rounded-full border border-orange-200">
+                Filtered by &quot;{searchParam}&quot;
+              </span>
+            )}
+          </div>
+
+          {/* Search Form */}
+          <form method="GET" action="/admin/seo" className="flex items-center gap-2 max-w-md w-full">
+            <div className="relative flex-1">
+              <input 
+                type="text" 
+                name="search" 
+                defaultValue={searchParam}
+                placeholder="Search path, title, or keywords..." 
+                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-xs text-slate-900 placeholder:text-slate-400"
+              />
+              <svg className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <button 
+              type="submit" 
+              className="px-4 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-xs text-xs whitespace-nowrap"
+            >
+              Search
+            </button>
+            {searchParam && (
+              <Link 
+                href="/admin/seo" 
+                className="px-3 py-2.5 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-xl transition-colors text-xs whitespace-nowrap"
+              >
+                Clear
+              </Link>
+            )}
+          </form>
+        </div>
+
+        {/* Table Container */}
         <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600">
@@ -156,7 +232,16 @@ export default async function AdminSeoPage() {
                 {seoSettings.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-6 py-12 text-center text-slate-400 italic">
-                      No SEO settings found. Create one to get started.
+                      {searchParam ? (
+                        <div className="space-y-2">
+                          <p>No SEO settings found matching &quot;{searchParam}&quot;.</p>
+                          <Link href="/admin/seo" className="text-orange-600 hover:underline text-xs font-bold">
+                            Clear search filter
+                          </Link>
+                        </div>
+                      ) : (
+                        'No SEO settings found. Create one to get started.'
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -164,7 +249,7 @@ export default async function AdminSeoPage() {
                     <tr key={seo.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                          <span className="font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded font-mono text-xs">
                             {seo.pagePath}
                           </span>
                           {seo.pagePath === 'GLOBAL' && (
@@ -205,9 +290,19 @@ export default async function AdminSeoPage() {
                   ))
                 )}
               </tbody>
-              </table>
-            </div>
+            </table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={count}
+            limit={limit}
+            baseUrl="/admin/seo"
+            searchParams={searchParam ? { search: searchParam } : {}}
+          />
+        </div>
       </div>
     </div>
   );
