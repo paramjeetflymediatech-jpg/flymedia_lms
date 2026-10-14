@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "build:apk": "cd android && JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home ./gradlew assembleRelease",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest"
