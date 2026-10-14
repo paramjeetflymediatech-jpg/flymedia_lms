@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers } from '../src/lib/mailer';
+import { normalizePath } from '../src/lib/seo';
 
 // Helper to slugify string
 function slugify(text: string) {
@@ -1286,7 +1287,7 @@ export async function adminUpdateCoupon(couponId: string, formData: FormData) {
 export async function adminCreateSeo(formData: FormData) {
   await requireAdmin();
 
-  let pagePath = (formData.get('pagePath') as string || '').trim();
+  let rawPath = (formData.get('pagePath') as string || '').trim();
   const title = (formData.get('title') as string || '').trim();
   const description = (formData.get('description') as string || '').trim();
   const keywords = (formData.get('keywords') as string || '').trim();
@@ -1295,19 +1296,16 @@ export async function adminCreateSeo(formData: FormData) {
   const headerScript = (formData.get('headerScript') as string || '').trim();
   const footerScript = (formData.get('footerScript') as string || '').trim();
 
-  if (!pagePath || !title || !description) {
+  if (!rawPath || !title || !description) {
     return { error: 'Path, Title, and Description are required.' };
   }
 
-  // Allow 'GLOBAL' as a valid path without prefixing with '/'
-  if (pagePath !== 'GLOBAL' && !pagePath.startsWith('/')) {
-    pagePath = '/' + pagePath;
-  }
+  const pagePath = normalizePath(rawPath);
 
   try {
     const existing = await SeoSetting.findOne({ where: { pagePath } });
     if (existing) {
-      return { error: 'SEO setting for this path already exists.' };
+      return { error: `SEO setting for path "${pagePath}" already exists.` };
     }
 
     await SeoSetting.create({
@@ -1322,9 +1320,8 @@ export async function adminCreateSeo(formData: FormData) {
     });
 
     revalidatePath('/admin/seo');
-    if (pagePath === 'GLOBAL') {
-      revalidatePath('/', 'layout');
-    } else {
+    revalidatePath('/', 'layout');
+    if (pagePath !== 'GLOBAL') {
       revalidatePath(pagePath);
     }
     return { success: true };
@@ -1337,7 +1334,7 @@ export async function adminCreateSeo(formData: FormData) {
 export async function adminUpdateSeo(seoId: string, formData: FormData) {
   await requireAdmin();
 
-  let pagePath = (formData.get('pagePath') as string || '').trim();
+  let rawPath = (formData.get('pagePath') as string || '').trim();
   const title = (formData.get('title') as string || '').trim();
   const description = (formData.get('description') as string || '').trim();
   const keywords = (formData.get('keywords') as string || '').trim();
@@ -1346,13 +1343,11 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
   const headerScript = (formData.get('headerScript') as string || '').trim();
   const footerScript = (formData.get('footerScript') as string || '').trim();
 
-  if (!pagePath || !title || !description) {
+  if (!rawPath || !title || !description) {
     return { error: 'Path, Title, and Description are required.' };
   }
 
-  if (pagePath !== 'GLOBAL' && !pagePath.startsWith('/')) {
-    pagePath = '/' + pagePath;
-  }
+  const pagePath = normalizePath(rawPath);
 
   try {
     const seo = await SeoSetting.findByPk(seoId);
@@ -1361,7 +1356,7 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
     if (seo.pagePath !== pagePath) {
       const existing = await SeoSetting.findOne({ where: { pagePath } });
       if (existing) {
-        return { error: 'SEO setting for this path already exists.' };
+        return { error: `SEO setting for path "${pagePath}" already exists.` };
       }
     }
 
@@ -1379,9 +1374,7 @@ export async function adminUpdateSeo(seoId: string, formData: FormData) {
     await seo.save();
 
     revalidatePath('/admin/seo');
-    if (oldPath === 'GLOBAL' || pagePath === 'GLOBAL') {
-      revalidatePath('/', 'layout');
-    }
+    revalidatePath('/', 'layout');
     if (oldPath !== 'GLOBAL') {
       revalidatePath(oldPath);
     }
@@ -1407,9 +1400,8 @@ export async function adminDeleteSeo(seoId: string) {
     await seo.destroy();
 
     revalidatePath('/admin/seo');
-    if (pagePath === 'GLOBAL') {
-      revalidatePath('/', 'layout');
-    } else {
+    revalidatePath('/', 'layout');
+    if (pagePath !== 'GLOBAL') {
       revalidatePath(pagePath);
     }
     return { success: true };

@@ -1,15 +1,23 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import ContactForm from '../../src/components/contact/ContactForm';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
-export const metadata = {
-  title: 'Contact Us | Flymedia Technology Summer Training',
-  description: 'Apply for summer training or get in touch with our Ludhiana admissions office for course details, timing, and fee configurations.',
-};
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/contact', {
+    title: 'Contact Us | Flymedia Technology Summer Training',
+    description: 'Apply for summer training or get in touch with our Ludhiana admissions office for course details, timing, and fee configurations.',
+  });
+}
 
 export default function ContactPage() {
   return (
     <>
+      <PageSeoScripts path="/contact" />
       <Header />
       <main className="flex-1 bg-white pt-10 pb-32 relative overflow-hidden">
         {/* Subtle Background Gradients */}

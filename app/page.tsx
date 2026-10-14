@@ -11,29 +11,15 @@ import GsapScrubText from '../src/components/animations/GsapScrubText';
 import GsapParallaxText from '../src/components/animations/GsapParallaxText';
 import SplitText from '../src/components/animations/SplitText';
 import SmoothScroller from '../src/components/animations/SmoothScroller';
-import { Package, SeoSetting, Testimonial, Faq } from '../src/db/models';
+import { Package, Testimonial, Faq } from '../src/db/models';
 import { Metadata } from 'next';
+import { getSeoMetadata } from '../src/lib/seo';
+import PageSeoScripts from '../src/components/common/PageSeoScripts';
 
 export const revalidate = 0; // Dynamic rendering to fetch courses
 
 export async function generateMetadata(): Promise<Metadata> {
-  try {
-    const seo = await SeoSetting.findOne({ where: { pagePath: '/' } });
-    if (seo) {
-      return {
-        title: seo.title,
-        description: seo.description,
-        keywords: seo.keywords ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined,
-      };
-    }
-  } catch (e) {
-    console.error('Failed to load SEO for homepage:', e);
-  }
-
-  return {
-    title: "Flymedia Academy LMS",
-    description: "Premium learning management system.",
-  };
+  return getSeoMetadata('/');
 }
 
 export default async function HomePage() {
@@ -60,6 +46,7 @@ export default async function HomePage() {
 
   return (
     <SmoothScroller>
+      <PageSeoScripts path="/" />
       <Header />
       <main className="flex-1 bg-[#fafafa]">
 

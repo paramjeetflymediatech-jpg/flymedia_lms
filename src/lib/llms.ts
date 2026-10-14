@@ -1,5 +1,6 @@
 import { Package, BlogPost, Category, User, SeoSetting } from '../db/models';
 import { getBaseUrl } from './sitemap';
+import { getSeoSetting } from './seo';
 
 function stripHtml(html?: string | null): string {
   if (!html) return '';
@@ -37,12 +38,7 @@ export async function generateLlmsTxt(): Promise<string> {
       attributes: ['name', 'slug', 'metaDescription'],
       order: [['name', 'ASC']],
     }),
-    // User.findAll({
-    //   where: { role: 'TUTOR' },
-    //   attributes: ['id', 'name', 'professionTitle', 'bio', 'skills'],
-    //   order: [['createdAt', 'DESC']],
-    // }),
-    SeoSetting.findOne({ where: { pagePath: 'GLOBAL' } }),
+    getSeoSetting('GLOBAL'),
   ]);
 
   const siteTitle = globalSeo?.title || 'Flymedia Academy LMS';
@@ -137,11 +133,7 @@ export async function generateLlmsFullTxt(): Promise<string> {
     Category.findAll({
       order: [['name', 'ASC']],
     }),
-    // User.findAll({
-    //   where: { role: 'TUTOR' },
-    //   order: [['createdAt', 'DESC']],
-    // }),
-    SeoSetting.findOne({ where: { pagePath: 'GLOBAL' } }),
+    getSeoSetting('GLOBAL'),
   ]);
 
   const siteTitle = globalSeo?.title || 'Flymedia Academy LMS';

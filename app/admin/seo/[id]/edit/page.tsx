@@ -1,5 +1,5 @@
 import { requireAdmin } from '../../../../../src/lib/auth';
-import { SeoSetting } from '../../../../../src/db/models';
+import { SeoSetting, Package, Category } from '../../../../../src/db/models';
 import { adminUpdateSeo } from '../../../../actions';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -8,13 +8,19 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
   await requireAdmin();
   const { id } = await params;
 
-  const seoData = await SeoSetting.findByPk(id);
+  const [seoData, pList, cList] = await Promise.all([
+    SeoSetting.findByPk(id),
+    Package.findAll({ where: { status: 'PUBLISHED' }, attributes: ['slug', 'title'], limit: 50 }).catch(() => []),
+    Category.findAll({ attributes: ['slug', 'name'], limit: 50 }).catch(() => []),
+  ]);
 
   if (!seoData) {
     redirect('/admin/seo');
   }
 
   const seo = seoData.toJSON() as any;
+  const packages = pList.map((p) => p.toJSON());
+  const categories = cList.map((c) => c.toJSON());
 
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
@@ -44,10 +50,35 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
               <input
                 name="pagePath"
                 type="text"
+                list="seo-paths"
                 defaultValue={seo.pagePath}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 font-mono"
               />
+              <datalist id="seo-paths">
+                <option value="GLOBAL">GLOBAL - Site-wide scripts (GTM, Pixel, Analytics) & default fallback</option>
+                <option value="/">/ - Homepage</option>
+                <option value="/packages">/packages - All Courses & Bootcamps</option>
+                <option value="/about">/about - About Us</option>
+                <option value="/contact">/contact - Contact Us</option>
+                <option value="/blog">/blog - Tech Blog</option>
+                <option value="/faq">/faq - Help Center & FAQ</option>
+                <option value="/mentors">/mentors - Mentors & Instructors</option>
+                <option value="/become-tutor">/become-tutor - Become an Instructor</option>
+                <option value="/terms">/terms - Terms of Service</option>
+                <option value="/privacy">/privacy - Privacy Policy</option>
+                <option value="/cookies">/cookies - Cookie Policy</option>
+                {packages.map((pkg: any) => (
+                  <option key={pkg.slug} value={`/packages/${pkg.slug}`}>
+                    {`/packages/${pkg.slug} - ${pkg.title}`}
+                  </option>
+                ))}
+                {categories.map((cat: any) => (
+                  <option key={cat.slug} value={`/packages/category/${cat.slug}`}>
+                    {`/packages/category/${cat.slug} - ${cat.name}`}
+                  </option>
+                ))}
+              </datalist>
             </div>
             
             <div>

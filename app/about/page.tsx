@@ -1,15 +1,23 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import Reveal from '../../src/components/ui/Reveal';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
-export const metadata = {
-  title: 'About Us | Flymedia Technology Summer Training',
-  description: 'Learn about Flymedia Technology, our 14+ years of industry excellence in digital marketing, web designing, and our 30-day summer bootcamps.',
-};
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/about', {
+    title: 'About Us | Flymedia Technology Summer Training',
+    description: 'Learn about Flymedia Technology, our 14+ years of industry excellence in digital marketing, web designing, and our 30-day summer bootcamps.',
+  });
+}
 
 export default function AboutPage() {
   return (
     <>
+      <PageSeoScripts path="/about" />
       <Header />
       <main className="flex-1 bg-white pt-10 pb-32 relative overflow-hidden">
         {/* Subtle Background Gradients */}

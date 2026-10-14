@@ -12,10 +12,13 @@ export interface SitemapEntry {
 
 export function getBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
-  if (envUrl) {
+  if (envUrl && !envUrl.includes('localhost')) {
     return envUrl.replace(/\/$/, '');
   }
-  return 'http://localhost:3000';
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://course.flymediatech.com';
+  }
+  return envUrl ? envUrl.replace(/\/$/, '') : 'http://localhost:3000';
 }
 
 /**

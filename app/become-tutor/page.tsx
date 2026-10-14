@@ -1,15 +1,23 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import TutorApplicationForm from './TutorApplicationForm';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
-export const metadata = {
-  title: 'Become a Tutor | Flymedia Technology',
-  description: 'Apply to join our elite team of instructors.',
-};
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/become-tutor', {
+    title: 'Become an Instructor | Flymedia Technology',
+    description: 'Apply to join our elite team of instructors and mentor students in cutting-edge tech.',
+  });
+}
 
 export default function BecomeTutorPage() {
   return (
     <>
+      <PageSeoScripts path="/become-tutor" />
       <Header />
       <main className="bg-white relative overflow-hidden">
         {/* Hero Section (Split Layout) */}

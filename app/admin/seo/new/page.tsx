@@ -1,4 +1,5 @@
 import { requireAdmin } from '../../../../src/lib/auth';
+import { Package, Category } from '../../../../src/db/models';
 import { adminCreateSeo } from '../../../actions';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -11,6 +12,19 @@ export default async function NewSeoPage({
   await requireAdmin();
   const resolvedParams = searchParams ? await searchParams : {};
   const defaultPath = resolvedParams?.path || '';
+
+  let packages: any[] = [];
+  let categories: any[] = [];
+  try {
+    const [pList, cList] = await Promise.all([
+      Package.findAll({ where: { status: 'PUBLISHED' }, attributes: ['slug', 'title'], limit: 50 }),
+      Category.findAll({ attributes: ['slug', 'name'], limit: 50 }),
+    ]);
+    packages = pList.map((p) => p.toJSON());
+    categories = cList.map((c) => c.toJSON());
+  } catch (e) {
+    console.error('Failed to load packages/categories for SEO suggestions:', e);
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
@@ -45,13 +59,38 @@ export default async function NewSeoPage({
               <input
                 name="pagePath"
                 type="text"
+                list="seo-paths"
                 defaultValue={defaultPath}
-                placeholder="e.g. /packages, /about, or GLOBAL"
+                placeholder="e.g. /, /packages, /about, or GLOBAL"
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900 placeholder:text-slate-400 font-mono"
               />
+              <datalist id="seo-paths">
+                <option value="GLOBAL">GLOBAL - Site-wide scripts (GTM, Pixel, Analytics) & default fallback</option>
+                <option value="/">/ - Homepage</option>
+                <option value="/packages">/packages - All Courses & Bootcamps</option>
+                <option value="/about">/about - About Us</option>
+                <option value="/contact">/contact - Contact Us</option>
+                <option value="/blog">/blog - Tech Blog</option>
+                <option value="/faq">/faq - Help Center & FAQ</option>
+                <option value="/mentors">/mentors - Mentors & Instructors</option>
+                <option value="/become-tutor">/become-tutor - Become an Instructor</option>
+                <option value="/terms">/terms - Terms of Service</option>
+                <option value="/privacy">/privacy - Privacy Policy</option>
+                <option value="/cookies">/cookies - Cookie Policy</option>
+                {packages.map((pkg) => (
+                  <option key={pkg.slug} value={`/packages/${pkg.slug}`}>
+                    {`/packages/${pkg.slug} - ${pkg.title}`}
+                  </option>
+                ))}
+                {categories.map((cat) => (
+                  <option key={cat.slug} value={`/packages/category/${cat.slug}`}>
+                    {`/packages/category/${cat.slug} - ${cat.name}`}
+                  </option>
+                ))}
+              </datalist>
               <p className="text-[10px] text-slate-500 mt-1">
-                Enter <span className="font-bold text-slate-800">GLOBAL</span> to inject scripts across all pages (Google Tag Manager, Meta Pixel, Analytics, etc.), or a specific page path like <span className="font-bold text-slate-800">/</span>, <span className="font-bold text-slate-800">/about</span>, etc.
+                Select from suggestions or enter any path like <span className="font-bold text-slate-800">/</span>, <span className="font-bold text-slate-800">/packages</span>, <span className="font-bold text-slate-800">/about</span>, or <span className="font-bold text-slate-800">GLOBAL</span> for site-wide scripts.
               </p>
             </div>
             

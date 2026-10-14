@@ -45,6 +45,11 @@ export default function SeoScriptRenderer({
   const clean = trimmed.replace(/<!--[\s\S]*?-->/g, '').trim();
   if (!clean) return null;
 
+  // If raw JSON-LD is provided without script tags, wrap properly
+  if ((clean.startsWith('{') || clean.startsWith('[')) && clean.includes('@context')) {
+    return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: clean }} />;
+  }
+
   // If no HTML tags are found, assume it is raw JavaScript code
   const hasHtmlTag = /<[a-zA-Z0-9]+[^>]*>/i.test(clean);
   if (!hasHtmlTag) {

@@ -7,12 +7,18 @@ import { Op } from 'sequelize';
 import { Suspense } from 'react';
 import BlogSearch from '../../src/components/blog/BlogSearch';
 
-export const metadata = {
-  title: 'Tech Blog | Flymedia Technology',
-  description: 'Latest insights, tutorials, and industry news from Flymedia Technology.',
-};
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
 export const revalidate = 0; // Fresh blog posts
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/blog', {
+    title: 'Tech Blog & Insights | Flymedia Technology',
+    description: 'Latest insights, tutorials, and industry news from Flymedia Technology.',
+  });
+}
 
 export default async function BlogPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const resolvedSearchParams = await searchParams;
@@ -51,6 +57,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
 
   return (
     <>
+      <PageSeoScripts path="/blog" />
       <Header />
       <main className="flex-1 bg-[#FAFAFA] py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -2,15 +2,22 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
-export const metadata: Metadata = {
-  title: 'Terms of Service | Flymedia Technology',
-  description: 'Terms of Service for Flymedia Technology.',
-};
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/terms', {
+    title: 'Terms of Service | Flymedia Technology',
+    description: 'Terms of Service for Flymedia Technology.',
+  });
+}
 
 export default function TermsOfServicePage() {
   return (
     <>
+      <PageSeoScripts path="/terms" />
       <Header />
       <div className="min-h-screen bg-slate-50 py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">

@@ -9,6 +9,9 @@ import CourseModuleAccordion from '../../../src/components/packages/CourseModule
 import FaqAccordion from '../../../src/components/packages/FaqAccordion';
 import CertificateToggle from '../../../src/components/packages/CertificateToggle';
 
+import { getSeoMetadata, getSeoSetting } from '../../../src/lib/seo';
+import PageSeoScripts from '../../../src/components/common/PageSeoScripts';
+
 export const revalidate = 0;
 
 interface Props {
@@ -17,17 +20,23 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const coursePath = `/packages/${slug}`;
+
+  // 1. Check if admin configured custom SEO for this course path or alias
+  const customSeo = await getSeoSetting(coursePath);
+  if (customSeo) {
+    return getSeoMetadata(coursePath);
+  }
+
+  // 2. Fall back to package record
   const pkg = await Package.findOne({ where: { slug } });
   if (!pkg) return { title: 'Package Not Found' };
-  return {
+
+  return getSeoMetadata(coursePath, {
     title: `${pkg.title} | Flymedia Technology`,
-    description: pkg.description.slice(0, 160),
-    openGraph: {
-      title: pkg.title,
-      description: pkg.description.slice(0, 160),
-      images: pkg.thumbnail ? [{ url: pkg.thumbnail }] : [],
-    },
-  };
+    description: pkg.description ? pkg.description.slice(0, 160) : 'Learn professional tech skills with industry-led training at Flymedia Technology.',
+    ogImage: pkg.thumbnail || undefined,
+  });
 }
 
 export default async function PackageDetailPage({ params }: Props) {
@@ -142,6 +151,7 @@ export default async function PackageDetailPage({ params }: Props) {
 
   return (
     <>
+      <PageSeoScripts path={`/packages/${slug}`} />
       <Header />
       <main className="flex-1 bg-white">
 

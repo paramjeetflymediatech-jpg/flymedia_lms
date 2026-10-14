@@ -8,19 +8,33 @@ import Link from 'next/link';
 import SplitText from '../../../../src/components/animations/SplitText';
 import GsapReveal from '../../../../src/components/animations/GsapReveal';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+import { Metadata } from 'next';
+import { getSeoMetadata, getSeoSetting } from '../../../../src/lib/seo';
+import PageSeoScripts from '../../../../src/components/common/PageSeoScripts';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
+  const categoryPath = `/packages/category/${resolvedParams.slug}`;
+
+  // 1. Check if admin configured custom SEO for this category
+  const customSeo = await getSeoSetting(categoryPath);
+  if (customSeo) {
+    return getSeoMetadata(categoryPath);
+  }
+
+  // 2. Fall back to Category model
   const category = await Category.findOne({ where: { slug: resolvedParams.slug } });
   
   if (!category) {
-    return { title: 'Category Not Found' };
+    return { title: 'Category Not Found | Flymedia Technology' };
   }
 
-  return {
+  return getSeoMetadata(categoryPath, {
     title: category.metaTitle || `${category.name} Courses | Flymedia Technology LMS`,
     description: category.metaDescription || `Explore our specialized ${category.name} courses designed to expand your skill set.`,
-    keywords: category.metaKeywords || category.name,
-  };
+    keywords: category.metaKeywords ? category.metaKeywords.split(',').map((k: string) => k.trim()) : [category.name],
+    ogImage: category.image || undefined,
+  });
 }
 
 export const revalidate = 0;
@@ -162,6 +176,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
   return (
     <>
+      <PageSeoScripts path={`/packages/category/${resolvedParams.slug}`} />
       <Header />
       <main className="flex-1 bg-white min-h-screen">
         {/* Dynamic Category Hero Section */}

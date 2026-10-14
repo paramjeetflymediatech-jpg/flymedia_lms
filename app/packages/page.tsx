@@ -5,13 +5,18 @@ import PublicFilterForm from '../../src/components/packages/PublicFilterForm';
 import { Package } from '../../src/db/models';
 import { Op } from 'sequelize';
 import GsapReveal from '../../src/components/animations/GsapReveal';
-
-export const metadata = {
-  title: 'Training Programs | Flymedia Technology LMS',
-  description: 'Browse our catalog of professional packages, coding bootcamps, and certification tracks designed for software developers.',
-};
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
 export const revalidate = 0; // Fresh listing every time
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/packages', {
+    title: 'Training Programs & Courses | Flymedia Technology',
+    description: 'Browse our catalog of professional packages, coding bootcamps, and certification tracks designed for software developers.',
+  });
+}
 
 export default async function PackagesListingPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const resolvedSearchParams = await searchParams;
@@ -89,6 +94,7 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
 
   return (
     <>
+      <PageSeoScripts path="/packages" />
       <Header />
       <main className="flex-1 bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">

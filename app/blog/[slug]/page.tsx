@@ -3,8 +3,35 @@ import Footer from '../../../src/components/layout/Footer';
 import { BlogPost, User } from '../../../src/db/models';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Metadata } from 'next';
+import { getSeoMetadata, getSeoSetting } from '../../../src/lib/seo';
+import PageSeoScripts from '../../../src/components/common/PageSeoScripts';
 
 export const revalidate = 0;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const blogPath = `/blog/${resolvedParams.slug}`;
+
+  // 1. Check if admin configured custom SEO for this blog path
+  const customSeo = await getSeoSetting(blogPath);
+  if (customSeo) {
+    return getSeoMetadata(blogPath);
+  }
+
+  // 2. Fall back to BlogPost model
+  const post = await BlogPost.findOne({ where: { slug: resolvedParams.slug } });
+  if (!post) {
+    return { title: 'Post Not Found | Flymedia Technology' };
+  }
+
+  return getSeoMetadata(blogPath, {
+    title: post.metaTitle || `${post.title} | Flymedia Technology Blog`,
+    description: post.metaDescription || (post.excerpt || post.title),
+    keywords: post.metaKeywords ? post.metaKeywords.split(',').map((k: string) => k.trim()) : undefined,
+    ogImage: post.coverImage || undefined,
+  });
+}
 
 export default async function SingleBlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -28,6 +55,7 @@ export default async function SingleBlogPostPage({ params }: { params: Promise<{
 
   return (
     <>
+      <PageSeoScripts path={`/blog/${resolvedParams.slug}`} />
       <Header />
       <main className="flex-1 bg-white relative pt-24 pb-32">
         {/* Subtle Background Elements */}

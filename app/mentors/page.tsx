@@ -3,8 +3,18 @@ import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import Link from 'next/link';
 import { MentorList } from './MentorList';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
 export const revalidate = 0; // Ensure data is fresh
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/mentors', {
+    title: 'Expert Mentors & Instructors | Flymedia Technology',
+    description: 'Learn from industry expert mentors and instructors with hands-on live project training.',
+  });
+}
 
 export default async function MentorsPage() {
   let tutors: any[] = [];
@@ -20,6 +30,7 @@ export default async function MentorsPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
+      <PageSeoScripts path="/mentors" />
       <Header />
       
       <main className="flex-1">

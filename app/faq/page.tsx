@@ -7,12 +7,18 @@ import GsapReveal from '../../src/components/animations/GsapReveal';
 import SplitText from '../../src/components/animations/SplitText';
 import SmoothScroller from '../../src/components/animations/SmoothScroller';
 
-export const metadata = {
-  title: 'Help Center & FAQ | Flymedia Technology',
-  description: 'Find answers to common questions about our courses, enrollment, and platform.',
-};
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
 
 export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/faq', {
+    title: 'Help Center & FAQ | Flymedia Technology',
+    description: 'Find answers to common questions about our courses, enrollment, and platform.',
+  });
+}
 
 export default async function HelpCenterPage() {
   let dbFaqs: any[] = [];
@@ -47,6 +53,7 @@ export default async function HelpCenterPage() {
 
   return (
     <SmoothScroller>
+      <PageSeoScripts path="/faq" />
       <Header />
       <main className="flex-1 bg-slate-50 relative overflow-hidden pt-32 pb-32">
         {/* Modern Vibrant Gradient Background */}
