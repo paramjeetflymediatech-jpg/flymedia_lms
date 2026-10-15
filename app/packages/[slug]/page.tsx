@@ -70,17 +70,17 @@ export default async function PackageDetailPage({ params }: Props) {
     whatYoullLearn = pkgJson.whatYoullLearn;
   } else if (typeof pkgJson.whatYoullLearn === 'string' && pkgJson.whatYoullLearn.trim().startsWith('[')) {
     try {
-      whatYoullLearn = JSON.parse(pkgJson.whatYoullLearn);
+      whatYoullLearn = JSON.parse(pkgJson.whatYoullLearn) as string[];
     } catch(e) {}
   }
-  whatYoullLearn = whatYoullLearn.filter(Boolean).filter(i => i.trim() !== '');
+  whatYoullLearn = (whatYoullLearn || []).filter(Boolean).filter(i => typeof i === 'string' && i.trim() !== '');
 
   let benefits: string[] = [];
   if (Array.isArray(pkgJson.benefits)) {
     benefits = pkgJson.benefits;
   } else if (typeof pkgJson.benefits === 'string' && pkgJson.benefits.trim().startsWith('[')) {
     try {
-      benefits = JSON.parse(pkgJson.benefits);
+      benefits = JSON.parse(pkgJson.benefits) as string[];
     } catch(e) {}
   }
   benefits = benefits.filter(Boolean).filter((i: string) => typeof i === 'string' && i.trim() !== '');
@@ -102,26 +102,26 @@ export default async function PackageDetailPage({ params }: Props) {
     ? pkgJson.techStack
     : (typeof pkgJson.techStack === 'string' ? (() => { try { return JSON.parse(pkgJson.techStack); } catch { return []; } })() : []);
 
-  let projectDetails: { description: string; stages: { title: string; content: string }[] } | null = pkgJson.projectDetails || null;
+  let projectDetails: any = pkgJson.projectDetails || null;
   if (typeof projectDetails === 'string') {
     try { projectDetails = JSON.parse(projectDetails); } catch { projectDetails = null; }
   }
   // Only keep projectDetails if it has description or at least one stage with content
   if (projectDetails) {
     const hasDesc = !!projectDetails.description?.trim();
-    const hasStages = Array.isArray(projectDetails.stages) && projectDetails.stages.some(s => s?.title?.trim() || s?.content?.trim());
+    const hasStages = Array.isArray(projectDetails.stages) && projectDetails.stages.some((s: any) => s?.title?.trim() || s?.content?.trim());
     if (!hasDesc && !hasStages) {
       projectDetails = null;
     }
   }
 
-  let targetAudience: { list: string[]; prerequisites: string } | null = pkgJson.targetAudience || null;
+  let targetAudience: any = pkgJson.targetAudience || null;
   if (typeof targetAudience === 'string') {
     try { targetAudience = JSON.parse(targetAudience); } catch { targetAudience = null; }
   }
   // Only keep targetAudience if it has audience list items or prerequisites
   if (targetAudience) {
-    const list = Array.isArray(targetAudience.list) ? targetAudience.list.filter(Boolean).filter(i => typeof i === 'string' && i.trim() !== '') : [];
+    const list = Array.isArray(targetAudience.list) ? targetAudience.list.filter(Boolean).filter((i: any) => typeof i === 'string' && i.trim() !== '') : [];
     const prerequisites = targetAudience.prerequisites?.trim() || '';
     if (list.length === 0 && !prerequisites) {
       targetAudience = null;
@@ -474,7 +474,7 @@ export default async function PackageDetailPage({ params }: Props) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-blue-50/50">
-                      {projectDetails.stages.map((stage, i) => (
+                      {projectDetails.stages.map((stage: any, i: number) => (
                         <tr key={i}>
                           <td className="px-6 py-4 font-bold text-slate-900">{stage.title}</td>
                           <td className="px-6 py-4">{stage.content}</td>
@@ -607,7 +607,7 @@ export default async function PackageDetailPage({ params }: Props) {
                   </div>
                   <div className="bg-slate-50 border border-slate-200 rounded-3xl p-7 space-y-6">
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {targetAudience.list.map((item, i) => (
+                      {targetAudience.list.map((item: any, i: number) => (
                         <li key={i} className="flex items-start gap-3">
                           <div className="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-orange-500" />
                           <span className="text-slate-700 font-medium text-sm leading-relaxed">{item}</span>

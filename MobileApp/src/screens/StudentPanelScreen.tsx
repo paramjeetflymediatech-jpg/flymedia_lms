@@ -37,18 +37,25 @@ import { formatImageUrl } from '../utils/imageUrl';
 type StudentTab = 'overview' | 'sessions' | 'book' | 'packages';
 
 interface StudentPanelScreenProps {
+  route?: any;
   navigation: any;
 }
 
-export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigation }) => {
+export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, navigation }) => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
   const bottomPadding = Math.max(insets.bottom, 16);
 
-  const [activeTab, setActiveTab] = useState<StudentTab>('overview');
+  const [activeTab, setActiveTab] = useState<StudentTab>(route?.params?.initialTab || 'overview');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (route?.params?.initialTab) {
+      setActiveTab(route.params.initialTab);
+    }
+  }, [route?.params?.initialTab]);
 
   // Dashboard Data
   const [stats, setStats] = useState({
@@ -70,6 +77,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
   const [selectedTutor, setSelectedTutor] = useState<any | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [availableCredits, setAvailableCredits] = useState<number | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
 
@@ -145,6 +153,9 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
       const res = await ApiService.getStudentSlots(tutorId, date, user?.token);
       if (res && res.success) {
         setAvailableSlots(res.slots || []);
+        if (res.availableCredits !== undefined) {
+          setAvailableCredits(res.availableCredits);
+        }
       } else {
         setAvailableSlots([]);
       }
@@ -169,20 +180,32 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
       return;
     }
 
+    if (availableCredits !== null && availableCredits <= 0) {
+      Alert.alert(
+        'Insufficient Slot Balance 💳',
+        'You have 0 session credits remaining. Please enroll in a package or purchase session credits to book.\n\nNote: Once a tutor provides a class, credits are non-refundable regardless of whether you attend or miss the session.'
+      );
+      return;
+    }
+
     Alert.alert(
-      'Confirm Booking',
-      `Would you like to book a 1-on-1 session with ${selectedTutor?.name} on ${selectedDate} at ${slotTime}?`,
+      'Confirm Booking (1 Credit)',
+      `Book 1-on-1 session with ${selectedTutor?.name} on ${selectedDate} at ${slotTime}?\n\n• 1 credit will be deducted from your profile balance.\n• Policy: Once scheduled, the credit is consumed whether you attend or miss the session.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Yes, Book Session',
+          text: 'Confirm & Deduct 1 Credit',
           style: 'default',
           onPress: async () => {
             setBookingSlotId(slotId);
             const res = await ApiService.bookStudentSlot(slotId, user.token!);
             setBookingSlotId(null);
             if (res && res.success) {
-              Alert.alert('Success 🎉', 'Your session has been successfully booked!');
+              setAvailableCredits(prev => (prev !== null ? Math.max(0, prev - 1) : 0));
+              Alert.alert(
+                'Session Booked! 🎉',
+                'Your session has been successfully booked! 1 credit has been deducted from your profile balance.'
+              );
               setAvailableSlots(prev =>
                 prev.map(s => {
                   if (s.id === slotId) {
@@ -635,10 +658,27 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ navigati
           {activeTab === 'book' && (
             <View style={styles.tabContent}>
               <View style={styles.bookHeaderBanner}>
-                <Text style={styles.bookHeaderTitle}>Book a 1-on-1 Mentorship</Text>
-                <Text style={styles.bookHeaderSub}>
-                  Select your tutor, choose a preferred date and select an available time slot.
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1, marginRight: 10 }}>
+                    <Text style={styles.bookHeaderTitle}>Book a 1-on-1 Mentorship</Text>
+                    <Text style={styles.bookHeaderSub}>
+                      Select your tutor, choose a preferred date and select an available time slot.
+                    </Text>
+                  </View>
+                  <View style={styles.creditPillBadge}>
+                    <Sparkles size={12} color="#c2410c" />
+                    <Text style={styles.creditPillText}>
+                      {availableCredits !== null ? `${availableCredits} Credits` : 'Active'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Attendance & Non-Refundable Policy Notice */}
+                <View style={styles.policyNoticeBox}>
+                  <Text style={styles.policyNoticeText}>
+                    📌 Credit Policy: 1 session credit is deducted upon booking. As the tutor reserves their scheduled time for you, credits are consumed whether you attend or miss the session.
+                  </Text>
+                </View>
               </View>
 
               {/* STEP 1: TUTOR SELECTOR */}
@@ -1441,6 +1481,36 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 4,
     lineHeight: 17,
+  },
+  creditPillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff7ed',
+    borderWidth: 1.5,
+    borderColor: '#fed7aa',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  creditPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#c2410c',
+  },
+  policyNoticeBox: {
+    marginTop: 12,
+    backgroundColor: '#f8fafc',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  policyNoticeText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+    fontWeight: '500',
   },
   bookingStepCard: {
     backgroundColor: Colors.surface,

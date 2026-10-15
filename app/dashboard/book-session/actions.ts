@@ -213,12 +213,49 @@ export async function bookSessionSlot(slotId: string) {
       return handleResponse(false, "This session is fully booked (maximum 100 students reached).");
     }
 
-    // Create booking record
+    // Check student credit balance
+    const userRecord = await User.findByPk(user.id);
+    const studentEnrollments = await Enrollment.findAll({
+      where: { userId: user.id },
+      order: [['createdAt', 'DESC']],
+    });
+
+    let availableCredits = 0;
+    let targetEnrollment: any = null;
+
+    if (studentEnrollments.length > 0) {
+      availableCredits = studentEnrollments.reduce(
+        (acc, e) => acc + Math.max(0, (e.totalCredits || 10) - (e.usedCredits || 0)),
+        0
+      );
+      targetEnrollment = studentEnrollments.find(e => (e.totalCredits || 10) > (e.usedCredits || 0));
+    } else {
+      availableCredits = userRecord?.credits || 0;
+    }
+
+    if (availableCredits <= 0) {
+      return handleResponse(
+        false,
+        "Insufficient slot balance. You have 0 credits remaining. Please enroll in a package or purchase session credits to book."
+      );
+    }
+
+    // Create booking record (marked creditDeducted: true - non-refundable on student absence)
     await TutorSlotBooking.create({
       slotId,
       studentId: user.id,
       status: 'SCHEDULED',
+      attendanceStatus: 'SCHEDULED',
+      creditDeducted: true,
     });
+
+    // Deduct credit immediately from student
+    if (targetEnrollment) {
+      await targetEnrollment.increment('usedCredits', { by: 1 });
+    }
+    if (userRecord && (userRecord.credits || 0) > 0) {
+      await userRecord.decrement('credits', { by: 1 });
+    }
 
     const newCount = currentCount + 1;
     await slot.update({
@@ -229,7 +266,7 @@ export async function bookSessionSlot(slotId: string) {
 
     revalidatePath("/dashboard/book-session");
     revalidatePath("/dashboard/courses");
-    return handleResponse(true, "Session booked successfully!");
+    return handleResponse(true, `Session booked successfully! 1 credit deducted (${availableCredits - 1} credits remaining).`);
   } catch (error: any) {
     console.error("Error booking session:", error);
     return handleResponse(false, error.message || "Failed to book session");

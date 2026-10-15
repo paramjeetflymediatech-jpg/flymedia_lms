@@ -42,7 +42,7 @@ export default function CategoryContentEditor({ defaultValue }: { defaultValue?:
   const [content, setContent] = useState<CategoryContent>(() => {
     if (defaultValue) {
       try {
-        const parsed = JSON.parse(defaultValue);
+        const parsed: any = JSON.parse(defaultValue);
         // Ensure properties exist if upgrading from a different format or missing fields
         return {
           features: Array.isArray(parsed.features) ? parsed.features : [],

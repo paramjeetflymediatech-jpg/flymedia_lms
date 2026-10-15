@@ -5,7 +5,6 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { CoursesScreen } from '../screens/CoursesScreen';
 import { CourseDetailScreen } from '../screens/CourseDetailScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
-import { MentorsScreen } from '../screens/MentorsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AdminDashboardScreen } from '../screens/admin';
 import { StudentPanelScreen } from '../screens/StudentPanelScreen';
@@ -18,7 +17,6 @@ import {
   Home,
   BookOpen,
   GraduationCap,
-  Users,
   User,
 } from 'lucide-react-native';
 
@@ -111,18 +109,6 @@ function MainTabs() {
             tabBarLabel: 'Learning',
             tabBarIcon: ({ color, focused }) => (
               <TabIconItem Icon={GraduationCap} color={color} focused={focused} />
-            ),
-          }}
-        />
-      )}
-      {!isTutor && !isAdmin && (
-        <Tab.Screen
-          name="MentorsTab"
-          component={MentorsScreen}
-          options={{
-            tabBarLabel: 'Mentors',
-            tabBarIcon: ({ color, focused }) => (
-              <TabIconItem Icon={Users} color={color} focused={focused} />
             ),
           }}
         />

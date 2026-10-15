@@ -9,10 +9,12 @@ import {
   Alert,
   Image,
   Platform,
+  Linking,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { useAuth } from '../context/AuthContext';
+import { FlymediaContact } from '../constants/contact';
 import {
   User,
   Mail,
@@ -203,37 +205,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               </View>
             )}
 
-            {/* CAMPUS & HELPLINE CARD */}
-            <View style={styles.infoSection}>
-              <Text style={styles.sectionTitle}>Flymedia Academy Campus</Text>
-              
-              <View style={styles.infoRow}>
-                <MapPin size={18} color={Colors.primaryOrange} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.infoLabel}>Campus Address</Text>
-                  <Text style={styles.infoVal}>
-                    Model Town Extension, Ludhiana, Punjab - 141002
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Phone size={18} color={Colors.primaryOrange} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.infoLabel}>Official Helpline</Text>
-                  <Text style={styles.infoVal}>+91 78144 08934 / +91 87279 09176</Text>
-                </View>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Mail size={18} color={Colors.primaryOrange} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.infoLabel}>Admissions Email</Text>
-                  <Text style={styles.infoVal}>admissions@flymediatech.com</Text>
-                </View>
-              </View>
-            </View>
-
             {/* LOGOUT BUTTON */}
             <TouchableOpacity
               style={styles.logoutBtn}
@@ -334,6 +305,51 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
           </View>
         )}
+
+        {/* CAMPUS & HELPLINE CARD */}
+        <View style={[styles.infoSection, { marginTop: user ? 0 : 20 }]}>
+          <Text style={styles.sectionTitle}>{FlymediaContact.campusName}</Text>
+
+          <TouchableOpacity
+            style={styles.infoRow}
+            onPress={() => Linking.openURL(FlymediaContact.googleMapsUrl).catch(() => {})}
+            activeOpacity={0.7}
+          >
+            <MapPin size={18} color={Colors.primaryOrange} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.infoLabel}>Campus Address (Tap for directions)</Text>
+              <Text style={styles.infoVal}>
+                {FlymediaContact.address}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.infoRow}
+            onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
+            activeOpacity={0.7}
+          >
+            <Phone size={18} color={Colors.primaryOrange} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.infoLabel}>Official Mobile & Helpline (Tap to call)</Text>
+              <Text style={[styles.infoVal, { color: Colors.primaryRose, fontWeight: '800' }]}>
+                {FlymediaContact.phone}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.infoRow}
+            onPress={() => Linking.openURL(`mailto:${FlymediaContact.email}`).catch(() => {})}
+            activeOpacity={0.7}
+          >
+            <Mail size={18} color={Colors.primaryOrange} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.infoLabel}>Admissions Email</Text>
+              <Text style={styles.infoVal}>{FlymediaContact.email}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>

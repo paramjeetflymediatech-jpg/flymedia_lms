@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return getSeoMetadata(blogPath, {
     title: post.metaTitle || `${post.title} | Flymedia Technology Blog`,
     description: post.metaDescription || (post.excerpt || post.title),
-    keywords: post.metaKeywords ? post.metaKeywords.split(',').map((k: string) => k.trim()) : undefined,
-    ogImage: post.coverImage || undefined,
+    keywords: post.keywords ? post.keywords.split(',').map((k: string) => k.trim()) : undefined,
+    ogImage: post.image || undefined,
   });
 }
 

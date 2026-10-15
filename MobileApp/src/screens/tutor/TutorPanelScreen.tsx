@@ -18,8 +18,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
 import { ApiService } from '../../services/api';
+import { FlymediaContact } from '../../constants/contact';
 import {
   ArrowLeft,
+  ArrowRight,
   Calendar,
   Clock,
   Video,
@@ -46,6 +48,55 @@ import {
 import { formatImageUrl } from '../../utils/imageUrl';
 
 type TutorTab = 'overview' | 'classes' | 'availability' | 'students' | 'profile';
+
+const PRESET_SLOTS = [
+  { start: '09:00', end: '10:00', label: '9:00 - 10:00 AM' },
+  { start: '10:00', end: '11:00', label: '10:00 - 11:00 AM' },
+  { start: '11:00', end: '12:00', label: '11:00 AM - 12:00 PM' },
+  { start: '12:00', end: '13:00', label: '12:00 - 1:00 PM' },
+  { start: '13:00', end: '14:00', label: '1:00 - 2:00 PM' },
+  { start: '14:00', end: '15:00', label: '2:00 - 3:00 PM' },
+  { start: '15:00', end: '16:00', label: '3:00 - 4:00 PM' },
+  { start: '16:00', end: '17:00', label: '4:00 - 5:00 PM' },
+  { start: '17:00', end: '18:00', label: '5:00 - 6:00 PM' },
+  { start: '18:00', end: '19:00', label: '6:00 - 7:00 PM' },
+  { start: '19:00', end: '20:00', label: '7:00 - 8:00 PM' },
+  { start: '20:00', end: '21:00', label: '8:00 - 9:00 PM' },
+];
+
+const PRESET_DURATIONS = [
+  { mins: 30, label: '30m' },
+  { mins: 45, label: '45m' },
+  { mins: 60, label: '1h' },
+  { mins: 90, label: '1.5h' },
+  { mins: 120, label: '2h' },
+];
+
+const HOUR_PRESETS = [
+  '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22'
+];
+
+const MINUTE_PRESETS = ['00', '15', '30', '45'];
+
+const formatTo12Hour = (time24: string): string => {
+  if (!time24) return '--:--';
+  const clean = time24.trim().split(' ')[0];
+  const parts = clean.split(':');
+  if (parts.length < 2) return time24;
+  let hours = parseInt(parts[0], 10);
+  const minutes = (parts[1] || '00').padStart(2, '0');
+  if (isNaN(hours)) return time24;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+const formatMinutesToTime = (totalMinutes: number): string => {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
 
 interface TutorPanelScreenProps {
   navigation: any;
@@ -77,7 +128,10 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const [classFilter, setClassFilter] = useState<'UPCOMING' | 'PAST' | 'ALL'>('UPCOMING');
 
   // Availability Tab Data
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [slots, setSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
@@ -86,6 +140,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const [newSlotStartTime, setNewSlotStartTime] = useState('10:00');
   const [newSlotEndTime, setNewSlotEndTime] = useState('11:00');
   const [submittingSlot, setSubmittingSlot] = useState(false);
+  const [activeTimePicker, setActiveTimePicker] = useState<'start' | 'end'>('start');
 
   // Edit Meet Link Modal
   const [showMeetLinkModal, setShowMeetLinkModal] = useState(false);
@@ -177,14 +232,215 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     }
   };
 
+  const parseTimeToMinutes = (timeStr: string): number => {
+    if (!timeStr) return -1;
+    const clean = timeStr.trim().split(' ')[0];
+    const parts = clean.split(':');
+    if (parts.length < 2) return -1;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return -1;
+    }
+    return hours * 60 + minutes;
+  };
+
+  const addMinutesToTime = (timeStr: string, minutesToAdd: number): string => {
+    const min = parseTimeToMinutes(timeStr);
+    if (min < 0) return timeStr;
+    const newMin = Math.min(23 * 60 + 59, min + minutesToAdd);
+    const h = Math.floor(newMin / 60);
+    const m = newMin % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
+  const now = new Date();
+  const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const minAllowedStartMinutesToday = currentMinutes + 120; // 2 hours advance notice
+
+  const getInitialStartTimeForDate = (targetDate?: string): { start: string; end: string } => {
+    const checkDate = targetDate || selectedDate || todayString;
+    if (checkDate === todayString) {
+      // Must be at least 2 hours in advance (120 mins)
+      const nextHour = Math.ceil(minAllowedStartMinutesToday / 60);
+      if (nextHour <= 22) {
+        const startH = String(nextHour).padStart(2, '0');
+        const endH = String(Math.min(23, nextHour + 1)).padStart(2, '0');
+        return { start: `${startH}:00`, end: `${endH}:00` };
+      }
+      return { start: '22:00', end: '23:00' };
+    }
+    return { start: '10:00', end: '11:00' };
+  };
+
+  const handleOpenAddSlotModal = () => {
+    const { start, end } = getInitialStartTimeForDate(selectedDate || todayString);
+    setNewSlotStartTime(start);
+    setNewSlotEndTime(end);
+    setActiveTimePicker('start');
+    setShowAddSlotModal(true);
+  };
+
+  const handleSelectPresetSlot = (start: string, end: string) => {
+    if (selectedDate === todayString && parseTimeToMinutes(start) < minAllowedStartMinutesToday) {
+      return;
+    }
+    setNewSlotStartTime(start);
+    setNewSlotEndTime(end);
+  };
+
+  const handleSelectDuration = (mins: number) => {
+    const end = addMinutesToTime(newSlotStartTime || '10:00', mins);
+    setNewSlotEndTime(end);
+  };
+
+  const handleSelectHour = (hour: string, type: 'start' | 'end') => {
+    const current = type === 'start' ? newSlotStartTime : newSlotEndTime;
+    const parts = (current || '10:00').split(':');
+    let minPart = parts[1] || '00';
+    const hNum = parseInt(hour, 10);
+
+    if (type === 'start') {
+      if (selectedDate === todayString) {
+        // If current minute makes this slot < 2h advance, auto-clamp to first valid minute in this hour
+        if (hNum * 60 + parseInt(minPart, 10) < minAllowedStartMinutesToday) {
+          const firstValidMin = MINUTE_PRESETS.find(
+            (m) => hNum * 60 + parseInt(m, 10) >= minAllowedStartMinutesToday
+          );
+          if (firstValidMin) {
+            minPart = firstValidMin;
+          }
+        }
+      }
+      const newTime = `${hour}:${minPart}`;
+      setNewSlotStartTime(newTime);
+      const startM = parseTimeToMinutes(newTime);
+      const endM = parseTimeToMinutes(newSlotEndTime);
+      if (endM <= startM) {
+        setNewSlotEndTime(addMinutesToTime(newTime, 60));
+      }
+    } else {
+      // type === 'end'
+      if (hNum * 60 + parseInt(minPart, 10) <= selectedStartMinutes) {
+        const firstValidMin = MINUTE_PRESETS.find(
+          (m) => hNum * 60 + parseInt(m, 10) > selectedStartMinutes
+        );
+        if (firstValidMin) {
+          minPart = firstValidMin;
+        }
+      }
+      const newTime = `${hour}:${minPart}`;
+      setNewSlotEndTime(newTime);
+    }
+  };
+
+  const handleSelectMinute = (minute: string, type: 'start' | 'end') => {
+    const current = type === 'start' ? newSlotStartTime : newSlotEndTime;
+    const parts = (current || '10:00').split(':');
+    const hourPart = parts[0] || '10';
+    const totalMin = parseInt(hourPart, 10) * 60 + parseInt(minute, 10);
+
+    if (type === 'start' && selectedDate === todayString && totalMin < minAllowedStartMinutesToday) {
+      return;
+    }
+    if (type === 'end' && totalMin <= selectedStartMinutes) {
+      return;
+    }
+
+    const newTime = `${hourPart}:${minute}`;
+    if (type === 'start') {
+      setNewSlotStartTime(newTime);
+      const startM = parseTimeToMinutes(newTime);
+      const endM = parseTimeToMinutes(newSlotEndTime);
+      if (endM <= startM) {
+        setNewSlotEndTime(addMinutesToTime(newTime, 60));
+      }
+    } else {
+      setNewSlotEndTime(newTime);
+    }
+  };
+
+  const selectedStartMinutes = parseTimeToMinutes(newSlotStartTime);
+  const selectedEndMinutes = parseTimeToMinutes(newSlotEndTime);
+  const selectedDurationMinutes =
+    selectedStartMinutes >= 0 && selectedEndMinutes > selectedStartMinutes
+      ? selectedEndMinutes - selectedStartMinutes
+      : 0;
+
+  const isPastDate = !!selectedDate && selectedDate < todayString;
+  const isWithinTwoHours =
+    !!selectedDate &&
+    selectedDate === todayString &&
+    selectedStartMinutes >= 0 &&
+    selectedStartMinutes < minAllowedStartMinutesToday;
+
+  const currentOverlappingSlot = slots.find((slot) => {
+    const sMin = parseTimeToMinutes(slot.startTime);
+    const eMin = parseTimeToMinutes(slot.endTime);
+    if (sMin < 0 || eMin < 0 || selectedStartMinutes < 0 || selectedEndMinutes < 0) return false;
+    return selectedStartMinutes < eMin && selectedEndMinutes > sMin;
+  });
+
+  const isSlotTimeInvalid =
+    selectedStartMinutes < 0 ||
+    selectedEndMinutes < 0 ||
+    selectedStartMinutes >= selectedEndMinutes ||
+    isPastDate ||
+    isWithinTwoHours ||
+    !!currentOverlappingSlot;
+
   const handleAddSlot = async () => {
     if (!newSlotStartTime.trim() || !newSlotEndTime.trim()) {
       Alert.alert('Required', 'Please enter both start time and end time (e.g. 10:00 and 11:00).');
       return;
     }
 
-    if (newSlotStartTime >= newSlotEndTime) {
+    const startMin = parseTimeToMinutes(newSlotStartTime);
+    const endMin = parseTimeToMinutes(newSlotEndTime);
+
+    if (startMin < 0 || endMin < 0) {
+      Alert.alert('Invalid Time', 'Please enter time in HH:mm format (e.g. 10:00 or 14:30).');
+      return;
+    }
+
+    if (startMin >= endMin) {
       Alert.alert('Invalid Time', 'End time must be after start time.');
+      return;
+    }
+
+    const clientNow = new Date();
+    const clientToday = `${clientNow.getFullYear()}-${String(clientNow.getMonth() + 1).padStart(2, '0')}-${String(clientNow.getDate()).padStart(2, '0')}`;
+    const clientMin = clientNow.getHours() * 60 + clientNow.getMinutes();
+    const minAllowedStart = clientMin + 120; // 2 hours minimum advance
+
+    if (selectedDate < clientToday) {
+      Alert.alert('Past Date', 'Cannot add availability for past dates.');
+      return;
+    }
+
+    if (selectedDate === clientToday && startMin < minAllowedStart) {
+      const earliestStr = formatTo12Hour(formatMinutesToTime(Math.min(23 * 60 + 59, minAllowedStart)));
+      Alert.alert(
+        '2 Hours Advance Notice Required',
+        `Slots for today must be scheduled at least 2 hours in advance.\n\nEarliest slot start time allowed today is ${earliestStr}.`
+      );
+      return;
+    }
+
+    // Client-side overlap pre-check
+    const overlapping = slots.find((slot) => {
+      const sMin = parseTimeToMinutes(slot.startTime);
+      const eMin = parseTimeToMinutes(slot.endTime);
+      if (sMin < 0 || eMin < 0) return false;
+      return startMin < eMin && endMin > sMin;
+    });
+
+    if (overlapping) {
+      Alert.alert(
+        'Overlapping Slot',
+        `This time slot overlaps with an existing slot (${overlapping.startTime} - ${overlapping.endTime}). Please choose a different time.`
+      );
       return;
     }
 
@@ -194,6 +450,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
         date: selectedDate,
         startTime: newSlotStartTime.trim(),
         endTime: newSlotEndTime.trim(),
+        clientDate: clientToday,
+        clientCurrentMinutes: clientMin,
       },
       user!.token!
     );
@@ -202,6 +460,9 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     if (res && res.success) {
       Alert.alert('Success', 'Availability slot added successfully!');
       setShowAddSlotModal(false);
+      const nextDefaults = getInitialStartTimeForDate(selectedDate);
+      setNewSlotStartTime(nextDefaults.start);
+      setNewSlotEndTime(nextDefaults.end);
       loadSlots(selectedDate);
       loadDashboardData();
     } else {
@@ -692,7 +953,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 </View>
                 <TouchableOpacity
                   style={styles.addSlotPrimaryBtn}
-                  onPress={() => setShowAddSlotModal(true)}
+                  onPress={handleOpenAddSlotModal}
                   activeOpacity={0.85}
                 >
                   <PlusCircle size={16} color={Colors.textWhite} />
@@ -747,7 +1008,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                     <Text style={styles.noSlotsSub}>Tap "Add Slot" above to open your calendar for students.</Text>
                     <TouchableOpacity
                       style={styles.addFirstSlotBtn}
-                      onPress={() => setShowAddSlotModal(true)}
+                      onPress={handleOpenAddSlotModal}
                     >
                       <Text style={styles.addFirstSlotBtnText}>Add Time Slot</Text>
                     </TouchableOpacity>
@@ -912,33 +1173,47 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
 
               {/* CAMPUS & HELPLINE CARD */}
               <View style={styles.profileSectionCard}>
-                <Text style={styles.profileSectionTitle}>Academy Campus & Support</Text>
+                <Text style={styles.profileSectionTitle}>Campus & Official Support</Text>
 
-                <View style={styles.profileInfoRow}>
+                <TouchableOpacity
+                  style={styles.profileInfoRow}
+                  onPress={() => Linking.openURL(FlymediaContact.googleMapsUrl).catch(() => {})}
+                  activeOpacity={0.7}
+                >
                   <MapPin size={18} color={Colors.primaryRose} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.profileInfoRowTitle}>Campus Address</Text>
+                    <Text style={styles.profileInfoRowTitle}>Campus Address (Tap for map)</Text>
                     <Text style={styles.profileInfoRowSubtitle}>
-                      Flymedia Academy, Model Town Extension, Ludhiana, Punjab - 141002
+                      {FlymediaContact.address}
                     </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
 
-                <View style={styles.profileInfoRow}>
+                <TouchableOpacity
+                  style={styles.profileInfoRow}
+                  onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
+                  activeOpacity={0.7}
+                >
                   <Phone size={18} color={Colors.primaryRose} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.profileInfoRowTitle}>Academy Helpline</Text>
-                    <Text style={styles.profileInfoRowSubtitle}>+91 78144 08934 / +91 87279 09176</Text>
+                    <Text style={styles.profileInfoRowTitle}>Official Mobile & Helpline (Tap to call)</Text>
+                    <Text style={[styles.profileInfoRowSubtitle, { color: Colors.primaryRose, fontWeight: '800' }]}>
+                      {FlymediaContact.phone}
+                    </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
 
-                <View style={[styles.profileInfoRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <TouchableOpacity
+                  style={[styles.profileInfoRow, { borderBottomWidth: 0, paddingBottom: 0 }]}
+                  onPress={() => Linking.openURL(`mailto:${FlymediaContact.email}`).catch(() => {})}
+                  activeOpacity={0.7}
+                >
                   <Mail size={18} color={Colors.primaryRose} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.profileInfoRowTitle}>Tutor Helpdesk</Text>
-                    <Text style={styles.profileInfoRowSubtitle}>support@flymediatech.com</Text>
+                    <Text style={styles.profileInfoRowTitle}>Official Support Email</Text>
+                    <Text style={styles.profileInfoRowSubtitle}>{FlymediaContact.email}</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               </View>
 
               {/* LOGOUT BUTTON */}
@@ -1062,46 +1337,358 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Availability Slot</Text>
+              <View>
+                <Text style={styles.modalTitle}>Add Availability Slot</Text>
+                <Text style={styles.modalSubTitle}>Select session start & end time</Text>
+              </View>
               <TouchableOpacity onPress={() => setShowAddSlotModal(false)} style={styles.modalCloseBtn}>
                 <X size={20} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
-              <Text style={styles.modalLabel}>Date</Text>
+            <ScrollView style={styles.modalScrollBody} showsVerticalScrollIndicator={false}>
+              {/* DATE BADGE */}
               <View style={styles.modalDateDisplay}>
                 <Calendar size={16} color="#2563eb" />
-                <Text style={styles.modalDateText}>{selectedDate}</Text>
+                <Text style={styles.modalDateText}>Date: {selectedDate}</Text>
               </View>
 
-              <Text style={[styles.modalLabel, { marginTop: 14 }]}>Start Time (HH:MM e.g. 10:00 or 14:30)</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={newSlotStartTime}
-                onChangeText={setNewSlotStartTime}
-                placeholder="10:00"
-                placeholderTextColor={Colors.textMuted}
-              />
+              {/* TIME RANGE SELECTOR CARDS */}
+              <View style={styles.timeRangeCardsRow}>
+                {/* START TIME CARD */}
+                <TouchableOpacity
+                  style={[
+                    styles.timeCard,
+                    activeTimePicker === 'start' && styles.timeCardActive,
+                  ]}
+                  onPress={() => setActiveTimePicker('start')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.timeCardHeader}>
+                    <Clock size={12} color={activeTimePicker === 'start' ? '#2563eb' : Colors.textMuted} />
+                    <Text
+                      style={[
+                        styles.timeCardLabel,
+                        activeTimePicker === 'start' && styles.timeCardLabelActive,
+                      ]}
+                    >
+                      START TIME
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.timeCardValue,
+                      activeTimePicker === 'start' && styles.timeCardValueActive,
+                    ]}
+                  >
+                    {formatTo12Hour(newSlotStartTime)}
+                  </Text>
+                  <Text style={styles.timeCard24h}>({newSlotStartTime || '--:--'})</Text>
+                </TouchableOpacity>
 
-              <Text style={[styles.modalLabel, { marginTop: 14 }]}>End Time (HH:MM e.g. 11:00 or 15:30)</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={newSlotEndTime}
-                onChangeText={setNewSlotEndTime}
-                placeholder="11:00"
-                placeholderTextColor={Colors.textMuted}
-              />
+                {/* DURATION PILL / ARROW */}
+                <View style={styles.timeRangeSeparatorWrap}>
+                  <ArrowRight size={16} color={Colors.textMuted} />
+                  <View style={styles.durationBadge}>
+                    <Text style={styles.durationBadgeText}>
+                      {selectedDurationMinutes > 0 ? `${selectedDurationMinutes}m` : '--'}
+                    </Text>
+                  </View>
+                </View>
 
+                {/* END TIME CARD */}
+                <TouchableOpacity
+                  style={[
+                    styles.timeCard,
+                    activeTimePicker === 'end' && styles.timeCardActive,
+                  ]}
+                  onPress={() => setActiveTimePicker('end')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.timeCardHeader}>
+                    <Clock size={12} color={activeTimePicker === 'end' ? '#2563eb' : Colors.textMuted} />
+                    <Text
+                      style={[
+                        styles.timeCardLabel,
+                        activeTimePicker === 'end' && styles.timeCardLabelActive,
+                      ]}
+                    >
+                      END TIME
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.timeCardValue,
+                      activeTimePicker === 'end' && styles.timeCardValueActive,
+                    ]}
+                  >
+                    {formatTo12Hour(newSlotEndTime)}
+                  </Text>
+                  <Text style={styles.timeCard24h}>({newSlotEndTime || '--:--'})</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* QUICK DURATION BUTTONS */}
+              <View style={styles.pickerSection}>
+                <Text style={styles.pickerSectionTitle}>Quick Durations (sets end time):</Text>
+                <View style={styles.durationsRow}>
+                  {PRESET_DURATIONS.map((dur) => {
+                    const isSelected = selectedDurationMinutes === dur.mins;
+                    return (
+                      <TouchableOpacity
+                        key={dur.mins}
+                        style={[styles.durationChip, isSelected && styles.durationChipActive]}
+                        onPress={() => handleSelectDuration(dur.mins)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.durationChipText, isSelected && styles.durationChipTextActive]}>
+                          {dur.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* HOUR & MINUTE SELECTOR FOR ACTIVE TARGET */}
+              <View style={styles.pickerSection}>
+                <View style={styles.pickerTargetHeader}>
+                  <Text style={styles.pickerSectionTitle}>
+                    Select {activeTimePicker === 'start' ? 'Start Time' : 'End Time'}:
+                  </Text>
+                  <View style={styles.targetToggleWrap}>
+                    <TouchableOpacity
+                      style={[styles.targetToggleBtn, activeTimePicker === 'start' && styles.targetToggleBtnActive]}
+                      onPress={() => setActiveTimePicker('start')}
+                    >
+                      <Text style={[styles.targetToggleBtnText, activeTimePicker === 'start' && styles.targetToggleBtnTextActive]}>
+                        Start ({newSlotStartTime})
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.targetToggleBtn, activeTimePicker === 'end' && styles.targetToggleBtnActive]}
+                      onPress={() => setActiveTimePicker('end')}
+                    >
+                      <Text style={[styles.targetToggleBtnText, activeTimePicker === 'end' && styles.targetToggleBtnTextActive]}>
+                        End ({newSlotEndTime})
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* HOUR CHIPS */}
+                <Text style={styles.chipGroupLabel}>Hour (24h / AM-PM):</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+                  {HOUR_PRESETS.map((hour) => {
+                    const currentHour = ((activeTimePicker === 'start' ? newSlotStartTime : newSlotEndTime) || '').split(':')[0];
+                    const isSelected = currentHour === hour;
+                    const hNum = parseInt(hour, 10);
+                    const label12 = hNum === 0 ? '12 AM' : hNum < 12 ? `${hNum} AM` : hNum === 12 ? '12 PM' : `${hNum - 12} PM`;
+                    
+                    // For start time: disable if max preset minute (45) is still < 2 hours advance notice
+                    const isHourTooSoon =
+                      selectedDate === todayString &&
+                      activeTimePicker === 'start' &&
+                      (hNum * 60 + 45) < minAllowedStartMinutesToday;
+
+                    // For end time: disable if entire hour is <= selected start minutes
+                    const isHourInvalidEnd =
+                      activeTimePicker === 'end' &&
+                      (hNum * 60 + 59) <= selectedStartMinutes;
+
+                    const isHourDisabled = isHourTooSoon || isHourInvalidEnd;
+
+                    return (
+                      <TouchableOpacity
+                        key={hour}
+                        style={[
+                          styles.hourChip,
+                          isSelected && styles.hourChipActive,
+                          isHourDisabled && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isHourDisabled}
+                        onPress={() => handleSelectHour(hour, activeTimePicker)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.hourChipNum, isSelected && styles.hourChipNumActive, isHourDisabled && { color: Colors.textMuted }]}>{hour}:00</Text>
+                        <Text style={[styles.hourChipLabel, isSelected && styles.hourChipLabelActive, isHourDisabled && { color: Colors.textMuted }]}>
+                          {isHourTooSoon ? '<2h' : isHourInvalidEnd ? '<=Start' : label12}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                {/* MINUTE CHIPS */}
+                <Text style={[styles.chipGroupLabel, { marginTop: 10 }]}>Minutes:</Text>
+                <View style={styles.minutesRow}>
+                  {MINUTE_PRESETS.map((minute) => {
+                    const currentMinute = ((activeTimePicker === 'start' ? newSlotStartTime : newSlotEndTime) || '').split(':')[1] || '00';
+                    const isSelected = currentMinute === minute;
+                    const currentHourStr = ((activeTimePicker === 'start' ? newSlotStartTime : newSlotEndTime) || '').split(':')[0] || '10';
+                    const currentHourNum = parseInt(currentHourStr, 10);
+                    const totalMin = currentHourNum * 60 + parseInt(minute, 10);
+
+                    const isMinuteTooSoon =
+                      selectedDate === todayString &&
+                      activeTimePicker === 'start' &&
+                      totalMin < minAllowedStartMinutesToday;
+
+                    const isMinuteInvalidEnd =
+                      activeTimePicker === 'end' &&
+                      totalMin <= selectedStartMinutes;
+
+                    const isMinuteDisabled = isMinuteTooSoon || isMinuteInvalidEnd;
+
+                    return (
+                      <TouchableOpacity
+                        key={minute}
+                        style={[
+                          styles.minuteChip,
+                          isSelected && styles.minuteChipActive,
+                          isMinuteDisabled && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isMinuteDisabled}
+                        onPress={() => handleSelectMinute(minute, activeTimePicker)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.minuteChipText,
+                            isSelected && styles.minuteChipTextActive,
+                            isMinuteDisabled && { color: Colors.textMuted },
+                          ]}
+                        >
+                          :{minute} min
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* POPULAR PRESET 1-HOUR SLOTS */}
+              <View style={styles.pickerSection}>
+                <Text style={styles.pickerSectionTitle}>Or Pick a Popular 1-Hour Slot:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+                  {PRESET_SLOTS.map((preset) => {
+                    const isSelected = newSlotStartTime === preset.start && newSlotEndTime === preset.end;
+                    const isPresetTooSoon = selectedDate === todayString && parseTimeToMinutes(preset.start) < minAllowedStartMinutesToday;
+                    return (
+                      <TouchableOpacity
+                        key={preset.start}
+                        style={[
+                          styles.presetSlotChip,
+                          isSelected && styles.presetSlotChipActive,
+                          isPresetTooSoon && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isPresetTooSoon}
+                        onPress={() => handleSelectPresetSlot(preset.start, preset.end)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.presetSlotChipText, isSelected && styles.presetSlotChipTextActive, isPresetTooSoon && { color: Colors.textMuted }]}>
+                          {preset.label} {isPresetTooSoon ? '(<2h)' : ''}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              {/* MANUAL EDIT INPUTS (FALLBACK / FINE-TUNING) */}
+              <View style={styles.manualInputSection}>
+                <Text style={styles.manualInputSectionTitle}>Or type time directly (HH:mm):</Text>
+                <View style={styles.manualInputsRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.manualInputLabel}>Start Time</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      value={newSlotStartTime}
+                      onChangeText={setNewSlotStartTime}
+                      placeholder="10:00"
+                      placeholderTextColor={Colors.textMuted}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.manualInputLabel}>End Time</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      value={newSlotEndTime}
+                      onChangeText={setNewSlotEndTime}
+                      placeholder="11:00"
+                      placeholderTextColor={Colors.textMuted}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* PAST DATE WARNING */}
+              {isPastDate && (
+                <View style={styles.overlapWarningBanner}>
+                  <AlertCircle size={16} color="#dc2626" />
+                  <Text style={styles.overlapWarningText}>
+                    Cannot add availability for past dates ({selectedDate}).
+                  </Text>
+                </View>
+              )}
+
+              {/* WITHIN 2 HOURS NOTICE WARNING */}
+              {isWithinTwoHours && (
+                <View style={styles.overlapWarningBanner}>
+                  <AlertCircle size={16} color="#dc2626" />
+                  <Text style={styles.overlapWarningText}>
+                    Slots for today must start at least 2 hours in advance (at or after {formatTo12Hour(formatMinutesToTime(Math.min(23 * 60 + 59, minAllowedStartMinutesToday)))}).
+                  </Text>
+                </View>
+              )}
+
+              {/* VALIDATION & OVERLAP STATUS BANNER */}
+              {currentOverlappingSlot && (
+                <View style={styles.overlapWarningBanner}>
+                  <AlertCircle size={16} color="#dc2626" />
+                  <Text style={styles.overlapWarningText}>
+                    Slot overlaps with existing ({currentOverlappingSlot.startTime} - {currentOverlappingSlot.endTime}).
+                  </Text>
+                </View>
+              )}
+
+              {selectedStartMinutes >= 0 && selectedEndMinutes > 0 && selectedStartMinutes >= selectedEndMinutes && (
+                <View style={styles.invalidTimeBanner}>
+                  <AlertCircle size={16} color="#d97706" />
+                  <Text style={styles.invalidTimeText}>
+                    End time must be after start time.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* FIXED FOOTER (ALWAYS VISIBLE) */}
+            <View style={styles.modalFixedFooter}>
               <TouchableOpacity
-                style={styles.modalSubmitBtn}
-                disabled={submittingSlot}
+                style={[
+                  styles.modalSubmitBtn,
+                  isSlotTimeInvalid && styles.modalSubmitBtnDisabled,
+                ]}
+                disabled={submittingSlot || isSlotTimeInvalid}
                 onPress={handleAddSlot}
+                activeOpacity={0.8}
               >
                 {submittingSlot ? (
                   <ActivityIndicator size="small" color={Colors.textWhite} />
                 ) : (
-                  <Text style={styles.modalSubmitBtnText}>Create Availability Slot</Text>
+                  <Text style={styles.modalSubmitBtnText}>
+                    {isSlotTimeInvalid
+                      ? currentOverlappingSlot
+                        ? 'Time Slot Overlaps'
+                        : isPastDate
+                        ? 'Past Date'
+                        : isWithinTwoHours
+                        ? 'Needs 2h Advance Notice'
+                        : selectedStartMinutes >= selectedEndMinutes
+                        ? 'End Must Be After Start'
+                        : 'Choose Valid Time'
+                      : `Create Slot (${formatTo12Hour(newSlotStartTime)} - ${formatTo12Hour(newSlotEndTime)})`}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -2272,6 +2859,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: 'hidden',
+    width: '100%',
+    maxHeight: '88%',
     ...Shadows.medium,
   },
   modalHeader: {
@@ -2288,8 +2877,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.textPrimary,
   },
+  modalSubTitle: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
   modalCloseBtn: {
     padding: 4,
+  },
+  modalScrollBody: {
+    padding: 16,
   },
   modalBody: {
     padding: 18,
@@ -2315,6 +2912,245 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
   },
+  timeRangeCardsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    gap: 8,
+  },
+  timeCard: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    padding: 12,
+    alignItems: 'center',
+  },
+  timeCardActive: {
+    borderColor: '#2563eb',
+    backgroundColor: '#eff6ff',
+  },
+  timeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  timeCardLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  timeCardLabelActive: {
+    color: '#2563eb',
+  },
+  timeCardValue: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+  },
+  timeCardValueActive: {
+    color: '#1d4ed8',
+  },
+  timeCard24h: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  timeRangeSeparatorWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 2,
+  },
+  durationBadge: {
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  durationBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#3730a3',
+  },
+  pickerSection: {
+    marginTop: 14,
+  },
+  pickerSectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  durationsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  durationChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  durationChipActive: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#2563eb',
+  },
+  durationChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  durationChipTextActive: {
+    color: Colors.textWhite,
+  },
+  pickerTargetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  targetToggleWrap: {
+    flexDirection: 'row',
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  targetToggleBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  targetToggleBtnActive: {
+    backgroundColor: '#2563eb',
+  },
+  targetToggleBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  targetToggleBtnTextActive: {
+    color: Colors.textWhite,
+  },
+  chipGroupLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginBottom: 6,
+  },
+  chipsScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  hourChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    minWidth: 64,
+  },
+  hourChipActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#1d4ed8',
+  },
+  hourChipNum: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  hourChipNumActive: {
+    color: Colors.textWhite,
+  },
+  hourChipLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  hourChipLabelActive: {
+    color: '#dbeafe',
+  },
+  minutesRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  minuteChip: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  minuteChipActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#1d4ed8',
+  },
+  minuteChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  minuteChipTextActive: {
+    color: Colors.textWhite,
+  },
+  presetSlotChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  presetSlotChipActive: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#2563eb',
+  },
+  presetSlotChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  presetSlotChipTextActive: {
+    color: '#2563eb',
+    fontWeight: '800',
+  },
+  manualInputSection: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  manualInputSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginBottom: 6,
+  },
+  manualInputsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  manualInputLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginBottom: 4,
+  },
   modalInput: {
     backgroundColor: Colors.background,
     borderWidth: 1,
@@ -2325,12 +3161,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textPrimary,
   },
+  overlapWarningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 14,
+  },
+  overlapWarningText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#dc2626',
+  },
+  invalidTimeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 14,
+  },
+  invalidTimeText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#b45309',
+  },
+  modalFixedFooter: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
   modalSubmitBtn: {
     backgroundColor: '#2563eb',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+  },
+  modalSubmitBtnDisabled: {
+    backgroundColor: Colors.border,
+    opacity: 0.7,
   },
   modalSubmitBtnText: {
     color: Colors.textWhite,

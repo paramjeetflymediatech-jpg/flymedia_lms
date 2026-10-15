@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -15,6 +16,7 @@ import { CallbackModal } from '../components/common/CallbackModal';
 import { ApiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Course, Testimonial, FaqItem } from '../types';
+import { FlymediaContact } from '../constants/contact';
 import {
   Sparkles,
   Award,
@@ -27,6 +29,10 @@ import {
   ArrowRight,
   PhoneCall,
   RefreshCw,
+  MapPin,
+  Phone,
+  Mail,
+  Navigation as NavigationIcon,
 } from 'lucide-react-native';
 
 interface HomeScreenProps {
@@ -334,6 +340,50 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        {/* CAMPUS & ADMISSIONS SECTION */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Visit Our Academy Campus</Text>
+          <Text style={styles.sectionSubtitle}>Learn in-person at Flymedia Technology in Ludhiana</Text>
+        </View>
+
+        <View style={styles.campusCard}>
+          <View style={styles.campusCardHeader}>
+            <View style={styles.campusIconCircle}>
+              <MapPin size={20} color={Colors.textWhite} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.campusTitle}>{FlymediaContact.companyName}</Text>
+              <Text style={styles.campusSub}>Offline Training Hub & Software Labs</Text>
+            </View>
+          </View>
+
+          <View style={styles.campusInfoRow}>
+            <Text style={styles.campusAddressText}>
+              {FlymediaContact.address}
+            </Text>
+          </View>
+
+          <View style={styles.campusCtaRow}>
+            <TouchableOpacity
+              style={styles.campusCallBtn}
+              onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
+              activeOpacity={0.85}
+            >
+              <Phone size={15} color={Colors.textWhite} />
+              <Text style={styles.campusCallBtnText}>Call {FlymediaContact.phone}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.campusMapBtn}
+              onPress={() => Linking.openURL(FlymediaContact.googleMapsUrl).catch(() => {})}
+              activeOpacity={0.85}
+            >
+              <NavigationIcon size={15} color={Colors.primaryRose} />
+              <Text style={styles.campusMapBtnText}>Directions</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -707,5 +757,88 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
+  },
+  campusCard: {
+    marginHorizontal: 20,
+    backgroundColor: '#0a0f1d',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.25)',
+    ...Shadows.medium,
+  },
+  campusCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  campusIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryRose,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  campusTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.textWhite,
+  },
+  campusSub: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  campusInfoRow: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  campusAddressText: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  campusCtaRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  campusCallBtn: {
+    flex: 1.4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primaryRose,
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 8,
+  },
+  campusCallBtnText: {
+    color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  campusMapBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 6,
+  },
+  campusMapBtnText: {
+    color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

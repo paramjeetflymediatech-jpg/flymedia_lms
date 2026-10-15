@@ -9,10 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import { Colors, Shadows } from '../../theme/colors';
 import { X, CheckCircle, PhoneCall } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
+import { FlymediaContact } from '../../constants/contact';
 
 interface CallbackModalProps {
   visible: boolean;
@@ -97,7 +99,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
               <Text style={styles.label}>Mobile Number (WhatsApp)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="+91 98765 43210"
+                placeholder="+91 98884 84310"
                 placeholderTextColor={Colors.textLight}
                 keyboardType="phone-pad"
                 value={phone}
@@ -121,6 +123,17 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
               >
                 <Text style={styles.submitButtonText}>
                   {loading ? 'Submitting...' : 'Request Instant Callback'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.directCallButton}
+                onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
+                activeOpacity={0.8}
+              >
+                <PhoneCall size={14} color={Colors.primaryOrange} />
+                <Text style={styles.directCallText}>
+                  Or call directly: {FlymediaContact.phone}
                 </Text>
               </TouchableOpacity>
 
@@ -224,6 +237,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textMuted,
     marginTop: 10,
+  },
+  directCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 10,
+    backgroundColor: Colors.orangeLight,
+    borderRadius: 12,
+  },
+  directCallText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.primaryOrange,
   },
   successContainer: {
     alignItems: 'center',

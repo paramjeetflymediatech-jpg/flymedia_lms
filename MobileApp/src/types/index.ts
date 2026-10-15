@@ -55,7 +55,27 @@ export interface Enrollment {
   totalLessons: number;
   nextLiveClass?: string;
   certificateReady: boolean;
+  // Enhanced package purchase fields
+  packageId?: string;
+  title?: string;
+  slug?: string;
+  duration?: string;
+  level?: string;
+  mode?: string;
+  price?: number;
+  amountPaid?: number;
+  paymentStatus?: string;
+  transactionId?: string | null;
+  paymentMethod?: string;
+  purchasedAt?: string;
+  totalClasses?: number;
+  liveClasses?: any[];
+  nextLiveClassTime?: string | null;
+  nextLiveClassMeetLink?: string | null;
+  isPurchased?: boolean;
 }
+
+export type PurchasedPackage = Enrollment;
 
 export interface Mentor {
   id: string;

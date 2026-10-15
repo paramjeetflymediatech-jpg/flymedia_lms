@@ -101,7 +101,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const packages = packagesData.map(p => p.toJSON());
   const categoryDurations = Array.from(new Set(categoryDurationRows.map((d: any) => d.duration).filter(Boolean)));
 
-  let dynamicContent = null;
+  let dynamicContent: any = null;
   let isLegacyHtml = false;
   let themeColor = 'indigo';
   let heroLayout = 'centered';

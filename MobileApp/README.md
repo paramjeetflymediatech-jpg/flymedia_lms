@@ -46,12 +46,7 @@ The styling matches the web app's design system:
    - Syllabus checklist
    - Course Completion Certificate status
 
-5. **👨‍🏫 Mentors & Trainers**:
-   - Senior faculty profiles (Paramjeet Singh, Amanpreet Kaur, Rohit Sharma)
-   - Industry experience, ratings, student count, and specializations
-   - 1-on-1 counseling consultation booking
-
-6. **👤 Student Profile & Auth**:
+5. **👤 Student Profile & Auth**:
    - User profile with role badge (STUDENT / TUTOR / ADMIN)
    - Authentication system (Sign In / Register / Logout) persisted via AsyncStorage
    - Flymedia Academy campus helpline phone, WhatsApp, and admissions email
@@ -116,7 +111,6 @@ MobileApp/
     │   ├── CoursesScreen.tsx
     │   ├── CourseDetailScreen.tsx
     │   ├── MyLearningScreen.tsx
-    │   ├── MentorsScreen.tsx
     │   └── ProfileScreen.tsx
     ├── theme/
     │   └── colors.ts              # Exact web color tokens

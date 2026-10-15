@@ -62,8 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(verifiedUser);
           await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(verifiedUser));
 
-          // Fetch real live enrollments from API
-          const userEnrollments = await ApiService.getEnrollments(storedToken);
+          // Fetch real live enrollments and purchased packages from API
+          const userEnrollments = await ApiService.getStudentPurchasedPackages(storedToken);
           setEnrollments(userEnrollments);
         } else {
           // Token is expired, invalid, or dummy - clear session completely
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setEnrollments([]);
       return;
     }
-    const realEnrollments = await ApiService.getEnrollments(user.token);
+    const realEnrollments = await ApiService.getStudentPurchasedPackages(user.token);
     setEnrollments(realEnrollments);
   };
 
@@ -112,8 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem(TOKEN_STORAGE_KEY, res.token);
         setUser(authUser);
 
-        // Fetch user's real enrollments
-        const realEnrollments = await ApiService.getEnrollments(res.token);
+        // Fetch user's real enrollments and purchased packages
+        const realEnrollments = await ApiService.getStudentPurchasedPackages(res.token);
         setEnrollments(realEnrollments);
         return { success: true };
       }

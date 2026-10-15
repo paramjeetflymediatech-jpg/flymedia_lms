@@ -5,7 +5,7 @@ async function run() {
   await sequelize.authenticate();
   const cat = await Category.findOne({ where: { slug: 'graphic-design' } });
   if (cat) {
-    const content = JSON.parse(cat.content as string);
+    const content: any = JSON.parse(cat.content as string);
     console.log(content.sections[0]);
   }
 }
