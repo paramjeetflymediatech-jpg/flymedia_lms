@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { LiveClass, TutorAvailability } from '../../../../../src/db/models';
+import { LiveClass, TutorAvailability, TutorSlotBooking, Enrollment, User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
+import { Op } from 'sequelize';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { sessionId, isOneOnOne, meetLink, status } = body;
+    const { sessionId, isOneOnOne, meetLink, status, attendanceStatus, studentId } = body;
 
     if (!sessionId) {
       return NextResponse.json({ success: false, error: 'sessionId is required' }, { status: 400 });
@@ -30,6 +31,41 @@ export async function POST(request: Request) {
         meetLink: meetLink !== undefined ? meetLink : session.meetLink,
         status: status !== undefined ? status : session.status,
       });
+
+      // Update student attendance status if provided
+      if (attendanceStatus) {
+        const whereClause: any = { slotId: sessionId };
+        if (studentId) whereClause.studentId = studentId;
+
+        await TutorSlotBooking.update(
+          { attendanceStatus },
+          { where: whereClause }
+        );
+      }
+
+      // If tutor/admin cancels the class, refund the credit
+      if (status === 'CANCELLED') {
+        const bookings = await TutorSlotBooking.findAll({
+          where: { slotId: sessionId, status: { [Op.ne]: 'CANCELLED' } },
+        });
+
+        for (const b of bookings) {
+          if (b.creditDeducted) {
+            const studentEnrollment = await Enrollment.findOne({
+              where: { userId: b.studentId },
+              order: [['createdAt', 'DESC']],
+            });
+            if (studentEnrollment && (studentEnrollment.usedCredits || 0) > 0) {
+              await studentEnrollment.decrement('usedCredits', { by: 1 });
+            }
+            const studentUser = await User.findByPk(b.studentId);
+            if (studentUser) {
+              await studentUser.increment('credits', { by: 1 });
+            }
+            await b.update({ status: 'CANCELLED', creditDeducted: false });
+          }
+        }
+      }
 
       return NextResponse.json({
         success: true,

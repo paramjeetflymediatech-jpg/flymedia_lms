@@ -20,6 +20,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare studentsMentored: CreationOptional<number>;
   declare skills: CreationOptional<string[] | null>;
   declare trialExpectations: CreationOptional<string[] | null>;
+  declare credits: CreationOptional<number>;
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -40,6 +41,7 @@ User.init(
     studentsMentored: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     skills: { type: DataTypes.JSON, allowNull: true },
     trialExpectations: { type: DataTypes.JSON, allowNull: true },
+    credits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -191,6 +193,8 @@ export class Enrollment extends Model<InferAttributes<Enrollment>, InferCreation
   declare packageId: ForeignKey<Package['id']>;
   declare enrolledAt: CreationOptional<Date>;
   declare completedAt: CreationOptional<Date | null>;
+  declare totalCredits: CreationOptional<number>;
+  declare usedCredits: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -202,6 +206,8 @@ Enrollment.init(
     packageId: { type: DataTypes.UUID, allowNull: false, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
     enrolledAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     completedAt: { type: DataTypes.DATE, allowNull: true },
+    totalCredits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
+    usedCredits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -487,6 +493,8 @@ export class TutorSlotBooking extends Model<InferAttributes<TutorSlotBooking>, I
   declare slotId: ForeignKey<TutorAvailability['id']>;
   declare studentId: ForeignKey<User['id']>;
   declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
+  declare attendanceStatus: CreationOptional<'SCHEDULED' | 'ATTENDED' | 'ABSENT'>;
+  declare creditDeducted: CreationOptional<boolean>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare slot?: NonAttribute<TutorAvailability>;
@@ -499,6 +507,8 @@ TutorSlotBooking.init(
     slotId: { type: DataTypes.UUID, allowNull: false, references: { model: 'tutor_availabilities', key: 'id' }, onDelete: 'CASCADE' },
     studentId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
     status: { type: DataTypes.ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'SCHEDULED' },
+    attendanceStatus: { type: DataTypes.ENUM('SCHEDULED', 'ATTENDED', 'ABSENT'), allowNull: false, defaultValue: 'SCHEDULED' },
+    creditDeducted: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { TutorAvailability, TutorSlotBooking, User } from '../../../../../src/db/models';
+import { TutorAvailability, TutorSlotBooking, User, Enrollment } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -24,6 +24,21 @@ export async function GET(request: Request) {
 
     const queryDate = date || todayString;
 
+    // Calculate student's available credit balance
+    let availableCredits = 0;
+    if (currentUserId) {
+      const userRecord = await User.findByPk(currentUserId);
+      const studentEnrollments = await Enrollment.findAll({ where: { userId: currentUserId } });
+      if (studentEnrollments.length > 0) {
+        availableCredits = studentEnrollments.reduce(
+          (acc, e) => acc + Math.max(0, (e.totalCredits || 10) - (e.usedCredits || 0)),
+          0
+        );
+      } else {
+        availableCredits = userRecord?.credits || 0;
+      }
+    }
+
     const slots = await TutorAvailability.findAll({
       where: { tutorId, date: queryDate },
       order: [['startTime', 'ASC']],
@@ -31,7 +46,7 @@ export async function GET(request: Request) {
         {
           model: TutorSlotBooking,
           as: 'bookings',
-          attributes: ['studentId', 'status'],
+          attributes: ['studentId', 'status', 'attendanceStatus', 'creditDeducted'],
           required: false,
         },
       ],
@@ -70,6 +85,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
+      availableCredits,
       slots: formattedSlots,
     });
   } catch (error: any) {
@@ -105,7 +121,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Cannot book slots in the past' }, { status: 400 });
     }
 
-    // Check if this student already booked this slot
+    // 1. Check if student already booked this slot
     const existingBooking = await TutorSlotBooking.findOne({
       where: {
         slotId,
@@ -118,7 +134,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'You have already booked this session' }, { status: 400 });
     }
 
-    // Check capacity (Max 100 students)
+    // 2. Check capacity (Max 100 students)
     const currentBookingsCount = await TutorSlotBooking.count({
       where: {
         slotId,
@@ -130,12 +146,53 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'This session is fully booked (maximum 100 students reached)' }, { status: 400 });
     }
 
-    // Create booking
+    // 3. Check student credit balance
+    const userRecord = await User.findByPk(authUser.userId);
+    const studentEnrollments = await Enrollment.findAll({
+      where: { userId: authUser.userId },
+      order: [['createdAt', 'DESC']],
+    });
+
+    let availableCredits = 0;
+    let targetEnrollment: any = null;
+
+    if (studentEnrollments.length > 0) {
+      availableCredits = studentEnrollments.reduce(
+        (acc, e) => acc + Math.max(0, (e.totalCredits || 10) - (e.usedCredits || 0)),
+        0
+      );
+      targetEnrollment = studentEnrollments.find(e => (e.totalCredits || 10) > (e.usedCredits || 0));
+    } else {
+      availableCredits = userRecord?.credits || 0;
+    }
+
+    if (availableCredits <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          insufficientCredits: true,
+          error: 'Insufficient slot balance. You have 0 credits remaining. Please enroll in a package or purchase session credits to book.',
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4. Create booking record (marked creditDeducted: true - non-refundable on student absence)
     await TutorSlotBooking.create({
       slotId,
       studentId: authUser.userId,
       status: 'SCHEDULED',
+      attendanceStatus: 'SCHEDULED',
+      creditDeducted: true,
     });
+
+    // 5. Deduct credit immediately from student
+    if (targetEnrollment) {
+      await targetEnrollment.increment('usedCredits', { by: 1 });
+    }
+    if (userRecord && (userRecord.credits || 0) > 0) {
+      await userRecord.decrement('credits', { by: 1 });
+    }
 
     const newCount = currentBookingsCount + 1;
     await slot.update({
@@ -147,7 +204,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Session booked successfully!',
+      message: 'Session booked successfully! 1 credit deducted from your profile balance.',
+      remainingCredits: Math.max(0, availableCredits - 1),
       slot: {
         id: slot.id,
         date: slot.date,
