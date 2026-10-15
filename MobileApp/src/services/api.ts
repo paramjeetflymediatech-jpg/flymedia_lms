@@ -100,6 +100,29 @@ export const ApiService = {
   },
 
   /**
+   * Fetches authenticated student's purchased packages
+   */
+  async getStudentPurchasedPackages(token: string): Promise<Enrollment[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/packages`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && (json.packages || json.enrollments)) {
+          return json.packages || json.enrollments;
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching purchased packages from API:', e);
+    }
+    return this.getEnrollments(token);
+  },
+
+  /**
    * Fetches authenticated user's real enrollments from database
    */
   async getEnrollments(token: string): Promise<Enrollment[]> {
@@ -112,8 +135,8 @@ export const ApiService = {
       });
       if (response.ok) {
         const json = await response.json();
-        if (json.success && json.enrollments) {
-          return json.enrollments;
+        if (json.success && (json.packages || json.enrollments)) {
+          return json.packages || json.enrollments;
         }
       }
     } catch (e) {
