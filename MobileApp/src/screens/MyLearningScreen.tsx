@@ -213,9 +213,9 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                   <Calendar size={18} color={Colors.textWhite} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.openStudentPanelTitle}>Student Dashboard & 1-on-1 Sessions</Text>
+                  <Text style={styles.openStudentPanelTitle}>Student Dashboard & Live Classes</Text>
                   <Text style={styles.openStudentPanelSub}>
-                    Book expert tutors, attend 1-on-1 mentorship, and manage schedule
+                    Attend live classes, track package progress, and manage schedule
                   </Text>
                 </View>
               </View>

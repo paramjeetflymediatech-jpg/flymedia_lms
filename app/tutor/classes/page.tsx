@@ -17,6 +17,7 @@ export default async function TutorClassesPage() {
     include: [
       { 
         model: Package, 
+        as: 'Package',
         attributes: ['title', 'slug'],
         include: [
           {

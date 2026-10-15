@@ -24,6 +24,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  declare assignedPackages?: NonAttribute<Package[]>;
 }
 
 User.init(
@@ -85,7 +86,7 @@ Category.init(
 // ==========================================
 // 2. PACKAGE MODEL
 // ==========================================
-export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses' }>, InferCreationAttributes<Package, { omit: 'liveClasses' }>> {
+export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses' | 'assignedTutors' | 'schedules' }>, InferCreationAttributes<Package, { omit: 'liveClasses' | 'assignedTutors' | 'schedules' }>> {
   declare id: CreationOptional<string>;
   declare title: string;
   declare slug: string;
@@ -112,10 +113,13 @@ export class Package extends Model<InferAttributes<Package, { omit: 'liveClasses
   declare reviewsCount: CreationOptional<string | null>;
   declare level: CreationOptional<string | null>;
   declare duration: CreationOptional<string | null>;
+  declare totalClasses: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   // Eager-loaded association
   declare liveClasses?: NonAttribute<LiveClass[]>;
+  declare assignedTutors?: NonAttribute<User[]>;
+  declare schedules?: NonAttribute<ClassSchedule[]>;
 }
 
 Package.init(
@@ -130,6 +134,7 @@ Package.init(
     videoUrl: { type: DataTypes.STRING(1024), allowNull: true },
     status: { type: DataTypes.ENUM('DRAFT', 'PUBLISHED'), allowNull: false, defaultValue: 'DRAFT' },
     mode: { type: DataTypes.ENUM('ONLINE', 'OFFLINE', 'BOTH'), allowNull: false, defaultValue: 'ONLINE' },
+    totalClasses: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 12 },
     whatYoullLearn: { type: DataTypes.JSON, allowNull: true },
     instructors: { type: DataTypes.JSON, allowNull: true },
     successStories: { type: DataTypes.JSON, allowNull: true },
@@ -159,6 +164,8 @@ export class LiveClass extends Model<InferAttributes<LiveClass>, InferCreationAt
   declare id: CreationOptional<string>;
   declare packageId: ForeignKey<Package['id']>;
   declare tutorId: ForeignKey<User['id']>;
+  declare scheduleId: CreationOptional<string | null>;
+  declare classNumber: CreationOptional<number | null>;
   declare title: string;
   declare meetLink: string;
   declare startTime: Date;
@@ -166,6 +173,8 @@ export class LiveClass extends Model<InferAttributes<LiveClass>, InferCreationAt
   declare status: CreationOptional<'SCHEDULED' | 'COMPLETED' | 'CANCELLED'>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  declare package?: NonAttribute<Package>;
+  declare tutor?: NonAttribute<User>;
 }
 
 LiveClass.init(
@@ -173,6 +182,8 @@ LiveClass.init(
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     packageId: { type: DataTypes.UUID, allowNull: false, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
     tutorId: { type: DataTypes.UUID, allowNull: true, references: { model: 'users', key: 'id' }, onDelete: 'SET NULL' },
+    scheduleId: { type: DataTypes.UUID, allowNull: true, references: { model: 'class_schedules', key: 'id' }, onDelete: 'SET NULL' },
+    classNumber: { type: DataTypes.INTEGER, allowNull: true },
     title: { type: DataTypes.STRING(255), allowNull: false },
     meetLink: { type: DataTypes.STRING(1024), allowNull: true },
     startTime: { type: DataTypes.DATE, allowNull: false },
@@ -182,6 +193,81 @@ LiveClass.init(
     updatedAt: DataTypes.DATE,
   },
   { sequelize, modelName: 'LiveClass', tableName: 'live_classes' }
+);
+
+// ==========================================
+// 3.1 CLASS SCHEDULE MODEL
+// ==========================================
+export class ClassSchedule extends Model<InferAttributes<ClassSchedule>, InferCreationAttributes<ClassSchedule>> {
+  declare id: CreationOptional<string>;
+  declare packageId: ForeignKey<Package['id']>;
+  declare tutorId: ForeignKey<User['id']>;
+  declare daysOfWeek: string[]; // e.g. ["Monday", "Wednesday"]
+  declare startTime: string; // e.g. "18:00"
+  declare duration: number; // in minutes
+  declare meetLink: string;
+  declare startDate: string; // YYYY-MM-DD
+  declare totalClasses: CreationOptional<number>;
+  declare status: CreationOptional<'ACTIVE' | 'COMPLETED' | 'CANCELLED'>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+  declare package?: NonAttribute<Package>;
+  declare tutor?: NonAttribute<User>;
+  declare liveClasses?: NonAttribute<LiveClass[]>;
+}
+
+ClassSchedule.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    packageId: { type: DataTypes.UUID, allowNull: false, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
+    tutorId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    daysOfWeek: { type: DataTypes.JSON, allowNull: false },
+    startTime: { type: DataTypes.STRING(20), allowNull: false },
+    duration: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 60 },
+    meetLink: { type: DataTypes.STRING(1024), allowNull: false },
+    startDate: { type: DataTypes.DATEONLY, allowNull: false },
+    totalClasses: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 12 },
+    status: { type: DataTypes.ENUM('ACTIVE', 'COMPLETED', 'CANCELLED'), allowNull: false, defaultValue: 'ACTIVE' },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'ClassSchedule', tableName: 'class_schedules' }
+);
+
+// ==========================================
+// 3.2 PACKAGE TUTOR (ASSIGNMENT) MODEL
+// ==========================================
+export class PackageTutor extends Model<InferAttributes<PackageTutor>, InferCreationAttributes<PackageTutor>> {
+  declare id: CreationOptional<string>;
+  declare packageId: ForeignKey<Package['id']>;
+  declare tutorId: ForeignKey<User['id']>;
+  declare assignedAt: CreationOptional<Date>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+  declare package?: NonAttribute<Package>;
+  declare tutor?: NonAttribute<User>;
+}
+
+PackageTutor.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    packageId: { type: DataTypes.UUID, allowNull: false, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
+    tutorId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    assignedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'PackageTutor',
+    tableName: 'package_tutors',
+    indexes: [
+      {
+        unique: true,
+        fields: ['packageId', 'tutorId'],
+      },
+    ],
+  }
 );
 
 // ==========================================
@@ -195,8 +281,15 @@ export class Enrollment extends Model<InferAttributes<Enrollment>, InferCreation
   declare completedAt: CreationOptional<Date | null>;
   declare totalCredits: CreationOptional<number>;
   declare usedCredits: CreationOptional<number>;
+  declare totalClasses: CreationOptional<number>;
+  declare conductedClasses: CreationOptional<number>;
+  declare attendedClasses: CreationOptional<number>;
+  declare status: CreationOptional<'ACTIVE' | 'EXPIRED' | 'COMPLETED'>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  declare package?: NonAttribute<Package>;
+  declare user?: NonAttribute<User>;
+  declare attendances?: NonAttribute<ClassAttendance[]>;
 }
 
 Enrollment.init(
@@ -208,10 +301,55 @@ Enrollment.init(
     completedAt: { type: DataTypes.DATE, allowNull: true },
     totalCredits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
     usedCredits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    totalClasses: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 12 },
+    conductedClasses: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    attendedClasses: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    status: { type: DataTypes.ENUM('ACTIVE', 'EXPIRED', 'COMPLETED'), allowNull: false, defaultValue: 'ACTIVE' },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
   { sequelize, modelName: 'Enrollment', tableName: 'enrollments' }
+);
+
+// ==========================================
+// 4.1 CLASS ATTENDANCE MODEL
+// ==========================================
+export class ClassAttendance extends Model<InferAttributes<ClassAttendance>, InferCreationAttributes<ClassAttendance>> {
+  declare id: CreationOptional<string>;
+  declare enrollmentId: ForeignKey<Enrollment['id']>;
+  declare studentId: ForeignKey<User['id']>;
+  declare liveClassId: ForeignKey<LiveClass['id']>;
+  declare status: CreationOptional<'ATTENDED' | 'ABSENT'>;
+  declare joinedAt: CreationOptional<Date | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+  declare liveClass?: NonAttribute<LiveClass>;
+  declare student?: NonAttribute<User>;
+  declare enrollment?: NonAttribute<Enrollment>;
+}
+
+ClassAttendance.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    enrollmentId: { type: DataTypes.UUID, allowNull: false, references: { model: 'enrollments', key: 'id' }, onDelete: 'CASCADE' },
+    studentId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    liveClassId: { type: DataTypes.UUID, allowNull: false, references: { model: 'live_classes', key: 'id' }, onDelete: 'CASCADE' },
+    status: { type: DataTypes.ENUM('ATTENDED', 'ABSENT'), allowNull: false, defaultValue: 'ATTENDED' },
+    joinedAt: { type: DataTypes.DATE, allowNull: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  {
+    sequelize,
+    modelName: 'ClassAttendance',
+    tableName: 'class_attendances',
+    indexes: [
+      {
+        unique: true,
+        fields: ['enrollmentId', 'liveClassId'],
+      },
+    ],
+  }
 );
 
 // ==========================================
@@ -726,5 +864,29 @@ TutorSlotBooking.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
 // User has many BlogPosts
 User.hasMany(BlogPost, { as: 'blogPosts', foreignKey: 'authorId', onDelete: 'CASCADE' });
 BlogPost.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
+
+// Package & User (Tutors) Many-to-Many
+Package.belongsToMany(User, { through: PackageTutor, as: 'assignedTutors', foreignKey: 'packageId' });
+User.belongsToMany(Package, { through: PackageTutor, as: 'assignedPackages', foreignKey: 'tutorId' });
+Package.hasMany(PackageTutor, { as: 'packageTutors', foreignKey: 'packageId', onDelete: 'CASCADE' });
+PackageTutor.belongsTo(Package, { foreignKey: 'packageId' });
+User.hasMany(PackageTutor, { as: 'tutorPackages', foreignKey: 'tutorId', onDelete: 'CASCADE' });
+PackageTutor.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
+
+// ClassSchedule
+Package.hasMany(ClassSchedule, { as: 'schedules', foreignKey: 'packageId', onDelete: 'CASCADE' });
+ClassSchedule.belongsTo(Package, { as: 'package', foreignKey: 'packageId' });
+User.hasMany(ClassSchedule, { as: 'tutorSchedules', foreignKey: 'tutorId', onDelete: 'CASCADE' });
+ClassSchedule.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
+ClassSchedule.hasMany(LiveClass, { as: 'liveClasses', foreignKey: 'scheduleId', onDelete: 'SET NULL' });
+LiveClass.belongsTo(ClassSchedule, { as: 'schedule', foreignKey: 'scheduleId' });
+
+// ClassAttendance
+Enrollment.hasMany(ClassAttendance, { as: 'attendances', foreignKey: 'enrollmentId', onDelete: 'CASCADE' });
+ClassAttendance.belongsTo(Enrollment, { foreignKey: 'enrollmentId' });
+LiveClass.hasMany(ClassAttendance, { as: 'attendances', foreignKey: 'liveClassId', onDelete: 'CASCADE' });
+ClassAttendance.belongsTo(LiveClass, { foreignKey: 'liveClassId' });
+User.hasMany(ClassAttendance, { as: 'attendances', foreignKey: 'studentId', onDelete: 'CASCADE' });
+ClassAttendance.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
 
 

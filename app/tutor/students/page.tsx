@@ -1,5 +1,5 @@
 import { requireAuth } from '../../../src/lib/auth';
-import { LiveClass, Enrollment, User, Package } from '../../../src/db/models';
+import { LiveClass, Enrollment, User, Package, PackageTutor } from '../../../src/db/models';
 
 export const revalidate = 0;
 
@@ -10,13 +10,22 @@ export default async function TutorStudentsPage() {
     return <div className="p-10"><h1 className="text-2xl font-bold text-red-600">Unauthorized</h1></div>;
   }
 
-  // 1. Get all packages this tutor teaches
-  const classes = await LiveClass.findAll({
-    where: { tutorId: user.id },
-    attributes: ['packageId'],
-  });
+  // 1. Get all packages assigned to this tutor or where tutor teaches live classes
+  const [classes, assignedTutors] = await Promise.all([
+    LiveClass.findAll({
+      where: { tutorId: user.id },
+      attributes: ['packageId'],
+    }),
+    PackageTutor.findAll({
+      where: { tutorId: user.id },
+      attributes: ['packageId'],
+    }),
+  ]);
   
-  const packageIds = [...new Set(classes.map(c => c.packageId))];
+  const packageIds = [...new Set([
+    ...classes.map((c) => c.packageId),
+    ...assignedTutors.map((a) => a.packageId),
+  ])];
 
   // 2. Fetch enrollments for these packages
   let enrollmentsData: any[] = [];

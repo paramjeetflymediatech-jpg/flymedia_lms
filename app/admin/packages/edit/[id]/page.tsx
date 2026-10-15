@@ -255,6 +255,16 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Total Classes (Package Expiry Limit)</label>
+                <input
+                  name="totalClasses"
+                  type="number"
+                  min="1"
+                  defaultValue={pkg.totalClasses || 12}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 text-xs text-slate-900"
+                />
+              </div>
             </div>
 
             <div>

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:sync": "tsx scripts/dbSync.ts",
+    "db:fresh": "tsx scripts/reset-and-seed-fresh.ts",
     "db:migrate": "tsx scripts/addResetTokenTable.ts",
     "db:migrate:live": "tsx scripts/migrateLiveDB.ts"
   },

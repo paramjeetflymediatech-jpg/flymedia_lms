@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
 import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers } from '../src/lib/mailer';
 import { normalizePath } from '../src/lib/seo';
@@ -557,6 +557,7 @@ export async function adminCreatePackage(formData: FormData) {
       reviewsCount: formData.get('reviewsCount') as string || '1.2k+',
       level: formData.get('level') as string || 'Beginner to Advanced',
       duration: formData.get('duration') as string || '6 Months',
+      totalClasses: formData.get('totalClasses') ? Number(formData.get('totalClasses')) : 12,
       status,
       mode,
       techStack: techStackParsed,
@@ -652,6 +653,11 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
 
     const durationRaw = formData.get('duration') as string;
     if (durationRaw !== null) pkg.duration = durationRaw;
+
+    const totalClassesRaw = formData.get('totalClasses');
+    if (totalClassesRaw !== null && totalClassesRaw !== '') {
+      pkg.totalClasses = Number(totalClassesRaw) || 12;
+    }
 
 
     const pkgAny = pkg as any;
@@ -825,7 +831,7 @@ export async function adminCreateLiveClass(formData: FormData) {
   }
 }
 
-export async function adminDeleteLiveClass(classId: string, packageId: string) {
+export async function adminDeleteLiveClass(classId: string, packageId?: string) {
   await requireAdmin();
 
   try {
@@ -834,7 +840,10 @@ export async function adminDeleteLiveClass(classId: string, packageId: string) {
 
     await liveClass.destroy();
 
-    revalidatePath(`/admin/packages/edit/${packageId}`);
+    if (packageId) {
+      revalidatePath(`/admin/packages/edit/${packageId}`);
+    }
+    revalidatePath('/admin/tutors');
     return { success: true };
   } catch (error) {
     console.error('Delete live class error:', error);
@@ -1889,5 +1898,225 @@ export async function adminDeleteInquiry(inquiryId: string) {
     return { error: 'Failed to delete inquiry' };
   }
 }
+
+// ==========================================
+// 8. TUTOR & RECURRING SCHEDULE ACTIONS
+// ==========================================
+
+export async function adminCreateTutor(prevState: any, formData: FormData) {
+  await requireAdmin();
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const professionTitle = (formData.get('professionTitle') as string) || 'Expert Instructor';
+  const bio = (formData.get('bio') as string) || '';
+  const packageIds = formData.getAll('packageIds') as string[];
+
+  if (!email || !password || !name) {
+    return { error: 'Name, email, and password are required' };
+  }
+
+  try {
+    const existing = await User.findOne({ where: { email } });
+    if (existing) {
+      return { error: 'A user with this email already exists' };
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const tutor = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: 'TUTOR',
+      professionTitle,
+      bio,
+    });
+
+    if (packageIds && packageIds.length > 0) {
+      const records = packageIds.map((pkgId) => ({
+        packageId: pkgId,
+        tutorId: tutor.id,
+      }));
+      await PackageTutor.bulkCreate(records);
+    }
+
+    revalidatePath('/admin/tutors');
+    return { success: true, message: 'Tutor created and packages assigned successfully' };
+  } catch (error: any) {
+    console.error('Create tutor error:', error);
+    return { error: error?.message || 'Failed to create tutor' };
+  }
+}
+
+export async function adminUpdateTutor(prevState: any, formData: FormData) {
+  await requireAdmin();
+  const tutorId = formData.get('tutorId') as string;
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const professionTitle = formData.get('professionTitle') as string;
+  const bio = formData.get('bio') as string;
+  const password = formData.get('password') as string;
+  const packageIds = formData.getAll('packageIds') as string[];
+
+  if (!tutorId) return { error: 'Tutor ID is required' };
+
+  try {
+    const tutor = await User.findByPk(tutorId);
+    if (!tutor) return { error: 'Tutor not found' };
+
+    tutor.name = name;
+    tutor.email = email;
+    if (professionTitle) tutor.professionTitle = professionTitle;
+    if (bio !== undefined) tutor.bio = bio;
+    if (password && password.trim().length > 0) {
+      tutor.passwordHash = await bcrypt.hash(password, 10);
+    }
+    await tutor.save();
+
+    // Sync assigned packages
+    await PackageTutor.destroy({ where: { tutorId } });
+    if (packageIds && packageIds.length > 0) {
+      const records = packageIds.map((pkgId) => ({
+        packageId: pkgId,
+        tutorId,
+      }));
+      await PackageTutor.bulkCreate(records);
+    }
+
+    revalidatePath('/admin/tutors');
+    return { success: true, message: 'Tutor updated successfully' };
+  } catch (error: any) {
+    console.error('Update tutor error:', error);
+    return { error: error?.message || 'Failed to update tutor' };
+  }
+}
+
+export async function adminDeleteTutor(tutorId: string) {
+  await requireAdmin();
+  try {
+    const tutor = await User.findByPk(tutorId);
+    if (!tutor) return { error: 'Tutor not found' };
+    await PackageTutor.destroy({ where: { tutorId } });
+    await tutor.destroy();
+    revalidatePath('/admin/tutors');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Delete tutor error:', error);
+    return { error: error?.message || 'Failed to delete tutor' };
+  }
+}
+
+export async function adminGenerateClassSchedule(prevState: any, formData: FormData) {
+  await requireAdmin();
+
+  const tutorId = formData.get('tutorId') as string;
+  const packageId = formData.get('packageId') as string;
+  const daysOfWeek = formData.getAll('daysOfWeek') as string[];
+  const startTime = formData.get('startTime') as string;
+  const duration = Number(formData.get('duration')) || 60;
+  const meetLink = formData.get('meetLink') as string;
+  const startDateStr = formData.get('startDate') as string;
+  const totalClasses = Number(formData.get('totalClasses')) || 12;
+
+  if (!tutorId || !packageId || !daysOfWeek || daysOfWeek.length === 0 || !startTime || !meetLink) {
+    return { error: 'Please select tutor, package, days of week, start time, and provide meet link' };
+  }
+
+  try {
+    const pkg = await Package.findByPk(packageId);
+    if (!pkg) return { error: 'Package not found' };
+
+    const tutor = await User.findByPk(tutorId);
+    if (!tutor) return { error: 'Tutor not found' };
+
+    // Create Schedule record
+    const schedule = await ClassSchedule.create({
+      packageId,
+      tutorId,
+      daysOfWeek,
+      startTime,
+      duration,
+      meetLink,
+      startDate: startDateStr || new Date().toISOString().slice(0, 10),
+      totalClasses,
+      status: 'ACTIVE',
+    });
+
+    const dayMap: { [key: string]: number } = {
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+    };
+
+    const targetDayNumbers = daysOfWeek.map((d) => dayMap[d.toLowerCase()]).filter((d) => d !== undefined);
+    if (targetDayNumbers.length === 0) {
+      return { error: 'Invalid days of week selected' };
+    }
+
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const startDate = startDateStr ? new Date(`${startDateStr}T00:00:00`) : new Date();
+    
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const cursor = startDate < now ? new Date(now) : new Date(startDate);
+
+    const classesToCreate: any[] = [];
+    let classesCreated = 0;
+    let safetyCounter = 0;
+
+    while (classesCreated < totalClasses && safetyCounter < 365) {
+      safetyCounter++;
+      const currentDay = cursor.getDay();
+      if (targetDayNumbers.includes(currentDay)) {
+        const classDate = new Date(cursor);
+        classDate.setHours(hours, minutes, 0, 0);
+
+        classesCreated++;
+        classesToCreate.push({
+          packageId,
+          tutorId,
+          scheduleId: schedule.id,
+          classNumber: classesCreated,
+          title: `${pkg.title} - Class ${classesCreated}`,
+          meetLink,
+          startTime: classDate,
+          duration,
+          status: 'SCHEDULED',
+        });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    await LiveClass.bulkCreate(classesToCreate);
+
+    revalidatePath('/admin/tutors');
+    revalidatePath('/admin/live-classes');
+    revalidatePath(`/packages/${pkg.slug}`);
+    return { success: true, message: `Successfully scheduled ${classesToCreate.length} recurring classes!` };
+  } catch (error: any) {
+    console.error('Generate schedule error:', error);
+    return { error: error?.message || 'Failed to generate schedule' };
+  }
+}
+
+export async function adminDeleteSchedule(scheduleId: string) {
+  await requireAdmin();
+  try {
+    const schedule = await ClassSchedule.findByPk(scheduleId);
+    if (!schedule) return { error: 'Schedule not found' };
+    await LiveClass.destroy({ where: { scheduleId } });
+    await schedule.destroy();
+    revalidatePath('/admin/tutors');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Delete schedule error:', error);
+    return { error: error?.message || 'Failed to delete schedule' };
+  }
+}
+
 
 

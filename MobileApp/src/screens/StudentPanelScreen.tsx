@@ -34,7 +34,7 @@ import {
 } from 'lucide-react-native';
 import { formatImageUrl } from '../utils/imageUrl';
 
-type StudentTab = 'overview' | 'sessions' | 'book' | 'packages';
+type StudentTab = 'overview' | 'sessions' | 'packages';
 
 interface StudentPanelScreenProps {
   route?: any;
@@ -72,30 +72,6 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
   // Sessions Tab Filter
   const [sessionFilter, setSessionFilter] = useState<'ALL' | 'UPCOMING' | 'COMPLETED'>('ALL');
 
-  // Booking Flow Data
-  const [tutors, setTutors] = useState<any[]>([]);
-  const [selectedTutor, setSelectedTutor] = useState<any | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
-  const [availableCredits, setAvailableCredits] = useState<number | null>(null);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
-
-  // Generate 14 days dates for booking
-  const datesList = React.useMemo(() => {
-    const list: { fullDate: string; dayName: string; dayNum: number; monthName: string }[] = [];
-    const now = new Date();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(now.getDate() + i);
-      const fullDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
-      list.push({ fullDate, dayName, dayNum: d.getDate(), monthName });
-    }
-    return list;
-  }, []);
-
   const loadDashboardData = useCallback(async () => {
     if (!user?.token) {
       setLoading(false);
@@ -112,15 +88,6 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
         setEnrolledPackages(res.enrolledPackages || []);
         setBookedSessions(res.bookedSessions || []);
       }
-
-      // Also load tutors for booking
-      const tutorsRes = await ApiService.getStudentTutors();
-      if (tutorsRes && tutorsRes.success) {
-        setTutors(tutorsRes.tutors || []);
-        if (tutorsRes.tutors?.length > 0 && !selectedTutor) {
-          setSelectedTutor(tutorsRes.tutors[0]);
-        }
-      }
     } catch (err) {
       console.warn('Failed to load student dashboard:', err);
     } finally {
@@ -133,103 +100,9 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Set initial selected date
-  useEffect(() => {
-    if (datesList.length > 0 && !selectedDate) {
-      setSelectedDate(datesList[0].fullDate);
-    }
-  }, [datesList, selectedDate]);
-
-  // Load slots when tutor or date changes
-  useEffect(() => {
-    if (selectedTutor && selectedDate) {
-      loadSlots(selectedTutor.id, selectedDate);
-    }
-  }, [selectedTutor?.id, selectedDate]);
-
-  const loadSlots = async (tutorId: string, date: string) => {
-    setLoadingSlots(true);
-    try {
-      const res = await ApiService.getStudentSlots(tutorId, date, user?.token);
-      if (res && res.success) {
-        setAvailableSlots(res.slots || []);
-        if (res.availableCredits !== undefined) {
-          setAvailableCredits(res.availableCredits);
-        }
-      } else {
-        setAvailableSlots([]);
-      }
-    } catch (err) {
-      setAvailableSlots([]);
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
-
   const onRefresh = () => {
     setRefreshing(true);
     loadDashboardData();
-    if (selectedTutor && selectedDate) {
-      loadSlots(selectedTutor.id, selectedDate);
-    }
-  };
-
-  const handleBookSlot = (slotId: string, slotTime: string) => {
-    if (!user?.token) {
-      Alert.alert('Sign In Required', 'Please sign in to book a session.');
-      return;
-    }
-
-    if (availableCredits !== null && availableCredits <= 0) {
-      Alert.alert(
-        'Insufficient Slot Balance 💳',
-        'You have 0 session credits remaining. Please enroll in a package or purchase session credits to book.\n\nNote: Once a tutor provides a class, credits are non-refundable regardless of whether you attend or miss the session.'
-      );
-      return;
-    }
-
-    Alert.alert(
-      'Confirm Booking (1 Credit)',
-      `Book 1-on-1 session with ${selectedTutor?.name} on ${selectedDate} at ${slotTime}?\n\n• 1 credit will be deducted from your profile balance.\n• Policy: Once scheduled, the credit is consumed whether you attend or miss the session.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm & Deduct 1 Credit',
-          style: 'default',
-          onPress: async () => {
-            setBookingSlotId(slotId);
-            const res = await ApiService.bookStudentSlot(slotId, user.token!);
-            setBookingSlotId(null);
-            if (res && res.success) {
-              setAvailableCredits(prev => (prev !== null ? Math.max(0, prev - 1) : 0));
-              Alert.alert(
-                'Session Booked! 🎉',
-                'Your session has been successfully booked! 1 credit has been deducted from your profile balance.'
-              );
-              setAvailableSlots(prev =>
-                prev.map(s => {
-                  if (s.id === slotId) {
-                    const newCount = (s.bookedCount || 0) + 1;
-                    return {
-                      ...s,
-                      isBooked: newCount >= 100,
-                      isBookedByMe: true,
-                      bookedCount: newCount,
-                      availableSeats: Math.max(0, 100 - newCount),
-                    };
-                  }
-                  return s;
-                })
-              );
-              // Refresh full dashboard
-              loadDashboardData();
-            } else {
-              Alert.alert('Booking Error', res?.error || 'Failed to book slot. Please try again.');
-            }
-          },
-        },
-      ]
-    );
   };
 
   const handleOpenMeeting = (link?: string | null) => {
@@ -299,13 +172,6 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'book' && styles.activeTabItem]}
-          onPress={() => setActiveTab('book')}
-        >
-          <Text style={[styles.tabText, activeTab === 'book' && styles.activeTabText]}>Book 1-on-1</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={[styles.tabItem, activeTab === 'packages' && styles.activeTabItem]}
           onPress={() => setActiveTab('packages')}
         >
@@ -341,11 +207,11 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                   <View style={styles.heroActions}>
                     <TouchableOpacity
                       style={styles.heroPrimaryBtn}
-                      onPress={() => setActiveTab('book')}
+                      onPress={() => setActiveTab('packages')}
                       activeOpacity={0.85}
                     >
-                      <Calendar size={16} color={Colors.textWhite} />
-                      <Text style={styles.heroPrimaryBtnText}>Book 1-on-1 Session</Text>
+                      <BookOpen size={16} color={Colors.textWhite} />
+                      <Text style={styles.heroPrimaryBtnText}>My Packages</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -359,7 +225,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                 </View>
               </View>
 
-              {/* STATS 4-CARD GRID */}
+              {/* STATS 3-CARD GRID */}
               <View style={styles.statsGrid}>
                 <View style={styles.statCard}>
                   <View style={[styles.statIconWrap, { backgroundColor: '#eff6ff' }]}>
@@ -375,14 +241,6 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                   </View>
                   <Text style={styles.statValue}>{stats.upcomingSessionsCount}</Text>
                   <Text style={styles.statLabel}>Upcoming Live</Text>
-                </View>
-
-                <View style={styles.statCard}>
-                  <View style={[styles.statIconWrap, { backgroundColor: '#ecfdf5' }]}>
-                    <Calendar size={20} color="#059669" />
-                  </View>
-                  <Text style={styles.statValue}>{stats.bookedSessionsCount}</Text>
-                  <Text style={styles.statLabel}>1-on-1 Bookings</Text>
                 </View>
 
                 <View style={styles.statCard}>
@@ -451,48 +309,16 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                   <Calendar size={28} color={Colors.primaryOrange} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.emptySessionTitle}>No Upcoming Sessions</Text>
-                    <Text style={styles.emptySessionSub}>Book a 1-on-1 slot with any expert tutor to get started.</Text>
+                    <Text style={styles.emptySessionSub}>Check your enrolled packages for scheduled class timings.</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.emptySessionBookBtn}
-                    onPress={() => setActiveTab('book')}
+                    onPress={() => setActiveTab('packages')}
                   >
-                    <Text style={styles.emptySessionBookBtnText}>Book Now</Text>
+                    <Text style={styles.emptySessionBookBtnText}>View Packages</Text>
                   </TouchableOpacity>
                 </View>
               )}
-
-              {/* QUICK RECENT SESSIONS */}
-              <View style={styles.sectionWrap}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>My 1-on-1 Mentorships</Text>
-                  <TouchableOpacity onPress={() => setActiveTab('sessions')}>
-                    <Text style={styles.seeAllText}>See all ({bookedSessions.length})</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {bookedSessions.length === 0 ? (
-                  <View style={styles.noDataCard}>
-                    <Text style={styles.noDataText}>No 1-on-1 sessions booked yet.</Text>
-                  </View>
-                ) : (
-                  bookedSessions.slice(0, 3).map((item) => (
-                    <View key={item.id} style={styles.bookedSessionItem}>
-                      <Image source={{ uri: formatImageUrl(item.tutor?.avatar) }} style={styles.sessionItemAvatar} />
-                      <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.sessionItemTutor}>{item.tutor?.name || 'Tutor'}</Text>
-                        <Text style={styles.sessionItemDate}>
-                          {item.date} • {formatSlotTime(item.startTime)} - {formatSlotTime(item.endTime)}
-                        </Text>
-                      </View>
-                      <View style={styles.bookedBadge}>
-                        <CheckCircle size={12} color="#059669" />
-                        <Text style={styles.bookedBadgeText}>Booked</Text>
-                      </View>
-                    </View>
-                  ))
-                )}
-              </View>
             </View>
           )}
 
@@ -519,8 +345,8 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                   <Video size={48} color={Colors.textMuted} />
                   <Text style={styles.emptyStateTitle}>No Scheduled Sessions</Text>
                   <Text style={styles.emptyStateSub}>You don't have any classes matching this filter.</Text>
-                  <TouchableOpacity style={styles.emptyStateBtn} onPress={() => setActiveTab('book')}>
-                    <Text style={styles.emptyStateBtnText}>Book a 1-on-1 Session</Text>
+                  <TouchableOpacity style={styles.emptyStateBtn} onPress={() => setActiveTab('packages')}>
+                    <Text style={styles.emptyStateBtnText}>Explore Packages</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -654,197 +480,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
             </View>
           )}
 
-          {/* TAB 3: BOOK 1-ON-1 SESSION */}
-          {activeTab === 'book' && (
-            <View style={styles.tabContent}>
-              <View style={styles.bookHeaderBanner}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <View style={{ flex: 1, marginRight: 10 }}>
-                    <Text style={styles.bookHeaderTitle}>Book a 1-on-1 Mentorship</Text>
-                    <Text style={styles.bookHeaderSub}>
-                      Select your tutor, choose a preferred date and select an available time slot.
-                    </Text>
-                  </View>
-                  <View style={styles.creditPillBadge}>
-                    <Sparkles size={12} color="#c2410c" />
-                    <Text style={styles.creditPillText}>
-                      {availableCredits !== null ? `${availableCredits} Credits` : 'Active'}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Attendance & Non-Refundable Policy Notice */}
-                <View style={styles.policyNoticeBox}>
-                  <Text style={styles.policyNoticeText}>
-                    📌 Credit Policy: 1 session credit is deducted upon booking. As the tutor reserves their scheduled time for you, credits are consumed whether you attend or miss the session.
-                  </Text>
-                </View>
-              </View>
-
-              {/* STEP 1: TUTOR SELECTOR */}
-              <View style={styles.bookingStepCard}>
-                <Text style={styles.stepTitle}>1. Choose Expert Tutor</Text>
-
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tutorsScroll}>
-                  {tutors.map((tutor) => {
-                    const isSelected = selectedTutor?.id === tutor.id;
-                    return (
-                      <TouchableOpacity
-                        key={tutor.id}
-                        style={[styles.tutorCardSelectable, isSelected && styles.tutorCardSelected]}
-                        onPress={() => setSelectedTutor(tutor)}
-                        activeOpacity={0.8}
-                      >
-                        <Image source={{ uri: formatImageUrl(tutor.avatar) }} style={styles.tutorSelectAvatar} />
-                        <Text style={styles.tutorSelectName} numberOfLines={1}>
-                          {tutor.name}
-                        </Text>
-                        <Text style={styles.tutorSelectTitle} numberOfLines={1}>
-                          {tutor.professionTitle}
-                        </Text>
-
-                        <View style={styles.tutorSelectRating}>
-                          <Star size={11} color="#f59e0b" fill="#f59e0b" />
-                          <Text style={styles.tutorSelectRatingText}>{tutor.rating.toFixed(1)}</Text>
-                        </View>
-
-                        {isSelected && (
-                          <View style={styles.selectedTutorCheck}>
-                            <CheckCircle size={14} color={Colors.textWhite} />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-
-              {/* STEP 2: DATE SELECTOR */}
-              <View style={styles.bookingStepCard}>
-                <Text style={styles.stepTitle}>2. Choose Date</Text>
-
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesScroll}>
-                  {datesList.map((item) => {
-                    const isSelected = selectedDate === item.fullDate;
-                    return (
-                      <TouchableOpacity
-                        key={item.fullDate}
-                        style={[styles.datePill, isSelected && styles.datePillSelected]}
-                        onPress={() => setSelectedDate(item.fullDate)}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={[styles.datePillDay, isSelected && styles.datePillTextSelected]}>
-                          {item.dayName}
-                        </Text>
-                        <Text style={[styles.datePillNum, isSelected && styles.datePillTextSelected]}>
-                          {item.dayNum}
-                        </Text>
-                        <Text style={[styles.datePillMonth, isSelected && styles.datePillTextSelected]}>
-                          {item.monthName}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-
-              {/* STEP 3: AVAILABLE TIME SLOTS */}
-              <View style={styles.bookingStepCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={styles.stepTitle}>3. Select Time Slot</Text>
-                  {selectedTutor && (
-                    <Text style={styles.tutorSlotNotice}>With {selectedTutor.name}</Text>
-                  )}
-                </View>
-
-                {loadingSlots ? (
-                  <View style={{ paddingVertical: 32, alignItems: 'center' }}>
-                    <ActivityIndicator size="small" color={Colors.primaryOrange} />
-                    <Text style={{ marginTop: 8, color: Colors.textMuted, fontSize: 13 }}>Loading slots...</Text>
-                  </View>
-                ) : availableSlots.length === 0 ? (
-                  <View style={styles.noSlotsBox}>
-                    <AlertCircle size={28} color={Colors.textMuted} />
-                    <Text style={styles.noSlotsTitle}>No slots available on this date</Text>
-                    <Text style={styles.noSlotsSub}>
-                      Please pick another date from the calendar above to view open openings.
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.slotsGrid}>
-                    {availableSlots.map((slot) => {
-                      const isBookedByMe = Boolean(slot.isBookedByMe);
-                      const bookedCount = slot.bookedCount || 0;
-                      const isFullyBooked = bookedCount >= 100 && !isBookedByMe;
-                      const isExpired = Boolean(slot.isPast);
-                      const availableSeats = Math.max(0, 100 - bookedCount);
-
-                      return (
-                        <View
-                          key={slot.id}
-                          style={[
-                            styles.slotItemCard,
-                            isBookedByMe && styles.slotItemCardBookedByMe,
-                            (isFullyBooked || isExpired) && styles.slotItemCardDisabled,
-                          ]}
-                        >
-                          <View style={styles.slotTimeWrap}>
-                            <Clock
-                              size={14}
-                              color={isBookedByMe ? '#059669' : isFullyBooked || isExpired ? Colors.textMuted : Colors.primaryOrange}
-                            />
-                            <View>
-                              <Text
-                                style={[
-                                  styles.slotTimeText,
-                                  isBookedByMe && { color: '#065f46', fontWeight: '800' },
-                                  (isFullyBooked || isExpired) && { color: Colors.textMuted, textDecorationLine: isExpired ? 'line-through' : 'none' },
-                                ]}
-                              >
-                                {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
-                              </Text>
-                              <Text style={styles.slotCapacityText}>
-                                {isFullyBooked ? 'Full (100/100)' : `${availableSeats} seats left`}
-                              </Text>
-                            </View>
-                          </View>
-
-                          {/* Action Button */}
-                          {isBookedByMe ? (
-                            <View style={styles.slotBadgeBookedByMe}>
-                              <CheckCircle size={12} color="#059669" />
-                              <Text style={styles.slotBadgeTextBookedByMe}>Booked</Text>
-                            </View>
-                          ) : isFullyBooked ? (
-                            <View style={styles.slotBadgeBookedOther}>
-                              <Text style={styles.slotBadgeTextBookedOther}>Fully Booked (100)</Text>
-                            </View>
-                          ) : isExpired ? (
-                            <View style={styles.slotBadgeExpired}>
-                              <Text style={styles.slotBadgeTextExpired}>Expired</Text>
-                            </View>
-                          ) : (
-                            <TouchableOpacity
-                              style={styles.bookSlotBtn}
-                              disabled={bookingSlotId === slot.id}
-                              onPress={() => handleBookSlot(slot.id, `${formatSlotTime(slot.startTime)} - ${formatSlotTime(slot.endTime)}`)}
-                              activeOpacity={0.8}
-                            >
-                              {bookingSlotId === slot.id ? (
-                                <ActivityIndicator size="small" color={Colors.textWhite} />
-                              ) : (
-                                <Text style={styles.bookSlotBtnText}>Book Now</Text>
-                              )}
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
 
           {/* TAB 4: MY PACKAGES */}
           {activeTab === 'packages' && (

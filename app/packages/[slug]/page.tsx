@@ -528,7 +528,22 @@ export default async function PackageDetailPage({ params }: Props) {
                             {lc.tutor?.name && <span> · <span className="text-orange-600">{lc.tutor.name}</span></span>}
                           </p>
                         </div>
-                        <span className="flex-shrink-0 px-3 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-600 uppercase tracking-wide">Live</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {isEnrolled && lc.meetLink ? (
+                            <a
+                              href={`/api/classes/${lc.id}/join`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-sm transition-all flex items-center gap-1.5"
+                            >
+                              📹 Join Class
+                            </a>
+                          ) : (
+                            <span className="px-3 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-600 uppercase tracking-wide">
+                              Live
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
