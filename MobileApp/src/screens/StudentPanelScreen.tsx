@@ -105,14 +105,38 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
     loadDashboardData();
   };
 
-  const handleOpenMeeting = (link?: string | null) => {
-    if (!link) {
-      Alert.alert('Meeting Link', 'The meeting link will be enabled 15 minutes before your scheduled session time.');
+  const handleJoinLiveClass = async (classId?: string, fallbackLink?: string | null) => {
+    if (!classId && !fallbackLink) {
+      Alert.alert('Notice', 'Meeting link is not available yet.');
       return;
     }
-    Linking.openURL(link).catch(() => {
-      Alert.alert('Error', 'Unable to open meeting link. Please make sure you have a browser or Google Meet installed.');
-    });
+
+    try {
+      if (user?.token && classId) {
+        // Record attendance and fetch Google Meet link
+        const res = await ApiService.joinClass(classId, user.token);
+        if (res && res.success && res.meetLink) {
+          Linking.openURL(res.meetLink).catch(() => {
+            Alert.alert('Google Meet', 'Opening Meet link. Please ensure Google Meet or browser is installed.');
+          });
+          // Refresh dashboard data to immediately reflect updated attendance
+          loadDashboardData();
+          return;
+        }
+      }
+
+      if (fallbackLink) {
+        Linking.openURL(fallbackLink).catch(() => {
+          Alert.alert('Google Meet', 'Unable to open link. Please ensure Google Meet or browser is installed.');
+        });
+      } else {
+        Alert.alert('Notice', 'Meeting link is not active yet.');
+      }
+    } catch (err) {
+      if (fallbackLink) {
+        Linking.openURL(fallbackLink).catch(() => {});
+      }
+    }
   };
 
   const formatSlotTime = (timeStr?: string) => {
@@ -293,12 +317,12 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
 
                     <TouchableOpacity
                       style={styles.joinMeetBtn}
-                      onPress={() => handleOpenMeeting(nextSession.meetLink)}
+                      onPress={() => handleJoinLiveClass(nextSession.id, nextSession.meetLink)}
                       activeOpacity={0.85}
                     >
                       <Video size={18} color={Colors.textWhite} />
                       <Text style={styles.joinMeetBtnText}>
-                        {nextSession.meetLink ? 'Join Session Link' : 'Meeting Link (Pending Tutor)'}
+                        {nextSession.meetLink ? 'Join Google Meet' : 'Meeting Link (Pending Tutor)'}
                       </Text>
                       <ExternalLink size={14} color={Colors.textWhite} />
                     </TouchableOpacity>
@@ -407,7 +431,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                               isCompleted && { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
                             ]}
                             disabled={isCompleted}
-                            onPress={() => handleOpenMeeting(session.meetLink)}
+                            onPress={() => handleJoinLiveClass(session.id, session.meetLink)}
                           >
                             <Video size={16} color={isCompleted ? Colors.textMuted : Colors.textWhite} />
                             <Text
@@ -462,15 +486,24 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                         </View>
 
                         <View style={styles.sessionCardFooter}>
-                          <TouchableOpacity
-                            style={styles.sessionJoinBtn}
-                            onPress={() => handleOpenMeeting(session.meetLink)}
-                          >
-                            <Video size={16} color={Colors.textWhite} />
-                            <Text style={styles.sessionJoinBtnText}>
-                              {session.meetLink ? 'Join Live Class' : 'Meeting Link (Pending)'}
-                            </Text>
-                          </TouchableOpacity>
+                          {new Date(session.startTime).getTime() + (session.duration || 60) * 60000 < Date.now() ? (
+                            <View style={styles.sessionEndedBtn}>
+                              <Clock size={15} color={Colors.textMuted} />
+                              <Text style={styles.sessionEndedBtnText}>Class Concluded</Text>
+                            </View>
+                          ) : (
+                            <TouchableOpacity
+                              style={styles.sessionJoinBtn}
+                              onPress={() => handleJoinLiveClass(session.id, session.meetLink)}
+                              activeOpacity={0.85}
+                            >
+                              <Video size={16} color={Colors.textWhite} />
+                              <Text style={styles.sessionJoinBtnText}>
+                                {session.meetLink ? 'Join Google Meet' : 'Meeting Link (Pending)'}
+                              </Text>
+                              <ExternalLink size={14} color={Colors.textWhite} />
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </View>
                     );
@@ -480,21 +513,21 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
             </View>
           )}
 
-
-
-          {/* TAB 4: MY PACKAGES */}
+          {/* TAB 3: MY PACKAGES */}
           {activeTab === 'packages' && (
             <View style={styles.tabContent}>
               <View style={styles.packagesHeader}>
                 <Text style={styles.packagesTitle}>My Enrolled Packages ({enrolledPackages.length})</Text>
-                <Text style={styles.packagesSub}>Access your enrolled curriculum, syllabus, and progress.</Text>
+                <Text style={styles.packagesSub}>
+                  Monitor your 12-class completion, attendance, missed sessions, and expiration.
+                </Text>
               </View>
 
               {enrolledPackages.length === 0 ? (
                 <View style={styles.emptyStateBox}>
                   <BookOpen size={48} color={Colors.textMuted} />
                   <Text style={styles.emptyStateTitle}>No Enrolled Packages</Text>
-                  <Text style={styles.emptyStateSub}>You haven't enrolled in any course packages yet.</Text>
+                  <Text style={styles.emptyStateSub}>You haven't enrolled in any packages yet.</Text>
                   <TouchableOpacity
                     style={styles.emptyStateBtn}
                     onPress={() => navigation.navigate('CoursesTab')}
@@ -503,48 +536,104 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View style={{ gap: 14 }}>
-                  {enrolledPackages.map((pkg) => (
-                    <View key={pkg.id} style={styles.packageCard}>
-                      <Image source={{ uri: formatImageUrl(pkg.thumbnail) }} style={styles.packageThumb} />
-                      <View style={styles.packageBody}>
-                        <View style={styles.packageCategoryBadge}>
-                          <Text style={styles.packageCategoryText}>{pkg.category}</Text>
-                        </View>
-                        <Text style={styles.packageName}>{pkg.title}</Text>
-                        <Text style={styles.packageDuration}>Duration: {pkg.duration}</Text>
+                <View style={{ gap: 16 }}>
+                  {enrolledPackages.map((pkg) => {
+                    const prog = pkg.progress || {
+                      totalClasses: 12,
+                      conductedClasses: 0,
+                      attendedClasses: 0,
+                      missedClasses: 0,
+                      remainingClasses: 12,
+                      isExpired: false,
+                      status: 'ACTIVE',
+                      progressPercentage: 0,
+                    };
+                    const isExpired = Boolean(prog.isExpired || prog.status === 'EXPIRED');
 
-                        {/* Progress Bar */}
-                        <View style={styles.progressBarWrap}>
-                          <View style={[styles.progressBarFill, { width: `${pkg.progressPercent}%` }]} />
+                    return (
+                      <View key={pkg.id} style={styles.packageCard}>
+                        {/* Thumbnail & Badges */}
+                        <View style={styles.packageThumbWrap}>
+                          <Image source={{ uri: formatImageUrl(pkg.thumbnail) }} style={styles.packageThumb} />
+                          <View style={styles.packageThumbOverlay}>
+                            <View style={styles.packageCategoryBadge}>
+                              <Text style={styles.packageCategoryText}>{pkg.category || 'Training'}</Text>
+                            </View>
+                            {isExpired ? (
+                              <View style={[styles.packageStatusPill, { backgroundColor: '#e11d48' }]}>
+                                <Text style={styles.packageStatusPillText}>PACKAGE EXPIRED</Text>
+                              </View>
+                            ) : (
+                              <View style={[styles.packageStatusPill, { backgroundColor: '#059669' }]}>
+                                <Text style={styles.packageStatusPillText}>ACTIVE • {prog.remainingClasses} CLASSES LEFT</Text>
+                              </View>
+                            )}
+                          </View>
                         </View>
-                        <View style={styles.progressTextRow}>
-                          <Text style={styles.progressText}>
-                            {pkg.completedLessons} of {pkg.totalLessons} lessons completed
+
+                        <View style={styles.packageBody}>
+                          <Text style={styles.packageName}>{pkg.title}</Text>
+                          <Text style={styles.packageDuration}>
+                            Enrolled: {pkg.enrolledAt || 'Recent'} • {pkg.duration || '6 Months'}
                           </Text>
-                          <Text style={styles.progressPercentText}>{pkg.progressPercent}%</Text>
-                        </View>
 
-                        <TouchableOpacity
-                          style={styles.continueLearningBtn}
-                          onPress={() => {
-                            navigation.navigate('CourseDetail', {
-                              course: {
-                                id: pkg.packageId || pkg.id,
-                                slug: pkg.slug,
-                                title: pkg.title,
-                                category: pkg.category,
-                                thumbnail: pkg.thumbnail,
-                              },
-                            });
-                          }}
-                        >
-                          <Text style={styles.continueLearningBtnText}>Continue Course</Text>
-                          <ChevronRight size={16} color={Colors.textWhite} />
-                        </TouchableOpacity>
+                          {/* 12-Class Completion Progress Bar */}
+                          <View style={styles.completionBarWrap}>
+                            <View style={styles.completionBarLabelRow}>
+                              <Text style={styles.completionBarTitle}>12-Class Completion</Text>
+                              <Text style={[styles.completionBarCount, isExpired && { color: '#e11d48' }]}>
+                                {prog.conductedClasses} / {prog.totalClasses || 12} Conducted
+                              </Text>
+                            </View>
+                            <View style={styles.progressBarTrack}>
+                              <View
+                                style={[
+                                  styles.progressBarFillGradient,
+                                  { width: `${prog.progressPercentage || 0}%` },
+                                  isExpired && { backgroundColor: '#94a3b8' },
+                                ]}
+                              />
+                            </View>
+                          </View>
+
+                          {/* 3 Metrics Grid: Attended, Missed, Remaining */}
+                          <View style={styles.metricsGrid}>
+                            <View style={[styles.metricBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                              <Text style={[styles.metricLabel, { color: '#16a34a' }]}>ATTENDED</Text>
+                              <Text style={[styles.metricValue, { color: '#15803d' }]}>{prog.attendedClasses || 0}</Text>
+                            </View>
+                            <View style={[styles.metricBox, { backgroundColor: '#fff1f2', borderColor: '#fecdd3' }]}>
+                              <Text style={[styles.metricLabel, { color: '#e11d48' }]}>MISSED</Text>
+                              <Text style={[styles.metricValue, { color: '#be123c' }]}>{prog.missedClasses || 0}</Text>
+                            </View>
+                            <View style={[styles.metricBox, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+                              <Text style={[styles.metricLabel, { color: '#2563eb' }]}>REMAINING</Text>
+                              <Text style={[styles.metricValue, { color: '#1d4ed8' }]}>{prog.remainingClasses || 0}</Text>
+                            </View>
+                          </View>
+
+                          {/* Expiration Policy Banner */}
+                          <View style={styles.policyBanner}>
+                            <AlertCircle size={14} color="#d97706" />
+                            <Text style={styles.policyBannerText}>
+                              {isExpired
+                                ? 'All 12 scheduled tutor classes have been conducted. This package has expired.'
+                                : 'Package includes 12 live classes. Absent sessions are counted as missed and cannot be re-attended.'}
+                            </Text>
+                          </View>
+
+                          <TouchableOpacity
+                            style={styles.viewScheduleBtn}
+                            onPress={() => setActiveTab('sessions')}
+                            activeOpacity={0.85}
+                          >
+                            <Text style={styles.viewScheduleBtnText}>View Scheduled Classes</Text>
+                            <ChevronRight size={16} color={Colors.textWhite} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               )}
             </View>
@@ -1385,26 +1474,51 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Shadows.small,
   },
+  packageThumbWrap: {
+    width: '100%',
+    height: 140,
+    position: 'relative',
+    backgroundColor: Colors.border,
+  },
   packageThumb: {
     width: '100%',
-    height: 130,
-    backgroundColor: Colors.border,
+    height: '100%',
+  },
+  packageThumbOverlay: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   packageBody: {
     padding: 16,
   },
   packageCategoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff7ed',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    ...Shadows.small,
   },
   packageCategoryText: {
     fontSize: 10,
     fontWeight: '800',
     color: Colors.primaryOrange,
+  },
+  packageStatusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    ...Shadows.small,
+  },
+  packageStatusPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.3,
   },
   packageName: {
     fontSize: 16,
@@ -1416,45 +1530,107 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: 4,
   },
-  progressBarWrap: {
-    height: 6,
-    backgroundColor: Colors.border,
-    borderRadius: 3,
-    marginTop: 12,
-    overflow: 'hidden',
+  completionBarWrap: {
+    marginTop: 14,
   },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#ea580c',
-    borderRadius: 3,
-  },
-  progressTextRow: {
+  completionBarLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
+    marginBottom: 6,
   },
-  progressText: {
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  progressPercentText: {
-    fontSize: 11,
-    fontWeight: '800',
+  completionBarTitle: {
+    fontSize: 12,
+    fontWeight: '700',
     color: Colors.textPrimary,
   },
-  continueLearningBtn: {
+  completionBarCount: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.primaryOrange,
+  },
+  progressBarTrack: {
+    height: 8,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFillGradient: {
+    height: '100%',
+    backgroundColor: Colors.primaryOrange,
+    borderRadius: 4,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  metricBox: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metricLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  policyBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fef3c7',
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 14,
+  },
+  policyBannerText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#92400e',
+    lineHeight: 16,
+    fontWeight: '500',
+  },
+  viewScheduleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#ea580c',
-    paddingVertical: 10,
-    borderRadius: 10,
+    backgroundColor: Colors.primaryOrange,
+    paddingVertical: 12,
+    borderRadius: 12,
     marginTop: 14,
   },
-  continueLearningBtnText: {
+  viewScheduleBtnText: {
     color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  sessionEndedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  sessionEndedBtnText: {
+    color: Colors.textMuted,
     fontSize: 13,
     fontWeight: '700',
   },

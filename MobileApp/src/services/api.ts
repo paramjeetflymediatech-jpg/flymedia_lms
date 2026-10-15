@@ -697,4 +697,22 @@ export const ApiService = {
       return { success: false, error: e.message || 'Network error' };
     }
   },
+
+  /**
+   * Student: Join live class and register attendance
+   */
+  async joinClass(classId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/classes/${encodeURIComponent(classId)}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
 };

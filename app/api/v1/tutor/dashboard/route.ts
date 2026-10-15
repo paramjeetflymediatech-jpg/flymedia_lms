@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { LiveClass, Package, Enrollment, User, TutorAvailability, TutorSlotBooking } from '../../../../../src/db/models';
+import { LiveClass, Package, Enrollment, User, TutorAvailability, TutorSlotBooking, PackageTutor, ClassSchedule } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
 
@@ -161,8 +161,60 @@ export async function GET(request: Request) {
     // Sort upcoming ascending to get nextClass
     const nextClass = [...upcomingClasses].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0] || null;
 
-    // Availability slots count
-    const totalSlots = await TutorAvailability.count({ where: { tutorId } });
+    // 4. Fetch Assigned Packages & Schedules
+    const packageTutors = await PackageTutor.findAll({
+      where: { tutorId },
+      include: [
+        {
+          model: Package,
+          include: [
+            {
+              model: ClassSchedule,
+              as: 'schedules',
+            },
+            {
+              model: LiveClass,
+              as: 'liveClasses',
+            },
+            {
+              model: Enrollment,
+              as: 'enrollments',
+            },
+          ],
+        },
+      ],
+    });
+
+    const assignedPackages = packageTutors.map((pt: any) => {
+      const pkg = pt.Package;
+      const schedules = (pkg?.schedules || []).map((s: any) => ({
+        id: s.id,
+        dayOfWeek: s.dayOfWeek,
+        time: s.time,
+        meetLink: s.meetLink,
+        isActive: s.isActive,
+        totalClasses: s.totalClasses || 12,
+      }));
+      const liveClasses = (pkg?.liveClasses || []).map((lc: any) => ({
+        id: lc.id,
+        title: lc.title,
+        startTime: lc.startTime,
+        duration: lc.duration,
+        meetLink: lc.meetLink,
+        status: lc.status,
+      }));
+      return {
+        id: pkg?.id,
+        title: pkg?.title || 'Assigned Package',
+        slug: pkg?.slug,
+        thumbnail: resolveFullImageUrl(pkg?.thumbnail),
+        category: pkg?.category || 'Training',
+        totalClasses: pkg?.totalClasses || 12,
+        assignedStudentsCount: (pkg?.enrollments || []).length,
+        schedules,
+        liveClasses,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -171,10 +223,12 @@ export async function GET(request: Request) {
         pastClassesCount: pastClasses.length,
         totalAssignedCount: formattedClasses.length,
         totalStudentsCount: studentsMap.size,
-        totalSlotsCount: totalSlots,
+        totalSlotsCount: 0,
+        assignedPackagesCount: assignedPackages.length,
       },
       nextClass,
       classes: formattedClasses,
+      assignedPackages,
       recentStudents: Array.from(studentsMap.values()),
     });
   } catch (error: any) {

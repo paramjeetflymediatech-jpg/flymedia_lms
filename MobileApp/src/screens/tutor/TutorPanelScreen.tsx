@@ -47,7 +47,7 @@ import {
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
-type TutorTab = 'overview' | 'classes' | 'availability' | 'students' | 'profile';
+type TutorTab = 'overview' | 'packages' | 'classes' | 'students' | 'profile';
 
 const PRESET_SLOTS = [
   { start: '09:00', end: '10:00', label: '9:00 - 10:00 AM' },
@@ -123,6 +123,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const [nextClass, setNextClass] = useState<any | null>(null);
   const [classesList, setClassesList] = useState<any[]>([]);
   const [recentStudents, setRecentStudents] = useState<any[]>([]);
+  const [assignedPackages, setAssignedPackages] = useState<any[]>([]);
 
   // Classes Tab Filter
   const [classFilter, setClassFilter] = useState<'UPCOMING' | 'PAST' | 'ALL'>('UPCOMING');
@@ -180,6 +181,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
         setNextClass(res.nextClass || null);
         setClassesList(res.classes || []);
         setRecentStudents(res.recentStudents || []);
+        setAssignedPackages(res.assignedPackages || []);
       }
     } catch (err) {
       console.warn('Failed to load tutor dashboard:', err);
@@ -678,17 +680,17 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 <View style={styles.heroContent}>
                   <Text style={styles.heroGreeting}>Welcome back, {user?.name || 'Tutor'} 🎓</Text>
                   <Text style={styles.heroSubtitle}>
-                    Manage your class schedules, coordinate 1-on-1 student sessions, and provide meeting links.
+                    Manage your assigned packages, view recurring class schedules, and conduct live sessions.
                   </Text>
 
                   <View style={styles.heroActions}>
                     <TouchableOpacity
                       style={styles.heroPrimaryBtn}
-                      onPress={() => setActiveTab('availability')}
+                      onPress={() => setActiveTab('packages')}
                       activeOpacity={0.85}
                     >
-                      <Calendar size={16} color={Colors.textWhite} />
-                      <Text style={styles.heroPrimaryBtnText}>Set Availability</Text>
+                      <BookOpen size={16} color={Colors.textWhite} />
+                      <Text style={styles.heroPrimaryBtnText}>My Packages</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -724,8 +726,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   <View style={[styles.statIconWrap, { backgroundColor: '#fef3c7' }]}>
                     <BookOpen size={20} color="#d97706" />
                   </View>
-                  <Text style={styles.statValue}>{stats.totalAssignedCount}</Text>
-                  <Text style={styles.statLabel}>Total Assigned</Text>
+                  <Text style={styles.statValue}>{assignedPackages.length}</Text>
+                  <Text style={styles.statLabel}>Assigned Packages</Text>
                 </View>
 
                 <View style={styles.statCard}>
@@ -805,9 +807,9 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   </View>
                   <TouchableOpacity
                     style={styles.emptySessionSetBtn}
-                    onPress={() => setActiveTab('availability')}
+                    onPress={() => setActiveTab('packages')}
                   >
-                    <Text style={styles.emptySessionSetBtnText}>Add Slot</Text>
+                    <Text style={styles.emptySessionSetBtnText}>My Packages</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -943,139 +945,157 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
             </View>
           )}
 
-          {/* TAB 3: AVAILABILITY */}
-          {activeTab === 'availability' && (
+          {/* TAB 2: PACKAGES */}
+          {activeTab === 'packages' && (
             <View style={styles.tabContent}>
-              <View style={styles.availHeaderCard}>
+              <View style={styles.packagesHeaderCard}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.availHeaderTitle}>Manage Availability Slots</Text>
-                  <Text style={styles.availHeaderSub}>Set time slots where students can book 1-on-1 sessions with you.</Text>
+                  <Text style={styles.packagesHeaderTitle}>Assigned Packages & Schedules</Text>
+                  <Text style={styles.packagesHeaderSub}>
+                    Live batches assigned to you with recurring weekly schedules and 12-class structure.
+                  </Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.addSlotPrimaryBtn}
-                  onPress={handleOpenAddSlotModal}
-                  activeOpacity={0.85}
-                >
-                  <PlusCircle size={16} color={Colors.textWhite} />
-                  <Text style={styles.addSlotPrimaryBtnText}>Add Slot</Text>
-                </TouchableOpacity>
+                <View style={styles.packagesCountPill}>
+                  <BookOpen size={14} color="#2563eb" />
+                  <Text style={styles.packagesCountPillText}>{assignedPackages.length} Packages</Text>
+                </View>
               </View>
 
-              {/* DATE PICKER STRIP */}
-              <View style={styles.availDatesCard}>
-                <Text style={styles.stepTitle}>Select Date</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesScroll}>
-                  {datesList.map((item) => {
-                    const isSelected = selectedDate === item.fullDate;
-                    return (
-                      <TouchableOpacity
-                        key={item.fullDate}
-                        style={[styles.datePill, isSelected && styles.datePillSelectedTutor]}
-                        onPress={() => setSelectedDate(item.fullDate)}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={[styles.datePillDay, isSelected && styles.datePillTextSelected]}>
-                          {item.dayName}
-                        </Text>
-                        <Text style={[styles.datePillNum, isSelected && styles.datePillTextSelected]}>
-                          {item.dayNum}
-                        </Text>
-                        <Text style={[styles.datePillMonth, isSelected && styles.datePillTextSelected]}>
-                          {item.monthName}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-
-              {/* SLOTS LIST FOR DATE */}
-              <View style={styles.slotsCardSection}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={styles.stepTitle}>Slots on {selectedDate}</Text>
-                  <Text style={styles.slotsCountBadge}>{slots.length} Slots</Text>
+              {assignedPackages.length === 0 ? (
+                <View style={styles.noPackagesBox}>
+                  <BookOpen size={36} color={Colors.textMuted} />
+                  <Text style={styles.noPackagesTitle}>No Packages Assigned Yet</Text>
+                  <Text style={styles.noPackagesSub}>
+                    Once the administrator assigns course packages to you, they will appear here along with your weekly schedules and student lists.
+                  </Text>
                 </View>
-
-                {loadingSlots ? (
-                  <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-                    <ActivityIndicator size="small" color="#2563eb" />
-                    <Text style={{ marginTop: 6, fontSize: 13, color: Colors.textMuted }}>Loading slots...</Text>
-                  </View>
-                ) : slots.length === 0 ? (
-                  <View style={styles.noSlotsBox}>
-                    <Calendar size={28} color={Colors.textMuted} />
-                    <Text style={styles.noSlotsTitle}>No slots set for this date</Text>
-                    <Text style={styles.noSlotsSub}>Tap "Add Slot" above to open your calendar for students.</Text>
-                    <TouchableOpacity
-                      style={styles.addFirstSlotBtn}
-                      onPress={handleOpenAddSlotModal}
-                    >
-                      <Text style={styles.addFirstSlotBtnText}>Add Time Slot</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={{ gap: 8 }}>
-                    {slots.map((slot) => {
-                      const bookedCount = slot.bookedCount || 0;
-                      const isFull = bookedCount >= 100;
-                      const hasBookings = bookedCount > 0;
-                      return (
-                        <View
-                          key={slot.id}
-                          style={[styles.slotItemCard, hasBookings && styles.slotItemCardBooked]}
-                        >
-                          <View style={styles.slotTimeWrap}>
-                            <Clock size={16} color={hasBookings ? '#059669' : Colors.primaryRose} />
-                            <View>
-                              <Text style={styles.slotTimeText}>
-                                {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
-                              </Text>
-                              <Text style={{ fontSize: 10, fontWeight: '700', color: hasBookings ? '#059669' : Colors.textMuted, marginTop: 2 }}>
-                                {hasBookings ? `${bookedCount}/100 Students Booked` : '0/100 Students Booked (Open)'}
-                              </Text>
+              ) : (
+                <View style={{ gap: 14 }}>
+                  {assignedPackages.map((pkg) => (
+                    <View key={pkg.id || pkg.packageId} style={styles.tutorPkgCard}>
+                      {/* Top banner / image */}
+                      <View style={styles.tutorPkgHeader}>
+                        {pkg.image ? (
+                          <Image source={{ uri: formatImageUrl(pkg.image) }} style={styles.tutorPkgThumb} />
+                        ) : (
+                          <View style={styles.tutorPkgThumbFallback}>
+                            <BookOpen size={24} color="#2563eb" />
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <View style={styles.pkgCategoryBadge}>
+                              <Text style={styles.pkgCategoryBadgeText}>{pkg.category || 'Course'}</Text>
+                            </View>
+                            <View style={styles.pkgActiveBadge}>
+                              <Text style={styles.pkgActiveBadgeText}>Active Batch</Text>
                             </View>
                           </View>
+                          <Text style={styles.tutorPkgTitle} numberOfLines={2}>
+                            {pkg.name}
+                          </Text>
+                        </View>
+                      </View>
 
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            {isFull ? (
-                              <TouchableOpacity
-                                style={[styles.bookedSlotBadge, { backgroundColor: '#fee2e2' }]}
-                                onPress={() => setSelectedSlotForStudents(slot)}
-                                activeOpacity={0.7}
-                              >
-                                <CheckCircle size={12} color="#dc2626" />
-                                <Text style={[styles.bookedSlotBadgeText, { color: '#dc2626' }]}>Full (100/100)</Text>
-                              </TouchableOpacity>
-                            ) : hasBookings ? (
-                              <TouchableOpacity
-                                style={styles.bookedSlotBadge}
-                                onPress={() => setSelectedSlotForStudents(slot)}
-                                activeOpacity={0.7}
-                              >
-                                <Users size={12} color="#059669" />
-                                <Text style={styles.bookedSlotBadgeText}>{bookedCount} Booked (View)</Text>
-                              </TouchableOpacity>
-                            ) : (
-                              <View style={styles.availableSlotBadge}>
-                                <Text style={styles.availableSlotBadgeText}>Available</Text>
+                      {/* Stats Overview */}
+                      <View style={styles.tutorPkgMetaRow}>
+                        <View style={styles.tutorPkgMetaItem}>
+                          <Calendar size={13} color="#2563eb" />
+                          <Text style={styles.tutorPkgMetaText}>
+                            {pkg.totalClassesScheduled || 12} Classes in Batch
+                          </Text>
+                        </View>
+                        <View style={styles.tutorPkgMetaItem}>
+                          <Users size={13} color="#059669" />
+                          <Text style={styles.tutorPkgMetaText}>
+                            {pkg.totalStudents || 0} Enrolled Students
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Weekly Schedules */}
+                      <View style={styles.tutorSchedulesSection}>
+                        <Text style={styles.tutorSectionSmallTitle}>Recurring Class Schedule</Text>
+                        {pkg.schedules && pkg.schedules.length > 0 ? (
+                          <View style={{ gap: 6, marginTop: 6 }}>
+                            {pkg.schedules.map((sch: any) => (
+                              <View key={sch.id} style={styles.schedulePillRow}>
+                                <Clock size={12} color="#4b5563" />
+                                <Text style={styles.schedulePillText}>
+                                  Every <Text style={{ fontWeight: '800' }}>{sch.dayName}</Text> • {sch.startTime} - {sch.endTime} ({sch.timezone || 'IST'})
+                                </Text>
                               </View>
-                            )}
+                            ))}
+                          </View>
+                        ) : (
+                          <Text style={styles.scheduleEmptyText}>Regular schedule pending setup by admin</Text>
+                        )}
+                      </View>
 
-                            {!hasBookings && (
-                              <TouchableOpacity
-                                style={styles.deleteSlotBtn}
-                                onPress={() => handleDeleteSlot(slot.id)}
-                              >
-                                <Trash2 size={16} color="#ef4444" />
-                              </TouchableOpacity>
-                            )}
+                      {/* Google Meet Link */}
+                      <View style={styles.tutorMeetSection}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Video size={14} color={pkg.meetLink ? '#2563eb' : Colors.textMuted} />
+                            <Text style={styles.tutorMeetTitle}>Class Google Meet Link</Text>
+                          </View>
+                          {pkg.meetLink ? (
+                            <TouchableOpacity
+                              style={styles.tutorLaunchMeetBtn}
+                              onPress={() => handleLaunchMeeting(pkg.meetLink)}
+                              activeOpacity={0.8}
+                            >
+                              <ExternalLink size={12} color={Colors.textWhite} />
+                              <Text style={styles.tutorLaunchMeetBtnText}>Launch Meet</Text>
+                            </TouchableOpacity>
+                          ) : (
+                            <Text style={styles.tutorNoMeetText}>No link configured</Text>
+                          )}
+                        </View>
+                        {pkg.meetLink ? (
+                          <Text style={styles.tutorMeetLinkUrl} numberOfLines={1}>
+                            {pkg.meetLink}
+                          </Text>
+                        ) : null}
+                      </View>
+
+                      {/* 12 Classes Preview & CTA */}
+                      {pkg.classes && pkg.classes.length > 0 && (
+                        <View style={styles.classesPreviewSection}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <Text style={styles.tutorSectionSmallTitle}>Live Classes ({pkg.classes.length}/12)</Text>
+                            <TouchableOpacity onPress={() => setActiveTab('classes')}>
+                              <Text style={styles.viewAllClassesLink}>View All Classes →</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={{ gap: 6 }}>
+                            {pkg.classes.slice(0, 3).map((cls: any) => (
+                              <View key={cls.id} style={styles.miniClassRow}>
+                                <View style={styles.miniClassNum}>
+                                  <Text style={styles.miniClassNumText}>#{cls.classNumber || 1}</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                  <Text style={styles.miniClassTopic} numberOfLines={1}>
+                                    {cls.topic || `Class #${cls.classNumber}`}
+                                  </Text>
+                                  <Text style={styles.miniClassDate}>
+                                    {cls.scheduledAt ? new Date(cls.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Scheduled'}
+                                  </Text>
+                                </View>
+                                <View style={[styles.miniStatusBadge, cls.status === 'COMPLETED' && { backgroundColor: '#ecfdf5' }]}>
+                                  <Text style={[styles.miniStatusBadgeText, cls.status === 'COMPLETED' && { color: '#059669' }]}>
+                                    {cls.status || 'SCHEDULED'}
+                                  </Text>
+                                </View>
+                              </View>
+                            ))}
                           </View>
                         </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -1251,11 +1271,35 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
 
         <TouchableOpacity
           style={styles.bottomNavItem}
+          onPress={() => setActiveTab('packages')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.bottomNavIconWrap, activeTab === 'packages' && styles.bottomNavIconWrapActive]}>
+            <BookOpen
+              size={20}
+              color={activeTab === 'packages' ? Colors.primaryRose : Colors.textMuted}
+              strokeWidth={activeTab === 'packages' ? 2.4 : 1.8}
+            />
+            {assignedPackages.length > 0 && (
+              <View style={[styles.tabBadge, { backgroundColor: Colors.primaryRose }]}>
+                <Text style={styles.tabBadgeText}>
+                  {assignedPackages.length > 99 ? '99+' : assignedPackages.length}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.bottomNavLabel, activeTab === 'packages' && styles.bottomNavLabelActive]}>
+            Packages
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.bottomNavItem}
           onPress={() => setActiveTab('classes')}
           activeOpacity={0.7}
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'classes' && styles.bottomNavIconWrapActive]}>
-            <BookOpen
+            <Video
               size={20}
               color={activeTab === 'classes' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'classes' ? 2.4 : 1.8}
@@ -1269,24 +1313,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
             )}
           </View>
           <Text style={[styles.bottomNavLabel, activeTab === 'classes' && styles.bottomNavLabelActive]}>
-            My Classes
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.bottomNavItem}
-          onPress={() => setActiveTab('availability')}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.bottomNavIconWrap, activeTab === 'availability' && styles.bottomNavIconWrapActive]}>
-            <Calendar
-              size={20}
-              color={activeTab === 'availability' ? Colors.primaryRose : Colors.textMuted}
-              strokeWidth={activeTab === 'availability' ? 2.4 : 1.8}
-            />
-          </View>
-          <Text style={[styles.bottomNavLabel, activeTab === 'availability' && styles.bottomNavLabelActive]}>
-            Availability
+            Classes
           </Text>
         </TouchableOpacity>
 
@@ -2616,6 +2643,272 @@ const styles = StyleSheet.create({
     marginTop: 4,
     maxWidth: 240,
   },
+  /* PACKAGES TAB */
+  packagesHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 4,
+  },
+  packagesHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  packagesHeaderSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+    paddingRight: 8,
+    lineHeight: 17,
+  },
+  packagesCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  packagesCountPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#2563eb',
+  },
+  noPackagesBox: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  noPackagesTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginTop: 12,
+  },
+  noPackagesSub: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  tutorPkgCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  tutorPkgHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  tutorPkgThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  tutorPkgThumbFallback: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  pkgCategoryBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pkgCategoryBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+  },
+  pkgActiveBadge: {
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pkgActiveBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  tutorPkgTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    lineHeight: 20,
+  },
+  tutorPkgMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 12,
+  },
+  tutorPkgMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tutorPkgMetaText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  tutorSchedulesSection: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  tutorSectionSmallTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  schedulePillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  schedulePillText: {
+    fontSize: 12,
+    color: Colors.textPrimary,
+  },
+  scheduleEmptyText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  tutorMeetSection: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    marginBottom: 10,
+  },
+  tutorMeetTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1e40af',
+  },
+  tutorLaunchMeetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  tutorLaunchMeetBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textWhite,
+  },
+  tutorNoMeetText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  tutorMeetLinkUrl: {
+    fontSize: 11,
+    color: '#2563eb',
+    marginTop: 6,
+    textDecorationLine: 'underline',
+  },
+  classesPreviewSection: {
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderColor: Colors.border,
+    paddingTop: 10,
+  },
+  viewAllClassesLink: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563eb',
+  },
+  miniClassRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f8fafc',
+    padding: 8,
+    borderRadius: 8,
+  },
+  miniClassNum: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniClassNumText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  miniClassTopic: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  miniClassDate: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  miniStatusBadge: {
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  miniStatusBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#2563eb',
+  },
+
   /* AVAILABILITY TAB */
   availHeaderCard: {
     flexDirection: 'row',

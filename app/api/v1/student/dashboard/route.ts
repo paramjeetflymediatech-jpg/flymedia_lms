@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Enrollment, Package, LiveClass, Certificate, TutorAvailability, TutorSlotBooking, User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 import { Op } from 'sequelize';
+import { syncAndGetEnrollmentProgress } from '@/src/lib/attendance';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,27 +128,40 @@ export async function GET(request: Request) {
     upcomingSessions.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     const nextSession = upcomingSessions[0] || null;
 
-    // 5. Formatted Enrolled Packages list
-    const enrolledPackages = enrollments.map((enr: any) => {
-      const pkg = enr.Package;
-      const totalLessons = pkg?.courseModules
-        ? pkg.courseModules.reduce((acc: number, m: any) => acc + (m.topics?.length || 0), 0)
-        : 20;
+    // 5. Formatted Enrolled Packages list with attendance & expiry progress
+    const enrolledPackages = await Promise.all(
+      enrollments.map(async (enr: any) => {
+        const pkg = enr.Package;
+        const progress = await syncAndGetEnrollmentProgress(enr.id);
+        const totalLessons = pkg?.courseModules
+          ? pkg.courseModules.reduce((acc: number, m: any) => acc + (m.topics?.length || 0), 0)
+          : 20;
 
-      return {
-        id: enr.id,
-        packageId: pkg?.id || enr.packageId,
-        title: pkg?.title || 'Enrolled Course',
-        slug: pkg?.slug || '',
-        category: pkg?.category || 'Development',
-        thumbnail: resolveFullImageUrl(pkg?.thumbnail),
-        duration: pkg?.duration || '12 Weeks',
-        enrolledAt: enr.enrolledAt ? new Date(enr.enrolledAt).toISOString().split('T')[0] : 'Recent',
-        progressPercent: enr.completedAt ? 100 : 35,
-        totalLessons: totalLessons || 20,
-        completedLessons: enr.completedAt ? totalLessons : Math.min(7, totalLessons),
-      };
-    });
+        return {
+          id: enr.id,
+          packageId: pkg?.id || enr.packageId,
+          title: pkg?.title || 'Enrolled Course',
+          slug: pkg?.slug || '',
+          category: pkg?.category || 'Development',
+          thumbnail: resolveFullImageUrl(pkg?.thumbnail),
+          duration: pkg?.duration || '12 Weeks',
+          enrolledAt: enr.enrolledAt ? new Date(enr.enrolledAt).toISOString().split('T')[0] : 'Recent',
+          progressPercent: progress ? progress.progressPercentage : (enr.completedAt ? 100 : 35),
+          totalLessons: totalLessons || 20,
+          completedLessons: enr.completedAt ? totalLessons : Math.min(7, totalLessons),
+          progress: progress || {
+            totalClasses: enr.totalClasses || 12,
+            conductedClasses: 0,
+            attendedClasses: 0,
+            missedClasses: 0,
+            remainingClasses: enr.totalClasses || 12,
+            isExpired: false,
+            status: enr.status || 'ACTIVE',
+            progressPercentage: 0,
+          },
+        };
+      })
+    );
 
     // 6. Formatted all booked 1-on-1 sessions
     const formattedBookedSessions = bookedSessions.map((sess: any) => {

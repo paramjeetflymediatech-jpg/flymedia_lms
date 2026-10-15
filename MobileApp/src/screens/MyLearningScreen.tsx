@@ -14,6 +14,7 @@ import {
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { useAuth } from '../context/AuthContext';
+import { ApiService } from '../services/api';
 import {
   Video,
   Award,
@@ -51,7 +52,22 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
     setRefreshing(false);
   };
 
-  const handleJoinClass = (courseTitle: string, meetLink?: string | null) => {
+  const handleJoinClass = async (courseTitle: string, meetLink?: string | null, classId?: string) => {
+    if (user?.token && classId) {
+      try {
+        const res = await ApiService.joinClass(classId, user.token);
+        if (res && res.success && res.meetLink) {
+          Linking.openURL(res.meetLink).catch(() => {
+            Alert.alert('Live Class', `Link: ${res.meetLink}`);
+          });
+          refreshEnrollments();
+          return;
+        }
+      } catch (e) {
+        // Fallback to meetLink
+      }
+    }
+
     if (meetLink) {
       Linking.openURL(meetLink).catch(() => {
         Alert.alert(
@@ -353,6 +369,9 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                   ? `₹${Number(pkg.price).toLocaleString('en-IN')}`
                   : 'Free Enrollment';
 
+                const prog = (pkg as any).progress;
+                const isExpired = prog ? Boolean(prog.isExpired || prog.status === 'EXPIRED') : false;
+
                 return (
                   <View key={pkg.id} style={styles.packageCard}>
                     {/* THUMBNAIL BANNER */}
@@ -367,10 +386,18 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                         <View style={styles.categoryPill}>
                           <Text style={styles.categoryText}>{pkg.category || 'Package'}</Text>
                         </View>
-                        <View style={styles.purchasedVerifiedBadge}>
-                          <CheckCircle2 size={12} color="#ffffff" />
-                          <Text style={styles.purchasedVerifiedText}>PURCHASED</Text>
-                        </View>
+                        {prog ? (
+                          <View style={[styles.purchasedVerifiedBadge, isExpired ? { backgroundColor: '#e11d48' } : { backgroundColor: '#059669' }]}>
+                            <Text style={styles.purchasedVerifiedText}>
+                              {isExpired ? 'EXPIRED' : `ACTIVE • ${prog.remainingClasses} LEFT`}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={styles.purchasedVerifiedBadge}>
+                            <CheckCircle2 size={12} color="#ffffff" />
+                            <Text style={styles.purchasedVerifiedText}>PURCHASED</Text>
+                          </View>
+                        )}
                       </View>
 
                       {pkg.mode && (
@@ -426,6 +453,39 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                         </View>
                       </View>
 
+                      {/* 12-CLASS COMPLETION & ATTENDANCE PROGRESS */}
+                      {prog && (
+                        <View style={{ marginTop: 12, backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: Colors.textPrimary }}>12-Class Completion</Text>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: isExpired ? '#e11d48' : Colors.primaryOrange }}>
+                              {prog.conductedClasses} / {prog.totalClasses || 12} Conducted
+                            </Text>
+                          </View>
+                          <View style={{ height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                            <View
+                              style={{
+                                height: '100%',
+                                width: `${Math.min(100, Math.max(0, prog.progressPercentage || 0))}%`,
+                                backgroundColor: isExpired ? '#94a3b8' : Colors.primaryOrange,
+                                borderRadius: 3,
+                              }}
+                            />
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                            <View style={{ flex: 1, backgroundColor: '#f0fdf4', paddingVertical: 5, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                              <Text style={{ fontSize: 9, fontWeight: '800', color: '#16a34a' }}>ATTENDED: {prog.attendedClasses || 0}</Text>
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: '#fff1f2', paddingVertical: 5, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#fecdd3' }}>
+                              <Text style={{ fontSize: 9, fontWeight: '800', color: '#e11d48' }}>MISSED: {prog.missedClasses || 0}</Text>
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: '#eff6ff', paddingVertical: 5, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#bfdbfe' }}>
+                              <Text style={{ fontSize: 9, fontWeight: '800', color: '#2563eb' }}>LEFT: {prog.remainingClasses || 0}</Text>
+                            </View>
+                          </View>
+                        </View>
+                      )}
+
                       {/* PROGRESS BAR */}
                       <View style={styles.progressContainer}>
                         <View style={styles.progressLabelRow}>
@@ -458,7 +518,11 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
 
                           <TouchableOpacity
                             style={styles.joinClassBtn}
-                            onPress={() => handleJoinClass(title, pkg.nextLiveClassMeetLink)}
+                            onPress={() => {
+                              const firstUpcomingClass = (pkg.liveClasses || []).find((lc: any) => new Date(lc.startTime) >= new Date());
+                              const targetClassId = firstUpcomingClass?.id || (pkg.liveClasses || [])[0]?.id;
+                              handleJoinClass(title, pkg.nextLiveClassMeetLink, targetClassId);
+                            }}
                             activeOpacity={0.85}
                           >
                             <Video size={16} color={Colors.textWhite} />
