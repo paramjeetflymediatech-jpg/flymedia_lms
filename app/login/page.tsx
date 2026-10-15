@@ -2,10 +2,23 @@ import { Suspense } from 'react';
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import LoginForm from './LoginForm';
+import { Metadata } from 'next';
+import { getSeoMetadata } from '../../src/lib/seo';
+import PageSeoScripts from '../../src/components/common/PageSeoScripts';
+
+export const revalidate = 0;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getSeoMetadata('/login', {
+    title: 'Login to Your Account | Flymedia Technology LMS',
+    description: 'Log in to Flymedia Technology LMS to access your courses, attend live classes, and track your progress.',
+  });
+}
 
 export default function LoginPage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <PageSeoScripts path="/login" />
       <Header />
       <main className="flex-1 flex flex-col bg-white">
         <div className="flex-1 flex flex-row-reverse bg-white min-h-[calc(100vh-80px)]">

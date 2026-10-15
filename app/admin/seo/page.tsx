@@ -80,10 +80,10 @@ export default async function AdminSeoPage({
               <span className="text-xs font-bold uppercase tracking-wider text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full">
                 Dynamic Sitemap
               </span>
-              <span className="text-xs text-slate-500 font-medium">5,000 URLs / page</span>
+              <span className="text-xs text-slate-500 font-medium">Single XML file</span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Sitemaps are generated dynamically with real-time course, blog, mentor, category, and page URLs.
+              Real-time dynamic XML sitemap containing all courses, blogs, categories, and site pages in a single file.
             </p>
           </div>
           <div className="pt-3 flex flex-wrap gap-2 text-xs font-semibold">
@@ -96,14 +96,6 @@ export default async function AdminSeoPage({
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               /sitemap.xml
             </a>
-            <a 
-              href="/sitemap/0.xml" 
-              target="_blank" 
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              /sitemap/0.xml
-            </a>
           </div>
         </div>
 
@@ -111,12 +103,12 @@ export default async function AdminSeoPage({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">
-                AI & LLMs Files
+                AI & LLMs File
               </span>
               <span className="text-xs text-indigo-600 font-bold">llmstxt.org</span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Real-time Markdown summaries optimized for ChatGPT, Claude, Perplexity, and AI search engines.
+              Comprehensive real-time syllabus, courses, and platform documentation optimized for ChatGPT, Claude, and Perplexity.
             </p>
           </div>
           <div className="pt-3 flex flex-wrap gap-2 text-xs font-semibold">
@@ -128,14 +120,6 @@ export default async function AdminSeoPage({
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               /llms.txt
-            </a>
-            <a 
-              href="/llms-full.txt" 
-              target="_blank" 
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              /llms-full.txt
             </a>
           </div>
         </div>
