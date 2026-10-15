@@ -128,16 +128,20 @@ export async function POST(request: Request) {
     const todayDate = clientDate || serverToday;
     const currentMin = typeof clientCurrentMinutes === 'number' ? clientCurrentMinutes : serverMinutes;
 
+    const minLeadMinutes = 120; // Must be at least 2 hours in advance
+
     if (date < todayDate) {
       return NextResponse.json({ success: false, error: 'Cannot add availability for past dates' }, { status: 400 });
     }
 
     if (date === todayDate) {
-      if (newStartMinutes <= currentMin) {
+      const minAllowedStart = currentMin + minLeadMinutes;
+      if (newStartMinutes < minAllowedStart) {
+        const earliestTime = formatMinutesToTime(Math.min(23 * 60 + 59, minAllowedStart));
         return NextResponse.json(
           {
             success: false,
-            error: `Cannot add slots in the past for today. ${normalizedStartTime} has already passed.`,
+            error: `Slot starting time must be at least 2 hours in advance. Earliest start time allowed today is ${earliestTime}.`,
           },
           { status: 400 }
         );

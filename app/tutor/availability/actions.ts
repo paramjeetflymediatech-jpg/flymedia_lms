@@ -142,14 +142,21 @@ export async function addAvailabilitySlot(date: string, startTime: string, endTi
     const now = new Date();
     const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
+    const minLeadMinutes = 120; // Must be at least 2 hours in advance
+
     if (date < todayString) {
       return handleResponse(false, "Cannot add availability for past dates");
     }
 
     if (date === todayString) {
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      if (newStartMinutes <= currentMinutes) {
-        return handleResponse(false, "Cannot add slots in the past for today");
+      const minAllowedStart = currentMinutes + minLeadMinutes;
+      if (newStartMinutes < minAllowedStart) {
+        const earliestTime = formatMinutesToTime(Math.min(23 * 60 + 59, minAllowedStart));
+        return handleResponse(
+          false,
+          `Slot starting time must be at least 2 hours in advance. Earliest start time allowed today is ${earliestTime}.`
+        );
       }
     }
 
