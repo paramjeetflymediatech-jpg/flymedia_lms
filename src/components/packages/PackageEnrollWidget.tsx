@@ -15,11 +15,13 @@ export default function PackageEnrollWidget({
   isEnrolled: boolean;
   variant?: 'card' | 'button';
 }) {
-  const [loading, setLoading] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const router = useRouter();
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
-  // Checkout states
+  // Pricing & Coupon states
   const originalPrice = pkg.price ? Number(pkg.price) : 0;
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
@@ -29,16 +31,6 @@ export default function PackageEnrollWidget({
     discountPercentage: number;
     discountAmount: number;
   } | null>(null);
-
-  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NETBANKING' | 'PHONEPE'>('UPI');
-  const [selectedUpiApp, setSelectedUpiApp] = useState('Google Pay');
-  const [upiId, setUpiId] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardHolder, setCardHolder] = useState('');
-  const [selectedBank, setSelectedBank] = useState('HDFC Bank');
-  const [checkoutSuccess, setCheckoutSuccess] = useState<any>(null);
 
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const finalPrice = Math.max(0, originalPrice - discountAmount);
@@ -55,20 +47,18 @@ export default function PackageEnrollWidget({
     }
 
     if (!originalPrice || originalPrice === 0) {
-      // Free package
       handleFreeEnroll();
       return;
     }
 
+    setPaymentError('');
+    setIsRedirecting(false);
+    setProcessing(false);
     setShowCheckoutModal(true);
   };
 
   const handleFreeEnroll = async () => {
-    if (user?.role === 'TUTOR') {
-      alert('You are logged in as a Tutor. Course enrollment is available for student accounts only.');
-      return;
-    }
-    setLoading(true);
+    setProcessing(true);
     try {
       const res = await fetch('/api/payment/free-enroll', {
         method: 'POST',
@@ -76,14 +66,14 @@ export default function PackageEnrollWidget({
         body: JSON.stringify({ packageId: pkg.id }),
       });
       if (res.ok) {
-        window.location.href = `/dashboard`;
+        window.location.href = '/dashboard';
       } else {
         alert('Failed to enroll.');
       }
-    } catch (e) {
+    } catch {
       alert('Enrollment error.');
     } finally {
-      setLoading(false);
+      setProcessing(false);
     }
   };
 
@@ -114,67 +104,48 @@ export default function PackageEnrollWidget({
       } else {
         setCouponError(data.error || 'Invalid coupon code');
       }
-    } catch (err: any) {
+    } catch {
       setCouponError('Failed to validate coupon');
     } finally {
       setCouponLoading(false);
     }
   };
 
-  const handleProcessCheckout = async () => {
-    setLoading(true);
-    try {
-      // If PhonePe gateway is chosen, user can also route directly through gateway
-      if (paymentMethod === 'PHONEPE') {
-        const initRes = await fetch('/api/payment/initiate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            packageId: pkg.id,
-            amount: finalPrice,
-          }),
-        });
-        const initData = await initRes.json();
-        if (initData.success && initData.redirectUrl) {
-          window.location.href = initData.redirectUrl;
-          return;
-        }
-      }
+  // Direct PhonePe Gateway Checkout (Same as MobileApp)
+  const handleProcessPhonePePayment = async () => {
+    setProcessing(true);
+    setPaymentError('');
 
-      // Execute unified checkout
-      const res = await fetch('/api/v1/payment/checkout', {
+    try {
+      const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           packageId: pkg.id,
-          paymentMethod,
           amount: finalPrice,
           couponCode: appliedCoupon?.code,
-          paymentDetails: {
-            method: paymentMethod,
-            upiApp: selectedUpiApp,
-            upiId: upiId || `${selectedUpiApp.toLowerCase().replace(/\s/g, '')}@upi`,
-            bank: selectedBank,
-            cardLast4: cardNumber ? cardNumber.slice(-4) : '4242',
-          },
         }),
       });
 
       const data = await res.json();
-      if (data.success) {
-        setCheckoutSuccess(data);
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1800);
+      if (res.ok && data.success && data.redirectUrl) {
+        setIsRedirecting(true);
+        // Direct redirect to PhonePe Gateway
+        window.location.href = data.redirectUrl;
       } else {
-        alert(data.error || 'Payment failed. Please retry.');
+        setProcessing(false);
+        setPaymentError(data.error || 'Failed to initiate PhonePe payment. Please try again.');
       }
     } catch (err: any) {
-      console.error(err);
-      alert('Checkout error occurred.');
-    } finally {
-      setLoading(false);
+      setProcessing(false);
+      setPaymentError(err?.message || 'Network error while connecting to PhonePe gateway.');
     }
+  };
+
+  const handleCancelRedirect = () => {
+    setIsRedirecting(false);
+    setProcessing(false);
+    setPaymentError('Payment was cancelled. You can retry anytime.');
   };
 
   const isTutor = user?.role === 'TUTOR';
@@ -193,8 +164,8 @@ export default function PackageEnrollWidget({
           </div>
         ) : isEnrolled ? (
           <Link
-            href={`/dashboard`}
-            className="w-full inline-flex items-center justify-center px-6 py-5 font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-2xl transition-all shadow-md group"
+            href="/dashboard"
+            className="w-full inline-flex items-center justify-center px-6 py-4 font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-2xl transition-all shadow-md group"
           >
             <span>Go to Dashboard</span>
             <svg
@@ -209,18 +180,18 @@ export default function PackageEnrollWidget({
         ) : (
           <button
             onClick={handleOpenCheckout}
-            disabled={loading}
+            disabled={processing}
             style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
-            className="w-full relative overflow-hidden group py-5 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-1 hover:shadow-rose-500/40 disabled:opacity-70 disabled:hover:translate-y-0"
+            className="w-full relative overflow-hidden group py-4 px-6 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40 disabled:opacity-70 disabled:hover:translate-y-0 cursor-pointer"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center justify-center gap-2">
-              {loading
+              {processing
                 ? 'Processing...'
                 : pkg.price && Number(pkg.price) > 0
-                ? `Pay ₹${Number(pkg.price).toLocaleString('en-IN')} & Enroll`
-                : 'Instant Enrollment'}
-              {!loading && (
+                ? `Buy Now • ₹${Number(pkg.price).toLocaleString('en-IN')}`
+                : 'Instant Free Enrollment'}
+              {!processing && (
                 <svg
                   className="w-5 h-5 group-hover:translate-x-1 transition-transform"
                   fill="none"
@@ -238,7 +209,7 @@ export default function PackageEnrollWidget({
           <Link
             href={`/login?callbackUrl=/packages/${pkg.slug}`}
             style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
-            className="w-full relative overflow-hidden group flex items-center justify-center py-5 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-1 hover:shadow-rose-500/40"
+            className="w-full relative overflow-hidden group flex items-center justify-center py-4 px-6 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 hover:shadow-rose-500/40"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10">Sign In to Enroll</span>
@@ -261,304 +232,234 @@ export default function PackageEnrollWidget({
       {variant === 'button' ? (
         buttonContent
       ) : (
-        <div className="sticky top-24 p-8 sm:p-10 bg-white border border-slate-100 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-8 flex flex-col justify-between overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-slate-50/50 to-transparent pointer-events-none" />
-
-          <div className="relative z-10 space-y-6">
-            <div>
-              <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Enrollment Plan</h3>
-              <div className="flex flex-wrap items-baseline gap-2">
-                <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight break-words">
-                  {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
-                </span>
-                {pkg.price && Number(pkg.price) > 0 && (
-                  <span className="text-sm text-slate-500 font-bold mb-1">/ one-time</span>
-                )}
-              </div>
+        <div className="sticky top-24 p-8 sm:p-10 bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-6 flex flex-col justify-between overflow-hidden">
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Course Fee</h3>
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+                {pkg.price && Number(pkg.price) > 0 ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Free'}
+              </span>
+              {pkg.price && Number(pkg.price) > 0 && (
+                <span className="text-sm text-slate-500 font-bold">/ one-time</span>
+              )}
             </div>
           </div>
-
-          <div className="relative z-10 pt-4">{buttonContent}</div>
+          <div className="pt-2">{buttonContent}</div>
         </div>
       )}
 
-      {/* CHECKOUT PAYMENT MODAL */}
+      {/* PHONEPE CHECKOUT MODAL (MATCHING MOBILE APP PAYMENT SCREEN) */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col">
+            
+            {/* Top Handle Bar for mobile sheet feel */}
+            <div className="w-12 h-1.5 rounded-full bg-slate-200 mx-auto mt-3 mb-1 sm:hidden" />
+
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
-              <div>
-                <h3 className="text-lg font-black text-slate-900">
-                  {checkoutSuccess ? 'Payment Confirmed' : 'Course Checkout'}
-                </h3>
-                <p className="text-xs font-semibold text-slate-500 truncate max-w-xs">{pkg.title}</p>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex-1 pr-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#5f259f]/10 text-[#5f259f] font-black text-xs">
+                    ₹
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900">PhonePe Checkout</h3>
+                </div>
+                <p className="text-xs font-semibold text-slate-500 truncate mt-0.5">{pkg.title}</p>
               </div>
               <button
-                onClick={() => setShowCheckoutModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition-colors"
+                onClick={() => {
+                  if (isRedirecting) handleCancelRedirect();
+                  setShowCheckoutModal(false);
+                }}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
-            {checkoutSuccess ? (
-              <div className="p-8 text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl">
-                  ✓
-                </div>
-                <h4 className="text-2xl font-black text-slate-900">Enrollment Confirmed! 🎉</h4>
-                <p className="text-sm text-slate-600">
-                  Transaction <span className="font-mono font-bold text-slate-800">{checkoutSuccess.transactionId}</span> verified. Redirecting to your dashboard...
-                </p>
-                <div className="pt-2">
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full animate-pulse w-full" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-                {/* Price Breakdown */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-                  <div className="flex justify-between text-sm text-slate-600">
-                    <span>Course Fee</span>
-                    <span className="font-bold text-slate-800">₹{originalPrice.toLocaleString('en-IN')}</span>
+            {/* Modal Content */}
+            <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+              {isRedirecting ? (
+                /* REDIRECTING / CONNECTING SCREEN */
+                <div className="py-8 px-4 text-center space-y-5">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-[#5f259f]/10 flex items-center justify-center relative">
+                    <div className="w-12 h-12 border-4 border-[#5f259f] border-t-transparent rounded-full animate-spin" />
                   </div>
 
-                  {appliedCoupon && (
-                    <div className="flex justify-between text-sm text-emerald-600 font-semibold">
-                      <span>
-                        Coupon Discount ({appliedCoupon.code} - {appliedCoupon.discountPercentage}%)
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-black text-slate-900">Connecting to PhonePe...</h4>
+                    <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
+                      Redirecting you to the secure PhonePe payment gateway. Please wait a moment...
+                    </p>
+                  </div>
+
+                  {/* Order Total pill */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 max-w-xs mx-auto">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Payable</div>
+                    <div className="text-2xl font-black text-slate-900">₹{finalPrice.toLocaleString('en-IN')}</div>
+                  </div>
+
+                  <button
+                    onClick={handleCancelRedirect}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors pt-2 cursor-pointer underline"
+                  >
+                    Cancel & Return
+                  </button>
+                </div>
+              ) : (
+                /* MAIN CHECKOUT FORM */
+                <>
+                  {/* Order Summary Box */}
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+                    <div className="flex justify-between items-center text-sm text-slate-600">
+                      <span className="font-medium">Course Fee</span>
+                      <span className="font-bold text-slate-900">₹{originalPrice.toLocaleString('en-IN')}</span>
+                    </div>
+
+                    {appliedCoupon && (
+                      <div className="flex justify-between items-center text-sm text-emerald-600 font-semibold">
+                        <span>Coupon Discount ({appliedCoupon.code} • {appliedCoupon.discountPercentage}%)</span>
+                        <span>-₹{appliedCoupon.discountAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+
+                    <div className="border-t border-slate-200 pt-3 flex justify-between items-baseline">
+                      <span className="text-sm font-black text-slate-900 uppercase tracking-wider">Total Payable</span>
+                      <span className="text-2xl font-black text-slate-900">
+                        ₹{finalPrice.toLocaleString('en-IN')}
                       </span>
-                      <span>-₹{appliedCoupon.discountAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+
+                  {/* Coupon Code Section */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Have a Coupon?
+                    </label>
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                        <span className="font-bold text-xs">
+                          ✓ {appliedCoupon.code} applied (Saved ₹{appliedCoupon.discountAmount})
+                        </span>
+                        <button
+                          onClick={() => setAppliedCoupon(null)}
+                          className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="e.g. FLYSCHOOL20"
+                            value={couponCode}
+                            onChange={(e) => {
+                              setCouponCode(e.target.value);
+                              setCouponError('');
+                            }}
+                            className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5f259f]/40 uppercase font-bold"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon()}
+                            disabled={couponLoading}
+                            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
+                          >
+                            {couponLoading ? '...' : 'Apply'}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon('FLYSCHOOL20')}
+                            className="text-[11px] font-bold text-[#5f259f] bg-[#5f259f]/5 border border-[#5f259f]/20 px-2.5 py-1 rounded-lg hover:bg-[#5f259f]/10 transition-colors cursor-pointer"
+                          >
+                            ⚡ FLYSCHOOL20 (20% OFF)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon('WELCOME50')}
+                            className="text-[11px] font-bold text-[#5f259f] bg-[#5f259f]/5 border border-[#5f259f]/20 px-2.5 py-1 rounded-lg hover:bg-[#5f259f]/10 transition-colors cursor-pointer"
+                          >
+                            🔥 WELCOME50 (50% OFF)
+                          </button>
+                        </div>
+                        {couponError && <p className="text-xs font-bold text-rose-500">{couponError}</p>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Error / Cancellation Banner with Retry */}
+                  {paymentError && (
+                    <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3">
+                      <span className="text-rose-500 font-black text-sm">⚠️</span>
+                      <div className="flex-1 text-xs">
+                        <div className="font-bold text-rose-900">Payment Incomplete</div>
+                        <div className="text-rose-700 mt-0.5">{paymentError}</div>
+                      </div>
                     </div>
                   )}
 
-                  <div className="border-t border-slate-200 pt-2 flex justify-between items-baseline">
-                    <span className="font-black text-slate-900">Total Payable</span>
-                    <span className="text-2xl font-black text-orange-600">
-                      ₹{finalPrice.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Coupon Code Section */}
-                <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-slate-500 tracking-wider">
-                    Discount Coupon
-                  </label>
-                  {appliedCoupon ? (
-                    <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
-                      <span className="font-bold">
-                        ✓ {appliedCoupon.code} applied (Saved ₹{appliedCoupon.discountAmount})
+                  {/* PhonePe Direct Gateway Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#5f259f]/5 to-purple-50/50 border border-[#5f259f]/20 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🛡️</span>
+                        <span className="text-sm font-black text-slate-900">PhonePe Payment Gateway</span>
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#5f259f] bg-[#5f259f]/10 px-2.5 py-0.5 rounded-full">
+                        Direct Redirect
                       </span>
-                      <button
-                        onClick={() => setAppliedCoupon(null)}
-                        className="text-xs font-bold text-rose-600 hover:underline"
-                      >
-                        Remove
-                      </button>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="e.g. FLYSCHOOL20"
-                          value={couponCode}
-                          onChange={(e) => {
-                            setCouponCode(e.target.value);
-                            setCouponError('');
-                          }}
-                          className="flex-1 px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 uppercase font-semibold"
-                        />
-                        <button
-                          onClick={() => handleApplyCoupon()}
-                          disabled={couponLoading}
-                          className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-black rounded-xl transition-colors disabled:opacity-60"
-                        >
-                          {couponLoading ? '...' : 'Apply'}
-                        </button>
-                      </div>
 
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyCoupon('FLYSCHOOL20')}
-                          className="text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-3 py-1 rounded-full hover:bg-orange-100 transition-colors"
-                        >
-                          ⚡ FLYSCHOOL20 (20% OFF)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyCoupon('WELCOME50')}
-                          className="text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-3 py-1 rounded-full hover:bg-orange-100 transition-colors"
-                        >
-                          🔥 WELCOME50 (50% OFF)
-                        </button>
-                      </div>
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      You will be redirected directly to PhonePe to complete your payment using UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, or Net Banking.
+                    </p>
 
-                      {couponError && <p className="text-xs font-bold text-rose-500">{couponError}</p>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Payment Method Selector */}
-                <div className="space-y-3">
-                  <label className="text-xs font-black uppercase text-slate-500 tracking-wider">
-                    Select Payment Method
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('UPI')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
-                        paymentMethod === 'UPI'
-                          ? 'border-orange-500 bg-orange-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="text-sm font-black text-slate-900">⚡ Instant UPI</div>
-                      <div className="text-xs text-slate-500">GPay, PhonePe, Paytm</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('CARD')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
-                        paymentMethod === 'CARD'
-                          ? 'border-orange-500 bg-orange-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="text-sm font-black text-slate-900">💳 Card</div>
-                      <div className="text-xs text-slate-500">Visa, RuPay, Master</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('NETBANKING')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
-                        paymentMethod === 'NETBANKING'
-                          ? 'border-orange-500 bg-orange-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="text-sm font-black text-slate-900">🏦 Net Banking</div>
-                      <div className="text-xs text-slate-500">All Indian Banks</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('PHONEPE')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
-                        paymentMethod === 'PHONEPE'
-                          ? 'border-orange-500 bg-orange-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="text-sm font-black text-slate-900">🛡️ PhonePe Gateway</div>
-                      <div className="text-xs text-slate-500">1-Tap Fast Pay</div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sub-form based on method */}
-                {paymentMethod === 'UPI' && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex gap-2">
-                      {['Google Pay', 'PhonePe', 'Paytm', 'BHIM'].map((app) => (
-                        <button
-                          key={app}
-                          type="button"
-                          onClick={() => setSelectedUpiApp(app)}
-                          className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all ${
-                            selectedUpiApp === app
-                              ? 'bg-orange-500 text-white shadow-sm'
-                              : 'bg-white border border-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {app}
-                        </button>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {['PhonePe', 'Google Pay', 'Paytm', 'BHIM UPI', 'Cards', 'NetBanking'].map((m) => (
+                        <span key={m} className="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
+                          {m}
+                        </span>
                       ))}
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Or enter UPI ID (e.g. mobile@upi)"
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
                   </div>
-                )}
 
-                {paymentMethod === 'CARD' && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                    <input
-                      type="text"
-                      placeholder="Card Number (XXXX XXXX XXXX XXXX)"
-                      value={cardNumber}
-                      maxLength={19}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-1/2 px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                      <input
-                        type="password"
-                        placeholder="CVV"
-                        maxLength={4}
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-1/2 px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
+                  {/* Security Badge */}
+                  <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 py-1">
+                    <span className="text-emerald-600 font-bold">🔒</span>
+                    <span>Protected by 256-bit bank encryption • 100% Safe</span>
                   </div>
-                )}
 
-                {paymentMethod === 'NETBANKING' && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                    <label className="text-xs font-bold text-slate-600">Select Bank</label>
-                    <select
-                      value={selectedBank}
-                      onChange={(e) => setSelectedBank(e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
-                    >
-                      <option>HDFC Bank</option>
-                      <option>State Bank of India</option>
-                      <option>ICICI Bank</option>
-                      <option>Axis Bank</option>
-                      <option>Kotak Mahindra Bank</option>
-                      <option>Punjab National Bank</option>
-                    </select>
-                  </div>
-                )}
+                  {/* Direct PhonePe Action Button */}
+                  <button
+                    type="button"
+                    onClick={handleProcessPhonePePayment}
+                    disabled={processing}
+                    className="w-full py-4 px-6 rounded-2xl text-white font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-900/25 hover:shadow-purple-900/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, #5f259f 0%, #7b2cbf 100%)' }}
+                  >
+                    {processing ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Connecting to PhonePe...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{paymentError ? 'Retry Payment' : `Proceed to Pay • ₹${finalPrice.toLocaleString('en-IN')}`}</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
 
-                {/* Security Guarantee */}
-                <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
-                  <span className="text-emerald-500">🔒</span> 256-Bit SSL Encrypted • 100% Safe & RBI Compliant
-                </div>
-
-                {/* Submit Pay Button */}
-                <button
-                  type="button"
-                  onClick={handleProcessCheckout}
-                  disabled={loading}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-base shadow-lg shadow-orange-500/25 transition-all transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
-                >
-                  {loading ? 'Processing Payment...' : `Pay ₹${finalPrice.toLocaleString('en-IN')} & Unlock Course`}
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
