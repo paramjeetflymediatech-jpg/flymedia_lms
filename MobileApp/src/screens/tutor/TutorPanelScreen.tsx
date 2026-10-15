@@ -128,7 +128,10 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const [classFilter, setClassFilter] = useState<'UPCOMING' | 'PAST' | 'ALL'>('UPCOMING');
 
   // Availability Tab Data
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [slots, setSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
@@ -251,24 +254,28 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
-  const getInitialStartTimeForDate = (targetDate: string): { start: string; end: string } => {
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (targetDate === today) {
+  const now = new Date();
+  const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const minAllowedStartMinutesToday = currentMinutes + 120; // 2 hours advance notice
+
+  const getInitialStartTimeForDate = (targetDate?: string): { start: string; end: string } => {
+    const checkDate = targetDate || selectedDate || todayString;
+    if (checkDate === todayString) {
       // Must be at least 2 hours in advance (120 mins)
-      const minStartMinutes = now.getHours() * 60 + now.getMinutes() + 120;
-      const startHour = Math.ceil(minStartMinutes / 60);
-      if (startHour <= 22) {
-        const startH = String(startHour).padStart(2, '0');
-        const endH = String(Math.min(23, startHour + 1)).padStart(2, '0');
+      const nextHour = Math.ceil(minAllowedStartMinutesToday / 60);
+      if (nextHour <= 22) {
+        const startH = String(nextHour).padStart(2, '0');
+        const endH = String(Math.min(23, nextHour + 1)).padStart(2, '0');
         return { start: `${startH}:00`, end: `${endH}:00` };
       }
+      return { start: '22:00', end: '23:00' };
     }
     return { start: '10:00', end: '11:00' };
   };
 
   const handleOpenAddSlotModal = () => {
-    const { start, end } = getInitialStartTimeForDate(selectedDate);
+    const { start, end } = getInitialStartTimeForDate(selectedDate || todayString);
     setNewSlotStartTime(start);
     setNewSlotEndTime(end);
     setActiveTimePicker('start');
@@ -276,6 +283,9 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   };
 
   const handleSelectPresetSlot = (start: string, end: string) => {
+    if (selectedDate === todayString && parseTimeToMinutes(start) < minAllowedStartMinutesToday) {
+      return;
+    }
     setNewSlotStartTime(start);
     setNewSlotEndTime(end);
   };
@@ -288,9 +298,22 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
   const handleSelectHour = (hour: string, type: 'start' | 'end') => {
     const current = type === 'start' ? newSlotStartTime : newSlotEndTime;
     const parts = (current || '10:00').split(':');
-    const minPart = parts[1] || '00';
-    const newTime = `${hour}:${minPart}`;
+    let minPart = parts[1] || '00';
+    const hNum = parseInt(hour, 10);
+
     if (type === 'start') {
+      if (selectedDate === todayString) {
+        // If current minute makes this slot < 2h advance, auto-clamp to first valid minute in this hour
+        if (hNum * 60 + parseInt(minPart, 10) < minAllowedStartMinutesToday) {
+          const firstValidMin = MINUTE_PRESETS.find(
+            (m) => hNum * 60 + parseInt(m, 10) >= minAllowedStartMinutesToday
+          );
+          if (firstValidMin) {
+            minPart = firstValidMin;
+          }
+        }
+      }
+      const newTime = `${hour}:${minPart}`;
       setNewSlotStartTime(newTime);
       const startM = parseTimeToMinutes(newTime);
       const endM = parseTimeToMinutes(newSlotEndTime);
@@ -298,6 +321,16 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
         setNewSlotEndTime(addMinutesToTime(newTime, 60));
       }
     } else {
+      // type === 'end'
+      if (hNum * 60 + parseInt(minPart, 10) <= selectedStartMinutes) {
+        const firstValidMin = MINUTE_PRESETS.find(
+          (m) => hNum * 60 + parseInt(m, 10) > selectedStartMinutes
+        );
+        if (firstValidMin) {
+          minPart = firstValidMin;
+        }
+      }
+      const newTime = `${hour}:${minPart}`;
       setNewSlotEndTime(newTime);
     }
   };
@@ -306,6 +339,15 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     const current = type === 'start' ? newSlotStartTime : newSlotEndTime;
     const parts = (current || '10:00').split(':');
     const hourPart = parts[0] || '10';
+    const totalMin = parseInt(hourPart, 10) * 60 + parseInt(minute, 10);
+
+    if (type === 'start' && selectedDate === todayString && totalMin < minAllowedStartMinutesToday) {
+      return;
+    }
+    if (type === 'end' && totalMin <= selectedStartMinutes) {
+      return;
+    }
+
     const newTime = `${hourPart}:${minute}`;
     if (type === 'start') {
       setNewSlotStartTime(newTime);
@@ -318,11 +360,6 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
       setNewSlotEndTime(newTime);
     }
   };
-
-  const now = new Date();
-  const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const minAllowedStartMinutesToday = currentMinutes + 120; // 2 hours advance notice
 
   const selectedStartMinutes = parseTimeToMinutes(newSlotStartTime);
   const selectedEndMinutes = parseTimeToMinutes(newSlotEndTime);
@@ -1447,22 +1484,35 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                     const isSelected = currentHour === hour;
                     const hNum = parseInt(hour, 10);
                     const label12 = hNum === 0 ? '12 AM' : hNum < 12 ? `${hNum} AM` : hNum === 12 ? '12 PM' : `${hNum - 12} PM`;
-                    const isHourTooSoon = selectedDate === todayString && activeTimePicker === 'start' && (hNum * 60 + 59) < minAllowedStartMinutesToday;
+                    
+                    // For start time: disable if max preset minute (45) is still < 2 hours advance notice
+                    const isHourTooSoon =
+                      selectedDate === todayString &&
+                      activeTimePicker === 'start' &&
+                      (hNum * 60 + 45) < minAllowedStartMinutesToday;
+
+                    // For end time: disable if entire hour is <= selected start minutes
+                    const isHourInvalidEnd =
+                      activeTimePicker === 'end' &&
+                      (hNum * 60 + 59) <= selectedStartMinutes;
+
+                    const isHourDisabled = isHourTooSoon || isHourInvalidEnd;
+
                     return (
                       <TouchableOpacity
                         key={hour}
                         style={[
                           styles.hourChip,
                           isSelected && styles.hourChipActive,
-                          isHourTooSoon && { opacity: 0.35, backgroundColor: Colors.border },
+                          isHourDisabled && { opacity: 0.35, backgroundColor: Colors.border },
                         ]}
-                        disabled={isHourTooSoon}
+                        disabled={isHourDisabled}
                         onPress={() => handleSelectHour(hour, activeTimePicker)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.hourChipNum, isSelected && styles.hourChipNumActive, isHourTooSoon && { color: Colors.textMuted }]}>{hour}:00</Text>
-                        <Text style={[styles.hourChipLabel, isSelected && styles.hourChipLabelActive, isHourTooSoon && { color: Colors.textMuted }]}>
-                          {isHourTooSoon ? '<2h' : label12}
+                        <Text style={[styles.hourChipNum, isSelected && styles.hourChipNumActive, isHourDisabled && { color: Colors.textMuted }]}>{hour}:00</Text>
+                        <Text style={[styles.hourChipLabel, isSelected && styles.hourChipLabelActive, isHourDisabled && { color: Colors.textMuted }]}>
+                          {isHourTooSoon ? '<2h' : isHourInvalidEnd ? '<=Start' : label12}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -1475,14 +1525,40 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   {MINUTE_PRESETS.map((minute) => {
                     const currentMinute = ((activeTimePicker === 'start' ? newSlotStartTime : newSlotEndTime) || '').split(':')[1] || '00';
                     const isSelected = currentMinute === minute;
+                    const currentHourStr = ((activeTimePicker === 'start' ? newSlotStartTime : newSlotEndTime) || '').split(':')[0] || '10';
+                    const currentHourNum = parseInt(currentHourStr, 10);
+                    const totalMin = currentHourNum * 60 + parseInt(minute, 10);
+
+                    const isMinuteTooSoon =
+                      selectedDate === todayString &&
+                      activeTimePicker === 'start' &&
+                      totalMin < minAllowedStartMinutesToday;
+
+                    const isMinuteInvalidEnd =
+                      activeTimePicker === 'end' &&
+                      totalMin <= selectedStartMinutes;
+
+                    const isMinuteDisabled = isMinuteTooSoon || isMinuteInvalidEnd;
+
                     return (
                       <TouchableOpacity
                         key={minute}
-                        style={[styles.minuteChip, isSelected && styles.minuteChipActive]}
+                        style={[
+                          styles.minuteChip,
+                          isSelected && styles.minuteChipActive,
+                          isMinuteDisabled && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isMinuteDisabled}
                         onPress={() => handleSelectMinute(minute, activeTimePicker)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.minuteChipText, isSelected && styles.minuteChipTextActive]}>
+                        <Text
+                          style={[
+                            styles.minuteChipText,
+                            isSelected && styles.minuteChipTextActive,
+                            isMinuteDisabled && { color: Colors.textMuted },
+                          ]}
+                        >
                           :{minute} min
                         </Text>
                       </TouchableOpacity>
@@ -1584,8 +1660,10 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   </Text>
                 </View>
               )}
+            </ScrollView>
 
-              {/* SUBMIT BUTTON */}
+            {/* FIXED FOOTER (ALWAYS VISIBLE) */}
+            <View style={styles.modalFixedFooter}>
               <TouchableOpacity
                 style={[
                   styles.modalSubmitBtn,
@@ -1613,7 +1691,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   </Text>
                 )}
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </View>
       </Modal>
@@ -2781,6 +2859,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: 'hidden',
+    width: '100%',
+    maxHeight: '88%',
     ...Shadows.medium,
   },
   modalHeader: {
@@ -2806,7 +2886,6 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   modalScrollBody: {
-    maxHeight: 520,
     padding: 16,
   },
   modalBody: {
@@ -3116,13 +3195,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#b45309',
   },
+  modalFixedFooter: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
   modalSubmitBtn: {
     backgroundColor: '#2563eb',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 10,
   },
   modalSubmitBtnDisabled: {
     backgroundColor: Colors.border,
