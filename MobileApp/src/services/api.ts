@@ -651,7 +651,7 @@ export const ApiService = {
     }
   },
 
-  async addTutorSlot(data: { date: string; startTime: string; endTime: string }, token: string) {
+  async addTutorSlot(data: { date: string; startTime: string; endTime: string; clientDate?: string; clientCurrentMinutes?: number }, token: string) {
     try {
       const response = await fetch(`${API_BASE_URL}/tutor/availability`, {
         method: 'POST',

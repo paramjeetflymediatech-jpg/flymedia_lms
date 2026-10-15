@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { date, startTime, endTime } = body;
+    const { date, startTime, endTime, clientDate, clientCurrentMinutes } = body;
 
     if (!date || !startTime || !endTime) {
       return NextResponse.json({ success: false, error: 'Date, start time, and end time are required' }, { status: 400 });
@@ -122,16 +122,25 @@ export async function POST(request: Request) {
     const normalizedEndTime = formatMinutesToTime(newEndMinutes);
 
     const now = new Date();
-    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const serverToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const serverMinutes = now.getHours() * 60 + now.getMinutes();
 
-    if (date < todayString) {
+    const todayDate = clientDate || serverToday;
+    const currentMin = typeof clientCurrentMinutes === 'number' ? clientCurrentMinutes : serverMinutes;
+
+    if (date < todayDate) {
       return NextResponse.json({ success: false, error: 'Cannot add availability for past dates' }, { status: 400 });
     }
 
-    if (date === todayString) {
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      if (newStartMinutes <= currentMinutes) {
-        return NextResponse.json({ success: false, error: 'Cannot add slots in the past for today' }, { status: 400 });
+    if (date === todayDate) {
+      if (newStartMinutes <= currentMin) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Cannot add slots in the past for today. ${normalizedStartTime} has already passed.`,
+          },
+          { status: 400 }
+        );
       }
     }
 

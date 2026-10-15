@@ -245,9 +245,24 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
+  const getInitialStartTimeForDate = (targetDate: string): { start: string; end: string } => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (targetDate === today) {
+      const nextHour = now.getHours() + 1;
+      if (nextHour < 23) {
+        const startH = String(nextHour).padStart(2, '0');
+        const endH = String(nextHour + 1).padStart(2, '0');
+        return { start: `${startH}:00`, end: `${endH}:00` };
+      }
+    }
+    return { start: '10:00', end: '11:00' };
+  };
+
   const handleOpenAddSlotModal = () => {
-    if (!newSlotStartTime) setNewSlotStartTime('10:00');
-    if (!newSlotEndTime) setNewSlotEndTime('11:00');
+    const { start, end } = getInitialStartTimeForDate(selectedDate);
+    setNewSlotStartTime(start);
+    setNewSlotEndTime(end);
     setActiveTimePicker('start');
     setShowAddSlotModal(true);
   };
@@ -296,12 +311,20 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     }
   };
 
+  const now = new Date();
+  const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   const selectedStartMinutes = parseTimeToMinutes(newSlotStartTime);
   const selectedEndMinutes = parseTimeToMinutes(newSlotEndTime);
   const selectedDurationMinutes =
     selectedStartMinutes >= 0 && selectedEndMinutes > selectedStartMinutes
       ? selectedEndMinutes - selectedStartMinutes
       : 0;
+
+  const isPastDate = !!selectedDate && selectedDate < todayString;
+  const isPastTime =
+    !!selectedDate && selectedDate === todayString && selectedStartMinutes >= 0 && selectedStartMinutes <= currentMinutes;
 
   const currentOverlappingSlot = slots.find((slot) => {
     const sMin = parseTimeToMinutes(slot.startTime);
@@ -314,6 +337,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     selectedStartMinutes < 0 ||
     selectedEndMinutes < 0 ||
     selectedStartMinutes >= selectedEndMinutes ||
+    isPastDate ||
+    isPastTime ||
     !!currentOverlappingSlot;
 
   const handleAddSlot = async () => {
@@ -332,6 +357,23 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
 
     if (startMin >= endMin) {
       Alert.alert('Invalid Time', 'End time must be after start time.');
+      return;
+    }
+
+    const clientNow = new Date();
+    const clientToday = `${clientNow.getFullYear()}-${String(clientNow.getMonth() + 1).padStart(2, '0')}-${String(clientNow.getDate()).padStart(2, '0')}`;
+    const clientMin = clientNow.getHours() * 60 + clientNow.getMinutes();
+
+    if (selectedDate < clientToday) {
+      Alert.alert('Past Date', 'Cannot add availability for past dates.');
+      return;
+    }
+
+    if (selectedDate === clientToday && startMin <= clientMin) {
+      Alert.alert(
+        'Past Time',
+        `Cannot add a slot for ${formatTo12Hour(newSlotStartTime)} as this time has already passed today. Please select an upcoming time.`
+      );
       return;
     }
 
@@ -357,6 +399,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
         date: selectedDate,
         startTime: newSlotStartTime.trim(),
         endTime: newSlotEndTime.trim(),
+        clientDate: clientToday,
+        clientCurrentMinutes: clientMin,
       },
       user!.token!
     );
@@ -365,8 +409,9 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     if (res && res.success) {
       Alert.alert('Success', 'Availability slot added successfully!');
       setShowAddSlotModal(false);
-      setNewSlotStartTime('10:00');
-      setNewSlotEndTime('11:00');
+      const nextDefaults = getInitialStartTimeForDate(selectedDate);
+      setNewSlotStartTime(nextDefaults.start);
+      setNewSlotEndTime(nextDefaults.end);
       loadSlots(selectedDate);
       loadDashboardData();
     } else {
@@ -1388,15 +1433,23 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                     const isSelected = currentHour === hour;
                     const hNum = parseInt(hour, 10);
                     const label12 = hNum === 0 ? '12 AM' : hNum < 12 ? `${hNum} AM` : hNum === 12 ? '12 PM' : `${hNum - 12} PM`;
+                    const isHourPast = selectedDate === todayString && activeTimePicker === 'start' && (hNum * 60 + 59) <= currentMinutes;
                     return (
                       <TouchableOpacity
                         key={hour}
-                        style={[styles.hourChip, isSelected && styles.hourChipActive]}
+                        style={[
+                          styles.hourChip,
+                          isSelected && styles.hourChipActive,
+                          isHourPast && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isHourPast}
                         onPress={() => handleSelectHour(hour, activeTimePicker)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.hourChipNum, isSelected && styles.hourChipNumActive]}>{hour}:00</Text>
-                        <Text style={[styles.hourChipLabel, isSelected && styles.hourChipLabelActive]}>{label12}</Text>
+                        <Text style={[styles.hourChipNum, isSelected && styles.hourChipNumActive, isHourPast && { color: Colors.textMuted }]}>{hour}:00</Text>
+                        <Text style={[styles.hourChipLabel, isSelected && styles.hourChipLabelActive, isHourPast && { color: Colors.textMuted }]}>
+                          {isHourPast ? 'Past' : label12}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -1430,15 +1483,21 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
                   {PRESET_SLOTS.map((preset) => {
                     const isSelected = newSlotStartTime === preset.start && newSlotEndTime === preset.end;
+                    const isPresetPast = selectedDate === todayString && parseTimeToMinutes(preset.start) <= currentMinutes;
                     return (
                       <TouchableOpacity
                         key={preset.start}
-                        style={[styles.presetSlotChip, isSelected && styles.presetSlotChipActive]}
+                        style={[
+                          styles.presetSlotChip,
+                          isSelected && styles.presetSlotChipActive,
+                          isPresetPast && { opacity: 0.35, backgroundColor: Colors.border },
+                        ]}
+                        disabled={isPresetPast}
                         onPress={() => handleSelectPresetSlot(preset.start, preset.end)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.presetSlotChipText, isSelected && styles.presetSlotChipTextActive]}>
-                          {preset.label}
+                        <Text style={[styles.presetSlotChipText, isSelected && styles.presetSlotChipTextActive, isPresetPast && { color: Colors.textMuted }]}>
+                          {preset.label} {isPresetPast ? '(Passed)' : ''}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -1472,6 +1531,26 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                   </View>
                 </View>
               </View>
+
+              {/* PAST DATE WARNING */}
+              {isPastDate && (
+                <View style={styles.overlapWarningBanner}>
+                  <AlertCircle size={16} color="#dc2626" />
+                  <Text style={styles.overlapWarningText}>
+                    Cannot add availability for past dates ({selectedDate}).
+                  </Text>
+                </View>
+              )}
+
+              {/* PAST TIME WARNING */}
+              {isPastTime && (
+                <View style={styles.overlapWarningBanner}>
+                  <AlertCircle size={16} color="#dc2626" />
+                  <Text style={styles.overlapWarningText}>
+                    This time ({formatTo12Hour(newSlotStartTime)}) has already passed today.
+                  </Text>
+                </View>
+              )}
 
               {/* VALIDATION & OVERLAP STATUS BANNER */}
               {currentOverlappingSlot && (
@@ -1509,6 +1588,12 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                     {isSlotTimeInvalid
                       ? currentOverlappingSlot
                         ? 'Time Slot Overlaps'
+                        : isPastDate
+                        ? 'Past Date'
+                        : isPastTime
+                        ? 'Time Already Passed'
+                        : selectedStartMinutes >= selectedEndMinutes
+                        ? 'End Must Be After Start'
                         : 'Choose Valid Time'
                       : `Create Slot (${formatTo12Hour(newSlotStartTime)} - ${formatTo12Hour(newSlotEndTime)})`}
                   </Text>
