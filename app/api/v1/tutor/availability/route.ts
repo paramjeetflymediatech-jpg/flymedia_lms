@@ -74,6 +74,25 @@ export async function GET(request: Request) {
   }
 }
 
+function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr) return -1;
+  const clean = timeStr.trim().split(' ')[0];
+  const parts = clean.split(':');
+  if (parts.length < 2) return -1;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return -1;
+  }
+  return hours * 60 + minutes;
+}
+
+function formatMinutesToTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
 export async function POST(request: Request) {
   try {
     const authUser = await getAuthUserFromRequest(request);
@@ -88,29 +107,67 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Date, start time, and end time are required' }, { status: 400 });
     }
 
-    if (startTime >= endTime) {
+    const newStartMinutes = parseTimeToMinutes(startTime);
+    const newEndMinutes = parseTimeToMinutes(endTime);
+
+    if (newStartMinutes < 0 || newEndMinutes < 0) {
+      return NextResponse.json({ success: false, error: 'Invalid time format. Please provide time as HH:mm (e.g. 10:00)' }, { status: 400 });
+    }
+
+    if (newStartMinutes >= newEndMinutes) {
       return NextResponse.json({ success: false, error: 'End time must be after start time' }, { status: 400 });
     }
 
-    // Check duplicate
-    const existing = await TutorAvailability.findOne({
+    const normalizedStartTime = formatMinutesToTime(newStartMinutes);
+    const normalizedEndTime = formatMinutesToTime(newEndMinutes);
+
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if (date < todayString) {
+      return NextResponse.json({ success: false, error: 'Cannot add availability for past dates' }, { status: 400 });
+    }
+
+    if (date === todayString) {
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (newStartMinutes <= currentMinutes) {
+        return NextResponse.json({ success: false, error: 'Cannot add slots in the past for today' }, { status: 400 });
+      }
+    }
+
+    // Check for overlapping active slots on the same date for this tutor
+    const existingSlots = await TutorAvailability.findAll({
       where: {
         tutorId: authUser.userId,
         date,
-        startTime,
-        endTime,
+        status: { [Op.ne]: 'CANCELLED' },
       },
     });
 
-    if (existing) {
-      return NextResponse.json({ success: false, error: 'A slot already exists for this exact time' }, { status: 400 });
+    const overlappingSlot = existingSlots.find((slot) => {
+      const slotStart = parseTimeToMinutes(slot.startTime);
+      const slotEnd = parseTimeToMinutes(slot.endTime);
+      if (slotStart < 0 || slotEnd < 0) return false;
+
+      // Intervals [newStart, newEnd) and [slotStart, slotEnd) overlap if:
+      return newStartMinutes < slotEnd && newEndMinutes > slotStart;
+    });
+
+    if (overlappingSlot) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `This time slot (${normalizedStartTime} - ${normalizedEndTime}) overlaps with an existing slot (${overlappingSlot.startTime} - ${overlappingSlot.endTime})`,
+        },
+        { status: 400 }
+      );
     }
 
     const newSlot = await TutorAvailability.create({
       tutorId: authUser.userId,
       date,
-      startTime,
-      endTime,
+      startTime: normalizedStartTime,
+      endTime: normalizedEndTime,
       isBooked: false,
       status: 'SCHEDULED',
     });

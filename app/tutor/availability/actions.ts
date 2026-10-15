@@ -96,6 +96,25 @@ export async function getMonthAvailabilitySlots(year: number, month: number) {
   }
 }
 
+function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr) return -1;
+  const clean = timeStr.trim().split(' ')[0];
+  const parts = clean.split(':');
+  if (parts.length < 2) return -1;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return -1;
+  }
+  return hours * 60 + minutes;
+}
+
+function formatMinutesToTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
 // Add a new availability slot
 export async function addAvailabilitySlot(date: string, startTime: string, endTime: string) {
   try {
@@ -106,9 +125,19 @@ export async function addAvailabilitySlot(date: string, startTime: string, endTi
       return handleResponse(false, "Date, start time, and end time are required");
     }
 
-    if (startTime >= endTime) {
+    const newStartMinutes = parseTimeToMinutes(startTime);
+    const newEndMinutes = parseTimeToMinutes(endTime);
+
+    if (newStartMinutes < 0 || newEndMinutes < 0) {
+      return handleResponse(false, "Invalid time format. Please provide time as HH:mm (e.g. 10:00)");
+    }
+
+    if (newStartMinutes >= newEndMinutes) {
       return handleResponse(false, "End time must be after start time");
     }
+
+    const normalizedStartTime = formatMinutesToTime(newStartMinutes);
+    const normalizedEndTime = formatMinutesToTime(newEndMinutes);
 
     const now = new Date();
     const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -118,45 +147,44 @@ export async function addAvailabilitySlot(date: string, startTime: string, endTi
     }
 
     if (date === todayString) {
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      if (startTime <= currentTime) {
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (newStartMinutes <= currentMinutes) {
         return handleResponse(false, "Cannot add slots in the past for today");
       }
     }
 
-    // Ensure slot does not already exist
-    const existingSlot = await TutorAvailability.findOne({
-      where: { tutorId: user.id, date, startTime, endTime }
-    });
-
-    if (existingSlot) {
-      return handleResponse(false, "This time slot already exists");
-    }
-
-    // Check for overlapping slots
+    // Check for overlapping active slots on the same date for this tutor
     const allSlots = await TutorAvailability.findAll({
-      where: { tutorId: user.id, date }
+      where: {
+        tutorId: user.id,
+        date,
+        status: { [Op.ne]: 'CANCELLED' },
+      }
     });
 
-    const isOverlapping = allSlots.some(slot => {
-      // Very basic string comparison works for "HH:mm" 24h format
-      return (
-        (startTime >= slot.startTime && startTime < slot.endTime) ||
-        (endTime > slot.startTime && endTime <= slot.endTime) ||
-        (startTime <= slot.startTime && endTime >= slot.endTime)
+    const overlappingSlot = allSlots.find(slot => {
+      const slotStart = parseTimeToMinutes(slot.startTime);
+      const slotEnd = parseTimeToMinutes(slot.endTime);
+      if (slotStart < 0 || slotEnd < 0) return false;
+
+      // Intervals [newStart, newEnd) and [slotStart, slotEnd) overlap if:
+      return newStartMinutes < slotEnd && newEndMinutes > slotStart;
+    });
+
+    if (overlappingSlot) {
+      return handleResponse(
+        false,
+        `This time slot (${normalizedStartTime} - ${normalizedEndTime}) overlaps with an existing slot (${overlappingSlot.startTime} - ${overlappingSlot.endTime})`
       );
-    });
-
-    if (isOverlapping) {
-      return handleResponse(false, "This time slot overlaps with an existing one");
     }
 
     const newSlot = await TutorAvailability.create({
       tutorId: user.id,
       date,
-      startTime,
-      endTime,
+      startTime: normalizedStartTime,
+      endTime: normalizedEndTime,
       isBooked: false,
+      status: 'SCHEDULED',
     });
 
     revalidatePath("/tutor/availability");

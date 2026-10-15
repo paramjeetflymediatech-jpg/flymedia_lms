@@ -178,14 +178,51 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     }
   };
 
+  const parseTimeToMinutes = (timeStr: string): number => {
+    if (!timeStr) return -1;
+    const clean = timeStr.trim().split(' ')[0];
+    const parts = clean.split(':');
+    if (parts.length < 2) return -1;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return -1;
+    }
+    return hours * 60 + minutes;
+  };
+
   const handleAddSlot = async () => {
     if (!newSlotStartTime.trim() || !newSlotEndTime.trim()) {
       Alert.alert('Required', 'Please enter both start time and end time (e.g. 10:00 and 11:00).');
       return;
     }
 
-    if (newSlotStartTime >= newSlotEndTime) {
+    const startMin = parseTimeToMinutes(newSlotStartTime);
+    const endMin = parseTimeToMinutes(newSlotEndTime);
+
+    if (startMin < 0 || endMin < 0) {
+      Alert.alert('Invalid Time', 'Please enter time in HH:mm format (e.g. 10:00 or 14:30).');
+      return;
+    }
+
+    if (startMin >= endMin) {
       Alert.alert('Invalid Time', 'End time must be after start time.');
+      return;
+    }
+
+    // Client-side overlap pre-check
+    const overlapping = slots.find((slot) => {
+      const sMin = parseTimeToMinutes(slot.startTime);
+      const eMin = parseTimeToMinutes(slot.endTime);
+      if (sMin < 0 || eMin < 0) return false;
+      return startMin < eMin && endMin > sMin;
+    });
+
+    if (overlapping) {
+      Alert.alert(
+        'Overlapping Slot',
+        `This time slot overlaps with an existing slot (${overlapping.startTime} - ${overlapping.endTime}). Please choose a different time.`
+      );
       return;
     }
 
@@ -203,6 +240,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
     if (res && res.success) {
       Alert.alert('Success', 'Availability slot added successfully!');
       setShowAddSlotModal(false);
+      setNewSlotStartTime('');
+      setNewSlotEndTime('');
       loadSlots(selectedDate);
       loadDashboardData();
     } else {
