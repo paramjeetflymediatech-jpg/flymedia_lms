@@ -56,8 +56,8 @@ export async function POST(request: Request) {
       level: level || 'Beginner to Advanced',
       status: 'PUBLISHED',
       mode: 'BOTH',
-      skills: Array.isArray(skills) ? skills : ['Hands-on Projects', 'Industry Mentorship'],
-      techStack: Array.isArray(techStack) ? techStack : ['Industry Tools', 'Git'],
+      skills: Array.isArray(skills) ? (skills as string[]) : ['Hands-on Projects', 'Industry Mentorship'],
+      techStack: Array.isArray(techStack) ? (techStack as string[]) : ['Industry Tools', 'Git'],
       highlights: [
         { title: 'Live Mentorship', description: 'Instructor-led training sessions.' },
         { title: 'Practical Portfolio', description: 'Real-world project deliverables.' },

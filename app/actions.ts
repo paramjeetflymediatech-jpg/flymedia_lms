@@ -494,18 +494,19 @@ export async function adminCreatePackage(formData: FormData) {
     const existing = await Package.findOne({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
 
-    let techStackParsed = null;
+    let techStackParsed: any = null;
     const techStackRaw = formData.get('techStack') as string;
     if (techStackRaw !== null) {
       try {
-        let parsed = techStackRaw.trim() ? JSON.parse(techStackRaw) : null;
+        let parsed: any = techStackRaw.trim() ? JSON.parse(techStackRaw) : null;
         if (parsed && Array.isArray(parsed)) {
-          for (let i = 0; i < parsed.length; i++) {
+          const list: any[] = parsed;
+          for (let i = 0; i < list.length; i++) {
             const file = formData.get(`tech_icon_${i}`) as File | null;
             const uploadedUrl = await saveLocalFile(file, 'tech');
-            if (uploadedUrl) parsed[i].iconUrl = uploadedUrl;
-            if (typeof parsed[i] === 'string') {
-              parsed[i] = { name: parsed[i], iconUrl: '' };
+            if (uploadedUrl) list[i].iconUrl = uploadedUrl;
+            if (typeof list[i] === 'string') {
+              list[i] = { name: list[i], iconUrl: '' };
             }
           }
         }
@@ -514,31 +515,31 @@ export async function adminCreatePackage(formData: FormData) {
     }
 
     // Dynamic fields
-    let benefitsParsed = null;
+    let benefitsParsed: any = null;
     const benefitsRaw = formData.get('benefits') as string;
     if (benefitsRaw !== null) {
       try { benefitsParsed = benefitsRaw.trim() ? JSON.parse(benefitsRaw) : null; } catch {}
     }
 
-    let whatYoullLearnParsed = null;
+    let whatYoullLearnParsed: any = null;
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
     if (whatYoullLearnRaw !== null) {
       try { whatYoullLearnParsed = whatYoullLearnRaw.trim() ? JSON.parse(whatYoullLearnRaw) : null; } catch {}
     }
 
-    let highlightsParsed = null;
+    let highlightsParsed: any = null;
     const highlightsRaw = formData.get('highlights') as string;
     if (highlightsRaw !== null) {
       try { highlightsParsed = highlightsRaw.trim() ? JSON.parse(highlightsRaw) : null; } catch {}
     }
 
-    let courseModulesParsed = null;
+    let courseModulesParsed: any = null;
     const courseModulesRaw = formData.get('courseModules') as string;
     if (courseModulesRaw !== null) {
       try { courseModulesParsed = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null; } catch {}
     }
 
-    let faqsParsed = null;
+    let faqsParsed: any = null;
     const faqsRaw = formData.get('faqs') as string;
     if (faqsRaw !== null) {
       try { faqsParsed = faqsRaw.trim() ? JSON.parse(faqsRaw) : null; } catch {}
@@ -653,100 +654,104 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
     if (durationRaw !== null) pkg.duration = durationRaw;
 
 
+    const pkgAny = pkg as any;
     // Benefits of This Course (JSON array)
     const benefitsRaw = formData.get('benefits') as string;
     if (benefitsRaw !== null) {
-      try { pkg.benefits = benefitsRaw.trim() ? JSON.parse(benefitsRaw) : null; } catch { pkg.benefits = null; }
+      try { pkgAny.benefits = benefitsRaw.trim() ? JSON.parse(benefitsRaw) : null; } catch { pkgAny.benefits = null; }
     }
 
     // What You'll Learn (JSON array)
     const whatYoullLearnRaw = formData.get('whatYoullLearn') as string;
     if (whatYoullLearnRaw !== null) {
-      try { pkg.whatYoullLearn = whatYoullLearnRaw.trim() ? JSON.parse(whatYoullLearnRaw) : null; } catch {}
+      try { pkgAny.whatYoullLearn = whatYoullLearnRaw.trim() ? JSON.parse(whatYoullLearnRaw) : null; } catch {}
     }
 
     // Instructors (JSON array)
     const instructorsRaw = formData.get('instructors') as string;
     if (instructorsRaw !== null) {
       try {
-        let parsed = instructorsRaw.trim() ? JSON.parse(instructorsRaw) : null;
+        let parsed: any = instructorsRaw.trim() ? JSON.parse(instructorsRaw) : null;
         if (parsed && Array.isArray(parsed)) {
-          for (let i = 0; i < parsed.length; i++) {
+          const list: any[] = parsed;
+          for (let i = 0; i < list.length; i++) {
             const file = formData.get(`instructor_avatar_${i}`) as File | null;
             const uploadedUrl = await saveLocalFile(file, 'instructors');
-            if (uploadedUrl) parsed[i].avatar = uploadedUrl;
+            if (uploadedUrl) list[i].avatar = uploadedUrl;
           }
         }
-        pkg.instructors = parsed;
-      } catch { pkg.instructors = null; }
+        pkgAny.instructors = parsed;
+      } catch { pkgAny.instructors = null; }
     }
 
     // Success Stories (JSON array)
     const successStoriesRaw = formData.get('successStories') as string;
     if (successStoriesRaw !== null) {
       try {
-        let parsed = successStoriesRaw.trim() ? JSON.parse(successStoriesRaw) : null;
+        let parsed: any = successStoriesRaw.trim() ? JSON.parse(successStoriesRaw) : null;
         if (parsed && Array.isArray(parsed)) {
-          for (let i = 0; i < parsed.length; i++) {
+          const list: any[] = parsed;
+          for (let i = 0; i < list.length; i++) {
             const file = formData.get(`story_avatar_${i}`) as File | null;
             const uploadedUrl = await saveLocalFile(file, 'stories');
-            if (uploadedUrl) parsed[i].avatar = uploadedUrl;
+            if (uploadedUrl) list[i].avatar = uploadedUrl;
           }
         }
-        pkg.successStories = parsed;
-      } catch { pkg.successStories = null; }
+        pkgAny.successStories = parsed;
+      } catch { pkgAny.successStories = null; }
     }
 
     // Course Modules (JSON array)
     const courseModulesRaw = formData.get('courseModules') as string;
     if (courseModulesRaw !== null) {
       try {
-        pkg.courseModules = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null;
-      } catch { pkg.courseModules = null; }
+        pkgAny.courseModules = courseModulesRaw.trim() ? JSON.parse(courseModulesRaw) : null;
+      } catch { pkgAny.courseModules = null; }
     }
 
     // New Dynamic JSON Fields
     const highlightsRaw = formData.get('highlights') as string;
     if (highlightsRaw !== null) {
-      try { pkg.highlights = highlightsRaw.trim() ? JSON.parse(highlightsRaw) : null; } catch {}
+      try { pkgAny.highlights = highlightsRaw.trim() ? JSON.parse(highlightsRaw) : null; } catch {}
     }
     const skillsRaw = formData.get('skills') as string;
     if (skillsRaw !== null) {
       try {
-        let parsed = skillsRaw.trim() ? JSON.parse(skillsRaw) : null;
+        let parsed: any = skillsRaw.trim() ? JSON.parse(skillsRaw) : null;
         if (parsed && Array.isArray(parsed)) {
-          for (let i = 0; i < parsed.length; i++) {
+          const list: any[] = parsed;
+          for (let i = 0; i < list.length; i++) {
             const file = formData.get(`skill_icon_${i}`) as File | null;
             const uploadedUrl = await saveLocalFile(file, 'skills');
-            if (uploadedUrl) parsed[i].iconUrl = uploadedUrl;
-            if (typeof parsed[i] === 'string') {
-              parsed[i] = { name: parsed[i], iconUrl: '', link: '' };
+            if (uploadedUrl) list[i].iconUrl = uploadedUrl;
+            if (typeof list[i] === 'string') {
+              list[i] = { name: list[i], iconUrl: '', link: '' };
             }
           }
         }
-        pkg.skills = parsed;
-      } catch { pkg.skills = null; }
+        pkgAny.skills = parsed;
+      } catch { pkgAny.skills = null; }
     }
     const techStackRaw = formData.get('techStack') as string;
     if (techStackRaw !== null) {
-      try { pkg.techStack = techStackRaw.trim() ? JSON.parse(techStackRaw) : null; } catch {}
+      try { pkgAny.techStack = techStackRaw.trim() ? JSON.parse(techStackRaw) : null; } catch {}
     }
     const projectDetailsRaw = formData.get('projectDetails') as string;
     if (projectDetailsRaw !== null) {
-      try { pkg.projectDetails = projectDetailsRaw.trim() ? JSON.parse(projectDetailsRaw) : null; } catch {}
+      try { pkgAny.projectDetails = projectDetailsRaw.trim() ? JSON.parse(projectDetailsRaw) : null; } catch {}
     }
     const targetAudienceRaw = formData.get('targetAudience') as string;
     if (targetAudienceRaw !== null) {
-      try { pkg.targetAudience = targetAudienceRaw.trim() ? JSON.parse(targetAudienceRaw) : null; } catch {}
+      try { pkgAny.targetAudience = targetAudienceRaw.trim() ? JSON.parse(targetAudienceRaw) : null; } catch {}
     }
     const faqsRaw = formData.get('faqs') as string;
     if (faqsRaw !== null) {
-      try { pkg.faqs = faqsRaw.trim() ? JSON.parse(faqsRaw) : null; } catch {}
+      try { pkgAny.faqs = faqsRaw.trim() ? JSON.parse(faqsRaw) : null; } catch {}
     }
     const certificateDataRaw = formData.get('certificateData') as string;
     if (certificateDataRaw !== null) {
       try {
-        let parsed = certificateDataRaw.trim() ? JSON.parse(certificateDataRaw) : null;
+        let parsed: any = certificateDataRaw.trim() ? JSON.parse(certificateDataRaw) : null;
         if (parsed && parsed.providers && Array.isArray(parsed.providers)) {
           for (let i = 0; i < parsed.providers.length; i++) {
             const file = formData.get(`cert_provider_logo_${i}`) as File | null;
@@ -754,8 +759,8 @@ export async function adminUpdatePackage(packageId: string, formData: FormData) 
             if (uploadedUrl) parsed.providers[i].logo = uploadedUrl;
           }
         }
-        pkg.certificateData = parsed;
-      } catch { pkg.certificateData = null; }
+        pkgAny.certificateData = parsed;
+      } catch { pkgAny.certificateData = null; }
     }
 
     await pkg.save();
