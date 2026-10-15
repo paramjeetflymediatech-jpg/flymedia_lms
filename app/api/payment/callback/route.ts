@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { Payment, Enrollment, Package } from '../../../../src/db/models';
+import crypto from 'crypto';
+import { Payment, Enrollment } from '../../../../src/db/models';
 import { StandardCheckoutClient, Env } from 'pg-sdk-node';
 
 export async function POST(req: Request) {
@@ -7,7 +8,6 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  // Sometimes gateways redirect via GET for user return
   return await handleCallback(req);
 }
 
@@ -37,21 +37,54 @@ async function handleCallback(req: Request) {
       return NextResponse.redirect(new URL('/payment/failed?reason=not_found', baseUrl));
     }
 
-    // Initialize PhonePe Verification
-    const clientId = process.env.PHONEPE_CLIENT_ID || process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT86';
-    const clientSecret = process.env.PHONEPE_CLIENT_SECRET || process.env.PHONEPE_SALT_KEY || '96434309-7796-489d-8924-ab56988a6076';
-    const clientVersion = Number(process.env.PHONEPE_SALT_INDEX) || 1;
+    const merchantId = process.env.PHONEPE_MERCHANT_ID || process.env.PHONEPE_CLIENT_ID || 'PGTESTPAYUAT86';
+    const saltKey = process.env.PHONEPE_SALT_KEY || process.env.PHONEPE_CLIENT_SECRET || '96434309-7796-489d-8924-ab56988a6076';
+    const saltIndex = process.env.PHONEPE_SALT_INDEX || '1';
     const isProd = process.env.PHONEPE_ENV?.toUpperCase() === 'PRODUCTION';
 
     let isSuccess = false;
+
+    // 1. Check with PhonePe Standard PG v1 Status API
     try {
-      const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, isProd ? Env.PRODUCTION : Env.SANDBOX);
-      const statusResponse = await client.getOrderStatus(txnId);
-      isSuccess = statusResponse?.state === 'COMPLETED';
-    } catch (e: any) {
-      console.warn('PhonePe getOrderStatus check error:', e?.message || e);
-      if (!isProd && searchParams.get('status') === 'SUCCESS') {
+      const host = isProd
+        ? 'https://api.phonepe.com/apis/hermes'
+        : 'https://api-preprod.phonepe.com/apis/pg-sandbox';
+
+      const path = `/pg/v1/status/${merchantId}/${txnId}`;
+      const stringToHash = `${path}${saltKey}`;
+      const sha256 = crypto.createHash('sha256').update(stringToHash).digest('hex');
+      const xVerify = `${sha256}###${saltIndex}`;
+
+      const statusRes = await fetch(`${host}${path}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-VERIFY': xVerify,
+          'X-MERCHANT-ID': merchantId,
+          accept: 'application/json',
+        },
+      });
+
+      const statusData = await statusRes.json();
+      if (
+        statusData?.code === 'PAYMENT_SUCCESS' ||
+        statusData?.data?.state === 'COMPLETED' ||
+        statusData?.data?.responseCode === 'SUCCESS'
+      ) {
         isSuccess = true;
+      }
+    } catch (v1Err) {
+      console.warn('PhonePe v1 status check error:', v1Err);
+    }
+
+    // 2. Fallback to pg-sdk-node if applicable
+    if (!isSuccess) {
+      try {
+        const client = StandardCheckoutClient.getInstance(merchantId, saltKey, Number(saltIndex) || 1, isProd ? Env.PRODUCTION : Env.SANDBOX);
+        const statusResponse = await client.getOrderStatus(txnId);
+        isSuccess = statusResponse?.state === 'COMPLETED';
+      } catch (sdkErr: any) {
+        // Ignored if standard v1 was used
       }
     }
 
@@ -61,7 +94,7 @@ async function handleCallback(req: Request) {
 
       // Check if already enrolled
       const existing = await Enrollment.findOne({
-        where: { userId: payment.userId, packageId: payment.packageId }
+        where: { userId: payment.userId, packageId: payment.packageId },
       });
 
       if (!existing) {
@@ -78,7 +111,6 @@ async function handleCallback(req: Request) {
     }
 
     return NextResponse.redirect(new URL('/payment/failed', baseUrl));
-
   } catch (error) {
     console.error('Payment callback error:', error);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
