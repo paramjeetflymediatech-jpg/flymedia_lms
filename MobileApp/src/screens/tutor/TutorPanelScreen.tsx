@@ -975,8 +975,8 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                     <View key={pkg.id || pkg.packageId} style={styles.tutorPkgCard}>
                       {/* Top banner / image */}
                       <View style={styles.tutorPkgHeader}>
-                        {pkg.image ? (
-                          <Image source={{ uri: formatImageUrl(pkg.image) }} style={styles.tutorPkgThumb} />
+                        {pkg.image || pkg.thumbnail ? (
+                          <Image source={{ uri: formatImageUrl(pkg.image || pkg.thumbnail) }} style={styles.tutorPkgThumb} />
                         ) : (
                           <View style={styles.tutorPkgThumbFallback}>
                             <BookOpen size={24} color="#2563eb" />
@@ -992,7 +992,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                             </View>
                           </View>
                           <Text style={styles.tutorPkgTitle} numberOfLines={2}>
-                            {pkg.name}
+                            {pkg.title || pkg.name || 'Assigned Course Package'}
                           </Text>
                         </View>
                       </View>
@@ -1002,13 +1002,13 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                         <View style={styles.tutorPkgMetaItem}>
                           <Calendar size={13} color="#2563eb" />
                           <Text style={styles.tutorPkgMetaText}>
-                            {pkg.totalClassesScheduled || 12} Classes in Batch
+                            {pkg.totalClassesScheduled || pkg.totalClasses || 12} Classes in Batch
                           </Text>
                         </View>
                         <View style={styles.tutorPkgMetaItem}>
                           <Users size={13} color="#059669" />
                           <Text style={styles.tutorPkgMetaText}>
-                            {pkg.totalStudents || 0} Enrolled Students
+                            {pkg.totalStudents || pkg.assignedStudentsCount || 0} Enrolled Students
                           </Text>
                         </View>
                       </View>
@@ -1022,7 +1022,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                               <View key={sch.id} style={styles.schedulePillRow}>
                                 <Clock size={12} color="#4b5563" />
                                 <Text style={styles.schedulePillText}>
-                                  Every <Text style={{ fontWeight: '800' }}>{sch.dayName}</Text> • {sch.startTime} - {sch.endTime} ({sch.timezone || 'IST'})
+                                  Every <Text style={{ fontWeight: '800' }}>{sch.dayName || sch.dayOfWeek || 'Weekly'}</Text> • {sch.startTime || sch.time || 'TBD'} {sch.duration ? `(${sch.duration} mins)` : ''}
                                 </Text>
                               </View>
                             ))}

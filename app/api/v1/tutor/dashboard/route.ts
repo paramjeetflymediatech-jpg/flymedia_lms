@@ -185,34 +185,100 @@ export async function GET(request: Request) {
       ],
     });
 
-    const assignedPackages = packageTutors.map((pt: any) => {
-      const pkg = pt.Package;
-      const schedules = (pkg?.schedules || []).map((s: any) => ({
-        id: s.id,
-        dayOfWeek: s.dayOfWeek,
-        time: s.time,
-        meetLink: s.meetLink,
-        isActive: s.isActive,
-        totalClasses: s.totalClasses || 12,
-      }));
+    const directPackages = packageTutors.map((pt: any) => pt.Package).filter(Boolean);
+    const existingPackageIds = new Set(directPackages.map((p: any) => p.id));
+
+    // Also check for any packages where this tutor has live classes
+    const extraLiveClasses = await LiveClass.findAll({
+      where: { tutorId },
+      attributes: ['packageId'],
+    });
+    const extraPackageIds = [...new Set(extraLiveClasses.map((c: any) => c.packageId))].filter(
+      (id: string) => id && !existingPackageIds.has(id)
+    );
+
+    let allPackages = [...directPackages];
+    if (extraPackageIds.length > 0) {
+      const extraPkgs = await Package.findAll({
+        where: { id: extraPackageIds },
+        include: [
+          {
+            model: ClassSchedule,
+            as: 'schedules',
+          },
+          {
+            model: LiveClass,
+            as: 'liveClasses',
+          },
+          {
+            model: Enrollment,
+            as: 'enrollments',
+          },
+        ],
+      });
+      allPackages.push(...extraPkgs);
+    }
+
+    const assignedPackages = allPackages.map((pkg: any) => {
+      const schedules = (pkg?.schedules || []).map((s: any) => {
+        let dayStr = '';
+        if (Array.isArray(s.daysOfWeek)) {
+          dayStr = s.daysOfWeek.join(' & ');
+        } else if (typeof s.daysOfWeek === 'string') {
+          dayStr = s.daysOfWeek;
+        } else if (s.dayOfWeek) {
+          dayStr = s.dayOfWeek;
+        }
+
+        return {
+          id: s.id,
+          daysOfWeek: s.daysOfWeek || [],
+          dayOfWeek: dayStr,
+          dayName: dayStr || 'Weekly',
+          startTime: s.startTime || s.time || '',
+          time: s.startTime || s.time || '',
+          duration: s.duration || 60,
+          meetLink: s.meetLink || '',
+          isActive: s.status === 'ACTIVE' || s.isActive !== false,
+          status: s.status || 'ACTIVE',
+          totalClasses: s.totalClasses || 12,
+        };
+      });
+
       const liveClasses = (pkg?.liveClasses || []).map((lc: any) => ({
         id: lc.id,
+        classNumber: lc.classNumber || 1,
         title: lc.title,
+        topic: lc.title,
         startTime: lc.startTime,
-        duration: lc.duration,
+        scheduledAt: lc.startTime,
+        duration: lc.duration || 60,
         meetLink: lc.meetLink,
-        status: lc.status,
+        status: lc.status || 'SCHEDULED',
       }));
+
+      const primaryMeetLink =
+        schedules.find((s: any) => s.meetLink)?.meetLink ||
+        liveClasses.find((lc: any) => lc.meetLink)?.meetLink ||
+        '';
+
       return {
         id: pkg?.id,
+        packageId: pkg?.id,
         title: pkg?.title || 'Assigned Package',
+        name: pkg?.title || 'Assigned Package',
         slug: pkg?.slug,
         thumbnail: resolveFullImageUrl(pkg?.thumbnail),
+        image: resolveFullImageUrl(pkg?.thumbnail),
         category: pkg?.category || 'Training',
         totalClasses: pkg?.totalClasses || 12,
+        totalClassesScheduled: pkg?.totalClasses || 12,
         assignedStudentsCount: (pkg?.enrollments || []).length,
+        totalStudents: (pkg?.enrollments || []).length,
+        meetLink: primaryMeetLink,
         schedules,
         liveClasses,
+        classes: liveClasses,
       };
     });
 
