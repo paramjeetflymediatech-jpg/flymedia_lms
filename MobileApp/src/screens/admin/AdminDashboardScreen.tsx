@@ -40,10 +40,20 @@ import {
   UserPlus,
   LogOut,
   LayoutDashboard,
+  Award,
+  Clock,
+  Video,
+  Check,
+  ChevronRight,
+  Eye,
+  Calendar,
+  AlertCircle,
+  Mail,
+  Star,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
-type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'users' | 'tools';
+type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'tutors' | 'users' | 'tools';
 
 interface AdminDashboardScreenProps {
   navigation: any;
@@ -118,6 +128,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     totalUsers: 0,
     totalCategories: 0,
     totalCoupons: 0,
+    totalTutors: 0,
   });
 
   // Data lists
@@ -127,11 +138,15 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [usersList, setUsersList] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [tutors, setTutors] = useState<any[]>([]);
 
   // Search queries & Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [leadFilter, setLeadFilter] = useState<'ALL' | 'NEW' | 'CONTACTED' | 'RESOLVED'>('ALL');
   const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'STUDENT' | 'TUTOR' | 'ADMIN'>('ALL');
+  const [tutorSearchQuery, setTutorSearchQuery] = useState('');
+  const [enrollmentSearch, setEnrollmentSearch] = useState('');
+  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'EXPIRED'>('ALL');
 
   // Modals
   const [addCourseModal, setAddCourseModal] = useState(false);
@@ -141,6 +156,44 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [editUserModal, setEditUserModal] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Lead Status Modal
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [selectedLeadForStatus, setSelectedLeadForStatus] = useState<any | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Edit Course Modal
+  const [editCourseModal, setEditCourseModal] = useState(false);
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [editCourseTitle, setEditCourseTitle] = useState('');
+  const [editCourseCategory, setEditCourseCategory] = useState('Web Development');
+  const [editCoursePrice, setEditCoursePrice] = useState('');
+  const [editCourseDuration, setEditCourseDuration] = useState('12 Weeks');
+  const [editCourseDesc, setEditCourseDesc] = useState('');
+  const [editCourseThumbnail, setEditCourseThumbnail] = useState('');
+  const [editCourseSkills, setEditCourseSkills] = useState('');
+  const [editCourseTech, setEditCourseTech] = useState('');
+  const [editCourseStatus, setEditCourseStatus] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
+
+  // Enrollment Details Modal
+  const [selectedEnrollment, setSelectedEnrollment] = useState<any | null>(null);
+  const [enrollmentDetailsModal, setEnrollmentDetailsModal] = useState(false);
+
+  // Edit Category Modal
+  const [editCategoryModal, setEditCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatDesc, setEditCatDesc] = useState('');
+
+  // Edit Coupon Modal
+  const [editCouponModal, setEditCouponModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+  const [editCouponCode, setEditCouponCode] = useState('');
+  const [editCouponPercent, setEditCouponPercent] = useState('10');
+
+  // Tutor Details Modal
+  const [selectedTutorDetails, setSelectedTutorDetails] = useState<any | null>(null);
+  const [tutorModalVisible, setTutorModalVisible] = useState(false);
 
   // New Course Form
   const [courseTitle, setCourseTitle] = useState('');
@@ -179,13 +232,16 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setSearchQuery('');
     setLeadFilter('ALL');
     setUserRoleFilter('ALL');
+    setTutorSearchQuery('');
+    setEnrollmentSearch('');
+    setEnrollmentStatusFilter('ALL');
     setActiveTab(tab);
   };
 
   const loadAllAdminData = async () => {
     if (!user || !user.token) return;
     try {
-      const [statsRes, pkgsRes, leadsRes, enrollRes, usersRes, catsRes, couponsRes] =
+      const [statsRes, pkgsRes, leadsRes, enrollRes, usersRes, catsRes, couponsRes, tutorsRes] =
         await Promise.all([
           ApiService.getAdminStats(user.token),
           ApiService.getAdminPackages(user.token),
@@ -194,6 +250,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           ApiService.getAdminUsers(user.token),
           ApiService.getAdminCategories(user.token),
           ApiService.getAdminCoupons(user.token),
+          ApiService.getAdminTutors(user.token),
         ]);
 
       let finalPackages = Array.isArray(pkgsRes?.packages) ? pkgsRes.packages : [];
@@ -202,6 +259,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       let finalUsers = Array.isArray(usersRes?.users) ? usersRes.users : [];
       let finalCategories = Array.isArray(catsRes?.categories) ? catsRes.categories : [];
       let finalCoupons = Array.isArray(couponsRes?.coupons) ? couponsRes.coupons : [];
+      let finalTutors = Array.isArray(tutorsRes?.tutors) ? tutorsRes.tutors : [];
 
       // Fallback for packages and categories from public home endpoint if admin returned empty
       if (finalPackages.length === 0 || finalCategories.length === 0) {
@@ -227,6 +285,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       setUsersList(finalUsers);
       setCategories(finalCategories);
       setCoupons(finalCoupons);
+      setTutors(finalTutors);
 
       // Keep stats cards aligned with the loaded data so overview cards match actual list contents
       setStats({
@@ -236,6 +295,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         totalUsers: Math.max(statsRes.stats?.totalUsers || 0, finalUsers.length),
         totalCategories: Math.max(statsRes.stats?.totalCategories || 0, finalCategories.length),
         totalCoupons: Math.max(statsRes.stats?.totalCoupons || 0, finalCoupons.length),
+        totalTutors: finalTutors.length || finalUsers.filter((u: any) => u.role === 'TUTOR').length,
       });
     } catch (e) {
       console.warn('Error loading admin data:', e);
@@ -328,7 +388,33 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     Linking.openURL(`https://wa.me/${cleanPhone}?text=${message}`);
   };
 
+  const handleOpenStatusModal = (lead: any) => {
+    setSelectedLeadForStatus(lead);
+    setStatusModalVisible(true);
+  };
+
+  const handleSelectLeadStatus = async (newStatus: 'NEW' | 'CONTACTED' | 'RESOLVED') => {
+    if (!selectedLeadForStatus || !user || !user.token) return;
+    setUpdatingStatus(true);
+    const res = await ApiService.updateLeadStatus(selectedLeadForStatus.id, newStatus, user.token);
+    setUpdatingStatus(false);
+    if (res.success) {
+      setLeads(prev =>
+        prev.map(l => (l.id === selectedLeadForStatus.id ? { ...l, status: newStatus } : l))
+      );
+      setStatusModalVisible(false);
+      setSelectedLeadForStatus(null);
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update lead status');
+    }
+  };
+
   const handleUpdateLeadStatus = async (leadId: string, currentStatus: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (lead) {
+      handleOpenStatusModal(lead);
+      return;
+    }
     if (!user || !user.token) return;
     const nextStatus =
       currentStatus === 'NEW' ? 'CONTACTED' : currentStatus === 'CONTACTED' ? 'RESOLVED' : 'NEW';
@@ -339,7 +425,76 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     }
   };
 
-  // Category & Coupon creation
+  // Course Edit Handlers
+  const handleOpenEditCourse = (pkg: any) => {
+    setEditingCourseId(pkg.id || pkg.slug);
+    setEditCourseTitle(pkg.title || '');
+    setEditCourseCategory(pkg.category || 'Web Development');
+    setEditCoursePrice(pkg.price != null ? String(pkg.price) : '');
+    setEditCourseDuration(pkg.duration || '12 Weeks');
+    setEditCourseDesc(pkg.description || '');
+    setEditCourseThumbnail(pkg.thumbnail || '');
+    setEditCourseSkills(
+      Array.isArray(pkg.skills)
+        ? pkg.skills.join(', ')
+        : typeof pkg.skills === 'string'
+        ? pkg.skills
+        : ''
+    );
+    setEditCourseTech(
+      Array.isArray(pkg.techStack)
+        ? pkg.techStack.join(', ')
+        : typeof pkg.techStack === 'string'
+        ? pkg.techStack
+        : ''
+    );
+    setEditCourseStatus(pkg.status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED');
+    setEditCourseModal(true);
+  };
+
+  const handleSaveEditCourse = async () => {
+    if (!editingCourseId || !user || !user.token) return;
+    if (!editCourseTitle.trim() || !editCourseDesc.trim()) {
+      Alert.alert('Required Fields', 'Course title and description cannot be empty.');
+      return;
+    }
+
+    setSubmitting(true);
+    const skillsArray = editCourseSkills.split(',').map(s => s.trim()).filter(Boolean);
+    const techArray = editCourseTech.split(',').map(t => t.trim()).filter(Boolean);
+
+    const payload = {
+      title: editCourseTitle.trim(),
+      category: editCourseCategory.trim(),
+      price: editCoursePrice ? Number(editCoursePrice) : 25000,
+      duration: editCourseDuration.trim() || '12 Weeks',
+      description: editCourseDesc.trim(),
+      thumbnail: editCourseThumbnail.trim() || undefined,
+      skills: skillsArray,
+      techStack: techArray,
+      status: editCourseStatus,
+    };
+
+    const res = await ApiService.updateAdminPackage(editingCourseId, payload, user.token);
+    setSubmitting(false);
+
+    if (res.success) {
+      setPackages(prev =>
+        prev.map(p =>
+          (p.id === editingCourseId || p.slug === editingCourseId)
+            ? { ...p, ...payload, id: editingCourseId }
+            : p
+        )
+      );
+      setEditCourseModal(false);
+      setEditingCourseId(null);
+      Alert.alert('Success 🎉', 'Course program updated successfully.');
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update course');
+    }
+  };
+
+  // Category CRUD Handlers
   const handleCreateCategory = async () => {
     if (!newCatName.trim() || !user || !user.token) return;
     setSubmitting(true);
@@ -355,6 +510,68 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     }
   };
 
+  const handleOpenEditCategory = (cat: any) => {
+    setEditingCategory(cat);
+    setEditCatName(cat.name || '');
+    setEditCatDesc(cat.description || '');
+    setEditCategoryModal(true);
+  };
+
+  const handleSaveEditCategory = async () => {
+    if (!editingCategory || !user || !user.token) return;
+    if (!editCatName.trim()) {
+      Alert.alert('Required', 'Category name is required.');
+      return;
+    }
+    setSubmitting(true);
+    const res = await ApiService.updateAdminCategory(
+      editingCategory.id,
+      { name: editCatName.trim(), description: editCatDesc.trim() || undefined },
+      user.token
+    );
+    setSubmitting(false);
+    if (res.success) {
+      setCategories(prev =>
+        prev.map(c =>
+          c.id === editingCategory.id
+            ? { ...c, name: editCatName.trim(), description: editCatDesc.trim() }
+            : c
+        )
+      );
+      setEditCategoryModal(false);
+      setEditingCategory(null);
+      Alert.alert('Success', 'Category updated successfully.');
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update category');
+    }
+  };
+
+  const handleDeleteCategory = (cat: any) => {
+    if (!user || !user.token) return;
+    const token = user.token;
+    Alert.alert(
+      'Delete Category',
+      `Are you sure you want to delete category "${cat.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await ApiService.deleteAdminCategory(cat.id, token);
+            if (res.success) {
+              setCategories(prev => prev.filter(c => c.id !== cat.id));
+              Alert.alert('Deleted', 'Category removed successfully.');
+            } else {
+              Alert.alert('Error', res.error || 'Failed to delete category');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Coupon CRUD Handlers
   const handleCreateCoupon = async () => {
     if (!newCouponCode.trim() || !user || !user.token) return;
     setSubmitting(true);
@@ -373,6 +590,87 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     }
   };
 
+  const handleOpenEditCoupon = (cp: any) => {
+    setEditingCoupon(cp);
+    setEditCouponCode(cp.code || '');
+    setEditCouponPercent(String(cp.discountPercentage || cp.discountPercent || 10));
+    setEditCouponModal(true);
+  };
+
+  const handleSaveEditCoupon = async () => {
+    if (!editingCoupon || !user || !user.token) return;
+    if (!editCouponCode.trim()) {
+      Alert.alert('Required', 'Coupon code is required.');
+      return;
+    }
+    setSubmitting(true);
+    const res = await ApiService.updateAdminCoupon(
+      editingCoupon.id,
+      {
+        code: editCouponCode.trim(),
+        discountPercent: Number(editCouponPercent) || 10,
+      },
+      user.token
+    );
+    setSubmitting(false);
+    if (res.success) {
+      const updatedDiscount = Number(editCouponPercent) || 10;
+      setCoupons(prev =>
+        prev.map(c =>
+          c.id === editingCoupon.id
+            ? {
+                ...c,
+                code: editCouponCode.trim(),
+                discountPercentage: updatedDiscount,
+                discountPercent: updatedDiscount,
+              }
+            : c
+        )
+      );
+      setEditCouponModal(false);
+      setEditingCoupon(null);
+      Alert.alert('Success', 'Coupon updated successfully.');
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update coupon');
+    }
+  };
+
+  const handleDeleteCoupon = (cp: any) => {
+    if (!user || !user.token) return;
+    const token = user.token;
+    Alert.alert(
+      'Delete Coupon',
+      `Are you sure you want to delete coupon "${cp.code}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await ApiService.deleteAdminCoupon(cp.id, token);
+            if (res.success) {
+              setCoupons(prev => prev.filter(c => c.id !== cp.id));
+              Alert.alert('Deleted', 'Coupon removed successfully.');
+            } else {
+              Alert.alert('Error', res.error || 'Failed to delete coupon');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Enrollment & Tutor details viewers
+  const handleViewEnrollment = (enr: any) => {
+    setSelectedEnrollment(enr);
+    setEnrollmentDetailsModal(true);
+  };
+
+  const handleViewTutor = (tutor: any) => {
+    setSelectedTutorDetails(tutor);
+    setTutorModalVisible(true);
+  };
+
   // Filtered leads
   const filteredLeads = leads.filter(l => {
     const matchStatus = leadFilter === 'ALL' || l.status === leadFilter;
@@ -381,6 +679,37 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       (l.name && l.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (l.phone && l.phone.includes(searchQuery)) ||
       (l.message && l.message.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchStatus && matchQuery;
+  });
+
+  // Filtered tutors
+  const filteredTutors = tutors.filter(t => {
+    const q = tutorSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    const nameMatch = t.name && t.name.toLowerCase().includes(q);
+    const emailMatch = t.email && t.email.toLowerCase().includes(q);
+    const courseMatch =
+      Array.isArray(t.courses) &&
+      t.courses.some((c: any) => c.title && c.title.toLowerCase().includes(q));
+    return nameMatch || emailMatch || courseMatch;
+  });
+
+  // Filtered enrollments
+  const filteredEnrollments = enrollments.filter(enr => {
+    const studentName = enr.user?.name || enr.User?.name || '';
+    const studentEmail = enr.user?.email || enr.User?.email || '';
+    const courseTitle = enr.package?.title || enr.Package?.title || '';
+    const status = (enr.status || 'ACTIVE').toUpperCase();
+    const matchStatus =
+      enrollmentStatusFilter === 'ALL' ||
+      status === enrollmentStatusFilter ||
+      (enrollmentStatusFilter === 'EXPIRED' && enr.isExpired);
+    const q = enrollmentSearch.toLowerCase().trim();
+    const matchQuery =
+      q === '' ||
+      studentName.toLowerCase().includes(q) ||
+      studentEmail.toLowerCase().includes(q) ||
+      courseTitle.toLowerCase().includes(q);
     return matchStatus && matchQuery;
   });
 
@@ -624,6 +953,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
                   <TouchableOpacity
                     style={styles.statCard}
+                    onPress={() => navigateToTab('tutors')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.statIconWrap, { backgroundColor: '#f5f3ff' }]}>
+                      <Award size={20} color="#7c3aed" />
+                    </View>
+                    <Text style={styles.statNumber}>{stats.totalTutors}</Text>
+                    <Text style={styles.statLabel}>Tutors / Mentors</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.statCard}
                     onPress={() => navigateToTab('users')}
                     activeOpacity={0.8}
                   >
@@ -681,12 +1022,14 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                             {new Date(lead.createdAt).toLocaleDateString()}
                           </Text>
                         </View>
-                        <View
+                        <TouchableOpacity
                           style={[
                             styles.statusPill,
                             lead.status === 'RESOLVED' && styles.statusResolved,
                             lead.status === 'CONTACTED' && styles.statusContacted,
                           ]}
+                          onPress={() => handleOpenStatusModal(lead)}
+                          activeOpacity={0.8}
                         >
                           <Text
                             style={[
@@ -695,9 +1038,9 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                               lead.status === 'CONTACTED' && styles.statusContactedText,
                             ]}
                           >
-                            {lead.status}
+                            {lead.status} ▾
                           </Text>
-                        </View>
+                        </TouchableOpacity>
                       </View>
 
                       {lead.message ? (
@@ -805,10 +1148,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
                           <View style={styles.itemCardActions}>
                             <TouchableOpacity
+                              style={styles.editBtn}
+                              onPress={() => handleOpenEditCourse(pkg)}
+                              activeOpacity={0.8}
+                            >
+                              <Pencil size={13} color={Colors.accentBlue} />
+                              <Text style={styles.editBtnText}>Edit</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
                               style={styles.deleteBtn}
                               onPress={() => handleDeletePackage(pkg.id || pkg.slug, pkg.title)}
+                              activeOpacity={0.8}
                             >
-                              <Trash2 size={14} color={Colors.error} />
+                              <Trash2 size={13} color={Colors.error} />
                               <Text style={styles.deleteBtnText}>Delete</Text>
                             </TouchableOpacity>
                           </View>
@@ -885,7 +1238,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                             lead.status === 'RESOLVED' && styles.statusResolved,
                             lead.status === 'CONTACTED' && styles.statusContacted,
                           ]}
-                          onPress={() => handleUpdateLeadStatus(lead.id, lead.status)}
+                          onPress={() => handleOpenStatusModal(lead)}
                         >
                           <Text
                             style={[
@@ -931,39 +1284,309 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= ENROLLMENTS TAB ================= */}
             {activeTab === 'enrollments' && (
               <View>
-                {enrollments.length === 0 ? (
+                {/* SEARCH & FILTERS */}
+                <View style={styles.tabHeaderActionRow}>
+                  <View style={styles.searchBarBox}>
+                    <Search size={16} color={Colors.textMuted} />
+                    <TextInput
+                      style={styles.searchBarInput}
+                      placeholder="Search student, course, email..."
+                      placeholderTextColor={Colors.textLight}
+                      value={enrollmentSearch}
+                      onChangeText={setEnrollmentSearch}
+                    />
+                  </View>
+                </View>
+
+                {/* STATUS FILTER PILLS */}
+                <View style={styles.filterPillsRow}>
+                  {(['ALL', 'ACTIVE', 'COMPLETED', 'EXPIRED'] as const).map(f => (
+                    <TouchableOpacity
+                      key={f}
+                      style={[styles.filterPill, enrollmentStatusFilter === f && styles.filterPillActive]}
+                      onPress={() => setEnrollmentStatusFilter(f)}
+                    >
+                      <Text
+                        style={[
+                          styles.filterPillText,
+                          enrollmentStatusFilter === f && styles.filterPillTextActive,
+                        ]}
+                      >
+                        {f}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {filteredEnrollments.length === 0 ? (
                   <View style={styles.emptyStateBox}>
                     <GraduationCap size={40} color={Colors.textLight} />
-                    <Text style={styles.emptyStateTitle}>No Student Enrollments Yet</Text>
+                    <Text style={styles.emptyStateTitle}>No Enrollments Found</Text>
                     <Text style={styles.emptyStateSub}>
-                      When students purchase or join courses, their registration records, payment timestamps, and details will appear here.
+                      {enrollmentSearch || enrollmentStatusFilter !== 'ALL'
+                        ? 'No student registrations match your current filter or search.'
+                        : 'When students purchase or join courses, their records and 12-class attendance will appear here.'}
                     </Text>
+                    {(enrollmentSearch || enrollmentStatusFilter !== 'ALL') && (
+                      <TouchableOpacity
+                        style={styles.emptyResetBtn}
+                        onPress={() => {
+                          setEnrollmentSearch('');
+                          setEnrollmentStatusFilter('ALL');
+                        }}
+                      >
+                        <Text style={styles.emptyResetBtnText}>Reset Enrollment Filters</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 ) : (
-                  enrollments.map(enr => {
+                  filteredEnrollments.map(enr => {
                     const studentName = enr.user?.name || enr.User?.name || 'Enrolled Student';
                     const studentEmail = enr.user?.email || enr.User?.email || 'Verified Account';
+                    const studentPhone = enr.user?.phone || enr.User?.phone || '';
                     const courseTitle = enr.package?.title || enr.Package?.title || 'LMS Career Program';
+                    const courseCategory = enr.package?.category || enr.Package?.category || 'Track';
+                    const courseDuration = enr.package?.duration || enr.Package?.duration || '12 Weeks';
                     const enrollDate = enr.createdAt || enr.enrolledAt ? new Date(enr.createdAt || enr.enrolledAt).toLocaleDateString() : 'Active';
 
+                    const total = enr.totalClasses || 12;
+                    const conducted = enr.conductedClasses || 0;
+                    const attended = enr.attendedClasses || 0;
+                    const missed = enr.missedClasses || Math.max(0, conducted - attended);
+                    const remaining = enr.remainingClasses || Math.max(0, total - conducted);
+                    const progress = enr.progressPercentage || Math.min(100, Math.round((conducted / total) * 100));
+                    const statusStr = (enr.status || (enr.isExpired ? 'EXPIRED' : progress >= 100 ? 'COMPLETED' : 'ACTIVE')).toUpperCase();
+
                     return (
-                      <View key={enr.id} style={styles.itemCard}>
-                        <View style={styles.itemCardTop}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.itemCardTitle}>{studentName}</Text>
-                            <Text style={styles.itemCardCategory}>{studentEmail}</Text>
+                      <View key={enr.id} style={styles.enrollmentCard}>
+                        {/* STUDENT & STATUS TOP */}
+                        <View style={styles.enrTopRow}>
+                          <View style={styles.enrAvatar}>
+                            <Text style={styles.enrAvatarText}>
+                              {studentName ? studentName[0].toUpperCase() : 'S'}
+                            </Text>
                           </View>
-                          <View style={styles.statusPillPublished}>
-                            <Text style={styles.statusPillPublishedText}>{enr.status || 'ENROLLED'}</Text>
+                          <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text style={styles.enrStudentName}>{studentName}</Text>
+                            <Text style={styles.enrStudentEmail}>{studentEmail}</Text>
+                            {studentPhone ? (
+                              <Text style={styles.enrStudentPhone}>{studentPhone}</Text>
+                            ) : null}
+                          </View>
+                          <View
+                            style={[
+                              styles.enrStatusBadge,
+                              statusStr === 'COMPLETED' && styles.enrStatusCompleted,
+                              statusStr === 'EXPIRED' && styles.enrStatusExpired,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.enrStatusText,
+                                statusStr === 'COMPLETED' && styles.enrStatusCompletedText,
+                                statusStr === 'EXPIRED' && styles.enrStatusExpiredText,
+                              ]}
+                            >
+                              {statusStr}
+                            </Text>
                           </View>
                         </View>
 
-                        <View style={styles.enrCourseRow}>
-                          <BookOpen size={14} color={Colors.primaryOrange} />
-                          <Text style={styles.enrCourseTitle}>{courseTitle}</Text>
+                        {/* COURSE INFO */}
+                        <View style={styles.enrCourseBox}>
+                          <BookOpen size={15} color={Colors.primaryOrange} />
+                          <View style={{ flex: 1, marginLeft: 8 }}>
+                            <Text style={styles.enrCourseName}>{courseTitle}</Text>
+                            <Text style={styles.enrCourseCategory}>{courseCategory} • {courseDuration}</Text>
+                          </View>
                         </View>
 
-                        <Text style={styles.enrDateText}>Enrolled on {enrollDate}</Text>
+                        {/* 12-CLASS PROGRESS TRACKER */}
+                        <View style={styles.enrProgressSection}>
+                          <View style={styles.enrProgressHeader}>
+                            <Text style={styles.enrProgressTitle}>12-Class Attendance Progress</Text>
+                            <Text style={styles.enrProgressPercent}>{progress}% ({conducted}/{total} classes)</Text>
+                          </View>
+
+                          <View style={styles.progressBarTrack}>
+                            <View
+                              style={[
+                                styles.progressBarFill,
+                                { width: `${progress}%` },
+                                statusStr === 'COMPLETED' && { backgroundColor: Colors.success },
+                              ]}
+                            />
+                          </View>
+
+                          {/* ATTENDANCE BADGES BREAKDOWN */}
+                          <View style={styles.attendanceBadgesRow}>
+                            <View style={styles.attBadgeAttended}>
+                              <CheckCircle size={12} color="#15803d" />
+                              <Text style={styles.attBadgeAttendedText}>{attended} Attended</Text>
+                            </View>
+                            <View style={styles.attBadgeMissed}>
+                              <AlertCircle size={12} color="#b91c1c" />
+                              <Text style={styles.attBadgeMissedText}>{missed} Missed</Text>
+                            </View>
+                            <View style={styles.attBadgeRemaining}>
+                              <Clock size={12} color="#6b7280" />
+                              <Text style={styles.attBadgeRemainingText}>{remaining} Remaining</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* CARD FOOTER WITH DETAILS BUTTON */}
+                        <View style={styles.enrCardFooter}>
+                          <Text style={styles.enrJoinedText}>Joined: {enrollDate}</Text>
+                          <TouchableOpacity
+                            style={styles.enrViewDetailsBtn}
+                            onPress={() => handleViewEnrollment(enr)}
+                            activeOpacity={0.8}
+                          >
+                            <Eye size={13} color={Colors.primaryOrange} />
+                            <Text style={styles.enrViewDetailsBtnText}>View Details</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            )}
+
+            {/* ================= TUTORS TAB ================= */}
+            {activeTab === 'tutors' && (
+              <View>
+                {/* TUTOR SEARCH */}
+                <View style={styles.tabHeaderActionRow}>
+                  <View style={styles.searchBarBox}>
+                    <Search size={16} color={Colors.textMuted} />
+                    <TextInput
+                      style={styles.searchBarInput}
+                      placeholder="Search tutors by name, email, course..."
+                      placeholderTextColor={Colors.textLight}
+                      value={tutorSearchQuery}
+                      onChangeText={setTutorSearchQuery}
+                    />
+                  </View>
+                </View>
+
+                {/* TUTOR OVERVIEW BANNER */}
+                <View style={styles.tutorHeaderSummary}>
+                  <Award size={18} color="#7c3aed" />
+                  <Text style={styles.tutorHeaderSummaryText}>
+                    Active Instructors & Course Allocations ({filteredTutors.length})
+                  </Text>
+                </View>
+
+                {filteredTutors.length === 0 ? (
+                  <View style={styles.emptyStateBox}>
+                    <Award size={40} color={Colors.textLight} />
+                    <Text style={styles.emptyStateTitle}>No Tutors Found</Text>
+                    <Text style={styles.emptyStateSub}>
+                      {tutorSearchQuery
+                        ? `No tutors matching "${tutorSearchQuery}".`
+                        : 'No instructors or tutors are currently registered. You can add users with TUTOR role in the Users tab.'}
+                    </Text>
+                    {tutorSearchQuery ? (
+                      <TouchableOpacity
+                        style={styles.emptyResetBtn}
+                        onPress={() => setTutorSearchQuery('')}
+                      >
+                        <Text style={styles.emptyResetBtnText}>Clear Search</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.emptyActionBtn}
+                        onPress={() => {
+                          setNewUserRole('TUTOR');
+                          setAddUserModal(true);
+                        }}
+                      >
+                        <UserPlus size={16} color={Colors.textWhite} />
+                        <Text style={styles.emptyActionBtnText}>Add Tutor Account</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : (
+                  filteredTutors.map(tutor => {
+                    const tutorName = tutor.name || 'Instructor';
+                    const tutorEmail = tutor.email || 'N/A';
+                    const coursesCount = tutor.coursesCount ?? (Array.isArray(tutor.courses) ? tutor.courses.length : 0);
+                    const studentsCount = tutor.studentsCount ?? 0;
+                    const assignedCourses = Array.isArray(tutor.courses) ? tutor.courses : [];
+
+                    return (
+                      <View key={tutor.id} style={styles.tutorCard}>
+                        {/* TUTOR PROFILE TOP */}
+                        <View style={styles.tutorCardTop}>
+                          <View style={styles.tutorAvatar}>
+                            <Text style={styles.tutorAvatarText}>
+                              {tutorName ? tutorName[0].toUpperCase() : 'T'}
+                            </Text>
+                          </View>
+                          <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text style={styles.tutorName}>{tutorName}</Text>
+                            <Text style={styles.tutorEmail}>{tutorEmail}</Text>
+                          </View>
+                          <View style={styles.tutorRolePill}>
+                            <Text style={styles.tutorRolePillText}>INSTRUCTOR</Text>
+                          </View>
+                        </View>
+
+                        {/* TUTOR METRICS: COURSES & STUDENTS */}
+                        <View style={styles.tutorMetricsRow}>
+                          <View style={styles.tutorMetricBox}>
+                            <BookOpen size={16} color={Colors.primaryOrange} />
+                            <View style={{ marginLeft: 8 }}>
+                              <Text style={styles.tutorMetricValue}>{coursesCount}</Text>
+                              <Text style={styles.tutorMetricLabel}>Assigned Courses</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.tutorMetricBox}>
+                            <Users size={16} color="#2563eb" />
+                            <View style={{ marginLeft: 8 }}>
+                              <Text style={styles.tutorMetricValue}>{studentsCount}</Text>
+                              <Text style={styles.tutorMetricLabel}>Enrolled Students</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* ASSIGNED COURSES CHIPS */}
+                        {assignedCourses.length > 0 && (
+                          <View style={styles.tutorCoursesWrap}>
+                            <Text style={styles.tutorCoursesLabel}>Assigned Tracks:</Text>
+                            <View style={styles.tutorCourseChipsRow}>
+                              {assignedCourses.slice(0, 3).map((c: any, idx: number) => (
+                                <View key={c.id || idx} style={styles.tutorCourseChip}>
+                                  <Text style={styles.tutorCourseChipText} numberOfLines={1}>
+                                    {c.title || 'Course Track'}
+                                  </Text>
+                                </View>
+                              ))}
+                              {assignedCourses.length > 3 && (
+                                <View style={[styles.tutorCourseChip, { backgroundColor: '#f1f5f9' }]}>
+                                  <Text style={[styles.tutorCourseChipText, { color: Colors.textSecondary }]}>
+                                    +{assignedCourses.length - 3} more
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        )}
+
+                        {/* VIEW DETAILS ACTION */}
+                        <View style={styles.tutorCardActions}>
+                          <TouchableOpacity
+                            style={styles.tutorDetailsBtn}
+                            onPress={() => handleViewTutor(tutor)}
+                            activeOpacity={0.8}
+                          >
+                            <Eye size={14} color="#7c3aed" />
+                            <Text style={styles.tutorDetailsBtnText}>View Tutor Roster</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     );
                   })
@@ -1121,9 +1744,37 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 ) : (
                   <View style={styles.toolsListWrap}>
                     {categories.map(cat => (
-                      <View key={cat.id || cat.slug} style={styles.categoryItem}>
-                        <Tag size={16} color={Colors.primaryOrange} />
-                        <Text style={styles.categoryItemName}>{cat.name}</Text>
+                      <View key={cat.id || cat.slug} style={styles.categoryCard}>
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                          <View style={styles.categoryCardNameRow}>
+                            <Tag size={15} color={Colors.primaryOrange} />
+                            <Text style={styles.categoryItemName}>{cat.name}</Text>
+                          </View>
+                          {cat.description ? (
+                            <Text style={styles.categoryDescText}>{cat.description}</Text>
+                          ) : null}
+                        </View>
+
+                        {/* CATEGORY CRUD ACTIONS: EDIT & DELETE */}
+                        <View style={styles.toolActionRow}>
+                          <TouchableOpacity
+                            style={styles.toolEditBtn}
+                            onPress={() => handleOpenEditCategory(cat)}
+                            activeOpacity={0.8}
+                          >
+                            <Pencil size={12} color={Colors.accentBlue} />
+                            <Text style={styles.toolEditBtnText}>Edit</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.toolDeleteBtn}
+                            onPress={() => handleDeleteCategory(cat)}
+                            activeOpacity={0.8}
+                          >
+                            <Trash2 size={12} color={Colors.error} />
+                            <Text style={styles.toolDeleteBtnText}>Delete</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     ))}
                   </View>
@@ -1154,15 +1805,39 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     {coupons.map(cp => {
                       const discountVal = cp.discountPercentage || cp.discountPercent || 10;
                       return (
-                        <View key={cp.id || cp.code} style={styles.couponItem}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.couponCodeText}>{cp.code}</Text>
+                        <View key={cp.id || cp.code} style={styles.couponCard}>
+                          <View style={{ flex: 1, marginRight: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <Ticket size={15} color={Colors.primaryOrange} style={{ marginRight: 6 }} />
+                              <Text style={styles.couponCodeText}>{cp.code}</Text>
+                              <View style={styles.couponActivePill}>
+                                <Text style={styles.couponActiveText}>ACTIVE</Text>
+                              </View>
+                            </View>
                             <Text style={styles.couponDetailText}>
                               {discountVal}% Discount Promo
                             </Text>
                           </View>
-                          <View style={styles.couponActivePill}>
-                            <Text style={styles.couponActiveText}>ACTIVE</Text>
+
+                          {/* COUPON CRUD ACTIONS: EDIT & DELETE */}
+                          <View style={styles.toolActionRow}>
+                            <TouchableOpacity
+                              style={styles.toolEditBtn}
+                              onPress={() => handleOpenEditCoupon(cp)}
+                              activeOpacity={0.8}
+                            >
+                              <Pencil size={12} color={Colors.accentBlue} />
+                              <Text style={styles.toolEditBtnText}>Edit</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.toolDeleteBtn}
+                              onPress={() => handleDeleteCoupon(cp)}
+                              activeOpacity={0.8}
+                            >
+                              <Trash2 size={12} color={Colors.error} />
+                              <Text style={styles.toolDeleteBtnText}>Delete</Text>
+                            </TouchableOpacity>
                           </View>
                         </View>
                       );
@@ -1186,7 +1861,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'overview' && styles.bottomNavIconWrapActive]}>
             <LayoutDashboard
-              size={19}
+              size={18}
               color={activeTab === 'overview' ? Colors.primaryOrange : Colors.textMuted}
               strokeWidth={activeTab === 'overview' ? 2.4 : 1.8}
             />
@@ -1203,7 +1878,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'courses' && styles.bottomNavIconWrapActive]}>
             <BookOpen
-              size={19}
+              size={18}
               color={activeTab === 'courses' ? Colors.primaryOrange : Colors.textMuted}
               strokeWidth={activeTab === 'courses' ? 2.4 : 1.8}
             />
@@ -1227,7 +1902,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'leads' && styles.bottomNavIconWrapActive]}>
             <PhoneCall
-              size={19}
+              size={18}
               color={activeTab === 'leads' ? Colors.primaryOrange : Colors.textMuted}
               strokeWidth={activeTab === 'leads' ? 2.4 : 1.8}
             />
@@ -1251,7 +1926,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'enrollments' && styles.bottomNavIconWrapActive]}>
             <GraduationCap
-              size={19}
+              size={18}
               color={activeTab === 'enrollments' ? Colors.primaryOrange : Colors.textMuted}
               strokeWidth={activeTab === 'enrollments' ? 2.4 : 1.8}
             />
@@ -1270,12 +1945,36 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
         <TouchableOpacity
           style={styles.bottomNavItem}
+          onPress={() => setActiveTab('tutors')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.bottomNavIconWrap, activeTab === 'tutors' && styles.bottomNavIconWrapActive]}>
+            <Award
+              size={18}
+              color={activeTab === 'tutors' ? Colors.primaryOrange : Colors.textMuted}
+              strokeWidth={activeTab === 'tutors' ? 2.4 : 1.8}
+            />
+            {tutors.length > 0 && (
+              <View style={[styles.tabBadge, { backgroundColor: '#7c3aed' }]}>
+                <Text style={styles.tabBadgeText}>
+                  {tutors.length > 99 ? '99+' : tutors.length}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.bottomNavLabel, activeTab === 'tutors' && styles.bottomNavLabelActive]}>
+            Tutors
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.bottomNavItem}
           onPress={() => setActiveTab('users')}
           activeOpacity={0.7}
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'users' && styles.bottomNavIconWrapActive]}>
             <Users
-              size={19}
+              size={18}
               color={activeTab === 'users' ? Colors.primaryOrange : Colors.textMuted}
               strokeWidth={activeTab === 'users' ? 2.4 : 1.8}
             />
@@ -1703,6 +2402,614 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 ) : (
                   <Text style={styles.submitBtnText}>Save User Changes</Text>
                 )}
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: UPDATE LEAD STATUS ================= */}
+      <Modal
+        visible={statusModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setStatusModalVisible(false)}
+      >
+        <View style={styles.modalCenterOverlay}>
+          <View style={styles.modalCenterCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalCenterTitle}>Update Lead Status</Text>
+                <Text style={styles.modalCenterSub}>
+                  {selectedLeadForStatus?.name || 'Student Lead'} • {selectedLeadForStatus?.phone || ''}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtnSmall}
+                onPress={() => setStatusModalVisible(false)}
+              >
+                <X size={18} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {updatingStatus ? (
+              <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                <ActivityIndicator color={Colors.primaryOrange} />
+                <Text style={{ marginTop: 8, color: Colors.textMuted, fontSize: 13 }}>Updating lead status...</Text>
+              </View>
+            ) : (
+              <View style={styles.statusOptionList}>
+                <TouchableOpacity
+                  style={[
+                    styles.statusOptionCard,
+                    selectedLeadForStatus?.status === 'NEW' && styles.statusOptionCardActiveNew,
+                  ]}
+                  onPress={() => handleSelectLeadStatus('NEW')}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.statusOptionDot, { backgroundColor: '#2563eb' }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.statusOptionTitle, { color: '#2563eb' }]}>NEW</Text>
+                    <Text style={styles.statusOptionDesc}>Fresh inquiry awaiting first contact</Text>
+                  </View>
+                  {selectedLeadForStatus?.status === 'NEW' && (
+                    <Check size={18} color="#2563eb" />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.statusOptionCard,
+                    selectedLeadForStatus?.status === 'CONTACTED' && styles.statusOptionCardActiveContacted,
+                  ]}
+                  onPress={() => handleSelectLeadStatus('CONTACTED')}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.statusOptionDot, { backgroundColor: '#ea580c' }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.statusOptionTitle, { color: '#ea580c' }]}>CONTACTED</Text>
+                    <Text style={styles.statusOptionDesc}>Called or messaged student counselor</Text>
+                  </View>
+                  {selectedLeadForStatus?.status === 'CONTACTED' && (
+                    <Check size={18} color="#ea580c" />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.statusOptionCard,
+                    selectedLeadForStatus?.status === 'RESOLVED' && styles.statusOptionCardActiveResolved,
+                  ]}
+                  onPress={() => handleSelectLeadStatus('RESOLVED')}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.statusOptionDot, { backgroundColor: '#16a34a' }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.statusOptionTitle, { color: '#16a34a' }]}>RESOLVED</Text>
+                    <Text style={styles.statusOptionDesc}>Successfully closed / enrolled or decided</Text>
+                  </View>
+                  {selectedLeadForStatus?.status === 'RESOLVED' && (
+                    <Check size={18} color="#16a34a" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.modalFullCancelBtn}
+              onPress={() => setStatusModalVisible(false)}
+            >
+              <Text style={styles.modalFullCancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: EDIT COURSE ================= */}
+      <Modal
+        visible={editCourseModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setEditCourseModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Edit Course Program</Text>
+                <Text style={styles.modalSub}>Update course details, fees, and syllabus</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setEditCourseModal(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Course Title *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Full Stack MERN Developer with AI"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseTitle}
+                  onChangeText={setEditCourseTitle}
+                />
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Category</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Web Development"
+                    placeholderTextColor={Colors.textLight}
+                    value={editCourseCategory}
+                    onChangeText={setEditCourseCategory}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Program Fee (₹)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="35000"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={editCoursePrice}
+                    onChangeText={setEditCoursePrice}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Duration</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="12 Weeks / 3 Months"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseDuration}
+                  onChangeText={setEditCourseDuration}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Thumbnail Image URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://images.unsplash.com/... (optional)"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseThumbnail}
+                  onChangeText={setEditCourseThumbnail}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Description *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Program overview and student outcomes..."
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={4}
+                  value={editCourseDesc}
+                  onChangeText={setEditCourseDesc}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Skills (comma-separated)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="React, Node.js, Express, MongoDB"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseSkills}
+                  onChangeText={setEditCourseSkills}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Tech Stack (comma-separated)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="JavaScript, TypeScript, Git, Docker"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseTech}
+                  onChangeText={setEditCourseTech}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Publication Status</Text>
+                <View style={styles.rolePickerRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.rolePickerItem,
+                      editCourseStatus === 'PUBLISHED' && styles.rolePickerItemActive,
+                    ]}
+                    onPress={() => setEditCourseStatus('PUBLISHED')}
+                  >
+                    <Text
+                      style={[
+                        styles.rolePickerItemText,
+                        editCourseStatus === 'PUBLISHED' && styles.rolePickerItemTextActive,
+                      ]}
+                    >
+                      PUBLISHED
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.rolePickerItem,
+                      editCourseStatus === 'DRAFT' && styles.rolePickerItemActive,
+                    ]}
+                    onPress={() => setEditCourseStatus('DRAFT')}
+                  >
+                    <Text
+                      style={[
+                        styles.rolePickerItemText,
+                        editCourseStatus === 'DRAFT' && styles.rolePickerItemTextActive,
+                      ]}
+                    >
+                      DRAFT
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitBtn}
+                onPress={handleSaveEditCourse}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={Colors.textWhite} />
+                ) : (
+                  <Text style={styles.submitBtnText}>Save Course Updates</Text>
+                )}
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: ENROLLMENT DETAILS ================= */}
+      <Modal
+        visible={enrollmentDetailsModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setEnrollmentDetailsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Student Enrollment Record</Text>
+                <Text style={styles.modalSub}>Complete registration & 12-class breakdown</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setEnrollmentDetailsModal(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              {selectedEnrollment && (
+                <>
+                  {/* STUDENT PROFILE CARD */}
+                  <View style={styles.modalDetailCard}>
+                    <Text style={styles.modalSectionLabel}>STUDENT PROFILE</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                      <View style={styles.modalAvatar}>
+                        <Text style={styles.modalAvatarText}>
+                          {(selectedEnrollment.user?.name || selectedEnrollment.User?.name || 'S')[0].toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ marginLeft: 12, flex: 1 }}>
+                        <Text style={styles.modalDetailMainText}>
+                          {selectedEnrollment.user?.name || selectedEnrollment.User?.name || 'Enrolled Student'}
+                        </Text>
+                        <Text style={styles.modalDetailSubText}>
+                          {selectedEnrollment.user?.email || selectedEnrollment.User?.email || 'N/A'}
+                        </Text>
+                        {selectedEnrollment.user?.phone || selectedEnrollment.User?.phone ? (
+                          <Text style={styles.modalDetailSubText}>
+                            Phone: {selectedEnrollment.user?.phone || selectedEnrollment.User?.phone}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* COURSE PROGRAM CARD */}
+                  <View style={styles.modalDetailCard}>
+                    <Text style={styles.modalSectionLabel}>COURSE PROGRAM</Text>
+                    <Text style={[styles.modalDetailMainText, { marginTop: 6 }]}>
+                      {selectedEnrollment.package?.title || selectedEnrollment.Package?.title || 'Course Program'}
+                    </Text>
+                    <Text style={styles.modalDetailSubText}>
+                      Track: {selectedEnrollment.package?.category || selectedEnrollment.Package?.category || 'General'}
+                    </Text>
+                    <Text style={styles.modalDetailSubText}>
+                      Duration: {selectedEnrollment.package?.duration || selectedEnrollment.Package?.duration || '12 Weeks'}
+                    </Text>
+                    {selectedEnrollment.package?.price != null && (
+                      <Text style={styles.modalDetailSubText}>
+                        Fee Paid: ₹{Number(selectedEnrollment.package?.price).toLocaleString('en-IN')}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* 12-CLASS ATTENDANCE DETAILED TRACKER */}
+                  <View style={styles.modalDetailCard}>
+                    <Text style={styles.modalSectionLabel}>12-CLASS ATTENDANCE TRACKER</Text>
+                    <View style={{ marginVertical: 10 }}>
+                      <View style={styles.enrProgressHeader}>
+                        <Text style={styles.enrProgressTitle}>Syllabus Completion</Text>
+                        <Text style={styles.enrProgressPercent}>
+                          {selectedEnrollment.progressPercentage || 0}% ({selectedEnrollment.conductedClasses || 0}/{selectedEnrollment.totalClasses || 12} classes)
+                        </Text>
+                      </View>
+                      <View style={styles.progressBarTrack}>
+                        <View
+                          style={[
+                            styles.progressBarFill,
+                            { width: `${selectedEnrollment.progressPercentage || 0}%` },
+                          ]}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.modalStatsGrid}>
+                      <View style={styles.modalStatTile}>
+                        <Text style={styles.modalStatNum}>{selectedEnrollment.totalClasses || 12}</Text>
+                        <Text style={styles.modalStatLabel}>Total Classes</Text>
+                      </View>
+                      <View style={[styles.modalStatTile, { backgroundColor: '#f0fdf4' }]}>
+                        <Text style={[styles.modalStatNum, { color: '#16a34a' }]}>{selectedEnrollment.attendedClasses || 0}</Text>
+                        <Text style={styles.modalStatLabel}>Attended</Text>
+                      </View>
+                      <View style={[styles.modalStatTile, { backgroundColor: '#fef2f2' }]}>
+                        <Text style={[styles.modalStatNum, { color: '#dc2626' }]}>{selectedEnrollment.missedClasses || 0}</Text>
+                        <Text style={styles.modalStatLabel}>Missed</Text>
+                      </View>
+                      <View style={[styles.modalStatTile, { backgroundColor: '#f8fafc' }]}>
+                        <Text style={[styles.modalStatNum, { color: '#64748b' }]}>{selectedEnrollment.remainingClasses || 12}</Text>
+                        <Text style={styles.modalStatLabel}>Remaining</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* ENROLLMENT META */}
+                  <View style={styles.modalDetailCard}>
+                    <Text style={styles.modalSectionLabel}>REGISTRATION DETAILS</Text>
+                    <Text style={styles.modalDetailSubText}>
+                      Enrollment ID: {selectedEnrollment.id}
+                    </Text>
+                    <Text style={styles.modalDetailSubText}>
+                      Enrolled Date: {selectedEnrollment.createdAt ? new Date(selectedEnrollment.createdAt).toLocaleDateString() : 'N/A'}
+                    </Text>
+                    <Text style={styles.modalDetailSubText}>
+                      Status: {selectedEnrollment.status || (selectedEnrollment.isExpired ? 'EXPIRED' : 'ACTIVE')}
+                    </Text>
+                  </View>
+                </>
+              )}
+
+              <TouchableOpacity
+                style={styles.modalCloseFullBtn}
+                onPress={() => setEnrollmentDetailsModal(false)}
+              >
+                <Text style={styles.modalCloseFullBtnText}>Close Record</Text>
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: EDIT CATEGORY ================= */}
+      <Modal
+        visible={editCategoryModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setEditCategoryModal(false)}
+      >
+        <View style={styles.modalCenterOverlay}>
+          <View style={styles.modalCenterCard}>
+            <Text style={styles.modalCenterTitle}>Edit Category</Text>
+            <TextInput
+              style={[styles.input, { marginTop: 12, marginBottom: 8 }]}
+              placeholder="Category Name"
+              placeholderTextColor={Colors.textLight}
+              value={editCatName}
+              onChangeText={setEditCatName}
+            />
+            <TextInput
+              style={[styles.input, { marginBottom: 16 }]}
+              placeholder="Description (Optional)"
+              placeholderTextColor={Colors.textLight}
+              value={editCatDesc}
+              onChangeText={setEditCatDesc}
+            />
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setEditCategoryModal(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveBtn}
+                onPress={handleSaveEditCategory}
+                disabled={submitting}
+              >
+                <Text style={styles.modalSaveBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: EDIT COUPON ================= */}
+      <Modal
+        visible={editCouponModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setEditCouponModal(false)}
+      >
+        <View style={styles.modalCenterOverlay}>
+          <View style={styles.modalCenterCard}>
+            <Text style={styles.modalCenterTitle}>Edit Coupon</Text>
+            <TextInput
+              style={[styles.input, { marginTop: 12, marginBottom: 8 }]}
+              placeholder="Coupon Code"
+              placeholderTextColor={Colors.textLight}
+              autoCapitalize="characters"
+              value={editCouponCode}
+              onChangeText={setEditCouponCode}
+            />
+            <TextInput
+              style={[styles.input, { marginBottom: 16 }]}
+              placeholder="Discount %"
+              placeholderTextColor={Colors.textLight}
+              keyboardType="numeric"
+              value={editCouponPercent}
+              onChangeText={setEditCouponPercent}
+            />
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setEditCouponModal(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveBtn}
+                onPress={handleSaveEditCoupon}
+                disabled={submitting}
+              >
+                <Text style={styles.modalSaveBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: TUTOR DETAILS ================= */}
+      <Modal
+        visible={tutorModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setTutorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Tutor Teaching Roster</Text>
+                <Text style={styles.modalSub}>Assigned curriculum and enrolled student metrics</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setTutorModalVisible(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              {selectedTutorDetails && (
+                <>
+                  {/* TUTOR PROFILE CARD */}
+                  <View style={styles.modalDetailCard}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={[styles.modalAvatar, { backgroundColor: '#7c3aed' }]}>
+                        <Text style={styles.modalAvatarText}>
+                          {(selectedTutorDetails.name || 'T')[0].toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ marginLeft: 12, flex: 1 }}>
+                        <Text style={styles.modalDetailMainText}>
+                          {selectedTutorDetails.name || 'Instructor'}
+                        </Text>
+                        <Text style={styles.modalDetailSubText}>
+                          {selectedTutorDetails.email || 'N/A'}
+                        </Text>
+                      </View>
+                      <View style={styles.tutorRolePill}>
+                        <Text style={styles.tutorRolePillText}>INSTRUCTOR</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* METRICS SUMMARY TILES */}
+                  <View style={styles.tutorMetricsRow}>
+                    <View style={styles.tutorMetricBox}>
+                      <BookOpen size={18} color={Colors.primaryOrange} />
+                      <View style={{ marginLeft: 8 }}>
+                        <Text style={styles.tutorMetricValue}>
+                          {selectedTutorDetails.coursesCount ?? (Array.isArray(selectedTutorDetails.courses) ? selectedTutorDetails.courses.length : 0)}
+                        </Text>
+                        <Text style={styles.tutorMetricLabel}>Assigned Courses</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.tutorMetricBox}>
+                      <Users size={18} color="#2563eb" />
+                      <View style={{ marginLeft: 8 }}>
+                        <Text style={styles.tutorMetricValue}>
+                          {selectedTutorDetails.studentsCount ?? 0}
+                        </Text>
+                        <Text style={styles.tutorMetricLabel}>Enrolled Students</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* ASSIGNED COURSES LIST */}
+                  <View style={styles.modalDetailCard}>
+                    <Text style={styles.modalSectionLabel}>ASSIGNED COURSES & BATCHES</Text>
+                    {Array.isArray(selectedTutorDetails.courses) && selectedTutorDetails.courses.length > 0 ? (
+                      selectedTutorDetails.courses.map((c: any, idx: number) => (
+                        <View key={c.id || idx} style={styles.tutorCourseListItem}>
+                          <BookOpen size={15} color={Colors.primaryOrange} />
+                          <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.tutorCourseListTitle}>{c.title}</Text>
+                            <Text style={styles.tutorCourseListCategory}>
+                              {c.category || 'General Track'} • {c.duration || '12 Weeks'}
+                            </Text>
+                          </View>
+                          {c.studentsCount != null && (
+                            <View style={styles.tutorCourseStudentBadge}>
+                              <Text style={styles.tutorCourseStudentBadgeText}>
+                                {c.studentsCount} students
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      ))
+                    ) : (
+                      <Text style={[styles.modalDetailSubText, { marginTop: 8 }]}>
+                        No specific course tracks currently assigned to this tutor.
+                      </Text>
+                    )}
+                  </View>
+                </>
+              )}
+
+              <TouchableOpacity
+                style={styles.modalCloseFullBtn}
+                onPress={() => setTutorModalVisible(false)}
+              >
+                <Text style={styles.modalCloseFullBtnText}>Close Roster</Text>
               </TouchableOpacity>
               <View style={{ height: 40 }} />
             </ScrollView>
@@ -2588,5 +3895,613 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: Colors.textWhite,
+  },
+
+  // Action buttons
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  editBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.accentBlue,
+  },
+
+  // Enrollments
+  enrollmentCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  enrTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  enrAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  enrAvatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#2563eb',
+  },
+  enrStudentName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  enrStudentEmail: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  enrStudentPhone: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  enrStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#f0fdf4',
+  },
+  enrStatusCompleted: {
+    backgroundColor: '#eff6ff',
+  },
+  enrStatusExpired: {
+    backgroundColor: '#fef2f2',
+  },
+  enrStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#16a34a',
+  },
+  enrStatusCompletedText: {
+    color: '#2563eb',
+  },
+  enrStatusExpiredText: {
+    color: '#dc2626',
+  },
+  enrCourseBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  enrCourseName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  enrCourseCategory: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  enrProgressSection: {
+    marginTop: 12,
+  },
+  enrProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  enrProgressTitle: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  enrProgressPercent: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  progressBarTrack: {
+    height: 7,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: 7,
+    backgroundColor: Colors.primaryOrange,
+    borderRadius: 4,
+  },
+  attendanceBadgesRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+  },
+  attBadgeAttended: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  attBadgeAttendedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#15803d',
+  },
+  attBadgeMissed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  attBadgeMissedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#b91c1c',
+  },
+  attBadgeRemaining: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  attBadgeRemainingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  enrCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  enrJoinedText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  enrViewDetailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff7ed',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 117, 14, 0.25)',
+  },
+  enrViewDetailsBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+  },
+
+  // Tutors
+  tutorHeaderSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f5f3ff',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ede9fe',
+  },
+  tutorHeaderSummaryText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#7c3aed',
+  },
+  tutorCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  tutorCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tutorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#7c3aed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  tutorAvatarText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  tutorName: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  tutorEmail: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  tutorRolePill: {
+    backgroundColor: '#f5f3ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+  },
+  tutorRolePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#7c3aed',
+  },
+  tutorMetricsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  tutorMetricBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tutorMetricValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+  },
+  tutorMetricLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '600',
+  },
+  tutorCoursesWrap: {
+    marginTop: 10,
+  },
+  tutorCoursesLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginBottom: 6,
+  },
+  tutorCourseChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tutorCourseChip: {
+    backgroundColor: '#fff7ed',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 117, 14, 0.2)',
+  },
+  tutorCourseChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+  },
+  tutorCardActions: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  tutorDetailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f5f3ff',
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+  },
+  tutorDetailsBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7c3aed',
+  },
+
+  // Category & Coupon CRUD cards
+  categoryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  categoryCardNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  categoryDescText: {
+    fontSize: 11.5,
+    color: Colors.textMuted,
+    marginTop: 3,
+    marginLeft: 23,
+  },
+  couponCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  toolActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  toolEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  toolEditBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.accentBlue,
+  },
+  toolDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  toolDeleteBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.error,
+  },
+
+  // Modals Extra Styles
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  modalCenterSub: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  closeBtnSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusOptionList: {
+    gap: 8,
+    marginVertical: 10,
+  },
+  statusOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceSubtle,
+    gap: 10,
+  },
+  statusOptionCardActiveNew: {
+    borderColor: '#2563eb',
+    backgroundColor: '#eff6ff',
+  },
+  statusOptionCardActiveContacted: {
+    borderColor: '#ea580c',
+    backgroundColor: '#fff7ed',
+  },
+  statusOptionCardActiveResolved: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
+  },
+  statusOptionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  statusOptionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  statusOptionDesc: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  modalFullCancelBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  modalFullCancelBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  modalDetailCard: {
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalSectionLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.6,
+  },
+  modalAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalAvatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  modalDetailMainText: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  modalDetailSubText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  modalStatsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  modalStatTile: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    padding: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalStatNum: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+  },
+  modalStatLabel: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  modalCloseFullBtn: {
+    backgroundColor: Colors.surfaceSubtle,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalCloseFullBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  tutorCourseListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tutorCourseListTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  tutorCourseListCategory: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  tutorCourseStudentBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  tutorCourseStudentBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
   },
 });

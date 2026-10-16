@@ -170,3 +170,91 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+export async function PUT(request: Request) {
+  return handleUpdatePackage(request);
+}
+
+export async function PATCH(request: Request) {
+  return handleUpdatePackage(request);
+}
+
+async function handleUpdatePackage(request: Request) {
+  try {
+    const authPayload = await getAuthUserFromRequest(request);
+    if (!authPayload || authPayload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      id,
+      title,
+      category,
+      price,
+      duration,
+      level,
+      description,
+      skills,
+      techStack,
+      status,
+      thumbnail,
+      mode,
+      totalClasses,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Package ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const pkg = await Package.findByPk(id);
+    if (!pkg) {
+      return NextResponse.json(
+        { success: false, error: 'Package not found' },
+        { status: 404 }
+      );
+    }
+
+    if (title !== undefined) pkg.title = title;
+    if (category !== undefined) pkg.category = category;
+    if (description !== undefined) pkg.description = description;
+    if (price !== undefined) pkg.price = Number(price);
+    if (duration !== undefined) pkg.duration = duration;
+    if (level !== undefined) pkg.level = level;
+    if (status !== undefined) pkg.status = status;
+    if (thumbnail !== undefined) pkg.thumbnail = thumbnail;
+    if (mode !== undefined) pkg.mode = mode;
+    if (totalClasses !== undefined) (pkg as any).totalClasses = Number(totalClasses);
+
+    if (skills !== undefined) {
+      pkg.skills = Array.isArray(skills) ? (skills as string[]) : String(skills).split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+    if (techStack !== undefined) {
+      pkg.techStack = Array.isArray(techStack) ? (techStack as string[]) : String(techStack).split(',').map((t: string) => t.trim()).filter(Boolean);
+    }
+
+    await pkg.save();
+
+    const formatted = pkg.toJSON();
+    formatted.thumbnail = resolveFullImageUrl(formatted.thumbnail);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Course updated successfully',
+      package: formatted,
+    });
+  } catch (error: any) {
+    console.error('Admin update package error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update course' },
+      { status: 500 }
+    );
+  }
+}
+

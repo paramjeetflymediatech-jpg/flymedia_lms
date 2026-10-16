@@ -395,6 +395,25 @@ export const ApiService = {
   },
 
   /**
+   * Admin: Update course package
+   */
+  async updateAdminPackage(id: string, data: any, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/packages`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update package' };
+    }
+  },
+
+  /**
    * Admin: Get all student enrollments
    */
   async getAdminEnrollments(token: string) {
@@ -561,6 +580,98 @@ export const ApiService = {
       return { success: false, error: e.message || 'Failed to create coupon' };
     }
   },
+
+  /**
+   * Admin: Update category
+   */
+  async updateAdminCategory(id: string, data: { name: string; description?: string }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update category' };
+    }
+  },
+
+  /**
+   * Admin: Delete category
+   */
+  async deleteAdminCategory(id: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/categories?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete category' };
+    }
+  },
+
+  /**
+   * Admin: Update coupon
+   */
+  async updateAdminCoupon(id: string, data: { code: string; discountPercent?: number }, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/coupons`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update coupon' };
+    }
+  },
+
+  /**
+   * Admin: Delete coupon
+   */
+  async deleteAdminCoupon(id: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/coupons?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete coupon' };
+    }
+  },
+
+  /**
+   * Admin: Get all tutors with assigned courses and students
+   */
+  async getAdminTutors(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/tutors`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, tutors: [] };
+    }
+  },
+
 
   // ==========================================
   // STUDENT PANEL APIs

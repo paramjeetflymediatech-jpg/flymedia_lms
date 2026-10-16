@@ -33,6 +33,14 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  return handleUpdateLead(request);
+}
+
+export async function POST(request: Request) {
+  return handleUpdateLead(request);
+}
+
+async function handleUpdateLead(request: Request) {
   try {
     const authPayload = await getAuthUserFromRequest(request);
     if (!authPayload || authPayload.role !== 'ADMIN') {
@@ -67,10 +75,11 @@ export async function PATCH(request: Request) {
       lead,
     });
   } catch (error: any) {
-    console.error('Admin leads PATCH error:', error);
+    console.error('Admin leads update error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update lead' },
       { status: 500 }
     );
   }
 }
+
