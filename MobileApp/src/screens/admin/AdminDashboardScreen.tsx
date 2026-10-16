@@ -167,12 +167,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editCourseTitle, setEditCourseTitle] = useState('');
   const [editCourseCategory, setEditCourseCategory] = useState('Web Development');
+  const [editCourseMode, setEditCourseMode] = useState<'ONLINE' | 'OFFLINE' | 'BOTH'>('ONLINE');
   const [editCoursePrice, setEditCoursePrice] = useState('');
   const [editCourseDuration, setEditCourseDuration] = useState('12 Weeks');
+  const [editCourseLevel, setEditCourseLevel] = useState('Beginner to Advanced');
+  const [editCourseTotalClasses, setEditCourseTotalClasses] = useState('12');
+  const [editCourseRating, setEditCourseRating] = useState('4.9');
+  const [editCourseReviewsCount, setEditCourseReviewsCount] = useState('1.2k+');
+  const [editCourseVideoUrl, setEditCourseVideoUrl] = useState('');
   const [editCourseDesc, setEditCourseDesc] = useState('');
   const [editCourseThumbnail, setEditCourseThumbnail] = useState('');
   const [editCourseSkills, setEditCourseSkills] = useState('');
   const [editCourseTech, setEditCourseTech] = useState('');
+  const [editCourseBenefits, setEditCourseBenefits] = useState('');
+  const [editCourseWhatYoullLearn, setEditCourseWhatYoullLearn] = useState('');
   const [editCourseStatus, setEditCourseStatus] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
 
   // Enrollment Details Modal
@@ -198,12 +206,23 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   // New Course Form
   const [courseTitle, setCourseTitle] = useState('');
   const [courseCategory, setCourseCategory] = useState('Web Development');
+  const [courseMode, setCourseMode] = useState<'ONLINE' | 'OFFLINE' | 'BOTH'>('ONLINE');
   const [coursePrice, setCoursePrice] = useState('');
   const [courseDuration, setCourseDuration] = useState('12 Weeks');
+  const [courseLevel, setCourseLevel] = useState('Beginner to Advanced');
+  const [courseTotalClasses, setCourseTotalClasses] = useState('12');
+  const [courseRating, setCourseRating] = useState('4.9');
+  const [courseReviewsCount, setCourseReviewsCount] = useState('1.2k+');
+  const [courseVideoUrl, setCourseVideoUrl] = useState('');
   const [courseDesc, setCourseDesc] = useState('');
   const [courseThumbnail, setCourseThumbnail] = useState('');
   const [courseSkills, setCourseSkills] = useState('React, Node.js, Express, MongoDB');
   const [courseTech, setCourseTech] = useState('JavaScript, Git, Postman');
+  const [courseBenefits, setCourseBenefits] = useState(
+    '100% Practical Training with Live Projects\nAdvanced Skills & Industry Mentorship\nInternship Opportunity Basis Learning Progress\nCertification after Completion'
+  );
+  const [courseWhatYoullLearn, setCourseWhatYoullLearn] = useState('');
+  const [courseStatus, setCourseStatus] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
 
   // New Category Form
   const [newCatName, setNewCatName] = useState('');
@@ -321,17 +340,27 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setSubmitting(true);
     const skillsArray = courseSkills.split(',').map(s => s.trim()).filter(Boolean);
     const techArray = courseTech.split(',').map(t => t.trim()).filter(Boolean);
+    const benefitsArray = courseBenefits.split('\n').map(s => s.trim()).filter(Boolean);
+    const whatYoullLearnArray = courseWhatYoullLearn.split('\n').map(s => s.trim()).filter(Boolean);
 
     const payload = {
       title: courseTitle.trim(),
       category: courseCategory,
+      mode: courseMode,
       thumbnail: courseThumbnail.trim() || undefined,
       price: coursePrice ? Number(coursePrice) : 25000,
       duration: courseDuration || '12 Weeks',
+      level: courseLevel || 'Beginner to Advanced',
+      totalClasses: courseTotalClasses ? Number(courseTotalClasses) : 12,
+      rating: courseRating ? Number(courseRating) : 4.9,
+      reviewsCount: courseReviewsCount || '1.2k+',
+      videoUrl: courseVideoUrl.trim() || undefined,
       description: courseDesc.trim(),
       skills: skillsArray,
       techStack: techArray,
-      status: 'PUBLISHED',
+      benefits: benefitsArray,
+      whatYoullLearn: whatYoullLearnArray,
+      status: courseStatus,
     };
 
     const res = await ApiService.createCourse(payload, user.token);
@@ -344,6 +373,8 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       setCourseDesc('');
       setCourseThumbnail('');
       setCoursePrice('');
+      setCourseVideoUrl('');
+      setCourseWhatYoullLearn('');
       loadAllAdminData();
     } else {
       Alert.alert('Error', res.error || 'Failed to create course');
@@ -430,8 +461,14 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setEditingCourseId(pkg.id || pkg.slug);
     setEditCourseTitle(pkg.title || '');
     setEditCourseCategory(pkg.category || 'Web Development');
+    setEditCourseMode(pkg.mode === 'OFFLINE' ? 'OFFLINE' : pkg.mode === 'BOTH' ? 'BOTH' : 'ONLINE');
     setEditCoursePrice(pkg.price != null ? String(pkg.price) : '');
     setEditCourseDuration(pkg.duration || '12 Weeks');
+    setEditCourseLevel(pkg.level || 'Beginner to Advanced');
+    setEditCourseTotalClasses(pkg.totalClasses != null ? String(pkg.totalClasses) : '12');
+    setEditCourseRating(pkg.rating != null ? String(pkg.rating) : '4.9');
+    setEditCourseReviewsCount(pkg.reviewsCount || '1.2k+');
+    setEditCourseVideoUrl(pkg.videoUrl || '');
     setEditCourseDesc(pkg.description || '');
     setEditCourseThumbnail(pkg.thumbnail || '');
     setEditCourseSkills(
@@ -448,6 +485,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         ? pkg.techStack
         : ''
     );
+    setEditCourseBenefits(
+      Array.isArray(pkg.benefits)
+        ? pkg.benefits.join('\n')
+        : typeof pkg.benefits === 'string'
+        ? pkg.benefits
+        : ''
+    );
+    setEditCourseWhatYoullLearn(
+      Array.isArray(pkg.whatYoullLearn)
+        ? pkg.whatYoullLearn.join('\n')
+        : typeof pkg.whatYoullLearn === 'string'
+        ? pkg.whatYoullLearn
+        : ''
+    );
     setEditCourseStatus(pkg.status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED');
     setEditCourseModal(true);
   };
@@ -462,16 +513,26 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setSubmitting(true);
     const skillsArray = editCourseSkills.split(',').map(s => s.trim()).filter(Boolean);
     const techArray = editCourseTech.split(',').map(t => t.trim()).filter(Boolean);
+    const benefitsArray = editCourseBenefits.split('\n').map(s => s.trim()).filter(Boolean);
+    const whatYoullLearnArray = editCourseWhatYoullLearn.split('\n').map(s => s.trim()).filter(Boolean);
 
     const payload = {
       title: editCourseTitle.trim(),
       category: editCourseCategory.trim(),
+      mode: editCourseMode,
       price: editCoursePrice ? Number(editCoursePrice) : 25000,
       duration: editCourseDuration.trim() || '12 Weeks',
+      level: editCourseLevel.trim() || 'Beginner to Advanced',
+      totalClasses: editCourseTotalClasses ? Number(editCourseTotalClasses) : 12,
+      rating: editCourseRating ? Number(editCourseRating) : 4.9,
+      reviewsCount: editCourseReviewsCount.trim() || '1.2k+',
+      videoUrl: editCourseVideoUrl.trim() || undefined,
       description: editCourseDesc.trim(),
       thumbnail: editCourseThumbnail.trim() || undefined,
       skills: skillsArray,
       techStack: techArray,
+      benefits: benefitsArray,
+      whatYoullLearn: whatYoullLearnArray,
       status: editCourseStatus,
     };
 
@@ -2026,18 +2087,72 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 />
               </View>
 
-              <View style={styles.inputRow}>
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>Category</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Web Development"
-                    placeholderTextColor={Colors.textLight}
-                    value={courseCategory}
-                    onChangeText={setCourseCategory}
-                  />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Delivery Mode</Text>
+                <View style={styles.rolePickerRow}>
+                  {(['ONLINE', 'OFFLINE', 'BOTH'] as const).map(m => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[
+                        styles.rolePickerItem,
+                        courseMode === m && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setCourseMode(m)}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          courseMode === m && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        {m === 'ONLINE' ? 'Online' : m === 'OFFLINE' ? 'Offline' : 'Both'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
+              </View>
 
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Category</Text>
+                {categories.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8, marginTop: 4 }}>
+                    {categories.map((cat: any) => (
+                      <TouchableOpacity
+                        key={cat.id || cat.name}
+                        onPress={() => setCourseCategory(cat.name)}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 16,
+                          backgroundColor: courseCategory === cat.name ? '#fff7ed' : Colors.surfaceSubtle,
+                          borderColor: courseCategory === cat.name ? Colors.primaryOrange : Colors.border,
+                          borderWidth: 1,
+                          marginRight: 6,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: courseCategory === cat.name ? '700' : '500',
+                            color: courseCategory === cat.name ? Colors.primaryOrange : Colors.textSecondary,
+                          }}
+                        >
+                          {cat.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Web Development"
+                  placeholderTextColor={Colors.textLight}
+                  value={courseCategory}
+                  onChangeText={setCourseCategory}
+                />
+              </View>
+
+              <View style={styles.inputRow}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={styles.inputLabel}>Program Fee (₹)</Text>
                   <TextInput
@@ -2049,13 +2164,102 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     onChangeText={setCoursePrice}
                   />
                 </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Status</Text>
+                  <View style={styles.rolePickerRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.rolePickerItem,
+                        courseStatus === 'PUBLISHED' && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setCourseStatus('PUBLISHED')}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          courseStatus === 'PUBLISHED' && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        PUBLISHED
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.rolePickerItem,
+                        courseStatus === 'DRAFT' && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setCourseStatus('DRAFT')}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          courseStatus === 'DRAFT' && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        DRAFT
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Rating</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="4.9"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={courseRating}
+                    onChangeText={setCourseRating}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Reviews Count</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="1.2k+"
+                    placeholderTextColor={Colors.textLight}
+                    value={courseReviewsCount}
+                    onChangeText={setCourseReviewsCount}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Course Level</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Beginner to Advanced"
+                    placeholderTextColor={Colors.textLight}
+                    value={courseLevel}
+                    onChangeText={setCourseLevel}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Total Classes</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="12"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={courseTotalClasses}
+                    onChangeText={setCourseTotalClasses}
+                  />
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Duration</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="12 Weeks / 3 Months"
+                  placeholder="e.g. 6 Months / 12 Weeks"
                   placeholderTextColor={Colors.textLight}
                   value={courseDuration}
                   onChangeText={setCourseDuration}
@@ -2075,6 +2279,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
 
               <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Course Video URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://www.youtube.com/embed/... (optional)"
+                  placeholderTextColor={Colors.textLight}
+                  value={courseVideoUrl}
+                  onChangeText={setCourseVideoUrl}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Description *</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -2088,7 +2304,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Skills (comma-separated)</Text>
+                <Text style={styles.inputLabel}>Skills You'll Gain (comma-separated)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="React, Node.js, Express, MongoDB"
@@ -2106,6 +2322,32 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   placeholderTextColor={Colors.textLight}
                   value={courseTech}
                   onChangeText={setCourseTech}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Benefits of This Course (1 per line)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, { minHeight: 90 }]}
+                  placeholder="100% Practical Training with Live Projects&#10;Placement Assistance&#10;Certification"
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={4}
+                  value={courseBenefits}
+                  onChangeText={setCourseBenefits}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>What You'll Learn (1 per line)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, { minHeight: 90 }]}
+                  placeholder="Master Modern Full-Stack Development&#10;Build Production Projects"
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={4}
+                  value={courseWhatYoullLearn}
+                  onChangeText={setCourseWhatYoullLearn}
                 />
               </View>
 
@@ -2540,18 +2782,72 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 />
               </View>
 
-              <View style={styles.inputRow}>
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>Category</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Web Development"
-                    placeholderTextColor={Colors.textLight}
-                    value={editCourseCategory}
-                    onChangeText={setEditCourseCategory}
-                  />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Delivery Mode</Text>
+                <View style={styles.rolePickerRow}>
+                  {(['ONLINE', 'OFFLINE', 'BOTH'] as const).map(m => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[
+                        styles.rolePickerItem,
+                        editCourseMode === m && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setEditCourseMode(m)}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          editCourseMode === m && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        {m === 'ONLINE' ? 'Online' : m === 'OFFLINE' ? 'Offline' : 'Both'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
+              </View>
 
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Category</Text>
+                {categories.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8, marginTop: 4 }}>
+                    {categories.map((cat: any) => (
+                      <TouchableOpacity
+                        key={cat.id || cat.name}
+                        onPress={() => setEditCourseCategory(cat.name)}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 16,
+                          backgroundColor: editCourseCategory === cat.name ? '#fff7ed' : Colors.surfaceSubtle,
+                          borderColor: editCourseCategory === cat.name ? Colors.primaryOrange : Colors.border,
+                          borderWidth: 1,
+                          marginRight: 6,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: editCourseCategory === cat.name ? '700' : '500',
+                            color: editCourseCategory === cat.name ? Colors.primaryOrange : Colors.textSecondary,
+                          }}
+                        >
+                          {cat.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder="Web Development"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseCategory}
+                  onChangeText={setEditCourseCategory}
+                />
+              </View>
+
+              <View style={styles.inputRow}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={styles.inputLabel}>Program Fee (₹)</Text>
                   <TextInput
@@ -2561,6 +2857,95 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     keyboardType="numeric"
                     value={editCoursePrice}
                     onChangeText={setEditCoursePrice}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Status</Text>
+                  <View style={styles.rolePickerRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.rolePickerItem,
+                        editCourseStatus === 'PUBLISHED' && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setEditCourseStatus('PUBLISHED')}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          editCourseStatus === 'PUBLISHED' && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        PUBLISHED
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.rolePickerItem,
+                        editCourseStatus === 'DRAFT' && styles.rolePickerItemActive,
+                      ]}
+                      onPress={() => setEditCourseStatus('DRAFT')}
+                    >
+                      <Text
+                        style={[
+                          styles.rolePickerItemText,
+                          editCourseStatus === 'DRAFT' && styles.rolePickerItemTextActive,
+                        ]}
+                      >
+                        DRAFT
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Rating</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="4.9"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={editCourseRating}
+                    onChangeText={setEditCourseRating}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Reviews Count</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="1.2k+"
+                    placeholderTextColor={Colors.textLight}
+                    value={editCourseReviewsCount}
+                    onChangeText={setEditCourseReviewsCount}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Course Level</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Beginner to Advanced"
+                    placeholderTextColor={Colors.textLight}
+                    value={editCourseLevel}
+                    onChangeText={setEditCourseLevel}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Total Classes</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="12"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={editCourseTotalClasses}
+                    onChangeText={setEditCourseTotalClasses}
                   />
                 </View>
               </View>
@@ -2589,6 +2974,18 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
 
               <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Course Video URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://www.youtube.com/embed/... (optional)"
+                  placeholderTextColor={Colors.textLight}
+                  value={editCourseVideoUrl}
+                  onChangeText={setEditCourseVideoUrl}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Description *</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -2602,7 +2999,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Skills (comma-separated)</Text>
+                <Text style={styles.inputLabel}>Skills You'll Gain (comma-separated)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="React, Node.js, Express, MongoDB"
@@ -2624,42 +3021,29 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Publication Status</Text>
-                <View style={styles.rolePickerRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.rolePickerItem,
-                      editCourseStatus === 'PUBLISHED' && styles.rolePickerItemActive,
-                    ]}
-                    onPress={() => setEditCourseStatus('PUBLISHED')}
-                  >
-                    <Text
-                      style={[
-                        styles.rolePickerItemText,
-                        editCourseStatus === 'PUBLISHED' && styles.rolePickerItemTextActive,
-                      ]}
-                    >
-                      PUBLISHED
-                    </Text>
-                  </TouchableOpacity>
+                <Text style={styles.inputLabel}>Benefits of This Course (1 per line)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, { minHeight: 90 }]}
+                  placeholder="100% Practical Training with Live Projects&#10;Placement Assistance&#10;Certification"
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={4}
+                  value={editCourseBenefits}
+                  onChangeText={setEditCourseBenefits}
+                />
+              </View>
 
-                  <TouchableOpacity
-                    style={[
-                      styles.rolePickerItem,
-                      editCourseStatus === 'DRAFT' && styles.rolePickerItemActive,
-                    ]}
-                    onPress={() => setEditCourseStatus('DRAFT')}
-                  >
-                    <Text
-                      style={[
-                        styles.rolePickerItemText,
-                        editCourseStatus === 'DRAFT' && styles.rolePickerItemTextActive,
-                      ]}
-                    >
-                      DRAFT
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>What You'll Learn (1 per line)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, { minHeight: 90 }]}
+                  placeholder="Master Modern Full-Stack Development&#10;Build Production Projects"
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={4}
+                  value={editCourseWhatYoullLearn}
+                  onChangeText={setEditCourseWhatYoullLearn}
+                />
               </View>
 
               <TouchableOpacity

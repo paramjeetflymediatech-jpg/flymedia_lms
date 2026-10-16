@@ -70,6 +70,15 @@ export async function POST(request: Request) {
       techStack,
       status,
       thumbnail,
+      mode,
+      rating,
+      reviewsCount,
+      totalClasses,
+      videoUrl,
+      benefits,
+      whatYoullLearn,
+      highlights,
+      faqs,
     } = body;
 
     if (!title || !description) {
@@ -91,23 +100,57 @@ export async function POST(request: Request) {
       );
     }
 
+    const parsedBenefits = Array.isArray(benefits)
+      ? benefits
+      : typeof benefits === 'string'
+      ? benefits.split('\n').map((s: string) => s.trim()).filter(Boolean)
+      : [
+          '100% Practical Training with Live Projects',
+          'Advanced Skills & Industry Mentorship',
+          'Internship Opportunity Basis Learning Progress',
+          'Certification after Completion',
+        ];
+
+    const parsedWhatYoullLearn = Array.isArray(whatYoullLearn)
+      ? whatYoullLearn
+      : typeof whatYoullLearn === 'string'
+      ? whatYoullLearn.split('\n').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
     const createdPackage = await Package.create({
       title,
       slug: finalSlug,
       category: category || 'Web Development',
       thumbnail: thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
       description,
-      price: price ? Number(price) : 25000,
+      price: price != null ? Number(price) : 25000,
       duration: duration || '12 Weeks',
       level: level || 'Beginner to Advanced',
       status: status || 'PUBLISHED',
-      mode: 'BOTH',
-      skills: Array.isArray(skills) ? skills : ['Core Concepts', 'Practical Projects'],
-      techStack: Array.isArray(techStack) ? techStack : ['Industry Tools', 'Git'],
-      highlights: [
-        { title: 'Live Mentorship', description: 'Real-time practical training from industry experts.' },
-        { title: 'Placement Assistance', description: 'Resume preparation and direct interviews.' },
-      ],
+      mode: mode || 'ONLINE',
+      rating: rating != null ? Number(rating) : 4.9,
+      reviewsCount: reviewsCount || '1.2k+',
+      totalClasses: totalClasses != null ? Number(totalClasses) : 12,
+      videoUrl: videoUrl || null,
+      skills: Array.isArray(skills)
+        ? skills
+        : typeof skills === 'string'
+        ? skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : ['Core Concepts', 'Practical Projects'],
+      techStack: Array.isArray(techStack)
+        ? techStack
+        : typeof techStack === 'string'
+        ? techStack.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : ['Industry Tools', 'Git'],
+      benefits: parsedBenefits,
+      whatYoullLearn: parsedWhatYoullLearn,
+      highlights: Array.isArray(highlights) && highlights.length > 0
+        ? highlights
+        : [
+            { title: 'Live Mentorship', description: 'Real-time practical training from industry experts.' },
+            { title: 'Placement Assistance', description: 'Resume preparation and direct interviews.' },
+          ],
+      faqs: Array.isArray(faqs) ? faqs : [],
       courseModules: [
         { title: 'Stage 1: Core Fundamentals', topics: ['Foundation & Concepts', 'Hands-on practice'] },
         { title: 'Stage 2: Advanced Real-world Projects', topics: ['Project Architecture', 'Deployment'] },
@@ -204,6 +247,13 @@ async function handleUpdatePackage(request: Request) {
       thumbnail,
       mode,
       totalClasses,
+      rating,
+      reviewsCount,
+      videoUrl,
+      benefits,
+      whatYoullLearn,
+      highlights,
+      faqs,
     } = body;
 
     if (!id) {
@@ -224,19 +274,46 @@ async function handleUpdatePackage(request: Request) {
     if (title !== undefined) pkg.title = title;
     if (category !== undefined) pkg.category = category;
     if (description !== undefined) pkg.description = description;
-    if (price !== undefined) pkg.price = Number(price);
+    if (price !== undefined) pkg.price = price != null ? Number(price) : null;
     if (duration !== undefined) pkg.duration = duration;
     if (level !== undefined) pkg.level = level;
     if (status !== undefined) pkg.status = status;
     if (thumbnail !== undefined) pkg.thumbnail = thumbnail;
     if (mode !== undefined) pkg.mode = mode;
     if (totalClasses !== undefined) (pkg as any).totalClasses = Number(totalClasses);
+    if (rating !== undefined) (pkg as any).rating = Number(rating);
+    if (reviewsCount !== undefined) (pkg as any).reviewsCount = reviewsCount;
+    if (videoUrl !== undefined) (pkg as any).videoUrl = videoUrl;
 
     if (skills !== undefined) {
-      pkg.skills = Array.isArray(skills) ? (skills as string[]) : String(skills).split(',').map((s: string) => s.trim()).filter(Boolean);
+      pkg.skills = Array.isArray(skills)
+        ? (skills as string[])
+        : String(skills).split(',').map((s: string) => s.trim()).filter(Boolean);
     }
     if (techStack !== undefined) {
-      pkg.techStack = Array.isArray(techStack) ? (techStack as string[]) : String(techStack).split(',').map((t: string) => t.trim()).filter(Boolean);
+      pkg.techStack = Array.isArray(techStack)
+        ? (techStack as string[])
+        : String(techStack).split(',').map((t: string) => t.trim()).filter(Boolean);
+    }
+    if (benefits !== undefined) {
+      (pkg as any).benefits = Array.isArray(benefits)
+        ? benefits
+        : typeof benefits === 'string'
+        ? benefits.split('\n').map((s: string) => s.trim()).filter(Boolean)
+        : null;
+    }
+    if (whatYoullLearn !== undefined) {
+      (pkg as any).whatYoullLearn = Array.isArray(whatYoullLearn)
+        ? whatYoullLearn
+        : typeof whatYoullLearn === 'string'
+        ? whatYoullLearn.split('\n').map((s: string) => s.trim()).filter(Boolean)
+        : null;
+    }
+    if (highlights !== undefined) {
+      (pkg as any).highlights = Array.isArray(highlights) ? highlights : null;
+    }
+    if (faqs !== undefined) {
+      (pkg as any).faqs = Array.isArray(faqs) ? faqs : null;
     }
 
     await pkg.save();
