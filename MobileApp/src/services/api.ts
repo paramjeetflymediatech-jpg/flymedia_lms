@@ -691,6 +691,122 @@ export const ApiService = {
     }
   },
 
+  /**
+   * Admin: Create a new tutor account and optionally assign packages
+   */
+  async createAdminTutor(
+    tutorData: {
+      name: string;
+      email: string;
+      password: string;
+      professionTitle?: string;
+      bio?: string;
+      packageIds?: string[];
+    },
+    token: string
+  ) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/tutors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(tutorData),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to create tutor' };
+    }
+  },
+
+  /**
+   * Admin: Delete tutor
+   */
+  async deleteAdminTutor(tutorId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/tutors?id=${tutorId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete tutor' };
+    }
+  },
+
+  /**
+   * Admin: Get all schedules and live classes
+   */
+  async getAdminSchedules(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/schedules`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, schedules: [], liveClasses: [] };
+    }
+  },
+
+  /**
+   * Admin: Create and generate recurring class schedule
+   */
+  async createAdminSchedule(scheduleData: any, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/schedules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(scheduleData),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to generate schedule' };
+    }
+  },
+
+  /**
+   * Admin: Delete recurring schedule
+   */
+  async deleteAdminSchedule(scheduleId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/schedules?scheduleId=${scheduleId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete schedule' };
+    }
+  },
+
+  /**
+   * Admin: Delete individual live class
+   */
+  async deleteAdminLiveClass(classId: string, token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/schedules?classId=${classId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to delete class' };
+    }
+  },
+
 
   // ==========================================
   // STUDENT PANEL APIs

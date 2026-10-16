@@ -174,15 +174,9 @@ export async function GET(request: Request) {
   }
 }
 
+import bcrypt from 'bcryptjs';
+
 export async function POST(request: Request) {
-  return handleAssignTutorPackages(request);
-}
-
-export async function PUT(request: Request) {
-  return handleAssignTutorPackages(request);
-}
-
-async function handleAssignTutorPackages(request: Request) {
   try {
     const authPayload = await getAuthUserFromRequest(request);
     if (!authPayload || authPayload.role !== 'ADMIN') {
@@ -193,7 +187,109 @@ async function handleAssignTutorPackages(request: Request) {
     }
 
     const body = await request.json();
-    const { tutorId, packageIds } = body;
+    const { tutorId, name, email, password, professionTitle, bio, packageIds } = body;
+
+    // Case 1: If tutorId is provided, sync course assignments or update profile
+    if (tutorId) {
+      const tutor = await User.findOne({ where: { id: tutorId, role: 'TUTOR' } });
+      if (!tutor) {
+        return NextResponse.json(
+          { success: false, error: 'Tutor not found' },
+          { status: 404 }
+        );
+      }
+
+      if (name) tutor.name = name;
+      if (email) tutor.email = email;
+      if (professionTitle !== undefined) tutor.professionTitle = professionTitle;
+      if (bio !== undefined) tutor.bio = bio;
+      if (password && password.trim().length > 0) {
+        tutor.passwordHash = await bcrypt.hash(password, 10);
+      }
+      await tutor.save();
+
+      if (packageIds !== undefined) {
+        await PackageTutor.destroy({ where: { tutorId } });
+        if (Array.isArray(packageIds) && packageIds.length > 0) {
+          const records = (packageIds as any[]).map((packageId: any) => ({
+            packageId: String(packageId),
+            tutorId: String(tutorId),
+          }));
+          await PackageTutor.bulkCreate(records);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Tutor updated successfully',
+        tutor,
+      });
+    }
+
+    // Case 2: Create a new tutor
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { success: false, error: 'Name, email, and password are required' },
+        { status: 400 }
+      );
+    }
+
+    const existing = await User.findOne({ where: { email } });
+    if (existing) {
+      return NextResponse.json(
+        { success: false, error: 'A user with this email already exists' },
+        { status: 400 }
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const newTutor = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: 'TUTOR',
+      professionTitle: professionTitle || 'Certified Mentor',
+      bio: bio || '',
+    });
+
+    if (Array.isArray(packageIds) && packageIds.length > 0) {
+      const records = (packageIds as any[]).map((pkgId: any) => ({
+        packageId: String(pkgId),
+        tutorId: newTutor.id,
+      }));
+      await PackageTutor.bulkCreate(records);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Tutor created and packages assigned successfully',
+      tutor: newTutor,
+    });
+  } catch (error: any) {
+    console.error('Admin tutor POST error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to process tutor action' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  return POST(request);
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const authPayload = await getAuthUserFromRequest(request);
+    if (!authPayload || authPayload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const tutorId = searchParams.get('id');
 
     if (!tutorId) {
       return NextResponse.json(
@@ -202,7 +298,7 @@ async function handleAssignTutorPackages(request: Request) {
       );
     }
 
-    const tutor = await User.findOne({ where: { id: tutorId, role: 'TUTOR' } });
+    const tutor = await User.findByPk(tutorId);
     if (!tutor) {
       return NextResponse.json(
         { success: false, error: 'Tutor not found' },
@@ -210,24 +306,17 @@ async function handleAssignTutorPackages(request: Request) {
       );
     }
 
-    // Sync package assignments
     await PackageTutor.destroy({ where: { tutorId } });
-    if (Array.isArray(packageIds) && packageIds.length > 0) {
-      const records = (packageIds as any[]).map((packageId: any) => ({
-        packageId: String(packageId),
-        tutorId: String(tutorId),
-      }));
-      await PackageTutor.bulkCreate(records);
-    }
+    await tutor.destroy();
 
     return NextResponse.json({
       success: true,
-      message: 'Tutor course assignments updated successfully',
+      message: 'Tutor removed successfully',
     });
   } catch (error: any) {
-    console.error('Assign tutor packages error:', error);
+    console.error('Admin delete tutor error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update tutor package assignments' },
+      { success: false, error: error.message || 'Failed to delete tutor' },
       { status: 500 }
     );
   }

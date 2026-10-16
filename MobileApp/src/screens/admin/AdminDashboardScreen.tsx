@@ -51,6 +51,7 @@ import {
   Mail,
   Star,
   UserCheck,
+  ExternalLink,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
@@ -211,6 +212,33 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [tutorAssignedPkgIds, setTutorAssignedPkgIds] = useState<string[]>([]);
   const [assigningTutorPackages, setAssigningTutorPackages] = useState(false);
 
+  // Tutors & Schedules State
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [liveClasses, setLiveClasses] = useState<any[]>([]);
+  const [tutorSubTab, setTutorSubTab] = useState<'roster' | 'schedule' | 'classes'>('roster');
+
+  // Add / Edit Tutor Modal
+  const [tutorModalOpen, setTutorModalOpen] = useState(false);
+  const [editingTutorData, setEditingTutorData] = useState<any | null>(null);
+  const [tutorFormName, setTutorFormName] = useState('');
+  const [tutorFormEmail, setTutorFormEmail] = useState('');
+  const [tutorFormPassword, setTutorFormPassword] = useState('');
+  const [tutorFormProfession, setTutorFormProfession] = useState('Certified Mentor');
+  const [tutorFormBio, setTutorFormBio] = useState('');
+  const [tutorFormPackageIds, setTutorFormPackageIds] = useState<string[]>([]);
+  const [savingTutor, setSavingTutor] = useState(false);
+
+  // Schedule Generator Form State
+  const [schedTutorId, setSchedTutorId] = useState('');
+  const [schedPackageId, setSchedPackageId] = useState('');
+  const [schedDays, setSchedDays] = useState<string[]>(['Monday', 'Wednesday']);
+  const [schedStartTime, setSchedStartTime] = useState('18:00');
+  const [schedDuration, setSchedDuration] = useState('60');
+  const [schedMeetLink, setSchedMeetLink] = useState('https://meet.google.com/');
+  const [schedStartDate, setSchedStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [schedTotalClasses, setSchedTotalClasses] = useState('12');
+  const [generatingSchedule, setGeneratingSchedule] = useState(false);
+
   // New Course Form
   const [courseTitle, setCourseTitle] = useState('');
   const [courseCategory, setCourseCategory] = useState('Web Development');
@@ -269,7 +297,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const loadAllAdminData = async () => {
     if (!user || !user.token) return;
     try {
-      const [statsRes, pkgsRes, leadsRes, enrollRes, usersRes, catsRes, couponsRes, tutorsRes] =
+      const [statsRes, pkgsRes, leadsRes, enrollRes, usersRes, catsRes, couponsRes, tutorsRes, schedsRes] =
         await Promise.all([
           ApiService.getAdminStats(user.token),
           ApiService.getAdminPackages(user.token),
@@ -279,6 +307,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           ApiService.getAdminCategories(user.token),
           ApiService.getAdminCoupons(user.token),
           ApiService.getAdminTutors(user.token),
+          ApiService.getAdminSchedules(user.token),
         ]);
 
       let finalPackages = Array.isArray(pkgsRes?.packages) ? pkgsRes.packages : [];
@@ -288,6 +317,8 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       let finalCategories = Array.isArray(catsRes?.categories) ? catsRes.categories : [];
       let finalCoupons = Array.isArray(couponsRes?.coupons) ? couponsRes.coupons : [];
       let finalTutors = Array.isArray(tutorsRes?.tutors) ? tutorsRes.tutors : [];
+      let finalSchedules = Array.isArray(schedsRes?.schedules) ? schedsRes.schedules : [];
+      let finalLiveClasses = Array.isArray(schedsRes?.liveClasses) ? schedsRes.liveClasses : [];
 
       // Fallback for packages and categories from public home endpoint if admin returned empty
       if (finalPackages.length === 0 || finalCategories.length === 0) {
@@ -314,6 +345,15 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       setCategories(finalCategories);
       setCoupons(finalCoupons);
       setTutors(finalTutors);
+      setSchedules(finalSchedules);
+      setLiveClasses(finalLiveClasses);
+
+      if (finalTutors.length > 0) {
+        setSchedTutorId(prev => prev || finalTutors[0].id);
+      }
+      if (finalPackages.length > 0) {
+        setSchedPackageId(prev => prev || finalPackages[0].id);
+      }
 
       // Keep stats cards aligned with the loaded data so overview cards match actual list contents
       setStats({
@@ -774,6 +814,236 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     } else {
       Alert.alert('Error', res.error || 'Failed to update course assignments');
     }
+  };
+
+  const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const handleOpenAddTutor = () => {
+    setEditingTutorData(null);
+    setTutorFormName('');
+    setTutorFormEmail('');
+    setTutorFormPassword('');
+    setTutorFormProfession('Certified Mentor');
+    setTutorFormBio('');
+    setTutorFormPackageIds([]);
+    setTutorModalOpen(true);
+  };
+
+  const handleOpenEditTutor = (tutor: any) => {
+    setEditingTutorData(tutor);
+    setTutorFormName(tutor.name || '');
+    setTutorFormEmail(tutor.email || '');
+    setTutorFormPassword('');
+    setTutorFormProfession(tutor.professionTitle || '');
+    setTutorFormBio(tutor.bio || '');
+
+    const directIds = Array.isArray(tutor.courses)
+      ? tutor.courses.map((c: any) => c.id).filter(Boolean)
+      : Array.isArray(tutor.assignedPackages)
+      ? tutor.assignedPackages.map((p: any) => p.id).filter(Boolean)
+      : [];
+    const fromPkgs = packages
+      .filter((p: any) => Array.isArray(p.assignedTutors) && p.assignedTutors.some((at: any) => at.id === tutor.id))
+      .map((p: any) => p.id);
+    setTutorFormPackageIds(Array.from(new Set([...directIds, ...fromPkgs])));
+    setTutorModalOpen(true);
+  };
+
+  const handleSaveTutor = async () => {
+    if (!tutorFormName.trim() || !tutorFormEmail.trim()) {
+      Alert.alert('Required Information', 'Please provide tutor name and email address.');
+      return;
+    }
+    if (!editingTutorData && !tutorFormPassword.trim()) {
+      Alert.alert('Required Information', 'Password is required when creating a new instructor account.');
+      return;
+    }
+    if (!user || !user.token) return;
+
+    setSavingTutor(true);
+    let res: any;
+    if (editingTutorData) {
+      res = await ApiService.createAdminTutor(
+        {
+          tutorId: editingTutorData.id,
+          name: tutorFormName.trim(),
+          email: tutorFormEmail.trim(),
+          password: tutorFormPassword.trim(),
+          professionTitle: tutorFormProfession.trim(),
+          bio: tutorFormBio.trim(),
+          packageIds: tutorFormPackageIds,
+        } as any,
+        user.token
+      );
+    } else {
+      res = await ApiService.createAdminTutor(
+        {
+          name: tutorFormName.trim(),
+          email: tutorFormEmail.trim(),
+          password: tutorFormPassword.trim(),
+          professionTitle: tutorFormProfession.trim(),
+          bio: tutorFormBio.trim(),
+          packageIds: tutorFormPackageIds,
+        },
+        user.token
+      );
+    }
+    setSavingTutor(false);
+
+    if (res.success) {
+      Alert.alert(
+        'Success 🎉',
+        editingTutorData
+          ? 'Instructor updated and packages synced successfully!'
+          : 'Instructor created and assigned to selected packages!'
+      );
+      setTutorModalOpen(false);
+      loadAllAdminData();
+    } else {
+      Alert.alert('Error', res.error || 'Failed to save instructor account');
+    }
+  };
+
+  const handleDeleteTutor = (tutor: any) => {
+    Alert.alert(
+      'Delete Instructor?',
+      `Are you sure you want to delete ${tutor.name || tutor.email}? All course assignments and schedules linked to this tutor will be removed.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Tutor',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user || !user.token) return;
+            const res = await ApiService.deleteAdminTutor(tutor.id, user.token);
+            if (res.success) {
+              Alert.alert('Deleted', 'Instructor account removed successfully.');
+              loadAllAdminData();
+            } else {
+              Alert.alert('Error', res.error || 'Failed to delete instructor');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleScheduleForTutor = (tutor: any) => {
+    setSchedTutorId(tutor.id);
+    const assigned = Array.isArray(tutor.courses) && tutor.courses.length > 0
+      ? tutor.courses
+      : Array.isArray(tutor.assignedPackages) && tutor.assignedPackages.length > 0
+      ? tutor.assignedPackages
+      : [];
+    if (assigned.length > 0) {
+      setSchedPackageId(assigned[0].id);
+    }
+    setTutorSubTab('schedule');
+  };
+
+  const toggleSchedDay = (day: string) => {
+    if (schedDays.includes(day)) {
+      if (schedDays.length === 1) return; // Keep at least one day
+      setSchedDays(schedDays.filter(d => d !== day));
+    } else {
+      setSchedDays([...schedDays, day]);
+    }
+  };
+
+  const handleGenerateSchedule = async () => {
+    if (!schedTutorId || !schedPackageId) {
+      Alert.alert('Missing Selection', 'Please select both an instructor and a course package.');
+      return;
+    }
+    if (schedDays.length === 0) {
+      Alert.alert('Missing Selection', 'Please select at least 1 day per week.');
+      return;
+    }
+    if (!schedMeetLink.trim()) {
+      Alert.alert('Missing Link', 'Please enter a valid Google Meet link for classes.');
+      return;
+    }
+    if (!user || !user.token) return;
+
+    setGeneratingSchedule(true);
+    const res = await ApiService.createAdminSchedule(
+      {
+        tutorId: schedTutorId,
+        packageId: schedPackageId,
+        daysOfWeek: schedDays,
+        startTime: schedStartTime.trim() || '18:00',
+        duration: Number(schedDuration) || 60,
+        meetLink: schedMeetLink.trim(),
+        startDate: schedStartDate.trim() || new Date().toISOString().slice(0, 10),
+        totalClasses: Number(schedTotalClasses) || 12,
+      },
+      user.token
+    );
+    setGeneratingSchedule(false);
+
+    if (res.success) {
+      Alert.alert(
+        'Schedule Generated! 🚀',
+        res.message || `Successfully generated recurring schedule and classes!`,
+        [
+          {
+            text: 'View Classes',
+            onPress: () => setTutorSubTab('classes'),
+          },
+        ]
+      );
+      loadAllAdminData();
+    } else {
+      Alert.alert('Error', res.error || 'Failed to generate recurring schedule');
+    }
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    Alert.alert(
+      'Cancel Schedule Rule?',
+      'This will cancel this recurring schedule rule and all upcoming live classes created from it.',
+      [
+        { text: 'Keep Rule', style: 'cancel' },
+        {
+          text: 'Cancel Rule',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user || !user.token) return;
+            const res = await ApiService.deleteAdminSchedule(scheduleId, user.token);
+            if (res.success) {
+              Alert.alert('Cancelled', 'Schedule rule cancelled.');
+              loadAllAdminData();
+            } else {
+              Alert.alert('Error', res.error || 'Failed to cancel schedule rule');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteLiveClass = (classId: string, title: string) => {
+    Alert.alert(
+      'Delete Live Class Session?',
+      `Are you sure you want to remove "${title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user || !user.token) return;
+            const res = await ApiService.deleteAdminLiveClass(classId, user.token);
+            if (res.success) {
+              Alert.alert('Deleted', 'Class session removed.');
+              loadAllAdminData();
+            } else {
+              Alert.alert('Error', res.error || 'Failed to remove class session');
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Available tutors helper (combines tutors list or tutor-role users)
@@ -1580,153 +1850,643 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= TUTORS TAB ================= */}
             {activeTab === 'tutors' && (
               <View>
-                {/* TUTOR SEARCH */}
-                <View style={styles.tabHeaderActionRow}>
-                  <View style={styles.searchBarBox}>
-                    <Search size={16} color={Colors.textMuted} />
-                    <TextInput
-                      style={styles.searchBarInput}
-                      placeholder="Search tutors by name, email, course..."
-                      placeholderTextColor={Colors.textLight}
-                      value={tutorSearchQuery}
-                      onChangeText={setTutorSearchQuery}
-                    />
-                  </View>
-                </View>
-
-                {/* TUTOR OVERVIEW BANNER */}
-                <View style={styles.tutorHeaderSummary}>
-                  <Award size={18} color="#7c3aed" />
-                  <Text style={styles.tutorHeaderSummaryText}>
-                    Active Instructors & Course Allocations ({filteredTutors.length})
-                  </Text>
-                </View>
-
-                {filteredTutors.length === 0 ? (
-                  <View style={styles.emptyStateBox}>
-                    <Award size={40} color={Colors.textLight} />
-                    <Text style={styles.emptyStateTitle}>No Tutors Found</Text>
-                    <Text style={styles.emptyStateSub}>
-                      {tutorSearchQuery
-                        ? `No tutors matching "${tutorSearchQuery}".`
-                        : 'No instructors or tutors are currently registered. You can add users with TUTOR role in the Users tab.'}
+                {/* TUTORS SUB-TAB SWITCHER */}
+                <View style={styles.tutorSubTabBar}>
+                  <TouchableOpacity
+                    style={[styles.tutorSubTabBtn, tutorSubTab === 'roster' && styles.tutorSubTabBtnActive]}
+                    onPress={() => setTutorSubTab('roster')}
+                    activeOpacity={0.8}
+                  >
+                    <Award size={13} color={tutorSubTab === 'roster' ? '#ffffff' : Colors.textMuted} />
+                    <Text style={[styles.tutorSubTabText, tutorSubTab === 'roster' && styles.tutorSubTabTextActive]}>
+                      Instructors ({tutors.length})
                     </Text>
-                    {tutorSearchQuery ? (
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.tutorSubTabBtn, tutorSubTab === 'schedule' && styles.tutorSubTabBtnActive]}
+                    onPress={() => setTutorSubTab('schedule')}
+                    activeOpacity={0.8}
+                  >
+                    <Calendar size={13} color={tutorSubTab === 'schedule' ? '#ffffff' : Colors.textMuted} />
+                    <Text style={[styles.tutorSubTabText, tutorSubTab === 'schedule' && styles.tutorSubTabTextActive]}>
+                      Schedule Generator
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.tutorSubTabBtn, tutorSubTab === 'classes' && styles.tutorSubTabBtnActive]}
+                    onPress={() => setTutorSubTab('classes')}
+                    activeOpacity={0.8}
+                  >
+                    <Video size={13} color={tutorSubTab === 'classes' ? '#ffffff' : Colors.textMuted} />
+                    <Text style={[styles.tutorSubTabText, tutorSubTab === 'classes' && styles.tutorSubTabTextActive]}>
+                      Live Classes ({liveClasses.length})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* ================= SUB-TAB 1: INSTRUCTORS ROSTER ================= */}
+                {tutorSubTab === 'roster' && (
+                  <View>
+                    {/* TUTOR TOP ACTION ROW: Search & Add Instructor */}
+                    <View style={styles.tabHeaderActionRow}>
+                      <View style={styles.searchBarBox}>
+                        <Search size={16} color={Colors.textMuted} />
+                        <TextInput
+                          style={styles.searchBarInput}
+                          placeholder="Search tutors by name, email, course..."
+                          placeholderTextColor={Colors.textLight}
+                          value={tutorSearchQuery}
+                          onChangeText={setTutorSearchQuery}
+                        />
+                      </View>
                       <TouchableOpacity
-                        style={styles.emptyResetBtn}
-                        onPress={() => setTutorSearchQuery('')}
-                      >
-                        <Text style={styles.emptyResetBtnText}>Clear Search</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.emptyActionBtn}
-                        onPress={() => {
-                          setNewUserRole('TUTOR');
-                          setAddUserModal(true);
-                        }}
+                        style={styles.newBtn}
+                        onPress={handleOpenAddTutor}
+                        activeOpacity={0.8}
                       >
                         <UserPlus size={16} color={Colors.textWhite} />
-                        <Text style={styles.emptyActionBtnText}>Add Tutor Account</Text>
+                        <Text style={styles.newBtnText}>Add Instructor</Text>
                       </TouchableOpacity>
+                    </View>
+
+                    {/* MULTI-PACKAGE TUTOR ASSIGNMENT INFO BANNER */}
+                    <View style={styles.tutorInfoBanner}>
+                      <Award size={18} color="#b45309" />
+                      <View style={{ flex: 1, marginLeft: 8 }}>
+                        <Text style={styles.tutorInfoBannerTitle}>Multi-Package Tutor Assignments</Text>
+                        <Text style={styles.tutorInfoBannerSub}>
+                          Instructors can teach multiple course packages. Schedule their live recurring batches or assign packages below.
+                        </Text>
+                      </View>
+                    </View>
+
+                    {filteredTutors.length === 0 ? (
+                      <View style={styles.emptyStateBox}>
+                        <Award size={40} color={Colors.textLight} />
+                        <Text style={styles.emptyStateTitle}>No Tutors Found</Text>
+                        <Text style={styles.emptyStateSub}>
+                          {tutorSearchQuery
+                            ? `No tutors matching "${tutorSearchQuery}".`
+                            : 'No instructors or tutors are currently registered. Add your first instructor to begin assigning packages and classes.'}
+                        </Text>
+                        {tutorSearchQuery ? (
+                          <TouchableOpacity
+                            style={styles.emptyResetBtn}
+                            onPress={() => setTutorSearchQuery('')}
+                          >
+                            <Text style={styles.emptyResetBtnText}>Clear Search</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.emptyActionBtn}
+                            onPress={handleOpenAddTutor}
+                          >
+                            <UserPlus size={16} color={Colors.textWhite} />
+                            <Text style={styles.emptyActionBtnText}>Add New Instructor</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ) : (
+                      filteredTutors.map(tutor => {
+                        const tutorName = tutor.name || 'Instructor';
+                        const tutorEmail = tutor.email || 'N/A';
+                        const coursesCount = tutor.coursesCount ?? (Array.isArray(tutor.courses) ? tutor.courses.length : 0);
+                        const studentsCount = tutor.studentsCount ?? 0;
+                        const assignedCourses = Array.isArray(tutor.courses) ? tutor.courses : [];
+
+                        return (
+                          <View key={tutor.id} style={styles.tutorCard}>
+                            {/* TUTOR PROFILE TOP */}
+                            <View style={styles.tutorCardTop}>
+                              <View style={styles.tutorAvatar}>
+                                <Text style={styles.tutorAvatarText}>
+                                  {tutorName ? tutorName[0].toUpperCase() : 'T'}
+                                </Text>
+                              </View>
+                              <View style={{ flex: 1, marginRight: 8 }}>
+                                <Text style={styles.tutorName}>{tutorName}</Text>
+                                <Text style={styles.tutorEmail}>{tutorEmail}</Text>
+                                {tutor.professionTitle ? (
+                                  <Text style={styles.tutorProfessionText}>{tutor.professionTitle}</Text>
+                                ) : null}
+                              </View>
+                              <View style={styles.tutorTopActionButtons}>
+                                <TouchableOpacity
+                                  style={styles.tutorMiniIconBtn}
+                                  onPress={() => handleOpenEditTutor(tutor)}
+                                  activeOpacity={0.7}
+                                >
+                                  <Pencil size={14} color={Colors.textSecondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={[styles.tutorMiniIconBtn, { backgroundColor: '#fef2f2' }]}
+                                  onPress={() => handleDeleteTutor(tutor)}
+                                  activeOpacity={0.7}
+                                >
+                                  <Trash2 size={14} color="#ef4444" />
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+
+                            {/* BIO IF PRESENT */}
+                            {tutor.bio ? (
+                              <View style={styles.tutorBioBox}>
+                                <Text style={styles.tutorBioText} numberOfLines={2}>
+                                  {tutor.bio}
+                                </Text>
+                              </View>
+                            ) : null}
+
+                            {/* TUTOR METRICS: COURSES & STUDENTS */}
+                            <View style={styles.tutorMetricsRow}>
+                              <View style={styles.tutorMetricBox}>
+                                <BookOpen size={16} color={Colors.primaryOrange} />
+                                <View style={{ marginLeft: 8 }}>
+                                  <Text style={styles.tutorMetricValue}>{coursesCount}</Text>
+                                  <Text style={styles.tutorMetricLabel}>Assigned Packages</Text>
+                                </View>
+                              </View>
+
+                              <View style={styles.tutorMetricBox}>
+                                <Users size={16} color="#2563eb" />
+                                <View style={{ marginLeft: 8 }}>
+                                  <Text style={styles.tutorMetricValue}>{studentsCount}</Text>
+                                  <Text style={styles.tutorMetricLabel}>Enrolled Students</Text>
+                                </View>
+                              </View>
+                            </View>
+
+                            {/* ASSIGNED COURSES CHIPS */}
+                            {assignedCourses.length > 0 && (
+                              <View style={styles.tutorCoursesWrap}>
+                                <Text style={styles.tutorCoursesLabel}>Assigned Packages ({assignedCourses.length}):</Text>
+                                <View style={styles.tutorCourseChipsRow}>
+                                  {assignedCourses.slice(0, 4).map((c: any, idx: number) => (
+                                    <View key={c.id || idx} style={styles.tutorCourseChip}>
+                                      <Text style={styles.tutorCourseChipText} numberOfLines={1}>
+                                        🎓 {c.title || 'Course Track'}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                  {assignedCourses.length > 4 && (
+                                    <View style={[styles.tutorCourseChip, { backgroundColor: '#f1f5f9' }]}>
+                                      <Text style={[styles.tutorCourseChipText, { color: Colors.textSecondary }]}>
+                                        +{assignedCourses.length - 4} more
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                              </View>
+                            )}
+
+                            {/* TUTOR CARD ACTIONS */}
+                            <View style={styles.tutorActionGrid}>
+                              <TouchableOpacity
+                                style={styles.tutorScheduleBtn}
+                                onPress={() => handleScheduleForTutor(tutor)}
+                                activeOpacity={0.8}
+                              >
+                                <Calendar size={14} color={Colors.primaryOrange} />
+                                <Text style={styles.tutorScheduleBtnText}>Schedule Classes</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity
+                                style={styles.tutorAssignBtn}
+                                onPress={() => handleOpenAssignCoursesToTutor(tutor)}
+                                activeOpacity={0.8}
+                              >
+                                <UserCheck size={14} color="#059669" />
+                                <Text style={styles.tutorAssignBtnText}>Assign Courses</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity
+                                style={styles.tutorRosterBtn}
+                                onPress={() => handleViewTutor(tutor)}
+                                activeOpacity={0.8}
+                              >
+                                <Eye size={14} color="#7c3aed" />
+                                <Text style={styles.tutorRosterBtnText}>Roster</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })
                     )}
                   </View>
-                ) : (
-                  filteredTutors.map(tutor => {
-                    const tutorName = tutor.name || 'Instructor';
-                    const tutorEmail = tutor.email || 'N/A';
-                    const coursesCount = tutor.coursesCount ?? (Array.isArray(tutor.courses) ? tutor.courses.length : 0);
-                    const studentsCount = tutor.studentsCount ?? 0;
-                    const assignedCourses = Array.isArray(tutor.courses) ? tutor.courses : [];
+                )}
 
-                    return (
-                      <View key={tutor.id} style={styles.tutorCard}>
-                        {/* TUTOR PROFILE TOP */}
-                        <View style={styles.tutorCardTop}>
-                          <View style={styles.tutorAvatar}>
-                            <Text style={styles.tutorAvatarText}>
-                              {tutorName ? tutorName[0].toUpperCase() : 'T'}
-                            </Text>
-                          </View>
-                          <View style={{ flex: 1, marginRight: 8 }}>
-                            <Text style={styles.tutorName}>{tutorName}</Text>
-                            <Text style={styles.tutorEmail}>{tutorEmail}</Text>
-                          </View>
-                          <View style={styles.tutorRolePill}>
-                            <Text style={styles.tutorRolePillText}>INSTRUCTOR</Text>
-                          </View>
-                        </View>
-
-                        {/* TUTOR METRICS: COURSES & STUDENTS */}
-                        <View style={styles.tutorMetricsRow}>
-                          <View style={styles.tutorMetricBox}>
-                            <BookOpen size={16} color={Colors.primaryOrange} />
-                            <View style={{ marginLeft: 8 }}>
-                              <Text style={styles.tutorMetricValue}>{coursesCount}</Text>
-                              <Text style={styles.tutorMetricLabel}>Assigned Courses</Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.tutorMetricBox}>
-                            <Users size={16} color="#2563eb" />
-                            <View style={{ marginLeft: 8 }}>
-                              <Text style={styles.tutorMetricValue}>{studentsCount}</Text>
-                              <Text style={styles.tutorMetricLabel}>Enrolled Students</Text>
-                            </View>
-                          </View>
-                        </View>
-
-                        {/* ASSIGNED COURSES CHIPS */}
-                        {assignedCourses.length > 0 && (
-                          <View style={styles.tutorCoursesWrap}>
-                            <Text style={styles.tutorCoursesLabel}>Assigned Tracks:</Text>
-                            <View style={styles.tutorCourseChipsRow}>
-                              {assignedCourses.slice(0, 3).map((c: any, idx: number) => (
-                                <View key={c.id || idx} style={styles.tutorCourseChip}>
-                                  <Text style={styles.tutorCourseChipText} numberOfLines={1}>
-                                    {c.title || 'Course Track'}
-                                  </Text>
-                                </View>
-                              ))}
-                              {assignedCourses.length > 3 && (
-                                <View style={[styles.tutorCourseChip, { backgroundColor: '#f1f5f9' }]}>
-                                  <Text style={[styles.tutorCourseChipText, { color: Colors.textSecondary }]}>
-                                    +{assignedCourses.length - 3} more
-                                  </Text>
-                                </View>
-                              )}
-                            </View>
-                          </View>
-                        )}
-
-                        {/* TUTOR CARD ACTIONS */}
-                        <View style={[styles.tutorCardActions, { flexDirection: 'row', gap: 8 }]}>
-                          <TouchableOpacity
-                            style={[styles.tutorDetailsBtn, { flex: 1 }]}
-                            onPress={() => handleViewTutor(tutor)}
-                            activeOpacity={0.8}
-                          >
-                            <Eye size={14} color="#7c3aed" />
-                            <Text style={styles.tutorDetailsBtnText}>View Roster</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={[
-                              styles.tutorDetailsBtn,
-                              { flex: 1, backgroundColor: '#fff7ed', borderColor: '#fed7aa', borderWidth: 1 },
-                            ]}
-                            onPress={() => handleOpenAssignCoursesToTutor(tutor)}
-                            activeOpacity={0.8}
-                          >
-                            <UserCheck size={14} color={Colors.primaryOrange} />
-                            <Text style={[styles.tutorDetailsBtnText, { color: Colors.primaryOrange }]}>
-                              Assign Courses
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
+                {/* ================= SUB-TAB 2: RECURRING SCHEDULE GENERATOR ================= */}
+                {tutorSubTab === 'schedule' && (
+                  <View style={styles.schedGeneratorCard}>
+                    <View style={styles.schedGenHeader}>
+                      <Calendar size={22} color={Colors.primaryOrange} />
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={styles.schedGenTitle}>Generate Tutor Class Schedule</Text>
+                        <Text style={styles.schedGenSub}>
+                          Select instructor, package, recurrence days, and Meet link to generate all 12 classes automatically.
+                        </Text>
                       </View>
-                    );
-                  })
+                    </View>
+
+                    {/* 12-CLASS PACKAGE RULE BANNER */}
+                    <View style={styles.schedRuleNotice}>
+                      <Text style={styles.schedRuleNoticeTitle}>📌 12-Class Package Rule:</Text>
+                      <Text style={styles.schedRuleNoticeItem}>• Students purchase a package with {schedTotalClasses} live classes.</Text>
+                      <Text style={styles.schedRuleNoticeItem}>• Classes are recurring on the days selected below (e.g. Tuesday & Thursday).</Text>
+                      <Text style={styles.schedRuleNoticeItem}>• Students join via the Google Meet link. Missed classes count towards the total.</Text>
+                      <Text style={styles.schedRuleNoticeItem}>• Once all {schedTotalClasses} sessions finish, package is automatically marked completed.</Text>
+                    </View>
+
+                    {/* STEP 1: SELECT TUTOR */}
+                    <View style={styles.schedFieldGroup}>
+                      <Text style={styles.schedFieldLabel}>1. Select Instructor *</Text>
+                      {availableTutors.length === 0 ? (
+                        <Text style={styles.schedFieldNotice}>No instructors available. Please add an instructor first.</Text>
+                      ) : (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.schedPillsScroll}>
+                          {availableTutors.map((t: any) => {
+                            const isSelected = schedTutorId === t.id;
+                            return (
+                              <TouchableOpacity
+                                key={t.id}
+                                style={[styles.schedTutorPill, isSelected && styles.schedTutorPillActive]}
+                                onPress={() => {
+                                  setSchedTutorId(t.id);
+                                  const assigned = Array.isArray(t.courses) && t.courses.length > 0
+                                    ? t.courses
+                                    : Array.isArray(t.assignedPackages) && t.assignedPackages.length > 0
+                                    ? t.assignedPackages
+                                    : [];
+                                  if (assigned.length > 0) {
+                                    setSchedPackageId(assigned[0].id);
+                                  }
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <View style={[styles.schedTutorInitial, isSelected && { backgroundColor: Colors.primaryOrange }]}>
+                                  <Text style={styles.schedTutorInitialText}>
+                                    {t.name ? t.name[0].toUpperCase() : 'T'}
+                                  </Text>
+                                </View>
+                                <View>
+                                  <Text style={[styles.schedTutorPillName, isSelected && styles.schedTutorPillNameActive]}>
+                                    {t.name || t.email}
+                                  </Text>
+                                  <Text style={styles.schedTutorPillSub}>
+                                    {t.professionTitle || 'Instructor'}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      )}
+                    </View>
+
+                    {/* STEP 2: SELECT PACKAGE */}
+                    <View style={styles.schedFieldGroup}>
+                      <Text style={styles.schedFieldLabel}>2. Select Course Package to Schedule *</Text>
+                      {packages.length === 0 ? (
+                        <Text style={styles.schedFieldNotice}>No course packages available.</Text>
+                      ) : (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.schedPillsScroll}>
+                          {packages.map((pkg: any) => {
+                            const isSelected = schedPackageId === pkg.id;
+                            const currentTutor = availableTutors.find((t: any) => t.id === schedTutorId);
+                            const isAssigned =
+                              (Array.isArray(currentTutor?.courses) && currentTutor.courses.some((c: any) => c.id === pkg.id)) ||
+                              (Array.isArray(currentTutor?.assignedPackages) && currentTutor.assignedPackages.some((p: any) => p.id === pkg.id));
+
+                            return (
+                              <TouchableOpacity
+                                key={pkg.id}
+                                style={[styles.schedPkgPill, isSelected && styles.schedPkgPillActive]}
+                                onPress={() => setSchedPackageId(pkg.id)}
+                                activeOpacity={0.7}
+                              >
+                                <View style={{ flex: 1 }}>
+                                  <Text style={[styles.schedPkgPillTitle, isSelected && styles.schedPkgPillTitleActive]} numberOfLines={1}>
+                                    {isAssigned ? '★ ' : ''}{pkg.title}
+                                  </Text>
+                                  <Text style={styles.schedPkgPillCategory}>
+                                    {pkg.category || 'Professional Track'} • {pkg.totalClasses || 12} Classes
+                                  </Text>
+                                </View>
+                                {isSelected && <Check size={16} color={Colors.primaryOrange} />}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      )}
+                    </View>
+
+                    {/* STEP 3: RECURRENCE DAYS */}
+                    <View style={styles.schedFieldGroup}>
+                      <Text style={styles.schedFieldLabel}>3. Recurrence Days of the Week *</Text>
+                      <Text style={styles.schedFieldDesc}>
+                        Tap to select days (e.g. Sunday only for weekend batch, or Mon & Wed for regular batch).
+                      </Text>
+                      <View style={styles.schedDaysGrid}>
+                        {DAYS_OF_WEEK.map(day => {
+                          const isChecked = schedDays.includes(day);
+                          return (
+                            <TouchableOpacity
+                              key={day}
+                              style={[styles.schedDayPill, isChecked && styles.schedDayPillActive]}
+                              onPress={() => toggleSchedDay(day)}
+                              activeOpacity={0.7}
+                            >
+                              {isChecked && <Check size={13} color="#ffffff" style={{ marginRight: 4 }} />}
+                              <Text style={[styles.schedDayPillText, isChecked && styles.schedDayPillTextActive]}>
+                                {day}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                      <Text style={styles.schedDaysSummary}>
+                        Selected: {schedDays.join(', ')} ({schedDays.length} day{schedDays.length > 1 ? 's' : ''}/week)
+                      </Text>
+                    </View>
+
+                    {/* STEP 4 & 5: TIME & DURATION */}
+                    <View style={styles.schedRowFields}>
+                      <View style={{ flex: 1, marginRight: 8 }}>
+                        <Text style={styles.schedFieldLabel}>Class Start Time *</Text>
+                        <TextInput
+                          style={styles.schedInput}
+                          placeholder="18:00 (e.g. 6:00 PM)"
+                          placeholderTextColor={Colors.textLight}
+                          value={schedStartTime}
+                          onChangeText={setSchedStartTime}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.schedFieldLabel}>Duration (Mins)</Text>
+                        <TextInput
+                          style={styles.schedInput}
+                          placeholder="60"
+                          placeholderTextColor={Colors.textLight}
+                          keyboardType="numeric"
+                          value={schedDuration}
+                          onChangeText={setSchedDuration}
+                        />
+                      </View>
+                    </View>
+
+                    {/* STEP 6 & 7: START DATE & TOTAL CLASSES */}
+                    <View style={styles.schedRowFields}>
+                      <View style={{ flex: 1, marginRight: 8 }}>
+                        <Text style={styles.schedFieldLabel}>Batch Start Date *</Text>
+                        <TextInput
+                          style={styles.schedInput}
+                          placeholder="YYYY-MM-DD"
+                          placeholderTextColor={Colors.textLight}
+                          value={schedStartDate}
+                          onChangeText={setSchedStartDate}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.schedFieldLabel}>Total Classes</Text>
+                        <TextInput
+                          style={[styles.schedInput, { fontWeight: '700', color: Colors.primaryOrange }]}
+                          placeholder="12"
+                          placeholderTextColor={Colors.textLight}
+                          keyboardType="numeric"
+                          value={schedTotalClasses}
+                          onChangeText={setSchedTotalClasses}
+                        />
+                      </View>
+                    </View>
+
+                    {/* STEP 8: GOOGLE MEET LINK */}
+                    <View style={styles.schedFieldGroup}>
+                      <Text style={styles.schedFieldLabel}>Google Meet Link for Students *</Text>
+                      <TextInput
+                        style={styles.schedInput}
+                        placeholder="https://meet.google.com/xyz-abc-def"
+                        placeholderTextColor={Colors.textLight}
+                        autoCapitalize="none"
+                        value={schedMeetLink}
+                        onChangeText={setSchedMeetLink}
+                      />
+                      <Text style={styles.schedFieldDesc}>
+                        Students and instructors will join online classes using this Google Meet link.
+                      </Text>
+                    </View>
+
+                    {/* SUBMIT BUTTON */}
+                    <TouchableOpacity
+                      style={[styles.schedGenerateSubmitBtn, generatingSchedule && { opacity: 0.7 }]}
+                      onPress={handleGenerateSchedule}
+                      disabled={generatingSchedule}
+                      activeOpacity={0.8}
+                    >
+                      {generatingSchedule ? (
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      ) : (
+                        <>
+                          <Calendar size={18} color="#ffffff" />
+                          <Text style={styles.schedGenerateSubmitBtnText}>
+                            Generate & Schedule {schedTotalClasses || 12} Classes
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* ================= SUB-TAB 3: SCHEDULED LIVE CLASSES & RECURRING RULES ================= */}
+                {tutorSubTab === 'classes' && (
+                  <View>
+                    {/* SECTION 1: ACTIVE RECURRING SCHEDULE RULES */}
+                    <View style={styles.schedSectionHeaderRow}>
+                      <View>
+                        <Text style={styles.schedSectionTitle}>Active Recurring Rules ({schedules.length})</Text>
+                        <Text style={styles.schedSectionSub}>Ongoing weekly schedule templates</Text>
+                      </View>
+                    </View>
+
+                    {schedules.length === 0 ? (
+                      <View style={styles.schedEmptyMini}>
+                        <Text style={styles.schedEmptyMiniText}>No recurring schedule rules active.</Text>
+                      </View>
+                    ) : (
+                      schedules.map(sch => {
+                        const days = Array.isArray(sch.daysOfWeek) ? sch.daysOfWeek.join(', ') : sch.daysOfWeek;
+                        const tutorName = sch.tutor?.name || sch.tutor?.email || 'Instructor';
+                        const pkgTitle = sch.package?.title || 'Package Track';
+
+                        return (
+                          <View key={sch.id} style={styles.schedRuleCard}>
+                            <View style={styles.schedRuleCardHeader}>
+                              <View style={{ flex: 1, marginRight: 8 }}>
+                                <Text style={styles.schedRulePkgTitle}>{pkgTitle}</Text>
+                                <Text style={styles.schedRuleTutorText}>Instructor: {tutorName}</Text>
+                              </View>
+                              <View style={styles.schedRuleStatusPill}>
+                                <Text style={styles.schedRuleStatusPillText}>{sch.status || 'ACTIVE'}</Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.schedRuleDetailRow}>
+                              <Calendar size={13} color={Colors.primaryOrange} />
+                              <Text style={styles.schedRuleDetailText}>
+                                Days: <Text style={{ fontWeight: '700', color: Colors.primaryOrange }}>{days}</Text>
+                              </Text>
+                            </View>
+
+                            <View style={styles.schedRuleDetailRow}>
+                              <Clock size={13} color={Colors.textMuted} />
+                              <Text style={styles.schedRuleDetailText}>
+                                Time: {sch.startTime} ({sch.duration} min) • Total {sch.totalClasses} classes
+                              </Text>
+                            </View>
+
+                            {sch.meetLink ? (
+                              <TouchableOpacity
+                                style={styles.schedRuleMeetLinkRow}
+                                onPress={() => Linking.openURL(sch.meetLink)}
+                                activeOpacity={0.7}
+                              >
+                                <Video size={13} color="#2563eb" />
+                                <Text style={styles.schedRuleMeetLinkText} numberOfLines={1}>
+                                  {sch.meetLink}
+                                </Text>
+                              </TouchableOpacity>
+                            ) : null}
+
+                            <View style={styles.schedRuleCardFooter}>
+                              <TouchableOpacity
+                                style={styles.schedRuleCancelBtn}
+                                onPress={() => handleDeleteSchedule(sch.id)}
+                                activeOpacity={0.7}
+                              >
+                                <Trash2 size={13} color="#ef4444" />
+                                <Text style={styles.schedRuleCancelBtnText}>Cancel Schedule Rule</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })
+                    )}
+
+                    {/* SECTION 2: ALL SCHEDULED LIVE CLASSES */}
+                    <View style={[styles.schedSectionHeaderRow, { marginTop: 20 }]}>
+                      <View>
+                        <Text style={styles.schedSectionTitle}>All Scheduled Live Classes ({liveClasses.length})</Text>
+                        <Text style={styles.schedSectionSub}>Individual sessions, Google Meet links & status</Text>
+                      </View>
+                    </View>
+
+                    {liveClasses.length === 0 ? (
+                      <View style={styles.emptyStateBox}>
+                        <Video size={40} color={Colors.textLight} />
+                        <Text style={styles.emptyStateTitle}>No Live Classes Scheduled</Text>
+                        <Text style={styles.emptyStateSub}>
+                          Use the Recurring Schedule Generator to schedule batches of classes.
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.emptyActionBtn}
+                          onPress={() => setTutorSubTab('schedule')}
+                        >
+                          <Calendar size={16} color={Colors.textWhite} />
+                          <Text style={styles.emptyActionBtnText}>Go to Schedule Generator</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      liveClasses.map(lc => {
+                        const classTime = new Date(lc.startTime);
+                        const dateFormatted = !isNaN(classTime.getTime())
+                          ? classTime.toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : 'TBD';
+                        const timeFormatted = !isNaN(classTime.getTime())
+                          ? classTime.toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '';
+
+                        return (
+                          <View key={lc.id} style={styles.liveClassCard}>
+                            <View style={styles.liveClassCardHeader}>
+                              <View style={styles.liveClassNumberPill}>
+                                <Text style={styles.liveClassNumberPillText}>
+                                  {lc.classNumber ? `#${lc.classNumber}` : 'CLASS'}
+                                </Text>
+                              </View>
+                              <View style={{ flex: 1, marginHorizontal: 8 }}>
+                                <Text style={styles.liveClassTitle}>{lc.title || 'Live Class Session'}</Text>
+                                <Text style={styles.liveClassPkgSub}>{lc.package?.title || 'Course Package'}</Text>
+                              </View>
+                              <View
+                                style={[
+                                  styles.liveClassStatusPill,
+                                  lc.status === 'COMPLETED'
+                                    ? { backgroundColor: '#dcfce7', borderColor: '#bbf7d0' }
+                                    : { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.liveClassStatusPillText,
+                                    lc.status === 'COMPLETED' ? { color: '#15803d' } : { color: '#2563eb' },
+                                  ]}
+                                >
+                                  {lc.status || 'SCHEDULED'}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.liveClassDetailsRow}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 14 }}>
+                                <Award size={13} color={Colors.textMuted} />
+                                <Text style={styles.liveClassDetailItem}>
+                                  {lc.tutor?.name || lc.tutor?.email || 'Instructor'}
+                                </Text>
+                              </View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Clock size={13} color={Colors.textMuted} />
+                                <Text style={styles.liveClassDetailItem}>
+                                  {dateFormatted} {timeFormatted ? `• ${timeFormatted}` : ''} ({lc.duration || 60}m)
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.liveClassActionsRow}>
+                              {lc.meetLink ? (
+                                <TouchableOpacity
+                                  style={styles.liveClassMeetBtn}
+                                  onPress={() => Linking.openURL(lc.meetLink)}
+                                  activeOpacity={0.8}
+                                >
+                                  <Video size={14} color="#ffffff" />
+                                  <Text style={styles.liveClassMeetBtnText}>Join Google Meet</Text>
+                                </TouchableOpacity>
+                              ) : (
+                                <View style={{ flex: 1 }} />
+                              )}
+
+                              <TouchableOpacity
+                                style={styles.liveClassDeleteBtn}
+                                onPress={() => handleDeleteLiveClass(lc.id, lc.title || 'Live Class')}
+                                activeOpacity={0.7}
+                              >
+                                <Trash2 size={14} color="#ef4444" />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
                 )}
               </View>
             )}
@@ -3773,6 +4533,182 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           </View>
         </View>
       </Modal>
+
+      {/* ================= MODAL: ADD / EDIT TUTOR ================= */}
+      <Modal
+        visible={tutorModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setTutorModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>
+                  {editingTutorData ? 'Edit Instructor & Packages' : 'Add New Instructor'}
+                </Text>
+                <Text style={styles.modalSub}>
+                  {editingTutorData ? 'Update profile and assigned packages' : 'Create instructor account and assign packages'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setTutorModalOpen(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. John Doe"
+                  placeholderTextColor={Colors.textLight}
+                  value={tutorFormName}
+                  onChangeText={setTutorFormName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="instructor@flymedia.com"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={tutorFormEmail}
+                  onChangeText={setTutorFormEmail}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {editingTutorData ? 'New Password (Leave blank to keep)' : 'Password *'}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={Colors.textLight}
+                  secureTextEntry
+                  value={tutorFormPassword}
+                  onChangeText={setTutorFormPassword}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Profession / Designation</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Senior Full-Stack Mentor & Architect"
+                  placeholderTextColor={Colors.textLight}
+                  value={tutorFormProfession}
+                  onChangeText={setTutorFormProfession}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Bio / Profile Description</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Tell students about the instructor's background and achievements..."
+                  placeholderTextColor={Colors.textLight}
+                  multiline
+                  numberOfLines={3}
+                  value={tutorFormBio}
+                  onChangeText={setTutorFormBio}
+                />
+              </View>
+
+              {/* MULTI-PACKAGE ASSIGNMENT CHECKBOXES */}
+              <View style={{ marginTop: 10, marginBottom: 14 }}>
+                <Text style={styles.inputLabel}>Assign to Packages ({tutorFormPackageIds.length} Selected)</Text>
+                <Text style={{ fontSize: 11.5, color: Colors.textMuted, marginBottom: 10 }}>
+                  Select all course packages this instructor is authorized to teach:
+                </Text>
+
+                {packages.length === 0 ? (
+                  <Text style={{ fontSize: 12, color: Colors.textMuted, fontStyle: 'italic' }}>
+                    No packages created yet.
+                  </Text>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {packages.map((pkg: any) => {
+                      const isAssigned = tutorFormPackageIds.includes(pkg.id);
+                      return (
+                        <TouchableOpacity
+                          key={pkg.id}
+                          onPress={() => {
+                            setTutorFormPackageIds(prev =>
+                              prev.includes(pkg.id) ? prev.filter(id => id !== pkg.id) : [...prev, pkg.id]
+                            );
+                          }}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 10,
+                            borderRadius: 12,
+                            borderWidth: 1.5,
+                            borderColor: isAssigned ? Colors.primaryOrange : Colors.border,
+                            backgroundColor: isAssigned ? '#fff7ed' : Colors.surfaceSubtle,
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={{ uri: formatImageUrl(pkg.thumbnail) }}
+                            style={{ width: 40, height: 40, borderRadius: 8, marginRight: 10 }}
+                            resizeMode="cover"
+                          />
+                          <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text style={{ fontSize: 12.5, fontWeight: '700', color: Colors.textPrimary }} numberOfLines={1}>
+                              {pkg.title}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: Colors.textMuted }}>
+                              {pkg.category || 'Professional Track'} • {pkg.totalClasses || 12} classes
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: 6,
+                              borderWidth: 1.5,
+                              borderColor: isAssigned ? Colors.primaryOrange : Colors.border,
+                              backgroundColor: isAssigned ? Colors.primaryOrange : '#ffffff',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {isAssigned && <Check size={14} color="#ffffff" />}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitBtn, savingTutor && { opacity: 0.7 }]}
+                onPress={handleSaveTutor}
+                disabled={savingTutor}
+              >
+                {savingTutor ? (
+                  <ActivityIndicator color={Colors.textWhite} />
+                ) : (
+                  <Text style={styles.submitBtnText}>
+                    {editingTutorData ? 'Update Instructor & Packages' : 'Save & Assign Instructor'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -5260,5 +6196,558 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textSecondary,
+  },
+
+  // TUTOR SUBTABS & SCHEDULING STYLES
+  tutorSubTabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 14,
+    gap: 4,
+  },
+  tutorSubTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    gap: 5,
+  },
+  tutorSubTabBtnActive: {
+    backgroundColor: Colors.primaryOrange,
+    ...Shadows.small,
+  },
+  tutorSubTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  tutorSubTabTextActive: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  tutorInfoBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  tutorInfoBannerTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#92400e',
+    marginBottom: 2,
+  },
+  tutorInfoBannerSub: {
+    fontSize: 11,
+    color: '#b45309',
+    lineHeight: 16,
+  },
+  tutorTopActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tutorMiniIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tutorProfessionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+    marginTop: 2,
+  },
+  tutorBioBox: {
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tutorBioText: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+  },
+  tutorActionGrid: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  tutorScheduleBtn: {
+    flex: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    borderRadius: 10,
+    paddingVertical: 8,
+  },
+  tutorScheduleBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+  },
+  tutorAssignBtn: {
+    flex: 1.1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 10,
+    paddingVertical: 8,
+  },
+  tutorAssignBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  tutorRosterBtn: {
+    flex: 0.8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#f5f3ff',
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+    borderRadius: 10,
+    paddingVertical: 8,
+  },
+  tutorRosterBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#7c3aed',
+  },
+
+  // SCHEDULE GENERATOR STYLES
+  schedGeneratorCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  schedGenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  schedGenTitle: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  schedGenSub: {
+    fontSize: 11.5,
+    color: Colors.textMuted,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  schedRuleNotice: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#ffedd5',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+  },
+  schedRuleNoticeTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#9a3412',
+    marginBottom: 4,
+  },
+  schedRuleNoticeItem: {
+    fontSize: 11,
+    color: '#475569',
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  schedFieldGroup: {
+    marginBottom: 14,
+  },
+  schedFieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 6,
+  },
+  schedFieldDesc: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginBottom: 8,
+  },
+  schedFieldNotice: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  schedPillsScroll: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  schedTutorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  schedTutorPillActive: {
+    borderColor: Colors.primaryOrange,
+    backgroundColor: '#fff7ed',
+  },
+  schedTutorInitial: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#7c3aed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  schedTutorInitialText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  schedTutorPillName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  schedTutorPillNameActive: {
+    color: Colors.primaryOrange,
+  },
+  schedTutorPillSub: {
+    fontSize: 10,
+    color: Colors.textMuted,
+  },
+  schedPkgPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    minWidth: 170,
+  },
+  schedPkgPillActive: {
+    borderColor: Colors.primaryOrange,
+    backgroundColor: '#fff7ed',
+  },
+  schedPkgPillTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  schedPkgPillTitleActive: {
+    color: Colors.primaryOrange,
+  },
+  schedPkgPillCategory: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  schedDaysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  schedDayPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceSubtle,
+  },
+  schedDayPillActive: {
+    backgroundColor: Colors.primaryOrange,
+    borderColor: Colors.primaryOrange,
+  },
+  schedDayPillText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  schedDayPillTextActive: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  schedDaysSummary: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
+    marginTop: 8,
+  },
+  schedRowFields: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  schedInput: {
+    height: 44,
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 12,
+    fontSize: 13,
+    color: Colors.textPrimary,
+  },
+  schedGenerateSubmitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primaryOrange,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 10,
+    ...Shadows.medium,
+  },
+  schedGenerateSubmitBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+
+  // LIVE CLASSES & RECURRING RULES STYLES
+  schedSectionHeaderRow: {
+    marginBottom: 12,
+  },
+  schedSectionTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  schedSectionSub: {
+    fontSize: 11.5,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  schedEmptyMini: {
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  schedEmptyMiniText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  schedRuleCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  schedRuleCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  schedRulePkgTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  schedRuleTutorText: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  schedRuleStatusPill: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  schedRuleStatusPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  schedRuleDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  schedRuleDetailText: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+  },
+  schedRuleMeetLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  schedRuleMeetLinkText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#2563eb',
+    fontWeight: '600',
+  },
+  schedRuleCardFooter: {
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  schedRuleCancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  schedRuleCancelBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#ef4444',
+  },
+
+  // LIVE CLASS CARD STYLES
+  liveClassCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  liveClassCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  liveClassNumberPill: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  liveClassNumberPillText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: Colors.primaryOrange,
+  },
+  liveClassTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  liveClassPkgSub: {
+    fontSize: 10.5,
+    color: Colors.textMuted,
+  },
+  liveClassStatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  liveClassStatusPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  liveClassDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginVertical: 6,
+  },
+  liveClassDetailItem: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    marginLeft: 4,
+  },
+  liveClassActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  liveClassMeetBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#2563eb',
+    paddingVertical: 9,
+    borderRadius: 10,
+  },
+  liveClassMeetBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  liveClassDeleteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
