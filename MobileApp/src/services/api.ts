@@ -672,6 +672,25 @@ export const ApiService = {
     }
   },
 
+  /**
+   * Admin: Assign packages to a tutor
+   */
+  async assignTutorPackages(tutorId: string, packageIds: string[], token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/tutors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tutorId, packageIds }),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to assign tutor packages' };
+    }
+  },
+
 
   // ==========================================
   // STUDENT PANEL APIs

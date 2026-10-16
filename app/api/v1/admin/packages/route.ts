@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Package, Enrollment } from '../../../../../src/db/models';
+import { Package, Enrollment, User, PackageTutor } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../../auth/jwt';
 
 export const dynamic = 'force-dynamic';
@@ -26,11 +26,26 @@ export async function GET(request: Request) {
 
     const packages = await Package.findAll({
       order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'assignedTutors',
+          attributes: ['id', 'name', 'email', 'avatar', 'professionTitle'],
+          through: { attributes: [] },
+          required: false,
+        },
+      ],
     });
 
     const formatted = packages.map(p => {
-      const json = p.toJSON();
+      const json: any = p.toJSON();
       json.thumbnail = resolveFullImageUrl(json.thumbnail);
+      if (Array.isArray(json.assignedTutors)) {
+        json.assignedTutors = json.assignedTutors.map((t: any) => ({
+          ...t,
+          avatar: resolveFullImageUrl(t.avatar),
+        }));
+      }
       return json;
     });
 
@@ -79,6 +94,7 @@ export async function POST(request: Request) {
       whatYoullLearn,
       highlights,
       faqs,
+      tutorIds,
     } = body;
 
     if (!title || !description) {
@@ -157,10 +173,39 @@ export async function POST(request: Request) {
       ],
     } as any);
 
+    if (Array.isArray(tutorIds) && tutorIds.length > 0) {
+      const records = (tutorIds as any[]).map((tutorId: any) => ({
+        packageId: createdPackage.id,
+        tutorId: String(tutorId),
+      }));
+      await PackageTutor.bulkCreate(records);
+    }
+
+    const reloaded = await Package.findByPk(createdPackage.id, {
+      include: [
+        {
+          model: User,
+          as: 'assignedTutors',
+          attributes: ['id', 'name', 'email', 'avatar', 'professionTitle'],
+          through: { attributes: [] },
+          required: false,
+        },
+      ],
+    });
+
+    const formatted: any = reloaded ? reloaded.toJSON() : createdPackage.toJSON();
+    formatted.thumbnail = resolveFullImageUrl(formatted.thumbnail);
+    if (Array.isArray(formatted.assignedTutors)) {
+      formatted.assignedTutors = formatted.assignedTutors.map((t: any) => ({
+        ...t,
+        avatar: resolveFullImageUrl(t.avatar),
+      }));
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Course created successfully',
-      package: createdPackage,
+      package: formatted,
     });
   } catch (error: any) {
     console.error('Admin create course error:', error);
@@ -254,6 +299,7 @@ async function handleUpdatePackage(request: Request) {
       whatYoullLearn,
       highlights,
       faqs,
+      tutorIds,
     } = body;
 
     if (!id) {
@@ -316,10 +362,39 @@ async function handleUpdatePackage(request: Request) {
       (pkg as any).faqs = Array.isArray(faqs) ? faqs : null;
     }
 
+    if (tutorIds !== undefined) {
+      await PackageTutor.destroy({ where: { packageId: pkg.id } });
+      if (Array.isArray(tutorIds) && tutorIds.length > 0) {
+        const records = (tutorIds as any[]).map((tutorId: any) => ({
+          packageId: pkg.id,
+          tutorId: String(tutorId),
+        }));
+        await PackageTutor.bulkCreate(records);
+      }
+    }
+
     await pkg.save();
 
-    const formatted = pkg.toJSON();
+    const reloaded = await Package.findByPk(pkg.id, {
+      include: [
+        {
+          model: User,
+          as: 'assignedTutors',
+          attributes: ['id', 'name', 'email', 'avatar', 'professionTitle'],
+          through: { attributes: [] },
+          required: false,
+        },
+      ],
+    });
+
+    const formatted: any = reloaded ? reloaded.toJSON() : pkg.toJSON();
     formatted.thumbnail = resolveFullImageUrl(formatted.thumbnail);
+    if (Array.isArray(formatted.assignedTutors)) {
+      formatted.assignedTutors = formatted.assignedTutors.map((t: any) => ({
+        ...t,
+        avatar: resolveFullImageUrl(t.avatar),
+      }));
+    }
 
     return NextResponse.json({
       success: true,

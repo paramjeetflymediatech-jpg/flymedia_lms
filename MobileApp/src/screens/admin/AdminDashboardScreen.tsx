@@ -50,6 +50,7 @@ import {
   AlertCircle,
   Mail,
   Star,
+  UserCheck,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
@@ -181,6 +182,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [editCourseTech, setEditCourseTech] = useState('');
   const [editCourseBenefits, setEditCourseBenefits] = useState('');
   const [editCourseWhatYoullLearn, setEditCourseWhatYoullLearn] = useState('');
+  const [editCourseTutorIds, setEditCourseTutorIds] = useState<string[]>([]);
   const [editCourseStatus, setEditCourseStatus] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
 
   // Enrollment Details Modal
@@ -203,6 +205,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [selectedTutorDetails, setSelectedTutorDetails] = useState<any | null>(null);
   const [tutorModalVisible, setTutorModalVisible] = useState(false);
 
+  // Assign Courses to Tutor Modal
+  const [assignCourseModalVisible, setAssignCourseModalVisible] = useState(false);
+  const [selectedTutorForCourseAssign, setSelectedTutorForCourseAssign] = useState<any | null>(null);
+  const [tutorAssignedPkgIds, setTutorAssignedPkgIds] = useState<string[]>([]);
+  const [assigningTutorPackages, setAssigningTutorPackages] = useState(false);
+
   // New Course Form
   const [courseTitle, setCourseTitle] = useState('');
   const [courseCategory, setCourseCategory] = useState('Web Development');
@@ -222,6 +230,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     '100% Practical Training with Live Projects\nAdvanced Skills & Industry Mentorship\nInternship Opportunity Basis Learning Progress\nCertification after Completion'
   );
   const [courseWhatYoullLearn, setCourseWhatYoullLearn] = useState('');
+  const [courseTutorIds, setCourseTutorIds] = useState<string[]>([]);
   const [courseStatus, setCourseStatus] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
 
   // New Category Form
@@ -360,6 +369,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       techStack: techArray,
       benefits: benefitsArray,
       whatYoullLearn: whatYoullLearnArray,
+      tutorIds: courseTutorIds,
       status: courseStatus,
     };
 
@@ -375,6 +385,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       setCoursePrice('');
       setCourseVideoUrl('');
       setCourseWhatYoullLearn('');
+      setCourseTutorIds([]);
       loadAllAdminData();
     } else {
       Alert.alert('Error', res.error || 'Failed to create course');
@@ -499,6 +510,10 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         ? pkg.whatYoullLearn
         : ''
     );
+    const existingTutorIds = Array.isArray(pkg.assignedTutors)
+      ? pkg.assignedTutors.map((t: any) => t.id)
+      : tutors.filter((t: any) => t.courses?.some((c: any) => c.id === pkg.id || c.slug === pkg.slug)).map((t: any) => t.id);
+    setEditCourseTutorIds(existingTutorIds);
     setEditCourseStatus(pkg.status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED');
     setEditCourseModal(true);
   };
@@ -533,6 +548,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
       techStack: techArray,
       benefits: benefitsArray,
       whatYoullLearn: whatYoullLearnArray,
+      tutorIds: editCourseTutorIds,
       status: editCourseStatus,
     };
 
@@ -540,16 +556,10 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setSubmitting(false);
 
     if (res.success) {
-      setPackages(prev =>
-        prev.map(p =>
-          (p.id === editingCourseId || p.slug === editingCourseId)
-            ? { ...p, ...payload, id: editingCourseId }
-            : p
-        )
-      );
+      Alert.alert('Success 🎉', 'Course program updated successfully.');
       setEditCourseModal(false);
       setEditingCourseId(null);
-      Alert.alert('Success 🎉', 'Course program updated successfully.');
+      loadAllAdminData();
     } else {
       Alert.alert('Error', res.error || 'Failed to update course');
     }
@@ -731,6 +741,45 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
     setSelectedTutorDetails(tutor);
     setTutorModalVisible(true);
   };
+
+  // Open modal to assign courses to a tutor
+  const handleOpenAssignCoursesToTutor = (tutor: any) => {
+    setSelectedTutorForCourseAssign(tutor);
+    const directIds = Array.isArray(tutor.courses)
+      ? tutor.courses.map((c: any) => c.id).filter(Boolean)
+      : [];
+    const fromPackages = packages
+      .filter((p: any) => Array.isArray(p.assignedTutors) && p.assignedTutors.some((t: any) => t.id === tutor.id))
+      .map((p: any) => p.id);
+    const combined = Array.from(new Set([...directIds, ...fromPackages]));
+    setTutorAssignedPkgIds(combined);
+    setAssignCourseModalVisible(true);
+  };
+
+  const handleSaveTutorCourseAssignments = async () => {
+    if (!selectedTutorForCourseAssign || !user || !user.token) return;
+    setAssigningTutorPackages(true);
+    const res = await ApiService.assignTutorPackages(
+      selectedTutorForCourseAssign.id,
+      tutorAssignedPkgIds,
+      user.token
+    );
+    setAssigningTutorPackages(false);
+
+    if (res.success) {
+      Alert.alert('Success 🎉', `Course assignments updated for ${selectedTutorForCourseAssign.name || 'tutor'}.`);
+      setAssignCourseModalVisible(false);
+      setSelectedTutorForCourseAssign(null);
+      loadAllAdminData();
+    } else {
+      Alert.alert('Error', res.error || 'Failed to update course assignments');
+    }
+  };
+
+  // Available tutors helper (combines tutors list or tutor-role users)
+  const availableTutors = tutors.length > 0
+    ? tutors
+    : usersList.filter((u: any) => u.role === 'TUTOR');
 
   // Filtered leads
   const filteredLeads = leads.filter(l => {
@@ -1207,6 +1256,19 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                             ₹{(Number(pkg.price) || 0).toLocaleString('en-IN')}
                           </Text>
 
+                          {/* ASSIGNED TUTORS PILL */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
+                            {Array.isArray(pkg.assignedTutors) && pkg.assignedTutors.length > 0 ? (
+                              <Text style={{ fontSize: 11, color: Colors.primaryOrange, fontWeight: '700' }} numberOfLines={1}>
+                                👨‍🏫 Tutors: {pkg.assignedTutors.map((t: any) => t.name).join(', ')}
+                              </Text>
+                            ) : (
+                              <Text style={{ fontSize: 11, color: Colors.textMuted, fontStyle: 'italic' }}>
+                                👨‍🏫 No tutor assigned
+                              </Text>
+                            )}
+                          </View>
+
                           <View style={styles.itemCardActions}>
                             <TouchableOpacity
                               style={styles.editBtn}
@@ -1637,15 +1699,29 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                           </View>
                         )}
 
-                        {/* VIEW DETAILS ACTION */}
-                        <View style={styles.tutorCardActions}>
+                        {/* TUTOR CARD ACTIONS */}
+                        <View style={[styles.tutorCardActions, { flexDirection: 'row', gap: 8 }]}>
                           <TouchableOpacity
-                            style={styles.tutorDetailsBtn}
+                            style={[styles.tutorDetailsBtn, { flex: 1 }]}
                             onPress={() => handleViewTutor(tutor)}
                             activeOpacity={0.8}
                           >
                             <Eye size={14} color="#7c3aed" />
-                            <Text style={styles.tutorDetailsBtnText}>View Tutor Roster</Text>
+                            <Text style={styles.tutorDetailsBtnText}>View Roster</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[
+                              styles.tutorDetailsBtn,
+                              { flex: 1, backgroundColor: '#fff7ed', borderColor: '#fed7aa', borderWidth: 1 },
+                            ]}
+                            onPress={() => handleOpenAssignCoursesToTutor(tutor)}
+                            activeOpacity={0.8}
+                          >
+                            <UserCheck size={14} color={Colors.primaryOrange} />
+                            <Text style={[styles.tutorDetailsBtnText, { color: Colors.primaryOrange }]}>
+                              Assign Courses
+                            </Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -2351,6 +2427,88 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 />
               </View>
 
+              {/* ASSIGN COURSE TUTORS */}
+              <View style={styles.inputGroup}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={styles.inputLabel}>Assign Course Tutors</Text>
+                  <Text style={{ fontSize: 11, color: Colors.primaryOrange, fontWeight: '700' }}>
+                    {courseTutorIds.length} Selected
+                  </Text>
+                </View>
+                {availableTutors.length === 0 ? (
+                  <View style={{ padding: 12, borderRadius: 10, backgroundColor: Colors.surfaceSubtle, borderWidth: 1, borderColor: Colors.border }}>
+                    <Text style={{ fontSize: 12, color: Colors.textMuted, fontStyle: 'italic' }}>
+                      No tutors registered. Add a tutor under the Users tab first.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {availableTutors.map((tut: any) => {
+                      const isSelected = courseTutorIds.includes(tut.id);
+                      const tutName = tut.name || tut.email;
+                      return (
+                        <TouchableOpacity
+                          key={tut.id}
+                          onPress={() => {
+                            setCourseTutorIds(prev =>
+                              prev.includes(tut.id) ? prev.filter(id => id !== tut.id) : [...prev, tut.id]
+                            );
+                          }}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 10,
+                            borderRadius: 12,
+                            borderWidth: 1.5,
+                            borderColor: isSelected ? Colors.primaryOrange : Colors.border,
+                            backgroundColor: isSelected ? '#fff7ed' : Colors.surfaceSubtle,
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: isSelected ? Colors.primaryOrange : '#e2e8f0',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 10,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: isSelected ? '#fff' : Colors.textPrimary }}>
+                              {(tutName || 'T')[0].toUpperCase()}
+                            </Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? Colors.primaryOrange : Colors.textPrimary }}>
+                              {tutName}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: Colors.textMuted }}>
+                              {tut.professionTitle || tut.email}
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: 6,
+                              borderWidth: 1.5,
+                              borderColor: isSelected ? Colors.primaryOrange : Colors.border,
+                              backgroundColor: isSelected ? Colors.primaryOrange : '#fff',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {isSelected && <Check size={14} color="#fff" strokeWidth={3} />}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={handleCreateCourse}
@@ -3046,6 +3204,88 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 />
               </View>
 
+              {/* ASSIGN COURSE TUTORS */}
+              <View style={styles.inputGroup}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={styles.inputLabel}>Assign Course Tutors</Text>
+                  <Text style={{ fontSize: 11, color: Colors.primaryOrange, fontWeight: '700' }}>
+                    {editCourseTutorIds.length} Selected
+                  </Text>
+                </View>
+                {availableTutors.length === 0 ? (
+                  <View style={{ padding: 12, borderRadius: 10, backgroundColor: Colors.surfaceSubtle, borderWidth: 1, borderColor: Colors.border }}>
+                    <Text style={{ fontSize: 12, color: Colors.textMuted, fontStyle: 'italic' }}>
+                      No tutors registered. Add a tutor under the Users tab first.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {availableTutors.map((tut: any) => {
+                      const isSelected = editCourseTutorIds.includes(tut.id);
+                      const tutName = tut.name || tut.email;
+                      return (
+                        <TouchableOpacity
+                          key={tut.id}
+                          onPress={() => {
+                            setEditCourseTutorIds(prev =>
+                              prev.includes(tut.id) ? prev.filter(id => id !== tut.id) : [...prev, tut.id]
+                            );
+                          }}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 10,
+                            borderRadius: 12,
+                            borderWidth: 1.5,
+                            borderColor: isSelected ? Colors.primaryOrange : Colors.border,
+                            backgroundColor: isSelected ? '#fff7ed' : Colors.surfaceSubtle,
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: isSelected ? Colors.primaryOrange : '#e2e8f0',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 10,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: isSelected ? '#fff' : Colors.textPrimary }}>
+                              {(tutName || 'T')[0].toUpperCase()}
+                            </Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? Colors.primaryOrange : Colors.textPrimary }}>
+                              {tutName}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: Colors.textMuted }}>
+                              {tut.professionTitle || tut.email}
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: 6,
+                              borderWidth: 1.5,
+                              borderColor: isSelected ? Colors.primaryOrange : Colors.border,
+                              backgroundColor: isSelected ? Colors.primaryOrange : '#fff',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {isSelected && <Check size={14} color="#fff" strokeWidth={3} />}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={handleSaveEditCourse}
@@ -3385,6 +3625,31 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                         No specific course tracks currently assigned to this tutor.
                       </Text>
                     )}
+
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        backgroundColor: '#fff7ed',
+                        borderColor: Colors.primaryOrange,
+                        borderWidth: 1,
+                        borderRadius: 10,
+                        paddingVertical: 10,
+                        marginTop: 12,
+                      }}
+                      onPress={() => {
+                        setTutorModalVisible(false);
+                        handleOpenAssignCoursesToTutor(selectedTutorDetails);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <UserCheck size={15} color={Colors.primaryOrange} />
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.primaryOrange }}>
+                        Assign / Manage Courses
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </>
               )}
@@ -3394,6 +3659,114 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 onPress={() => setTutorModalVisible(false)}
               >
                 <Text style={styles.modalCloseFullBtnText}>Close Roster</Text>
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: ASSIGN COURSES TO TUTOR ================= */}
+      <Modal
+        visible={assignCourseModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setAssignCourseModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { paddingTop: Math.max(insets.top, 24) }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Assign Courses to Tutor</Text>
+                <Text style={styles.modalSub}>
+                  {selectedTutorForCourseAssign?.name || 'Instructor'} • {selectedTutorForCourseAssign?.email || ''}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setAssignCourseModalVisible(false)}
+              >
+                <X size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScroll}>
+              <Text style={{ fontSize: 13, color: Colors.textSecondary, marginBottom: 14 }}>
+                Select all courses and tracks this instructor is assigned to teach:
+              </Text>
+
+              {packages.length === 0 ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: Colors.textMuted }}>No courses available to assign.</Text>
+                </View>
+              ) : (
+                <View style={{ gap: 8 }}>
+                  {packages.map((pkg: any) => {
+                    const isAssigned = tutorAssignedPkgIds.includes(pkg.id);
+                    return (
+                      <TouchableOpacity
+                        key={pkg.id}
+                        onPress={() => {
+                          setTutorAssignedPkgIds(prev =>
+                            prev.includes(pkg.id) ? prev.filter(id => id !== pkg.id) : [...prev, pkg.id]
+                          );
+                        }}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          padding: 12,
+                          borderRadius: 14,
+                          borderWidth: 1.5,
+                          borderColor: isAssigned ? Colors.primaryOrange : Colors.border,
+                          backgroundColor: isAssigned ? '#fff7ed' : Colors.surfaceSubtle,
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={{ uri: formatImageUrl(pkg.thumbnail) }}
+                          style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12 }}
+                          resizeMode="cover"
+                        />
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: isAssigned ? Colors.primaryOrange : Colors.textPrimary }}>
+                            {pkg.title}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: Colors.textMuted }}>
+                            {pkg.category || 'General Track'} • {pkg.duration || '12 Weeks'}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 6,
+                            borderWidth: 1.5,
+                            borderColor: isAssigned ? Colors.primaryOrange : Colors.textLight,
+                            backgroundColor: isAssigned ? Colors.primaryOrange : '#fff',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {isAssigned && <Check size={16} color="#fff" strokeWidth={3} />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.submitBtn, { marginTop: 20 }]}
+                onPress={handleSaveTutorCourseAssignments}
+                disabled={assigningTutorPackages}
+              >
+                {assigningTutorPackages ? (
+                  <ActivityIndicator color={Colors.textWhite} />
+                ) : (
+                  <Text style={styles.submitBtnText}>
+                    Save Course Assignments ({tutorAssignedPkgIds.length})
+                  </Text>
+                )}
               </TouchableOpacity>
               <View style={{ height: 40 }} />
             </ScrollView>

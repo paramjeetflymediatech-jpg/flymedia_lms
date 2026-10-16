@@ -173,3 +173,63 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function POST(request: Request) {
+  return handleAssignTutorPackages(request);
+}
+
+export async function PUT(request: Request) {
+  return handleAssignTutorPackages(request);
+}
+
+async function handleAssignTutorPackages(request: Request) {
+  try {
+    const authPayload = await getAuthUserFromRequest(request);
+    if (!authPayload || authPayload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { tutorId, packageIds } = body;
+
+    if (!tutorId) {
+      return NextResponse.json(
+        { success: false, error: 'Tutor ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const tutor = await User.findOne({ where: { id: tutorId, role: 'TUTOR' } });
+    if (!tutor) {
+      return NextResponse.json(
+        { success: false, error: 'Tutor not found' },
+        { status: 404 }
+      );
+    }
+
+    // Sync package assignments
+    await PackageTutor.destroy({ where: { tutorId } });
+    if (Array.isArray(packageIds) && packageIds.length > 0) {
+      const records = (packageIds as any[]).map((packageId: any) => ({
+        packageId: String(packageId),
+        tutorId: String(tutorId),
+      }));
+      await PackageTutor.bulkCreate(records);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Tutor course assignments updated successfully',
+    });
+  } catch (error: any) {
+    console.error('Assign tutor packages error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update tutor package assignments' },
+      { status: 500 }
+    );
+  }
+}
+
