@@ -1,4 +1,4 @@
-package com.mobileapp
+package com.flymedia.lms
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

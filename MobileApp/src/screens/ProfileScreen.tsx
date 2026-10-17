@@ -10,6 +10,7 @@ import {
   Image,
   Platform,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -28,6 +29,8 @@ import {
   ArrowRight,
   GraduationCap,
   Users,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -35,13 +38,14 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, login, register, logout } = useAuth();
+  const { user, login, register, logout, deleteAccount } = useAuth();
 
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleAuthSubmit = async () => {
     if (!email || !password) {
@@ -97,6 +101,30 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log Out', style: 'destructive', onPress: doLogout },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account & Data',
+      'Are you sure you want to permanently delete your account? All your enrolled courses, certificates, and learning progress will be permanently erased.\n\nThis action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Permanently Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            const res = await deleteAccount();
+            setDeleting(false);
+            if (!res.success) {
+              Alert.alert('Error', res.error || 'Failed to delete account. Please try again.');
+            } else {
+              Alert.alert('Account Deleted', 'Your account and personal data have been permanently removed.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -214,6 +242,32 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <LogOut size={16} color={Colors.error} />
               <Text style={styles.logoutBtnText}>Sign Out</Text>
             </TouchableOpacity>
+
+            {/* DANGER ZONE: DELETE ACCOUNT (Google Play Policy Compliance) */}
+            <View style={styles.dangerZoneCard}>
+              <View style={styles.dangerZoneHeader}>
+                <AlertTriangle size={16} color={Colors.error} />
+                <Text style={styles.dangerZoneTitle}>Account & Data Deletion</Text>
+              </View>
+              <Text style={styles.dangerZoneDesc}>
+                In compliance with Google Play data safety standards, you can permanently erase your account, enrolled packages, and certificates.
+              </Text>
+              <TouchableOpacity
+                style={styles.deleteAccountBtn}
+                onPress={handleDeleteAccount}
+                activeOpacity={0.8}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color={Colors.error} />
+                ) : (
+                  <>
+                    <Trash2 size={15} color={Colors.error} />
+                    <Text style={styles.deleteAccountBtnText}>Permanently Delete Account</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           /* AUTH LOGIN / REGISTER FORMS */
@@ -349,6 +403,23 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Text style={styles.infoVal}>{FlymediaContact.email}</Text>
             </View>
           </TouchableOpacity>
+
+          {/* GOOGLE PLAY PRIVACY & ACCOUNT DELETION WEB LINK */}
+          <View style={styles.legalLinksWrap}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://course.flymediatech.com/delete-account').catch(() => {})}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.legalLinkText}>Request Account Deletion (Web)</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalDot}>•</Text>
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://course.flymediatech.com/privacy').catch(() => {})}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.legalLinkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -566,6 +637,69 @@ const styles = StyleSheet.create({
     color: Colors.error,
     fontSize: 14,
     fontWeight: '700',
+  },
+  dangerZoneCard: {
+    marginTop: 18,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    borderRadius: 18,
+    padding: 16,
+    ...Shadows.small,
+  },
+  dangerZoneHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  dangerZoneTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#991b1b',
+  },
+  dangerZoneDesc: {
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 17,
+    marginBottom: 14,
+  },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#fda4af',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  deleteAccountBtnText: {
+    color: '#e11d48',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  legalLinksWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 18,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  legalLinkText: {
+    fontSize: 12,
+    color: Colors.primaryOrange,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    color: Colors.textMuted,
+    fontSize: 12,
   },
   authContainer: {
     marginTop: 10,

@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   refreshEnrollments: () => Promise<void>;
   enrollCourse: (course: Course) => Promise<{ success: boolean; error?: string; requireAuth?: boolean }>;
   purchaseCourse: (payload: {
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
   logout: async () => { },
+  deleteAccount: async () => ({ success: false }),
   refreshEnrollments: async () => { },
   enrollCourse: async () => ({ success: false }),
   purchaseCourse: async () => ({ success: false }),
@@ -156,6 +158,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setEnrollments([]);
   };
 
+  const deleteAccount = async () => {
+    try {
+      if (user && user.token) {
+        const res = await ApiService.deleteAccount(user.token);
+        if (!res.success) {
+          return { success: false, error: res.error || 'Failed to delete account' };
+        }
+      }
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+      setUser(null);
+      setEnrollments([]);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete account' };
+    }
+  };
+
   const enrollCourse = async (course: Course) => {
     if (!user || !user.token) {
       return { success: false, requireAuth: true, error: 'Please sign in to enroll in this course.' };
@@ -247,6 +267,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        deleteAccount,
         refreshEnrollments,
         enrollCourse,
         purchaseCourse,
