@@ -250,7 +250,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 <Text style={styles.dangerZoneTitle}>Account & Data Deletion</Text>
               </View>
               <Text style={styles.dangerZoneDesc}>
-                In compliance with Google Play data safety standards, you can permanently erase your account, enrolled packages, and certificates.
+                In compliance with data privacy and security standards, you can permanently erase your account, enrolled packages, and certificates.
               </Text>
               <TouchableOpacity
                 style={styles.deleteAccountBtn}
