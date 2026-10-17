@@ -87,7 +87,7 @@ export default function CallbackForm() {
           name="phone"
           required
           className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-medium"
-          placeholder="+91 98884-84310"
+          placeholder="+91 78144-08934"
         />
       </div>
       <div className="space-y-2">

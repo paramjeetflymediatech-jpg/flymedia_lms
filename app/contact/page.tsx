@@ -49,7 +49,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Call Us</p>
-                    <a href="tel:+919888484310" className="block text-xl font-black text-slate-900 hover:text-orange-600 transition-colors">+91 98884 84310</a>
+                    <a href="tel:+917814408934" className="block text-xl font-black text-slate-900 hover:text-orange-600 transition-colors">+91 78144 08934</a>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">

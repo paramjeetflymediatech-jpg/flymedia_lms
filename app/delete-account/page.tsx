@@ -60,7 +60,7 @@ export default function DeleteAccountPage() {
                 <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 space-y-2">
                   <p><strong>Email:</strong> <a href="mailto:anujguptaflymedia@gmail.com" className="text-orange-600 underline">anujguptaflymedia@gmail.com</a></p>
                   <p><strong>Subject:</strong> Account Deletion Request - Flymedia LMS</p>
-                  <p><strong>Helpline / WhatsApp:</strong> +91 98884 84310</p>
+                  <p><strong>Helpline / WhatsApp:</strong> +91 78144 08934</p>
                   <p><strong>Campus Address:</strong> Plot 20, Vishal Nagar Ext, Jawaddi, Ludhiana, Punjab - 141013</p>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">

@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
   Alert,
   Linking,
@@ -61,87 +62,99 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.overlay}
       >
         <View style={styles.modalContent}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={onClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
             <X size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
 
-          {submitted ? (
-            <View style={styles.successContainer}>
-              <CheckCircle size={54} color={Colors.success} />
-              <Text style={styles.successTitle}>Request Submitted!</Text>
-              <Text style={styles.successText}>
-                Our senior career counselor will call you within 15 minutes to discuss batches & scholarships.
-              </Text>
-            </View>
-          ) : (
-            <View>
-              <View style={styles.headerIconWrap}>
-                <PhoneCall size={26} color={Colors.primaryRose} />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContent}
+            bounces={false}
+          >
+            {submitted ? (
+              <View style={styles.successContainer}>
+                <CheckCircle size={54} color={Colors.success} />
+                <Text style={styles.successTitle}>Request Submitted!</Text>
+                <Text style={styles.successText}>
+                  Our senior career counselor will call you within 15 minutes to discuss batches & scholarships.
+                </Text>
               </View>
-              <Text style={styles.title}>Book Free Counseling</Text>
-              <Text style={styles.subtitle}>
-                Get syllabus details, demo class access, and batch schedule.
-              </Text>
-
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Rahul Sharma"
-                placeholderTextColor={Colors.textLight}
-                value={name}
-                onChangeText={setName}
-              />
-
-              <Text style={styles.label}>Mobile Number (WhatsApp)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="+91 98884 84310"
-                placeholderTextColor={Colors.textLight}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-              />
-
-              <Text style={styles.label}>Program of Interest</Text>
-              <TextInput
-                style={styles.input}
-                value={course}
-                onChangeText={setCourse}
-                placeholder="Course name"
-                placeholderTextColor={Colors.textLight}
-              />
-
-              <TouchableOpacity
-                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                onPress={handleSubmit}
-                disabled={loading}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.submitButtonText}>
-                  {loading ? 'Submitting...' : 'Request Instant Callback'}
+            ) : (
+              <View>
+                <View style={styles.headerIconWrap}>
+                  <PhoneCall size={26} color={Colors.primaryRose} />
+                </View>
+                <Text style={styles.title}>Book Free Counseling</Text>
+                <Text style={styles.subtitle}>
+                  Get syllabus details, demo class access, and batch schedule.
                 </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.directCallButton}
-                onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
-                activeOpacity={0.8}
-              >
-                <PhoneCall size={14} color={Colors.primaryOrange} />
-                <Text style={styles.directCallText}>
-                  Or call directly: {FlymediaContact.phone}
+                <Text style={styles.label}>Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Rahul Sharma"
+                  placeholderTextColor={Colors.textLight}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+
+                <Text style={styles.label}>Mobile Number (WhatsApp)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+91 78144 08934"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+
+                <Text style={styles.label}>Program of Interest</Text>
+                <TextInput
+                  style={styles.input}
+                  value={course}
+                  onChangeText={setCourse}
+                  placeholder="Course name"
+                  placeholderTextColor={Colors.textLight}
+                />
+
+                <TouchableOpacity
+                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.submitButtonText}>
+                    {loading ? 'Submitting...' : 'Request Instant Callback'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.directCallButton}
+                  onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
+                  activeOpacity={0.8}
+                >
+                  <PhoneCall size={14} color={Colors.primaryOrange} />
+                  <Text style={styles.directCallText}>
+                    Or call directly: {FlymediaContact.phone}
+                  </Text>
+                </TouchableOpacity>
+
+                <Text style={styles.privacyNote}>
+                  🔒 100% confidential. No spam calls.
                 </Text>
-              </TouchableOpacity>
-
-              <Text style={styles.privacyNote}>
-                🔒 100% confidential. No spam calls.
-              </Text>
-            </View>
-          )}
+              </View>
+            )}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -154,16 +167,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
   },
   modalContent: {
     backgroundColor: Colors.surface,
     borderRadius: 24,
     width: '100%',
-    maxWidth: 400,
-    padding: 24,
+    maxWidth: 420,
+    maxHeight: '88%',
     ...Shadows.medium,
     position: 'relative',
+    overflow: 'hidden',
+  },
+  scrollContent: {
+    padding: 24,
+    paddingTop: 28,
   },
   closeBtn: {
     position: 'absolute',

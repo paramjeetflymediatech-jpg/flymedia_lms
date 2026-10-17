@@ -323,7 +323,7 @@ export default async function HomePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                   <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-orange-500 hover:shadow-md transition-all group cursor-pointer">
                     <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Direct Call Support</span>
-                    <a href="tel:+919888484310" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91 98884 84310</a>
+                    <a href="tel:+917814408934" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91 78144 08934</a>
                   </div>
                   <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-rose-500 hover:shadow-md transition-all group cursor-pointer">
                     <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Email Admissions</span>
