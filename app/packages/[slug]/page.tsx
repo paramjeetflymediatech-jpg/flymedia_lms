@@ -11,6 +11,7 @@ import CertificateToggle from '../../../src/components/packages/CertificateToggl
 
 import { getSeoMetadata, getSeoSetting } from '../../../src/lib/seo';
 import PageSeoScripts from '../../../src/components/common/PageSeoScripts';
+import ContactSection from '../../../src/components/contact/ContactSection';
 
 export const revalidate = 0;
 
@@ -660,6 +661,18 @@ export default async function PackageDetailPage({ params }: Props) {
                   <FaqAccordion faqs={faqs} />
                 </section>
               )}
+
+              {/* Contact & Consultation Section */}
+              <div className="pt-6">
+                <ContactSection 
+                  badge="COURSE ADMISSIONS & INQUIRY"
+                  title={`Have Questions About ${pkgJson.title}?`}
+                  subtitle="Speak directly with our academic advisors to learn more about the curriculum, schedule, real-world capstone projects, and placement assistance."
+                  initialCourse={pkgJson.title}
+                  sourceContext={`Package Detail: ${pkgJson.title}`}
+                  buttonText={`Inquire About ${pkgJson.title}`}
+                />
+              </div>
 
         </div>
 

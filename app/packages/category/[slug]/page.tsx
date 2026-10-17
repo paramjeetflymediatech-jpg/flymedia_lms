@@ -11,6 +11,7 @@ import GsapReveal from '../../../../src/components/animations/GsapReveal';
 import { Metadata } from 'next';
 import { getSeoMetadata, getSeoSetting } from '../../../../src/lib/seo';
 import PageSeoScripts from '../../../../src/components/common/PageSeoScripts';
+import ContactSection from '../../../../src/components/contact/ContactSection';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
@@ -416,6 +417,17 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             </div>
           </div>
         )}
+
+        {/* Contact & Consultation Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+          <ContactSection 
+            badge={`${category.name} ADMISSIONS`}
+            title={`Interested in ${category.name} Training?`}
+            subtitle={`Have specific questions about syllabus, project portfolios, batch timings, or placement tracks in ${category.name}? Send us your details below.`}
+            initialCourse={category.name}
+            sourceContext={`Category Details: ${category.name}`}
+          />
+        </div>
       </main>
       <Footer />
     </>

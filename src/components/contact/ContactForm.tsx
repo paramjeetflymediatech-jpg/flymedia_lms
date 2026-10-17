@@ -4,31 +4,44 @@ import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { submitInquiryAction } from '../../../app/actions';
 
-export default function ContactForm() {
+interface ContactFormProps {
+  initialCourse?: string;
+  sourceContext?: string;
+  buttonText?: string;
+}
+
+export default function ContactForm({ initialCourse, sourceContext, buttonText }: ContactFormProps = {}) {
   const [loading, setLoading] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState(initialCourse || '');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (initialCourse) {
+      setSelectedCourse(initialCourse);
+    } else if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const courseParam = params.get('course');
       if (courseParam) {
         setSelectedCourse(courseParam);
       }
     }
-  }, []);
+  }, [initialCourse]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     
     const formData = new FormData(e.currentTarget);
-    const course = formData.get('course') as string;
+    const course = (formData.get('course') as string) || selectedCourse;
     const message = formData.get('message') as string;
     
-    // Combine course and message if a course is selected
-    if (course) {
-      formData.set('message', `Interested in: ${course}\n\n${message}`);
+    // Combine source context, course, and message
+    const details: string[] = [];
+    if (course) details.push(`Interested in: ${course}`);
+    if (sourceContext && sourceContext !== course) details.push(`Source: ${sourceContext}`);
+    if (message) details.push(message);
+
+    if (details.length > 0) {
+      formData.set('message', details.join('\n\n'));
     }
 
     try {
@@ -50,7 +63,7 @@ export default function ContactForm() {
         });
         // Reset form
         (e.target as HTMLFormElement).reset();
-        setSelectedCourse('');
+        setSelectedCourse(initialCourse || '');
       }
     } catch (error) {
       Swal.fire({
@@ -110,6 +123,18 @@ export default function ContactForm() {
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-medium appearance-none"
             >
               <option value="" className="text-slate-400">Select a program...</option>
+              {selectedCourse && ![
+                'Digital Marketing',
+                'Web Development',
+                'Video Editing',
+                'Graphic Designing',
+                'MERN Stack',
+                'Others'
+              ].includes(selectedCourse) && (
+                <option value={selectedCourse} className="text-slate-900 font-semibold">
+                  {selectedCourse}
+                </option>
+              )}
               <option value="Digital Marketing" className="text-slate-900">Digital Marketing</option>
               <option value="Web Development" className="text-slate-900">Web Development</option>
               <option value="Video Editing" className="text-slate-900">Video Editing</option>
@@ -139,11 +164,11 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-5 mt-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-orange-500/25 hover:-translate-y-1 hover:shadow-orange-500/40 relative overflow-hidden group disabled:opacity-70 disabled:hover:-translate-y-0 disabled:hover:shadow-orange-500/25"
+        className="w-full py-5 mt-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 rounded-2xl text-white font-black text-lg transition-all shadow-lg shadow-orange-500/25 hover:-translate-y-1 hover:shadow-orange-500/40 relative overflow-hidden group disabled:opacity-70 disabled:hover:-translate-y-0 disabled:hover:shadow-orange-500/25 cursor-pointer"
       >
         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
         <span className="relative z-10 flex items-center justify-center gap-2">
-          {loading ? 'Sending...' : 'Send Registration Inquiry'}
+          {loading ? 'Sending...' : (buttonText || 'Send Registration Inquiry')}
           {!loading && <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
         </span>
       </button>

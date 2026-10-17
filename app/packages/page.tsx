@@ -8,6 +8,7 @@ import GsapReveal from '../../src/components/animations/GsapReveal';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../../src/lib/seo';
 import PageSeoScripts from '../../src/components/common/PageSeoScripts';
+import ContactSection from '../../src/components/contact/ContactSection';
 
 export const revalidate = 0; // Fresh listing every time
 
@@ -253,6 +254,18 @@ export default async function PackagesListingPage({ searchParams }: { searchPara
               )}
             </>
           )}
+        </div>
+
+        {/* Contact & Consultation Section */}
+        <div className="mt-16">
+          <ContactSection 
+            title={categoryParam ? `Looking for Guidance in ${categoryParam}?` : 'Looking for the Right Training Program?'}
+            subtitle={categoryParam 
+              ? `Have questions about ${categoryParam} curriculum, batch schedules, or placement assistance? Send an inquiry and our expert advisors will guide you.`
+              : 'Not sure which training program or specialization aligns with your career path? Fill out the inquiry form and our educational advisors will help you choose.'}
+            initialCourse={categoryParam || ''}
+            sourceContext={categoryParam ? `All Packages Filtered by ${categoryParam}` : 'All Packages Page'}
+          />
         </div>
       </main>
       <Footer />
