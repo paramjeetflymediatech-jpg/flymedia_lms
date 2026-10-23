@@ -228,7 +228,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     <View style={styles.screen}>
       <Header
         subtitle="Account & Campus Info"
-        showMenuButton={Boolean(user)}
+        showMenuButton={Boolean(user && !editModalVisible)}
         onMenuPress={() => setEditModalVisible(true)}
       />
 

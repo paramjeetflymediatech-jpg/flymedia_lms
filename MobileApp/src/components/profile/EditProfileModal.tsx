@@ -390,29 +390,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         style={styles.modalScreen}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* ================= TOP HEADER WITH HAMBURGER ================= */}
+        {/* ================= TOP HEADER ================= */}
         <View style={[styles.header, { paddingTop: topPadding + 6 }]}>
-          <View style={styles.headerLeftGroup}>
-            {/* Hamburger Button */}
-            <TouchableOpacity
-              onPress={() => setHamburgerOpen(true)}
-              style={styles.hamburgerBtn}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Menu size={20} color={Colors.textPrimary} strokeWidth={2.4} />
-            </TouchableOpacity>
-
-            {/* Close Button */}
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeBtn}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <X size={18} color={Colors.textMuted} strokeWidth={2.2} />
-            </TouchableOpacity>
-          </View>
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <X size={18} color={Colors.textMuted} strokeWidth={2.2} />
+          </TouchableOpacity>
 
           <View style={styles.headerTitleWrap}>
             <Text style={styles.headerTitle} numberOfLines={1}>
