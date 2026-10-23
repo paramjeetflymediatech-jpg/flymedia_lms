@@ -76,7 +76,7 @@ export const ApiService = {
   /**
    * Submits inquiry directly to database
    */
-  async submitInquiry(data: { name: string; phone: string; course?: string; email?: string }): Promise<boolean> {
+  async submitInquiry(data: { name: string; phone: string; course?: string; email?: string; message?: string }): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/inquiry`, {
         method: 'POST',

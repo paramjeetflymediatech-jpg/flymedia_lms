@@ -14,6 +14,7 @@ import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { ContactUsModal } from '../components/common/ContactUsModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { ApiService } from '../services/api';
 import { prefetchImages } from '../utils/imageUrl';
@@ -37,6 +38,7 @@ import {
   Mail,
   Navigation as NavigationIcon,
   Play,
+  MessageSquare,
 } from 'lucide-react-native';
 
 interface HomeScreenProps {
@@ -95,6 +97,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
+  const [contactModalVisible, setContactModalVisible] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -522,8 +525,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {})}
               activeOpacity={0.85}
             >
-              <Phone size={15} color={Colors.textWhite} />
-              <Text style={styles.campusCallBtnText}>Call {FlymediaContact.phone}</Text>
+              <Phone size={14} color={Colors.textWhite} />
+              <Text style={styles.campusCallBtnText}>Call</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.campusContactBtn}
+              onPress={() => setContactModalVisible(true)}
+              activeOpacity={0.85}
+            >
+              <MessageSquare size={14} color="#ffffff" />
+              <Text style={styles.campusContactBtnText}>Contact Us</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -531,8 +543,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => Linking.openURL(FlymediaContact.googleMapsUrl).catch(() => {})}
               activeOpacity={0.85}
             >
-              <NavigationIcon size={15} color={Colors.primaryRose} />
-              <Text style={styles.campusMapBtnText}>Directions</Text>
+              <NavigationIcon size={14} color={Colors.primaryRose} />
+              <Text style={styles.campusMapBtnText}>Maps</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -544,6 +556,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <CallbackModal
         visible={callbackModalVisible}
         onClose={() => setCallbackModalVisible(false)}
+      />
+
+      {/* Official Contact Us Modal */}
+      <ContactUsModal
+        visible={contactModalVisible}
+        onClose={() => setContactModalVisible(false)}
       />
     </View>
   );
@@ -1079,25 +1097,40 @@ const styles = StyleSheet.create({
   },
   campusCtaRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   campusCallBtn: {
-    flex: 1.4,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primaryRose,
     paddingVertical: 12,
     borderRadius: 14,
-    gap: 8,
+    gap: 6,
   },
   campusCallBtnText: {
     color: Colors.textWhite,
-    fontSize: 13,
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  campusContactBtn: {
+    flex: 1.3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primaryOrange,
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 6,
+  },
+  campusContactBtnText: {
+    color: Colors.textWhite,
+    fontSize: 12.5,
     fontWeight: '800',
   },
   campusMapBtn: {
-    flex: 1,
+    flex: 0.9,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1110,7 +1143,7 @@ const styles = StyleSheet.create({
   },
   campusMapBtnText: {
     color: Colors.textWhite,
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
 });

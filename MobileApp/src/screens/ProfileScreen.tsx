@@ -18,6 +18,8 @@ import { formatImageUrl } from '../utils/imageUrl';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { ContactUsModal } from '../components/common/ContactUsModal';
+import { LegalAndAboutModal, LegalModalType } from '../components/common/LegalAndAboutModal';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
@@ -42,6 +44,12 @@ import {
   Sparkles,
   Award,
   Camera,
+  MessageSquare,
+  FileText,
+  Info,
+  ChevronRight,
+  HelpCircle,
+  Building2,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -53,6 +61,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
+  const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<LegalModalType>('about');
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -60,6 +71,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const openLegalModal = (type: LegalModalType) => {
+    setLegalModalType(type);
+    setLegalModalVisible(true);
+  };
 
   const handlePickAvatar = () => {
     Alert.alert(
@@ -612,10 +628,38 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           </View>
         )}
 
-        {/* CAMPUS & HELPLINE CARD */}
-        <View style={[styles.infoSection, { marginTop: user ? 0 : 20 }]}>
-          <Text style={styles.sectionTitle}>{FlymediaContact.campusName}</Text>
+        {/* REACH US & CONTACT FORM CARD */}
+        <View style={[styles.infoSection, { marginTop: user ? 16 : 20 }]}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>Reach & Connect</Text>
+              <Text style={styles.sectionSubtitle}>Admissions helpline, campus visit & inquiries</Text>
+            </View>
+            <View style={styles.activePill}>
+              <View style={styles.activePillDot} />
+              <Text style={styles.activePillText}>Campus Open</Text>
+            </View>
+          </View>
 
+          {/* Primary Contact Us Button */}
+          <TouchableOpacity
+            style={styles.openContactFormBtn}
+            onPress={() => setContactModalVisible(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.openContactFormIcon}>
+              <MessageSquare size={18} color="#ffffff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.openContactFormTitle}>Contact Us & Reach Admissions</Text>
+              <Text style={styles.openContactFormSub}>
+                Drop an inquiry regarding training tracks, batch timings, fees, or campus visits
+              </Text>
+            </View>
+            <ChevronRight size={18} color={Colors.primaryRose} />
+          </TouchableOpacity>
+
+          {/* Instant Campus Info Rows */}
           <TouchableOpacity
             style={styles.infoRow}
             onPress={() => Linking.openURL(FlymediaContact.googleMapsUrl).catch(() => {})}
@@ -628,6 +672,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 {FlymediaContact.address}
               </Text>
             </View>
+            <ExternalLink size={14} color={Colors.textLight} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -642,6 +687,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 {FlymediaContact.phone}
               </Text>
             </View>
+            <ChevronRight size={14} color={Colors.textLight} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -651,25 +697,100 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           >
             <Mail size={18} color={Colors.primaryOrange} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.infoLabel}>Admissions Email</Text>
+              <Text style={styles.infoLabel}>Admissions Email (Tap to write)</Text>
               <Text style={styles.infoVal}>{FlymediaContact.email}</Text>
             </View>
+            <ChevronRight size={14} color={Colors.textLight} />
           </TouchableOpacity>
+        </View>
 
-          {/* GOOGLE PLAY PRIVACY & ACCOUNT DELETION WEB LINK */}
-          <View style={styles.legalLinksWrap}>
+        {/* ABOUT & LEGAL POLICIES SECTION */}
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>About & Legal Policies</Text>
+          <Text style={styles.sectionSubtitle}>Transparency, student rights & compliance</Text>
+
+          <View style={styles.legalListWrap}>
+            {/* About Us */}
             <TouchableOpacity
-              onPress={() => Linking.openURL('https://course.flymediatech.com/delete-account').catch(() => {})}
-              activeOpacity={0.7}
+              style={styles.legalListItem}
+              onPress={() => openLegalModal('about')}
+              activeOpacity={0.75}
             >
-              <Text style={styles.legalLinkText}>Request Account Deletion (Web)</Text>
+              <View style={[styles.legalListIcon, { backgroundColor: '#FFF1F2' }]}>
+                <Building2 size={16} color={Colors.primaryRose} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.legalListTitle}>About Us</Text>
+                <Text style={styles.legalListSub}>14+ Years of excellence, leadership & campus network</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+
+            {/* Terms and Conditions */}
+            <TouchableOpacity
+              style={styles.legalListItem}
+              onPress={() => openLegalModal('terms')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.legalListIcon, { backgroundColor: '#EFF6FF' }]}>
+                <FileText size={16} color="#2563EB" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.legalListTitle}>Terms & Conditions</Text>
+                <Text style={styles.legalListSub}>Student code of conduct & course service agreement</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+
+            {/* Privacy Policy */}
+            <TouchableOpacity
+              style={styles.legalListItem}
+              onPress={() => openLegalModal('privacy')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.legalListIcon, { backgroundColor: '#F0FDF4' }]}>
+                <ShieldCheck size={16} color="#16A34A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.legalListTitle}>Privacy Policy</Text>
+                <Text style={styles.legalListSub}>Google Play Data Safety & user data protection</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+
+            {/* Delete User */}
+            <TouchableOpacity
+              style={[styles.legalListItem, { borderBottomWidth: 0 }]}
+              onPress={() => openLegalModal('delete')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.legalListIcon, { backgroundColor: '#FEF2F2' }]}>
+                <Trash2 size={16} color="#DC2626" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.legalListTitle, { color: '#DC2626' }]}>Delete User / Account</Text>
+                <Text style={styles.legalListSub}>Permanently erase personal data & certificates</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Quick Footer Links */}
+          <View style={styles.legalLinksWrap}>
+            <TouchableOpacity onPress={() => openLegalModal('about')} activeOpacity={0.7}>
+              <Text style={styles.legalLinkText}>About Us</Text>
             </TouchableOpacity>
             <Text style={styles.legalDot}>•</Text>
-            <TouchableOpacity
-              onPress={() => Linking.openURL('https://course.flymediatech.com/privacy').catch(() => {})}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity onPress={() => openLegalModal('terms')} activeOpacity={0.7}>
+              <Text style={styles.legalLinkText}>Terms & Conditions</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalDot}>•</Text>
+            <TouchableOpacity onPress={() => openLegalModal('privacy')} activeOpacity={0.7}>
               <Text style={styles.legalLinkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalDot}>•</Text>
+            <TouchableOpacity onPress={() => openLegalModal('delete')} activeOpacity={0.7}>
+              <Text style={[styles.legalLinkText, { color: '#DC2626' }]}>Delete User</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -690,6 +811,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         visible={callbackModalVisible}
         onClose={() => setCallbackModalVisible(false)}
         defaultCourse="Account & Admission Help"
+      />
+
+      <ContactUsModal
+        visible={contactModalVisible}
+        onClose={() => setContactModalVisible(false)}
+      />
+
+      <LegalAndAboutModal
+        visible={legalModalVisible}
+        onClose={() => setLegalModalVisible(false)}
+        type={legalModalType}
+        isLoggedIn={!!user}
+        isDeleting={deleting}
+        onDeleteAccount={deleteAccount}
       />
     </View>
   );
@@ -1147,26 +1282,122 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 11.5,
+    color: Colors.textMuted,
+    marginBottom: 12,
+  },
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  activePillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+  },
+  activePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  openContactFormBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    borderRadius: 16,
+    padding: 12,
+    gap: 12,
+    marginBottom: 14,
+    ...Shadows.small,
+  },
+  openContactFormIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryRose,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  openContactFormTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  openContactFormSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  legalListWrap: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  legalListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 10,
+  },
+  legalListIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legalListTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  legalListSub: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
   legalLinksWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 18,
-    paddingTop: 14,
+    marginTop: 14,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: '#F1F5F9',
     gap: 8,
     flexWrap: 'wrap',
   },
   legalLinkText: {
-    fontSize: 12,
-    color: Colors.primaryOrange,
+    fontSize: 11.5,
+    color: Colors.primaryRose,
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
   legalDot: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontSize: 11,
   },
   authContainer: {
     marginTop: 10,
