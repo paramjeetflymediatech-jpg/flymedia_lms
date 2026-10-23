@@ -256,92 +256,138 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         {user ? (
           /* LOGGED IN USER PROFILE */
           <View>
-            <View style={styles.profileCard}>
-              <TouchableOpacity
-                style={styles.avatarWrap}
-                activeOpacity={0.82}
-                onPress={handlePickAvatar}
-              >
-                {user.avatar ? (
-                  <CachedImage
-                    uri={user.avatar}
-                    style={styles.avatarImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text style={styles.avatarLetter}>
-                    {user.name ? user.name[0].toUpperCase() : 'U'}
-                  </Text>
-                )}
-                {uploadingAvatar && (
-                  <View style={styles.avatarLoadingOverlay}>
-                    <ActivityIndicator size="small" color="#fff" />
+            {/* ELEVATED STUDENT IDENTITY HERO CARD */}
+            <View style={styles.profileHeroCard}>
+              <View style={styles.profileHeroTop}>
+                <TouchableOpacity
+                  style={styles.heroAvatarWrap}
+                  activeOpacity={0.85}
+                  onPress={handlePickAvatar}
+                >
+                  {user.avatar ? (
+                    <CachedImage
+                      uri={user.avatar}
+                      style={styles.heroAvatarImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.heroAvatarFallback}>
+                      <Text style={styles.heroAvatarLetter}>
+                        {user.name ? user.name[0].toUpperCase() : 'S'}
+                      </Text>
+                    </View>
+                  )}
+                  {uploadingAvatar && (
+                    <View style={styles.avatarLoadingOverlay}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                  <View style={styles.heroCameraBadge}>
+                    <Camera size={11} color="#fff" strokeWidth={2.4} />
                   </View>
-                )}
-                <View style={styles.avatarCameraBadge}>
-                  <Camera size={13} color="#fff" />
+                </TouchableOpacity>
+
+                <View style={{ flex: 1 }}>
+                  <View style={styles.heroNameBadgeRow}>
+                    <Text style={styles.profileHeroName} numberOfLines={1}>{user.name}</Text>
+                    <View style={styles.verifiedRoleBadge}>
+                      <Sparkles size={11} color={Colors.primaryRose} strokeWidth={2.4} />
+                      <Text style={styles.verifiedRoleText}>
+                        {user.role === 'STUDENT' ? 'STUDENT' : `${user.role}`}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.profileHeroEmail} numberOfLines={1}>{user.email}</Text>
+                  {user.phone ? (
+                    <View style={styles.heroPhoneRow}>
+                      <Phone size={11} color={Colors.textSecondary} />
+                      <Text style={styles.profileHeroPhone}>{user.phone}</Text>
+                    </View>
+                  ) : null}
                 </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.changePhotoBadge}
-                activeOpacity={0.75}
-                onPress={handlePickAvatar}
-              >
-                <Camera size={12} color={Colors.primaryOrange} />
-                <Text style={styles.changePhotoBadgeText}>
-                  {uploadingAvatar ? 'Uploading Photo...' : 'Change Photo'}
-                </Text>
-              </TouchableOpacity>
-
-              <Text style={styles.profileName}>{user.name}</Text>
-              <Text style={styles.profileEmail}>{user.email}</Text>
-
-              <View style={styles.roleBadge}>
-                <ShieldCheck size={14} color={Colors.primaryOrange} />
-                <Text style={styles.roleText}>{user.role} ACCOUNT</Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.editProfileBtn}
-                onPress={() => setEditModalVisible(true)}
-                activeOpacity={0.82}
-              >
-                <Pencil size={13} color={Colors.textWhite} />
-                <Text style={styles.editProfileBtnText}>Edit Academic & Family Profile</Text>
-              </TouchableOpacity>
+              {/* Quick Profile Actions Row */}
+              <View style={styles.heroActionsRow}>
+                <TouchableOpacity
+                  style={styles.heroEditProfileBtn}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.82}
+                >
+                  <Pencil size={13} color="#ffffff" strokeWidth={2.4} />
+                  <Text style={styles.heroEditProfileBtnText}>Edit Profile</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.heroChangePhotoBtn}
+                  onPress={handlePickAvatar}
+                  activeOpacity={0.82}
+                >
+                  <Camera size={13} color={Colors.primaryRose} strokeWidth={2.2} />
+                  <Text style={styles.heroChangePhotoBtnText}>
+                    {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* STUDENT ACADEMIC, ADDRESS & FAMILY DOSSIER */}
-            <View style={styles.dossierCard}>
-              <View style={styles.dossierHeader}>
+            {/* HIGH IMPACT STUDENT LEARNING PORTAL CARD */}
+            {user.role === 'STUDENT' && (
+              <TouchableOpacity
+                style={styles.studentPortalCard}
+                onPress={() => navigation.navigate('StudentPanel')}
+                activeOpacity={0.88}
+              >
+                <View style={styles.studentPortalIconWrap}>
+                  <GraduationCap size={22} color="#ffffff" strokeWidth={2.4} />
+                </View>
+                <View style={{ flex: 1, paddingRight: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <Text style={styles.studentPortalTitle}>Student Learning Portal</Text>
+                    <View style={styles.portalLiveBadge}>
+                      <Text style={styles.portalLiveBadgeText}>ACTIVE</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.studentPortalSub}>
+                    Access enrolled training tracks, live classes & mentors
+                  </Text>
+                </View>
+                <View style={styles.studentPortalArrowBtn}>
+                  <ChevronRight size={18} color="#ffffff" strokeWidth={2.4} />
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* ACADEMIC & PERSONAL DETAILS CARD */}
+            <View style={styles.infoCard}>
+              <View style={styles.infoCardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={styles.dossierHeaderIcon}>
-                    <GraduationCap size={18} color={Colors.primaryRose} />
+                  <View style={styles.infoCardHeaderIconWrap}>
+                    <BookOpen size={16} color={Colors.primaryRose} strokeWidth={2.4} />
                   </View>
                   <View>
-                    <Text style={styles.dossierTitle}>Academic & Background Dossier</Text>
-                    <Text style={styles.dossierSubtitle}>Education, Residence & Family Details</Text>
+                    <Text style={styles.infoCardTitle}>Academic & Personal Details</Text>
+                    <Text style={styles.infoCardSub}>Education, Residence & Family Information</Text>
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={styles.dossierEditLink}
+                  style={styles.infoCardEditBtn}
                   onPress={() => setEditModalVisible(true)}
                   activeOpacity={0.7}
                 >
-                  <Pencil size={12} color={Colors.primaryRose} />
-                  <Text style={styles.dossierEditLinkText}>Edit</Text>
+                  <Pencil size={11} color={Colors.primaryRose} strokeWidth={2.2} />
+                  <Text style={styles.infoCardEditBtnText}>Edit</Text>
                 </TouchableOpacity>
               </View>
 
               {/* SECTION 1: EDUCATION */}
-              <View style={styles.dossierRow}>
-                <View style={[styles.dossierRowIcon, { backgroundColor: '#eff6ff' }]}>
-                  <BookOpen size={16} color="#2563eb" />
+              <View style={styles.infoItemRow}>
+                <View style={[styles.infoItemIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                  <GraduationCap size={16} color="#2563EB" strokeWidth={2.2} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <Text style={styles.dossierRowLabel}>Education History</Text>
+                    <Text style={styles.infoItemLabel}>Education History</Text>
                     {user.educationDetails?.currentlyStudying ? (
                       <View style={styles.studyBadgeActive}>
                         <Text style={styles.studyBadgeActiveText}>Currently Studying</Text>
@@ -352,11 +398,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                       </View>
                     )}
                   </View>
-                  <Text style={styles.dossierRowVal}>
+                  <Text style={styles.infoItemVal}>
                     {user.educationDetails?.highestQualification || 'Qualification pending update'}
                   </Text>
                   {user.educationDetails?.collegeOrSchool ? (
-                    <Text style={styles.dossierRowSub}>
+                    <Text style={styles.infoItemSub}>
                       {user.educationDetails.collegeOrSchool}
                       {user.educationDetails.passingYear ? ` • Class of ${user.educationDetails.passingYear}` : ''}
                       {user.educationDetails.percentageOrCgpa ? ` (${user.educationDetails.percentageOrCgpa})` : ''}
@@ -370,84 +416,58 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 </View>
               </View>
 
-              <View style={styles.dossierDivider} />
+              <View style={styles.infoDivider} />
 
               {/* SECTION 2: RESIDENTIAL ADDRESS */}
-              <View style={styles.dossierRow}>
-                <View style={[styles.dossierRowIcon, { backgroundColor: '#f0fdf4' }]}>
-                  <MapPin size={16} color="#059669" />
+              <View style={styles.infoItemRow}>
+                <View style={[styles.infoItemIconWrap, { backgroundColor: '#ECFDF5' }]}>
+                  <MapPin size={16} color="#059669" strokeWidth={2.2} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.dossierRowLabel}>Address & Location</Text>
-                  <Text style={styles.dossierRowVal}>
+                  <Text style={styles.infoItemLabel}>Residence & Location</Text>
+                  <Text style={styles.infoItemVal}>
                     {user.addressDetails?.city
                       ? `${user.addressDetails.city}, ${user.addressDetails.state || ''} ${user.addressDetails.pincode ? `• PIN ${user.addressDetails.pincode}` : ''}`
                       : 'Address not added yet'}
                   </Text>
                   {user.addressDetails?.addressLine ? (
-                    <Text style={styles.dossierRowSub}>{user.addressDetails.addressLine}</Text>
+                    <Text style={styles.infoItemSub}>{user.addressDetails.addressLine}</Text>
                   ) : null}
                 </View>
               </View>
 
-              <View style={styles.dossierDivider} />
+              <View style={styles.infoDivider} />
 
               {/* SECTION 3: FAMILY & CATEGORY */}
-              <View style={styles.dossierRow}>
-                <View style={[styles.dossierRowIcon, { backgroundColor: '#fff7ed' }]}>
-                  <Users size={16} color={Colors.primaryOrange} />
+              <View style={styles.infoItemRow}>
+                <View style={[styles.infoItemIconWrap, { backgroundColor: '#FFFBEB' }]}>
+                  <Users size={16} color="#D97706" strokeWidth={2.2} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <Text style={styles.dossierRowLabel}>Family & Social Category</Text>
+                    <Text style={styles.infoItemLabel}>Family & Social Category</Text>
                     <View style={styles.categoryPill}>
                       <Text style={styles.categoryPillText}>
                         {user.studentCategory || 'GENERAL'}
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.dossierRowVal}>
+                  <Text style={styles.infoItemVal}>
                     {user.familyDetails?.fatherName
                       ? `Father: ${user.familyDetails.fatherName}${user.familyDetails.familyOccupation ? ` (${user.familyDetails.familyOccupation})` : ''}`
                       : 'Father/Guardian info pending'}
                   </Text>
                   {user.familyDetails?.motherName ? (
-                    <Text style={styles.dossierRowSub}>Mother: {user.familyDetails.motherName}</Text>
+                    <Text style={styles.infoItemSub}>Mother: {user.familyDetails.motherName}</Text>
                   ) : null}
                   {user.familyDetails?.guardianPhone || user.phone ? (
-                    <Text style={styles.dossierRowSub}>
-                      Emergency / Guardian Contact: {user.familyDetails?.guardianPhone || user.phone}
+                    <Text style={styles.infoItemSub}>
+                      Emergency Contact: {user.familyDetails?.guardianPhone || user.phone}
                     </Text>
                   ) : null}
                 </View>
               </View>
             </View>
-
-            {/* STUDENT LEARNING PANEL SECTION */}
-            {user.role === 'STUDENT' && (
-              <View style={styles.studentHubCard}>
-                <View style={styles.hubHeader}>
-                  <View style={[styles.hubIconCircle, { backgroundColor: '#ea580c' }]}>
-                    <GraduationCap size={20} color={Colors.textWhite} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.hubTitle}>Student Learning Panel</Text>
-                    <Text style={styles.hubSub}>
-                      Access enrolled packages, view live batch classes, and book 1-on-1 sessions
-                    </Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.openHubBtn, { backgroundColor: '#ea580c' }]}
-                  onPress={() => navigation.navigate('StudentPanel')}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.openHubBtnText}>Open Student Dashboard & Sessions</Text>
-                  <ArrowRight size={16} color={Colors.textWhite} />
-                </TouchableOpacity>
-              </View>
-            )}
 
             {/* TUTOR MANAGEMENT PANEL SECTION */}
             {user.role === 'TUTOR' && (
@@ -841,216 +861,310 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
   },
-  profileCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+  /* Modern Profile Hero Card */
+  profileHeroCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#E2E8F0',
     ...Shadows.small,
-    marginBottom: 20,
   },
-  avatarWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.orangeLight,
+  profileHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  heroAvatarWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    position: 'relative',
+    marginRight: 14,
+    shadowColor: Colors.primaryRose,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  heroAvatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 2,
+    borderColor: '#FECDD3',
+  },
+  heroAvatarFallback: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 2,
+    borderColor: '#FECDD3',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
-    borderColor: Colors.primaryOrange,
-    marginBottom: 8,
-    position: 'relative',
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 34,
+  heroAvatarLetter: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: Colors.primaryRose,
   },
   avatarLoadingOverlay: {
     ...StyleSheet.absoluteFill,
-    borderRadius: 36,
+    borderRadius: 32,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarCameraBadge: {
+  heroCameraBadge: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primaryOrange,
+    bottom: -1,
+    right: -1,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primaryRose,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.small,
   },
-  changePhotoBadge: {
+  heroNameBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(249, 115, 22, 0.35)',
-    paddingHorizontal: 10,
-    paddingVertical: 3.5,
-    borderRadius: 14,
-    marginBottom: 10,
+    gap: 6,
+    flexWrap: 'wrap',
+    marginBottom: 3,
   },
-  changePhotoBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primaryOrange,
-  },
-  avatarLetter: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.primaryOrange,
-  },
-  profileName: {
-    fontSize: 20,
+  profileHeroName: {
+    fontSize: 18,
     fontWeight: '900',
     color: Colors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  verifiedRoleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FFF1F2',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  verifiedRoleText: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    color: Colors.primaryRose,
+    letterSpacing: 0.4,
+  },
+  profileHeroEmail: {
+    fontSize: 12.5,
+    color: Colors.textSecondary,
+    fontWeight: '500',
     marginBottom: 2,
   },
-  profileEmail: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginBottom: 12,
-  },
-  roleBadge: {
+  heroPhoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.orangeLight,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-    gap: 6,
+    gap: 4,
+    marginTop: 2,
   },
-  roleText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: Colors.primaryOrange,
-    letterSpacing: 0.5,
+  profileHeroPhone: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600',
   },
-  editProfileBtn: {
+  heroActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  heroEditProfileBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
     backgroundColor: Colors.primaryRose,
-    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 14,
-    marginTop: 14,
-    shadowColor: Colors.primaryRose,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
+    borderRadius: 12,
+    ...Shadows.small,
   },
-  editProfileBtnText: {
-    color: Colors.textWhite,
-    fontSize: 12,
+  heroEditProfileBtnText: {
+    color: '#ffffff',
+    fontSize: 12.5,
     fontWeight: '800',
-    letterSpacing: 0.3,
   },
-  dossierCard: {
+  heroChangePhotoBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    paddingVertical: 9.5,
+    borderRadius: 12,
+  },
+  heroChangePhotoBtnText: {
+    color: Colors.primaryRose,
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+
+  /* Modern Student Learning Portal Tile */
+  studentPortalCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  studentPortalIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryRose,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  studentPortalTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+  portalLiveBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  portalLiveBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#34D399',
+    letterSpacing: 0.4,
+  },
+  studentPortalSub: {
+    fontSize: 11.5,
+    color: '#94A3B8',
+    lineHeight: 16,
+  },
+  studentPortalArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* Academic & Personal Details Card */
+  infoCard: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E2E8F0',
     marginBottom: 16,
     ...Shadows.small,
   },
-  dossierHeader: {
+  infoCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 14,
     marginBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#F1F5F9',
   },
-  dossierHeaderIcon: {
+  infoCardHeaderIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 10,
-    backgroundColor: '#fdf2f8',
+    borderRadius: 12,
+    backgroundColor: '#FFF1F2',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dossierTitle: {
-    fontSize: 14,
-    fontWeight: '800',
+  infoCardTitle: {
+    fontSize: 14.5,
+    fontWeight: '900',
     color: Colors.textPrimary,
   },
-  dossierSubtitle: {
+  infoCardSub: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     marginTop: 1,
   },
-  dossierEditLink: {
+  infoCardEditBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#fdf2f8',
+    backgroundColor: '#FFF1F2',
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(230, 8, 112, 0.25)',
+    borderColor: '#FECDD3',
   },
-  dossierEditLinkText: {
+  infoCardEditBtnText: {
     fontSize: 11,
     fontWeight: '800',
     color: Colors.primaryRose,
   },
-  dossierRow: {
+  infoItemRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
   },
-  dossierRowIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+  infoItemIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
-  dossierRowLabel: {
+  infoItemLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  dossierRowVal: {
-    fontSize: 13,
+  infoItemVal: {
+    fontSize: 13.5,
     fontWeight: '800',
     color: Colors.textPrimary,
     marginTop: 2,
   },
-  dossierRowSub: {
+  infoItemSub: {
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
     lineHeight: 16,
   },
-  currentStudySub: {
-    fontSize: 11,
-    color: '#2563eb',
-    fontWeight: '700',
-    marginTop: 3,
-  },
-  dossierDivider: {
+  infoDivider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
   studyBadgeActive: {
@@ -1093,6 +1207,12 @@ const styles = StyleSheet.create({
     color: Colors.primaryOrange,
     letterSpacing: 0.3,
   },
+  currentStudySub: {
+    fontSize: 11,
+    color: '#2563eb',
+    fontWeight: '700',
+    marginTop: 3,
+  },
   infoSection: {
     backgroundColor: Colors.surface,
     borderRadius: 20,
@@ -1101,15 +1221,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 16,
     marginBottom: 20,
-  },
-  studentHubCard: {
-    backgroundColor: '#fff7ed', // orange-50
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#fed7aa', // orange-200
-    ...Shadows.small,
   },
   tutorHubCard: {
     backgroundColor: '#eff6ff', // blue-50
