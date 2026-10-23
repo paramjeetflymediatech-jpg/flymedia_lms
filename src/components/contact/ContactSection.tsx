@@ -12,7 +12,7 @@ interface ContactSectionProps {
 }
 
 export default function ContactSection({
-  badge = 'ADMISSIONS & COUNSELING',
+  badge = 'ADMISSIONS & ₹99 DEMO CLASS',
   title = 'Have Questions? Speak with our Career Advisors',
   subtitle = 'Need help selecting the right training program or understanding batch schedules, curriculum, and placement assistance? Get in touch with our team today.',
   initialCourse,
@@ -78,7 +78,7 @@ export default function ContactSection({
               {/* Quick Contact Info */}
               <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row lg:flex-col gap-4">
                 <a
-                  href="tel:+917814408934"
+                  href="tel:+919779324178"
                   className="flex items-center gap-3.5 group text-slate-300 hover:text-white transition-colors"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-lg group-hover:scale-105 group-hover:bg-orange-500 transition-all">
@@ -86,12 +86,12 @@ export default function ContactSection({
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Direct Call</p>
-                    <p className="font-bold text-sm text-white group-hover:text-orange-400 transition-colors">+91 78144 08934</p>
+                    <p className="font-bold text-sm text-white group-hover:text-orange-400 transition-colors">+91-97793-24178</p>
                   </div>
                 </a>
 
                 <a
-                  href="mailto:anujguptaflymedia@gmail.com"
+                  href="mailto:learnwithflymedia@gmail.com"
                   className="flex items-center gap-3.5 group text-slate-300 hover:text-white transition-colors"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-lg group-hover:scale-105 group-hover:bg-orange-500 transition-all">
@@ -99,7 +99,7 @@ export default function ContactSection({
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email Us</p>
-                    <p className="font-bold text-sm text-white group-hover:text-orange-400 transition-colors">anujguptaflymedia@gmail.com</p>
+                    <p className="font-bold text-sm text-white group-hover:text-orange-400 transition-colors">learnwithflymedia@gmail.com</p>
                   </div>
                 </a>
               </div>

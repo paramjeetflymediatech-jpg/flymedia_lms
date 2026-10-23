@@ -27,6 +27,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     else if (ext === '.webp') contentType = 'image/webp';
     else if (ext === '.svg') contentType = 'image/svg+xml';
     else if (ext === '.pdf') contentType = 'application/pdf';
+    else if (ext === '.mp4') contentType = 'video/mp4';
+    else if (ext === '.webm') contentType = 'video/webm';
+    else if (ext === '.mov') contentType = 'video/quicktime';
+    else if (ext === '.m4v') contentType = 'video/mp4';
 
     return new NextResponse(fileBuffer, {
       headers: {

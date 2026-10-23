@@ -104,3 +104,19 @@ export interface FaqItem {
   answer: string;
   category?: string;
 }
+
+export interface GalleryItem {
+  id: string;
+  title: string;
+  description?: string;
+  mediaType: 'IMAGE' | 'VIDEO';
+  mediaUrl: string;
+  thumbnailUrl?: string;
+  studentName?: string;
+  courseName?: string;
+  companyPlaced?: string;
+  salaryPackage?: string;
+  rating?: number;
+  category?: string;
+}
+

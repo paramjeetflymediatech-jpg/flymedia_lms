@@ -1,4 +1,4 @@
-import { Course, Testimonial, FaqItem, Mentor, Enrollment } from '../types';
+import { Course, Testimonial, FaqItem, Mentor, Enrollment, GalleryItem } from '../types';
 
 export const API_BASE_URL = 'https://course.flymediatech.com/api/v1';
 
@@ -8,6 +8,7 @@ export interface HomeApiResponse {
   testimonials: Testimonial[];
   faqs: FaqItem[];
   mentors: Mentor[];
+  gallery: GalleryItem[];
 }
 
 export const ApiService = {
@@ -31,6 +32,7 @@ export const ApiService = {
             testimonials: json.data.testimonials || [],
             faqs: json.data.faqs || [],
             mentors: json.data.mentors || [],
+            gallery: json.data.gallery || [],
           };
         }
       }
@@ -44,6 +46,7 @@ export const ApiService = {
       testimonials: [],
       faqs: [],
       mentors: [],
+      gallery: [],
     };
   },
 

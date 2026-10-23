@@ -39,8 +39,8 @@ export default function CallbackForm() {
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
           ✅
         </div>
-        <h4 className="text-2xl font-black">Request Received!</h4>
-        <p className="font-medium text-emerald-600">Our advisor will connect with you shortly regarding timings and fee structures.</p>
+        <h4 className="text-2xl font-black">Demo Class Request Received!</h4>
+        <p className="font-medium text-emerald-600">Our advisor will connect with you shortly to confirm your ₹99 demo class schedule and details.</p>
         <button 
           onClick={() => setSuccess(false)}
           className="mt-6 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors text-sm shadow-sm"
@@ -87,7 +87,7 @@ export default function CallbackForm() {
           name="phone"
           required
           className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-medium"
-          placeholder="+91 78144-08934"
+          placeholder="+91-97793-24178"
         />
       </div>
       <div className="space-y-2">
@@ -100,7 +100,7 @@ export default function CallbackForm() {
           >
             <option value="" className="text-slate-400">Select Training Course...</option>
             <option value="digital-marketing" className="text-slate-900">Digital Marketing</option>
-            <option value="web-development" className="text-slate-900">Web Development</option>
+            <option value="web-development" className="text-slate-900">Web Development (MERN Stack)</option>
             <option value="video-editing" className="text-slate-900">Video Editing</option>
             <option value="graphic-designing" className="text-slate-900">Graphic Designing</option>
           </select>
@@ -116,7 +116,7 @@ export default function CallbackForm() {
       >
         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
         <span className="relative z-10 flex items-center justify-center gap-2">
-          {loading ? 'Submitting Request...' : 'Submit Inquiry'}
+          {loading ? 'Booking Demo Class...' : 'Book Demo Class (₹99)'}
           {!loading && <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
         </span>
       </button>

@@ -120,11 +120,11 @@ export default function Footer() {
                   Our Story
                 </Link>
               </li>
-              {/* <li>
-                <Link href="/blog" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
-                  Tech Blog
+              <li>
+                <Link href="/gallery" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300 text-orange-400 font-bold">
+                  Success Gallery & Reviews
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link href="/faq" className="transition-colors inline-block hover:translate-x-1.5 transform duration-300">
                   Help Center
@@ -150,7 +150,7 @@ export default function Footer() {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
                 <div className="pt-1">
-                  <a href="mailto:anujguptaflymedia@gmail.com" className="transition-colors break-all">anujguptaflymedia@gmail.com</a>
+                  <a href="mailto:learnwithflymedia@gmail.com" className="transition-colors break-all">learnwithflymedia@gmail.com</a>
                 </div>
               </li>
               <li className="flex items-start gap-4 group">
@@ -158,7 +158,7 @@ export default function Footer() {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                 </div>
                 <div className="pt-1">
-                  <a href="tel:+917814408934" className="transition-colors">+91 78144 08934</a>
+                  <a href="tel:+919779324178" className="transition-colors">+91-97793-24178</a>
                 </div>
               </li>
               <li className="flex items-start gap-4 group">

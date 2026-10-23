@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const defaultFromEmail = process.env.SMTP_USER || 'anujguptaflymedia@gmail.com';
+const defaultFromEmail = process.env.SMTP_USER || 'learnwithflymedia@gmail.com';
 const FROM = process.env.SMTP_FROM || `"Flymedia Technology" <${defaultFromEmail}>`;
 
 // ── Receivers & Utility Helpers ────────────────────────────────
@@ -120,7 +120,7 @@ export function getEmailReceivers(role?: string): string[] {
     if (process.env.SMTP_USER && process.env.SMTP_USER.includes('@')) {
       uniqueEmails.push(process.env.SMTP_USER.trim());
     } else {
-      uniqueEmails.push('anujguptaflymedia@gmail.com');
+      uniqueEmails.push('learnwithflymedia@gmail.com');
     }
   }
 

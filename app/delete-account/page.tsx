@@ -58,9 +58,9 @@ export default function DeleteAccountPage() {
                   If you have already uninstalled the mobile app, you can submit an account deletion request directly to our admissions & privacy officer:
                 </p>
                 <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 space-y-2">
-                  <p><strong>Email:</strong> <a href="mailto:anujguptaflymedia@gmail.com" className="text-orange-600 underline">anujguptaflymedia@gmail.com</a></p>
+                  <p><strong>Email:</strong> <a href="mailto:learnwithflymedia@gmail.com" className="text-orange-600 underline">learnwithflymedia@gmail.com</a></p>
                   <p><strong>Subject:</strong> Account Deletion Request - Flymedia LMS</p>
-                  <p><strong>Helpline / WhatsApp:</strong> +91 78144 08934</p>
+                  <p><strong>Helpline / WhatsApp:</strong> +91-97793-24178</p>
                   <p><strong>Campus Address:</strong> Plot 20, Vishal Nagar Ext, Jawaddi, Ludhiana, Punjab - 141013</p>
                 </div>
                 <p className="text-xs text-slate-500 mt-3">

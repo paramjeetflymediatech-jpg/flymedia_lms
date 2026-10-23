@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Linking,
+  Image,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
@@ -15,7 +16,7 @@ import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
 import { ApiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Course, Testimonial, FaqItem } from '../types';
+import { Course, Testimonial, FaqItem, GalleryItem } from '../types';
 import { FlymediaContact } from '../constants/contact';
 import {
   Sparkles,
@@ -33,11 +34,52 @@ import {
   Phone,
   Mail,
   Navigation as NavigationIcon,
+  Play,
 } from 'lucide-react-native';
 
 interface HomeScreenProps {
   navigation: any;
 }
+
+const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
+  {
+    id: 'g1',
+    title: 'Placed as Full Stack Developer at Tech Mahindra',
+    studentName: 'Simran Kaur',
+    courseName: 'Full Stack MERN',
+    companyPlaced: 'Tech Mahindra',
+    salaryPackage: '₹6.5 LPA',
+    mediaType: 'IMAGE',
+    mediaUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+    rating: 5,
+    description: 'Completed 6-month live client project training with 1-on-1 practical mentor support.',
+  },
+  {
+    id: 'g2',
+    title: 'Student Review: Digital Marketing Live Campaigns',
+    studentName: 'Amanpreet Singh',
+    courseName: 'Digital Marketing',
+    companyPlaced: 'Growth Media Group',
+    salaryPackage: '₹5.8 LPA',
+    mediaType: 'VIDEO',
+    mediaUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
+    rating: 5,
+    description: 'Practical training on real client ad spends and live SEO audits.',
+  },
+  {
+    id: 'g3',
+    title: 'Placed as Motion Graphic Designer at Media Works',
+    studentName: 'Gurpreet Singh',
+    courseName: 'Video Editing & VFX',
+    companyPlaced: 'Media Works Studios',
+    salaryPackage: '₹4.8 LPA',
+    mediaType: 'IMAGE',
+    mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    rating: 5,
+    description: 'Created 15+ broadcast commercials during capstone projects.',
+  },
+];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
@@ -47,6 +89,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [categories, setCategories] = useState<string[]>(['All']);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>(DEFAULT_GALLERY_ITEMS);
   
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
@@ -65,6 +108,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       setCategories(data.categories);
       setTestimonials(data.testimonials);
       setFaqs(data.faqs);
+      if (data.gallery && data.gallery.length > 0) {
+        setGallery(data.gallery);
+      }
     } catch (e) {
       console.warn('Error loading dynamic home data:', e);
     } finally {
@@ -143,7 +189,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 activeOpacity={0.85}
               >
                 <PhoneCall size={16} color={Colors.primaryOrange} />
-                <Text style={styles.secondaryCtaText}>Book Free Demo</Text>
+                <Text style={styles.secondaryCtaText}>₹99 Demo Class</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -262,22 +308,118 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         )}
 
-        {/* BANNER CTA */}
+        {/* BANNER CTA - ₹99 DEMO CLASS */}
         <View style={styles.counselingBanner}>
           <View style={styles.counselingContent}>
-            <Text style={styles.counselingTitle}>Confused About Which Course To Choose?</Text>
+            <Text style={styles.counselingTitle}>Book 1 Demo Class For Just ₹99</Text>
             <Text style={styles.counselingText}>
-              Speak with our senior academic counselor for a personalized roadmap based on your background.
+              Try our live mentor-led training for any course before enrolling. Get 1-on-1 guidance, syllabus walkthrough, and career roadmap.
             </Text>
             <TouchableOpacity
               style={styles.bannerBtn}
               onPress={() => setCallbackModalVisible(true)}
               activeOpacity={0.85}
             >
-              <Text style={styles.bannerBtnText}>Request 1-on-1 Guidance</Text>
+              <Text style={styles.bannerBtnText}>Book Demo Class (₹99)</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* SUCCESS GALLERY & VIDEO REVIEWS */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Success Gallery & Video Reviews</Text>
+          <Text style={styles.sectionSubtitle}>Watch real student reviews, placement packages & project showcases</Text>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.galleryScroll}
+        >
+          {gallery.map(item => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.galleryCard}
+              onPress={() => {
+                if (item.mediaUrl) {
+                  Linking.openURL(item.mediaUrl).catch(() => {});
+                }
+              }}
+              activeOpacity={0.9}
+            >
+              {/* Media Thumbnail */}
+              <View style={styles.galleryImageWrap}>
+                <Image
+                  source={{ uri: item.thumbnailUrl || item.mediaUrl }}
+                  style={styles.galleryImage}
+                  resizeMode="cover"
+                />
+
+                {/* Badge Type */}
+                <View style={styles.galleryTypeBadge}>
+                  <Text style={styles.galleryTypeBadgeText}>
+                    {item.mediaType === 'VIDEO' ? '🎥 VIDEO' : '📷 PHOTO'}
+                  </Text>
+                </View>
+
+                {/* Package Badge */}
+                {item.salaryPackage ? (
+                  <View style={styles.galleryPackageBadge}>
+                    <Text style={styles.galleryPackageBadgeText}>{item.salaryPackage}</Text>
+                  </View>
+                ) : null}
+
+                {/* Play Button Overlay for Videos */}
+                {item.mediaType === 'VIDEO' && (
+                  <View style={styles.galleryPlayOverlay}>
+                    <View style={styles.galleryPlayBtn}>
+                      <Play size={16} color={Colors.textWhite} fill={Colors.textWhite} />
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Details */}
+              <View style={styles.galleryCardContent}>
+                <View style={styles.galleryRatingRow}>
+                  <Text style={styles.galleryCourseTag}>{item.courseName || 'Career Track'}</Text>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
+                    {[...Array(item.rating || 5)].map((_, i) => (
+                      <Star key={i} size={11} color="#f59e0b" fill="#f59e0b" />
+                    ))}
+                  </View>
+                </View>
+
+                <Text style={styles.galleryTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+
+                {item.description ? (
+                  <Text style={styles.galleryDesc} numberOfLines={2}>
+                    “{item.description}”
+                  </Text>
+                ) : null}
+
+                <View style={styles.galleryFooter}>
+                  <View>
+                    <Text style={styles.galleryStudentName}>
+                      {item.studentName || 'Flymedia Student'}
+                    </Text>
+                    {item.companyPlaced ? (
+                      <Text style={styles.galleryCompanyPlaced}>
+                        Placed at <Text style={{ color: Colors.primaryOrange, fontWeight: '800' }}>{item.companyPlaced}</Text>
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <Text style={styles.galleryActionText}>
+                    {item.mediaType === 'VIDEO' ? 'Watch ▶' : 'View 👁️'}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* STUDENT SUCCESS STORIES */}
         <View style={styles.sectionHeader}>
@@ -669,6 +811,127 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     fontSize: 13,
     fontWeight: '800',
+  },
+  galleryScroll: {
+    paddingHorizontal: 20,
+    gap: 16,
+    paddingBottom: 8,
+  },
+  galleryCard: {
+    width: 280,
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  galleryImageWrap: {
+    width: '100%',
+    height: 150,
+    backgroundColor: '#0f172a',
+    position: 'relative',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+  },
+  galleryTypeBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  galleryTypeBadgeText: {
+    color: Colors.textWhite,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  galleryPackageBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  galleryPackageBadgeText: {
+    color: Colors.textWhite,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  galleryPlayOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  galleryPlayBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryRose,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 2,
+    ...Shadows.medium,
+  },
+  galleryCardContent: {
+    padding: 14,
+  },
+  galleryRatingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  galleryCourseTag: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primaryOrange,
+    textTransform: 'uppercase',
+  },
+  galleryTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  galleryDesc: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    lineHeight: 16,
+    fontStyle: 'italic',
+    marginBottom: 10,
+  },
+  galleryFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  galleryStudentName: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  galleryCompanyPlaced: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginTop: 1,
+  },
+  galleryActionText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.primaryOrange,
   },
   testimonialsList: {
     paddingHorizontal: 20,

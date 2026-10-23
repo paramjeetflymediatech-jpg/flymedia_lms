@@ -51,6 +51,11 @@ export default async function Header() {
             <span>About Us</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
+
+          <Link href="/gallery" className="hover:text-orange-500 transition-colors relative group">
+            <span>Gallery</span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
+          </Link>
         </nav>
 
         {/* Auth CTAs */}

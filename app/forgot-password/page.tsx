@@ -93,8 +93,8 @@ export default function ForgotPasswordPage() {
               </p>
               <p className="mt-3 text-sm text-slate-400">
                 Didn't receive it? Check your spam folder or contact{' '}
-                <a href="mailto:anujguptaflymedia@gmail.com" className="text-blue-600 font-semibold hover:underline">
-                  anujguptaflymedia@gmail.com
+                <a href="mailto:learnwithflymedia@gmail.com" className="text-blue-600 font-semibold hover:underline">
+                  learnwithflymedia@gmail.com
                 </a>
               </p>
             </div>

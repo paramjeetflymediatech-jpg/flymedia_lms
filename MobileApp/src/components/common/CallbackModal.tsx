@@ -85,7 +85,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                 <CheckCircle size={54} color={Colors.success} />
                 <Text style={styles.successTitle}>Request Submitted!</Text>
                 <Text style={styles.successText}>
-                  Our senior career counselor will call you within 15 minutes to discuss batches & scholarships.
+                  Our senior academic advisor will call you within 15 minutes to schedule your ₹99 demo class for your selected course.
                 </Text>
               </View>
             ) : (
@@ -93,9 +93,14 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                 <View style={styles.headerIconWrap}>
                   <PhoneCall size={26} color={Colors.primaryRose} />
                 </View>
-                <Text style={styles.title}>Book Free Counseling</Text>
+
+                <View style={styles.offerBadge}>
+                  <Text style={styles.offerBadgeText}>⚡ ₹99 ONLY • 1 DEMO CLASS FOR ANY COURSE</Text>
+                </View>
+
+                <Text style={styles.title}>Book Demo Class (₹99)</Text>
                 <Text style={styles.subtitle}>
-                  Get syllabus details, demo class access, and batch schedule.
+                  Experience live 1-on-1 industry training with real code & client projects for just ₹99.
                 </Text>
 
                 <Text style={styles.label}>Full Name</Text>
@@ -111,19 +116,19 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                 <Text style={styles.label}>Mobile Number (WhatsApp)</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="+91 78144 08934"
+                  placeholder="+91-97793-24178"
                   placeholderTextColor={Colors.textLight}
                   keyboardType="phone-pad"
                   value={phone}
                   onChangeText={setPhone}
                 />
 
-                <Text style={styles.label}>Program of Interest</Text>
+                <Text style={styles.label}>Course for Demo Class</Text>
                 <TextInput
                   style={styles.input}
                   value={course}
                   onChangeText={setCourse}
-                  placeholder="Course name"
+                  placeholder="e.g. Full Stack MERN, Digital Marketing..."
                   placeholderTextColor={Colors.textLight}
                 />
 
@@ -134,7 +139,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   activeOpacity={0.8}
                 >
                   <Text style={styles.submitButtonText}>
-                    {loading ? 'Submitting...' : 'Request Instant Callback'}
+                    {loading ? 'Submitting...' : 'Book Demo Class for ₹99'}
                   </Text>
                 </TouchableOpacity>
 
@@ -150,7 +155,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                 </TouchableOpacity>
 
                 <Text style={styles.privacyNote}>
-                  🔒 100% confidential. No spam calls.
+                  🔒 100% verified mentors. Batch timing discussed on call.
                 </Text>
               </View>
             )}
@@ -203,6 +208,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+  },
+  offerBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(249, 115, 22, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.25)',
+    marginBottom: 10,
+  },
+  offerBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: Colors.primaryOrange,
+    letterSpacing: 0.5,
   },
   title: {
     fontSize: 20,

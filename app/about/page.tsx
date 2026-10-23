@@ -158,11 +158,11 @@ export default function AboutPage() {
                   </div>
 
                   <div className="relative z-10 shrink-0">
-                    <a href="tel:+917814408934" className="inline-flex items-center justify-center gap-4 px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-extrabold text-xl rounded-full hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300">
+                    <a href="tel:+919779324178" className="inline-flex items-center justify-center gap-4 px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-extrabold text-xl rounded-full hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300">
                       <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
                       </div>
-                      +91 78144 08934
+                      +91-97793-24178
                     </a>
                   </div>
                 </div>

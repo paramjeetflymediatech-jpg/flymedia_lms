@@ -199,7 +199,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
             style={styles.helpBtn}
             onPress={() => setCallbackModalVisible(true)}
           >
-            <Text style={styles.helpBtnText}>Counseling</Text>
+            <Text style={styles.helpBtnText}>₹99 Demo</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -449,7 +449,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
               onPress={() => setCallbackModalVisible(true)}
               activeOpacity={0.8}
             >
-              <Text style={styles.demoBtnText}>Book Free Demo</Text>
+              <Text style={styles.demoBtnText}>₹99 Demo Class</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

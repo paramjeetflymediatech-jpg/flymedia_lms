@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Package, Category, Testimonial, Faq, User } from '../../../../src/db/models';
+import { Package, Category, Testimonial, Faq, User, GalleryItem } from '../../../../src/db/models';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,9 @@ function resolveFullImageUrl(url?: string | null): string {
 
 export async function GET() {
   try {
-    const [packages, categoriesData, testimonialsData, faqsData, mentorsData] = await Promise.all([
+    await GalleryItem.sync({ alter: true }).catch(() => {});
+
+    const [packages, categoriesData, testimonialsData, faqsData, mentorsData, galleryData] = await Promise.all([
       Package.findAll({
         where: { status: 'PUBLISHED' },
         order: [['createdAt', 'DESC']],
@@ -36,6 +38,11 @@ export async function GET() {
         where: { role: 'TUTOR' },
         attributes: ['id', 'name', 'bio', 'avatar', 'professionTitle', 'rating', 'reviewsCount', 'studentsMentored', 'skills'],
       }),
+      GalleryItem.findAll({
+        where: { isActive: true },
+        order: [['order', 'ASC'], ['createdAt', 'DESC']],
+        limit: 12,
+      }).catch(() => []),
     ]);
 
     const formattedCourses = packages.map(pkg => ({
@@ -97,6 +104,21 @@ export async function GET() {
       skills: (m.skills as string[]) || ['Full Stack', 'Mentorship'],
     }));
 
+    const formattedGallery = galleryData.map(g => ({
+      id: g.id,
+      title: g.title,
+      description: g.description,
+      mediaType: g.mediaType,
+      mediaUrl: resolveFullImageUrl(g.mediaUrl),
+      thumbnailUrl: g.thumbnailUrl ? resolveFullImageUrl(g.thumbnailUrl) : resolveFullImageUrl(g.mediaUrl),
+      studentName: g.studentName,
+      courseName: g.courseName,
+      companyPlaced: g.companyPlaced,
+      salaryPackage: g.salaryPackage,
+      rating: g.rating || 5,
+      category: g.category,
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
@@ -105,6 +127,7 @@ export async function GET() {
         testimonials: formattedTestimonials,
         faqs: formattedFaqs,
         mentors: formattedMentors,
+        gallery: formattedGallery,
       },
     });
   } catch (error: any) {

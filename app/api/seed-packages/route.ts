@@ -74,7 +74,7 @@ const packagesToSeed = [
     faqs: [
       { question: 'Is this course suitable for beginners?', answer: "Yes. The program starts with the design tools and builds up step by step to full brand projects. Prior design experience isn't required." },
       { question: 'How long is the program?', answer: '6 months.' },
-      { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91 78144 08934 to talk it through.' },
+      { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91-97793-24178 to talk it through.' },
       { question: 'Are the classes live?', answer: "Yes. All classes are live and instructor-led. You can attend online or in person at Flymedia's labs in Ludhiana." },
       { question: 'What is the difference between Live Online and In-House?', answer: "The curriculum, projects and fee are the same. Live Online lets you attend from anywhere. In-House means learning in person at Flymedia's labs in Ludhiana." },
       { question: 'Which software will I learn?', answer: 'Adobe Photoshop, Adobe Illustrator and Canva Pro.' },

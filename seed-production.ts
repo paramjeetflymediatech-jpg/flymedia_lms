@@ -74,7 +74,7 @@ async function seedProduction() {
         { question: 'Will I learn to deploy my app?', answer: 'Yes. You will deploy your finished application to the cloud so it is live and shareable.' },
         { question: 'How is AI used in the course?', answer: 'You will integrate AI features into your project using AI/LLM APIs, so your final app goes beyond a standard CRUD application.' },
         { question: 'What is the fee?', answer: 'The fee is ₹35,000 for both Live Online and In-House modes.' },
-        { question: 'How do I enroll or ask questions?', answer: 'Call +91 78144 08934, +91 87279 09176, or +91 98723 61357, or email admissions@flymediatech.com.' }
+        { question: 'How do I enroll or ask questions?', answer: 'Call +91-97793-24178 or email learnwithflymedia@gmail.com.' }
       ],
       courseModules: [
         { title: 'Stage 1: Front-End Foundations (Weeks 1-2)', topics: ['HTML5 structure, semantic elements, forms, and accessibility basics', 'CSS selectors, box model, Flexbox, Grid, and animations', 'Responsive design with media queries', 'Bootstrap grid, components, navigation, and forms'] },
@@ -156,7 +156,7 @@ async function seedProduction() {
         { question: 'Is this course suitable for beginners?', answer: "Yes. The program starts from the basics and builds up step by step to full campaigns. Prior marketing experience isn't required." },
         { question: 'Do I need coding?', answer: "No. You don't need any coding or technical background to join." },
         { question: 'How long is the program?', answer: '6 months.' },
-        { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91 78144 08934 to talk it through.' },
+        { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91-97793-24178 to talk it through.' },
         { question: 'Are the classes live?', answer: 'Yes. All classes are live and instructor-led. You can attend online or in person at Flymedia labs in Ludhiana.' },
         { question: 'What is the difference between Live Online and In-House?', answer: 'The curriculum, projects and fee are the same. Live Online lets you attend from anywhere. In-House means learning in person at Flymedia labs in Ludhiana.' },
         { question: 'What will I learn?', answer: "SEO, local SEO, Google Business Profile and Maps, technical SEO, website audits, keyword research, social media marketing and optimization, Google Ads, content marketing and writing, email marketing, analytics and reporting, and how to use AI tools in your marketing work." },
@@ -164,7 +164,7 @@ async function seedProduction() {
         { question: 'How is AI used in the course?', answer: "You'll learn AI tools such as ChatGPT and Gemini and use them to research, write, design and automate parts of your marketing work, so you can deliver better results in less time." },
         { question: 'Will I get a certificate?', answer: 'Yes. Certification is included in the course fee.' },
         { question: 'What is the fee?', answer: 'The fee is ₹30,000 for both Live Online and In-House modes.' },
-        { question: 'How do I enroll or ask questions?', answer: 'Call +91 78144 08934, +91 87279 09176, or +91 98723 61357, or email admissions@flymediatech.com.' }
+        { question: 'How do I enroll or ask questions?', answer: 'Call +91-97793-24178 or email learnwithflymedia@gmail.com.' }
       ],
       courseModules: [
         { title: 'Stage 1: Search Foundations', topics: ['Search Engine Optimization (SEO)', 'Keyword Research & Competitor Analysis', 'Technical SEO', 'Website Audit & Optimization'] },
@@ -243,7 +243,7 @@ async function seedProduction() {
       faqs: [
         { question: 'Is this course suitable for beginners?', answer: 'Yes. The program starts from the basics of editing and builds up step by step to motion graphics and colour grading. Prior editing experience is not required.' },
         { question: 'How long is the program?', answer: '6 months.' },
-        { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91 78144 08934 to talk it through.' },
+        { question: 'What are the class timings?', answer: 'Timings are discussed on a call with our admissions team, so we can find a schedule that suits you. Call +91-97793-24178 to talk it through.' },
         { question: 'Are the classes live?', answer: 'Yes. All classes are live and instructor-led. You can attend online or in person at Flymedia labs in Ludhiana.' },
         { question: 'What is the difference between Live Online and In-House?', answer: 'The curriculum, projects and fee are the same. Live Online lets you attend from anywhere. In-House means learning in person at Flymedia labs in Ludhiana.' },
         { question: 'Which software will I learn?', answer: 'Adobe Premiere Pro, After Effects, Audition and Photoshop, plus DaVinci Resolve for colour grading, along with AI tools for video.' },
@@ -251,7 +251,7 @@ async function seedProduction() {
         { question: 'How is AI used in the course?', answer: 'You will learn AI tools such as Runway, ElevenLabs, Adobe Firefly and ChatGPT and use them to speed up visuals, voice and creative work.' },
         { question: 'Will I get a certificate?', answer: 'Yes. Certification is included in the course fee.' },
         { question: 'What is the fee?', answer: 'The fee is ₹40,000 for both Live Online and In-House modes.' },
-        { question: 'How do I enroll or ask questions?', answer: 'Call +91 78144 08934, +91 87279 09176, or +91 98723 61357, or email admissions@flymediatech.com.' }
+        { question: 'How do I enroll or ask questions?', answer: 'Call +91-97793-24178 or email learnwithflymedia@gmail.com.' }
       ],
       courseModules: [
         { title: 'Stage 1: Video Editing and Audio Essentials', topics: ['Adobe Photoshop: thumbnails, posters, title graphics, lower-thirds and layered files for video', 'Adobe Premiere Pro: timeline editing, transitions, effects, titles, multi-camera editing, basic colour correction and export for YouTube and OTT', 'Adobe Audition: dialogue cleanup, voiceover recording, EQ and effects, multi-track mixing and audio export'] },

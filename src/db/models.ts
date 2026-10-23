@@ -798,6 +798,50 @@ Faq.init(
 );
 
 // ==========================================
+// 18. GALLERY ITEM MODEL (SUCCESS STORIES & REVIEWS)
+// ==========================================
+export class GalleryItem extends Model<InferAttributes<GalleryItem>, InferCreationAttributes<GalleryItem>> {
+  declare id: CreationOptional<string>;
+  declare title: string;
+  declare description: CreationOptional<string | null>;
+  declare mediaType: 'IMAGE' | 'VIDEO';
+  declare mediaUrl: string;
+  declare thumbnailUrl: CreationOptional<string | null>;
+  declare studentName: CreationOptional<string | null>;
+  declare courseName: CreationOptional<string | null>;
+  declare companyPlaced: CreationOptional<string | null>;
+  declare salaryPackage: CreationOptional<string | null>;
+  declare rating: CreationOptional<number>;
+  declare category: CreationOptional<string>;
+  declare order: CreationOptional<number>;
+  declare isActive: CreationOptional<boolean>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+GalleryItem.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING(255), allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: true },
+    mediaType: { type: DataTypes.ENUM('IMAGE', 'VIDEO'), allowNull: false, defaultValue: 'IMAGE' },
+    mediaUrl: { type: DataTypes.STRING(1024), allowNull: false },
+    thumbnailUrl: { type: DataTypes.STRING(1024), allowNull: true },
+    studentName: { type: DataTypes.STRING(255), allowNull: true },
+    courseName: { type: DataTypes.STRING(255), allowNull: true },
+    companyPlaced: { type: DataTypes.STRING(255), allowNull: true },
+    salaryPackage: { type: DataTypes.STRING(100), allowNull: true },
+    rating: { type: DataTypes.INTEGER, defaultValue: 5 },
+    category: { type: DataTypes.STRING(100), defaultValue: 'SUCCESS_STORY' },
+    order: { type: DataTypes.INTEGER, defaultValue: 0 },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'GalleryItem', tableName: 'gallery_items' }
+);
+
+// ==========================================
 // ASSOCIATIONS
 // ==========================================
 

@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
 
               <section className="space-y-4">
                 <h2 className="text-xl font-bold text-slate-900">4. Contact Us</h2>
-                <p>If you have any questions about this Privacy Policy, please contact us at anujguptaflymedia@gmail.com.</p>
+                <p>If you have any questions about this Privacy Policy, please contact us at learnwithflymedia@gmail.com or call +91-97793-24178.</p>
               </section>
             </div>
             

@@ -11,7 +11,8 @@ import GsapScrubText from '../src/components/animations/GsapScrubText';
 import GsapParallaxText from '../src/components/animations/GsapParallaxText';
 import SplitText from '../src/components/animations/SplitText';
 import SmoothScroller from '../src/components/animations/SmoothScroller';
-import { Package, Testimonial, Faq } from '../src/db/models';
+import { Package, Testimonial, Faq, GalleryItem } from '../src/db/models';
+import GallerySection from '../src/components/gallery/GallerySection';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../src/lib/seo';
 import PageSeoScripts from '../src/components/common/PageSeoScripts';
@@ -26,6 +27,8 @@ export default async function HomePage() {
   let packages: Package[] = [];
   let testimonials: any[] = [];
   let faqs: any[] = [];
+  let galleryItems: any[] = [];
+
   try {
     packages = await Package.findAll({ where: { status: 'PUBLISHED' }, limit: 4 });
     const testimonialsData = await Testimonial.findAll({
@@ -40,8 +43,68 @@ export default async function HomePage() {
       order: [['order', 'ASC'], ['createdAt', 'ASC']]
     });
     faqs = faqsData.map(f => f.toJSON());
+
+    try {
+      await GalleryItem.sync({ alter: true });
+      const galleryData = await GalleryItem.findAll({
+        where: { isActive: true },
+        order: [['order', 'ASC'], ['createdAt', 'DESC']],
+        limit: 6
+      });
+      galleryItems = galleryData.map(g => g.toJSON());
+    } catch (gErr) {
+      console.warn('GalleryItem sync/fetch warning:', gErr);
+    }
   } catch (error) {
     console.error('Failed to load data for homepage:', error);
+  }
+
+  // Fallback demo items if no gallery items exist yet
+  if (galleryItems.length === 0) {
+    galleryItems = [
+      {
+        id: 'seed-home-1',
+        title: 'Placed as Full Stack MERN Developer at Tech Mahindra',
+        description: 'Completed 6-month live client project training at Flymedia Technology and cracked high-growth tech placement.',
+        mediaType: 'IMAGE',
+        mediaUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        studentName: 'Simran Kaur',
+        courseName: 'Full Stack Web Development',
+        companyPlaced: 'Tech Mahindra',
+        salaryPackage: '₹6.5 LPA',
+        rating: 5,
+        category: 'PLACEMENT',
+      },
+      {
+        id: 'seed-home-2',
+        title: 'Video Review: Student Journey & Live Campaign Strategy',
+        description: 'Watch how practical agency-level experience in SEO, PPC ads, and funnel design helped launch a full-time marketing career.',
+        mediaType: 'VIDEO',
+        mediaUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
+        studentName: 'Amanpreet Singh',
+        courseName: 'Digital Marketing Masterclass',
+        companyPlaced: 'Growth Media Group',
+        salaryPackage: '₹5.8 LPA',
+        rating: 5,
+        category: 'VIDEO',
+      },
+      {
+        id: 'seed-home-3',
+        title: 'Placed as Motion Graphics Specialist at Media Works',
+        description: 'Mastered Premiere Pro and After Effects while building 15+ broadcast videos and commercial reels under senior directors.',
+        mediaType: 'IMAGE',
+        mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        studentName: 'Gurpreet Singh',
+        courseName: 'Video Editing & VFX',
+        companyPlaced: 'Media Works Studios',
+        salaryPackage: '₹4.8 LPA',
+        rating: 5,
+        category: 'PLACEMENT',
+      },
+    ];
   }
 
   return (
@@ -323,11 +386,11 @@ export default async function HomePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                   <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-orange-500 hover:shadow-md transition-all group cursor-pointer">
                     <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Direct Call Support</span>
-                    <a href="tel:+917814408934" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91 78144 08934</a>
+                    <a href="tel:+919779324178" className="text-xl sm:text-xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">+91-97793-24178</a>
                   </div>
                   <div className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-rose-500 hover:shadow-md transition-all group cursor-pointer">
                     <span className="block text-slate-500 text-xs uppercase font-bold tracking-wider mb-2">Email Admissions</span>
-                    <a href="mailto:admissions@flymediatech.com" className="text-base sm:text-sm font-bold text-slate-900 group-hover:text-rose-600 transition-colors truncate block">admissions@flymediatech.com</a>
+                    <a href="mailto:learnwithflymedia@gmail.com" className="text-base sm:text-sm font-bold text-slate-900 group-hover:text-rose-600 transition-colors truncate block">learnwithflymedia@gmail.com</a>
                   </div>
                 </div>
               </div>
@@ -345,8 +408,11 @@ export default async function HomePage() {
 
                   <div className="relative z-10 space-y-8">
                     <div className="space-y-3">
-                      <h3 className="text-3xl sm:text-4xl font-black text-slate-900">Request Callback</h3>
-                      <p className="text-slate-500 font-medium text-sm sm:text-base">Secure your spot. Fill in the details and our advisor will connect regarding timings & fee structures.</p>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-extrabold text-xs">
+                        ⚡ ₹99 ONLY • 1 DEMO CLASS FOR ANY COURSE
+                      </div>
+                      <h3 className="text-3xl sm:text-4xl font-black text-slate-900">Book ₹99 Demo Class</h3>
+                      <p className="text-slate-500 font-medium text-sm sm:text-base">Experience live 1-on-1 industry training for just ₹99. Select your preferred course and our mentor will connect with you.</p>
                     </div>
                     <CallbackForm />
                   </div>
@@ -379,6 +445,9 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        {/* Success Gallery & Video Reviews Section */}
+        <GallerySection items={galleryItems} />
 
         {/* FAQ Section */}
         {faqs.length > 0 && (

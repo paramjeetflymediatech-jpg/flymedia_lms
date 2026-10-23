@@ -25,7 +25,7 @@ The styling matches the web app's design system:
    - Why Learn With Us pillars: 100% Practical, Live Projects, Flexible Batches, Placement Drives
    - Quick Category filtering pills
    - Featured Career Programs with ratings, fees, duration, and skills
-   - Interactive counseling & 1-on-1 demo booking banner
+   - Interactive ₹99 one demo class booking banner
    - Student Success Stories & Testimonials (5-star ratings, placements)
    - Expandable FAQ accordion
 
@@ -38,7 +38,7 @@ The styling matches the web app's design system:
    - Comprehensive course header, ratings, and price
    - Stage-by-stage Curriculum & Syllabus breakdown
    - Skills & Tools learned badges (React, Node, MongoDB, SEO, Figma, Python)
-   - One-tap "Book Free Demo" & "Enroll Now" actions
+   - One-tap "₹99 Demo Class" & "Enroll Now" actions
 
 4. **🎓 My Learning (Student Portal)**:
    - Active course cards with real-time completion progress bar
@@ -99,7 +99,7 @@ MobileApp/
     │   └── common/
     │       ├── Header.tsx         # Brand header with quick helpline
     │       ├── CourseCard.tsx     # Reusable course card component
-    │       └── CallbackModal.tsx  # Free counseling & demo booking modal
+    │       └── CallbackModal.tsx  # ₹99 Demo class booking modal
     ├── context/
     │   └── AuthContext.tsx        # Session state, login, and enrollments
     ├── data/
