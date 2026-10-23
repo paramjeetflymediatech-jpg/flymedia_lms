@@ -56,10 +56,12 @@ import {
   ChevronUp,
   MapPin,
   RotateCcw,
+  Camera,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 import { Header } from '../../components/common/Header';
 import { FlymediaContact } from '../../constants/contact';
+import { AdminEditProfileModal } from '../../components/admin/AdminEditProfileModal';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'tutors' | 'users' | 'tools';
 
@@ -68,7 +70,7 @@ interface AdminDashboardScreenProps {
 }
 
 export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
@@ -162,6 +164,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [addCouponModal, setAddCouponModal] = useState(false);
   const [addUserModal, setAddUserModal] = useState(false);
   const [editUserModal, setEditUserModal] = useState(false);
+  const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
@@ -1251,11 +1254,30 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         {/* MASTER ADMIN WELCOME & EXECUTIVE STATUS CARD */}
         <View style={styles.adminHeroCard}>
           <View style={styles.adminHeroTop}>
-            <View style={styles.adminAvatar}>
-              <Text style={styles.adminAvatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-              </Text>
-            </View>
+            {/* Interactive Admin Avatar with Photo or Initial */}
+            <TouchableOpacity
+              style={styles.adminAvatarWrap}
+              onPress={() => setEditProfileModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              {user?.avatar ? (
+                <Image
+                  source={{ uri: user.avatar.startsWith('data:') ? user.avatar : formatImageUrl(user.avatar) }}
+                  style={styles.adminAvatarImg}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.adminAvatar}>
+                  <Text style={styles.adminAvatarText}>
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.avatarEditBadge}>
+                <Camera size={9} color="#ffffff" strokeWidth={2.4} />
+              </View>
+            </TouchableOpacity>
+
             <View style={{ flex: 1, marginRight: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <Text style={styles.adminHeroTitle} numberOfLines={1}>
@@ -1267,7 +1289,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 </View>
               </View>
               <Text style={styles.adminHeroSub} numberOfLines={1}>
-                Master Control • {stats.totalCourses} Programs • {stats.totalEnrollments} Enrolled
+                {user?.phone ? `📞 ${user.phone} • ` : ''}Master Control
               </Text>
               <View style={styles.adminLiveStatus}>
                 <View style={styles.adminLiveDot} />
@@ -1275,15 +1297,26 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
             </View>
 
-            {/* Dedicated Executive Sign Out Button */}
-            <TouchableOpacity
-              style={styles.adminLogoutBtn}
-              onPress={handleLogout}
-              activeOpacity={0.82}
-            >
-              <LogOut size={13} color="#dc2626" />
-              <Text style={styles.adminLogoutText}>Sign Out</Text>
-            </TouchableOpacity>
+            {/* Right Buttons: Edit Profile & Sign Out */}
+            <View style={styles.adminHeroActionsCol}>
+              <TouchableOpacity
+                style={styles.adminEditProfileBtn}
+                onPress={() => setEditProfileModalVisible(true)}
+                activeOpacity={0.82}
+              >
+                <Pencil size={11} color={Colors.primaryRose} />
+                <Text style={styles.adminEditProfileBtnText}>Edit Profile</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.adminLogoutBtn}
+                onPress={handleLogout}
+                activeOpacity={0.82}
+              >
+                <LogOut size={11} color="#dc2626" />
+                <Text style={styles.adminLogoutText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Quick Shortcuts Bar */}
@@ -4858,6 +4891,15 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           </View>
         </View>
       </Modal>
+
+      {user && (
+        <AdminEditProfileModal
+          visible={editProfileModalVisible}
+          onClose={() => setEditProfileModalVisible(false)}
+          user={user}
+          onSave={updateProfile}
+        />
+      )}
     </View>
   );
 };
@@ -5051,21 +5093,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  adminAvatarWrap: {
+    width: 48,
+    height: 48,
+    position: 'relative',
+    marginRight: 12,
+  },
+  adminAvatarImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+  },
   adminAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFF1F2',
     borderWidth: 1.5,
     borderColor: '#FECDD3',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   adminAvatarText: {
     fontSize: 18,
     fontWeight: '900',
     color: Colors.primaryRose,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.primaryRose,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   adminHeroTitle: {
     fontSize: 16,
@@ -5100,6 +5167,26 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#059669',
+  },
+  adminHeroActionsCol: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  adminEditProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  adminEditProfileBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.primaryRose,
   },
   adminLogoutBtn: {
     flexDirection: 'row',
