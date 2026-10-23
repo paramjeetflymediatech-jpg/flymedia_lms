@@ -55,8 +55,11 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
+  RotateCcw,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
+import { Header } from '../../components/common/Header';
+import { FlymediaContact } from '../../constants/contact';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'tutors' | 'users' | 'tools';
 
@@ -1224,54 +1227,47 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
   return (
     <View style={styles.screen}>
-      {/* TOP HEADER */}
-      <View style={[styles.topBar, { paddingTop: topPadding + 6 }]}>
-        {navigation.canGoBack && navigation.canGoBack() && (
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ArrowLeft size={20} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        )}
+      {/* UNIFIED BRAND HEADER WITH LOGO & ADMIN CONTROLS */}
+      <Header
+        showBackButton={Boolean(navigation.canGoBack && navigation.canGoBack())}
+        onBackPress={() => navigation.goBack()}
+        showHelpButton={false}
+        rightAction={
+          <View style={styles.headerRightActions}>
+            <View style={styles.adminBadge}>
+              <ShieldCheck size={11} color={Colors.primaryRose} />
+              <Text style={styles.adminBadgeText}>ADMIN</Text>
+            </View>
 
-        <View style={[styles.topBarCenter, !(navigation.canGoBack && navigation.canGoBack()) && { marginLeft: 0 }]}>
-          <Text style={styles.topBarTitle}>Flymedia Admin Suite</Text>
-          <View style={styles.adminBadge}>
-            <ShieldCheck size={12} color={Colors.primaryOrange} />
-            <Text style={styles.adminBadgeText}>Master Admin Portal</Text>
+            <TouchableOpacity
+              style={styles.headerActionBtn}
+              onPress={() => setAddCourseModal(true)}
+              activeOpacity={0.85}
+            >
+              <PlusCircle size={13} color="#ffffff" />
+              <Text style={styles.headerActionBtnText}>+ Course</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toolsIconBtn, activeTab === 'tools' && styles.toolsIconBtnActive]}
+              onPress={() => setActiveTab('tools')}
+              activeOpacity={0.85}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Tag size={13} color={activeTab === 'tools' ? Colors.primaryRose : Colors.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={handleLogout}
+              activeOpacity={0.85}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <LogOut size={13} color="#dc2626" />
+            </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => setAddCourseModal(true)}
-            activeOpacity={0.85}
-          >
-            <PlusCircle size={15} color={Colors.textWhite} />
-            <Text style={styles.headerActionBtnText}>+ Course</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.toolsIconBtn, activeTab === 'tools' && styles.toolsIconBtnActive]}
-            onPress={() => setActiveTab('tools')}
-            activeOpacity={0.85}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Tag size={14} color={activeTab === 'tools' ? Colors.primaryOrange : Colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            onPress={handleLogout}
-            activeOpacity={0.85}
-          >
-            <LogOut size={13} color="#dc2626" />
-            <Text style={styles.logoutBtnText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       {/* MAIN CONTENT AREA */}
       <ScrollView
@@ -1282,14 +1278,78 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.primaryOrange]}
-            tintColor={Colors.primaryOrange}
+            colors={[Colors.primaryRose]}
+            tintColor={Colors.primaryRose}
           />
         }
       >
+        {/* MASTER ADMIN WELCOME & SYSTEM HEALTH CARD */}
+        <View style={styles.adminHeroCard}>
+          <View style={styles.adminHeroTop}>
+            <View style={styles.adminAvatar}>
+              <Text style={styles.adminAvatarText}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.adminHeroTitle} numberOfLines={1}>
+                {user?.name || 'Administrator'}
+              </Text>
+              <Text style={styles.adminHeroSub}>
+                Flymedia Master Suite • Central Control Center
+              </Text>
+              <View style={styles.adminLiveStatus}>
+                <View style={styles.adminLiveDot} />
+                <Text style={styles.adminLiveText}>System Online • Cloud Synced</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Quick Shortcuts Bar */}
+          <View style={styles.quickShortcutsRow}>
+            <TouchableOpacity
+              style={styles.shortcutPill}
+              onPress={() => setAddCourseModal(true)}
+              activeOpacity={0.75}
+            >
+              <PlusCircle size={13} color={Colors.primaryRose} />
+              <Text style={[styles.shortcutPillText, { color: Colors.primaryRose }]}>+ Course</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutPill}
+              onPress={() => navigateToTab('leads')}
+              activeOpacity={0.75}
+            >
+              <PhoneCall size={13} color="#2563EB" />
+              <Text style={[styles.shortcutPillText, { color: '#2563EB' }]}>
+                Leads ({stats.totalLeads})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutPill}
+              onPress={() => navigateToTab('tools')}
+              activeOpacity={0.75}
+            >
+              <Ticket size={13} color="#7C3AED" />
+              <Text style={[styles.shortcutPillText, { color: '#7C3AED' }]}>Coupons</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutPill}
+              onPress={onRefresh}
+              activeOpacity={0.75}
+            >
+              <RotateCcw size={13} color={Colors.textSecondary} />
+              <Text style={styles.shortcutPillText}>Sync</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {loading ? (
           <View style={styles.loaderWrap}>
-            <ActivityIndicator size="large" color={Colors.primaryOrange} />
+            <ActivityIndicator size="large" color={Colors.primaryRose} />
             <Text style={styles.loaderText}>Connecting to Flymedia LMS Admin Gateway...</Text>
           </View>
         ) : (
@@ -1297,18 +1357,19 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= OVERVIEW TAB ================= */}
             {activeTab === 'overview' && (
               <View>
-                {/* METRICS GRID */}
+                {/* METRICS GRID - 6 SYMMETRICAL CARDS */}
                 <View style={styles.statsGrid}>
                   <TouchableOpacity
                     style={styles.statCard}
                     onPress={() => navigateToTab('courses')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#fff7ed' }]}>
-                      <BookOpen size={20} color={Colors.primaryOrange} />
+                    <View style={[styles.statIconWrap, { backgroundColor: '#FFF1F2' }]}>
+                      <BookOpen size={19} color={Colors.primaryRose} />
                     </View>
                     <Text style={styles.statNumber}>{stats.totalCourses}</Text>
-                    <Text style={styles.statLabel}>Total Courses</Text>
+                    <Text style={styles.statLabel}>Career Tracks</Text>
+                    <Text style={styles.statSubLabel}>Live courses published</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1316,11 +1377,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     onPress={() => navigateToTab('leads')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#eff6ff' }]}>
-                      <PhoneCall size={20} color={Colors.accentBlue} />
+                    <View style={[styles.statIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                      <PhoneCall size={19} color="#2563EB" />
                     </View>
                     <Text style={styles.statNumber}>{stats.totalLeads}</Text>
                     <Text style={styles.statLabel}>Student Leads</Text>
+                    <Text style={styles.statSubLabel}>Inquiries & Callbacks</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1328,11 +1390,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     onPress={() => navigateToTab('enrollments')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#f0fdf4' }]}>
-                      <GraduationCap size={20} color={Colors.success} />
+                    <View style={[styles.statIconWrap, { backgroundColor: '#ECFDF5' }]}>
+                      <GraduationCap size={19} color="#059669" />
                     </View>
                     <Text style={styles.statNumber}>{stats.totalEnrollments}</Text>
                     <Text style={styles.statLabel}>Enrollments</Text>
+                    <Text style={styles.statSubLabel}>Active paid students</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1340,11 +1403,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     onPress={() => navigateToTab('tutors')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#f5f3ff' }]}>
-                      <Award size={20} color="#7c3aed" />
+                    <View style={[styles.statIconWrap, { backgroundColor: '#F5F3FF' }]}>
+                      <Award size={19} color="#7C3AED" />
                     </View>
                     <Text style={styles.statNumber}>{stats.totalTutors}</Text>
-                    <Text style={styles.statLabel}>Tutors / Mentors</Text>
+                    <Text style={styles.statLabel}>Faculty Team</Text>
+                    <Text style={styles.statSubLabel}>Assigned mentors</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1352,11 +1416,25 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                     onPress={() => navigateToTab('users')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#fdf2f8' }]}>
-                      <Users size={20} color="#db2777" />
+                    <View style={[styles.statIconWrap, { backgroundColor: '#FFFBEB' }]}>
+                      <Users size={19} color="#D97706" />
                     </View>
                     <Text style={styles.statNumber}>{stats.totalUsers}</Text>
-                    <Text style={styles.statLabel}>Active Students</Text>
+                    <Text style={styles.statLabel}>Registered Users</Text>
+                    <Text style={styles.statSubLabel}>Students & Accounts</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.statCard}
+                    onPress={() => navigateToTab('tools')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.statIconWrap, { backgroundColor: '#FDF2F8' }]}>
+                      <Ticket size={19} color="#DB2777" />
+                    </View>
+                    <Text style={styles.statNumber}>{stats.totalCoupons}</Text>
+                    <Text style={styles.statLabel}>Promo Coupons</Text>
+                    <Text style={styles.statSubLabel}>Discount campaigns</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1367,11 +1445,11 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                   activeOpacity={0.85}
                 >
                   <View style={styles.actionBannerContent}>
-                    <Sparkles size={20} color={Colors.primaryOrange} />
+                    <Sparkles size={20} color={Colors.primaryRose} />
                     <View style={{ flex: 1, marginLeft: 10 }}>
                       <Text style={styles.actionBannerTitle}>Launch Career Track</Text>
                       <Text style={styles.actionBannerSub}>
-                        Add courses, specify fees, syllabus modules and publish instantly.
+                        Add courses, specify fees, syllabus modules and publish instantly across apps & web.
                       </Text>
                     </View>
                     <View style={styles.actionBannerPill}>
@@ -2845,7 +2923,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'overview' && styles.bottomNavIconWrapActive]}>
             <LayoutDashboard
               size={18}
-              color={activeTab === 'overview' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'overview' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'overview' ? 2.4 : 1.8}
             />
           </View>
@@ -2862,7 +2940,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'courses' && styles.bottomNavIconWrapActive]}>
             <BookOpen
               size={18}
-              color={activeTab === 'courses' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'courses' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'courses' ? 2.4 : 1.8}
             />
             {packages.length > 0 && (
@@ -2886,7 +2964,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'leads' && styles.bottomNavIconWrapActive]}>
             <PhoneCall
               size={18}
-              color={activeTab === 'leads' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'leads' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'leads' ? 2.4 : 1.8}
             />
             {leads.length > 0 && (
@@ -2910,7 +2988,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'enrollments' && styles.bottomNavIconWrapActive]}>
             <GraduationCap
               size={18}
-              color={activeTab === 'enrollments' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'enrollments' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'enrollments' ? 2.4 : 1.8}
             />
             {enrollments.length > 0 && (
@@ -2934,7 +3012,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'tutors' && styles.bottomNavIconWrapActive]}>
             <Award
               size={18}
-              color={activeTab === 'tutors' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'tutors' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'tutors' ? 2.4 : 1.8}
             />
             {tutors.length > 0 && (
@@ -2958,7 +3036,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           <View style={[styles.bottomNavIconWrap, activeTab === 'users' && styles.bottomNavIconWrapActive]}>
             <Users
               size={18}
-              color={activeTab === 'users' ? Colors.primaryOrange : Colors.textMuted}
+              color={activeTab === 'users' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'users' ? 2.4 : 1.8}
             />
             {usersList.length > 0 && (
@@ -4835,43 +4913,49 @@ const styles = StyleSheet.create({
   adminBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+    gap: 3,
+    backgroundColor: '#fdf2f8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fce7f3',
   },
   adminBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primaryOrange,
+    fontSize: 10,
+    fontWeight: '900',
+    color: Colors.primaryRose,
+    letterSpacing: 0.5,
   },
   headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primaryOrange,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: Colors.primaryRose,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
-    gap: 5,
+    gap: 4,
+    ...Shadows.small,
   },
   headerActionBtnText: {
-    color: Colors.textWhite,
-    fontSize: 12,
+    color: '#ffffff',
+    fontSize: 11.5,
     fontWeight: '800',
   },
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logoutBtnText: {
     fontSize: 12,
@@ -4889,8 +4973,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toolsIconBtnActive: {
-    backgroundColor: '#fff7ed',
-    borderColor: 'rgba(248, 117, 14, 0.4)',
+    backgroundColor: '#fdf2f8',
+    borderColor: '#fce7f3',
   },
   bottomNavContainer: {
     flexDirection: 'row',
@@ -4920,7 +5004,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   bottomNavIconWrapActive: {
-    backgroundColor: 'rgba(248, 117, 14, 0.12)',
+    backgroundColor: 'rgba(230, 8, 112, 0.12)',
   },
   bottomNavLabel: {
     fontSize: 10.5,
@@ -4929,7 +5013,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   bottomNavLabelActive: {
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
     fontWeight: '800',
   },
   tabBadge: {
@@ -4939,7 +5023,7 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -4955,7 +5039,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: 14,
   },
   loaderWrap: {
     paddingVertical: 60,
@@ -4966,29 +5050,120 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 13,
   },
+
+  /* Master Admin Hero Card */
+  adminHeroCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...Shadows.small,
+  },
+  adminHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  adminAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  adminAvatarText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: Colors.primaryRose,
+  },
+  adminHeroTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  adminHeroSub: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  adminLiveStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  adminLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+  },
+  adminLiveText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  quickShortcutsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  shortcutPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  shortcutPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+
+  /* 6-Card Stats Grid */
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 16,
+    width: '48.5%',
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 13,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#E2E8F0',
     ...Shadows.small,
   },
   statIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statNumber: {
     fontSize: 22,
@@ -4998,15 +5173,23 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '800',
+  },
+  statSubLabel: {
+    fontSize: 10,
     color: Colors.textMuted,
-    fontWeight: '600',
+    marginTop: 2,
+    fontWeight: '500',
   },
   actionBanner: {
-    backgroundColor: Colors.darkSurface,
-    borderRadius: 16,
+    backgroundColor: '#0F172A',
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 20,
-    ...Shadows.small,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    ...Shadows.medium,
   },
   actionBannerContent: {
     flexDirection: 'row',
@@ -5015,7 +5198,7 @@ const styles = StyleSheet.create({
   actionBannerTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: Colors.textWhite,
+    color: '#ffffff',
     marginBottom: 2,
   },
   actionBannerSub: {
@@ -5024,16 +5207,17 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   actionBannerPill: {
-    backgroundColor: Colors.primaryOrange,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: Colors.primaryRose,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
     marginLeft: 8,
+    ...Shadows.small,
   },
   actionBannerPillText: {
-    color: Colors.textWhite,
+    color: '#ffffff',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -5042,14 +5226,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '900',
     color: Colors.textPrimary,
+    letterSpacing: -0.2,
   },
   seeAllText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primaryOrange,
+    fontWeight: '800',
+    color: Colors.primaryRose,
   },
   leadCard: {
     backgroundColor: Colors.surface,
@@ -5115,13 +5300,14 @@ const styles = StyleSheet.create({
   },
   leadCallBtn: {
     flex: 1.5,
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 10,
     gap: 6,
+    ...Shadows.small,
   },
   leadCallBtnText: {
     color: Colors.textWhite,
@@ -5168,12 +5354,13 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   newBtn: {
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     borderRadius: 12,
     gap: 6,
+    ...Shadows.small,
   },
   newBtnText: {
     color: Colors.textWhite,
@@ -5194,8 +5381,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   filterPillActive: {
-    backgroundColor: Colors.primaryOrange,
-    borderColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
+    borderColor: Colors.primaryRose,
   },
   filterPillText: {
     fontSize: 11,
@@ -5368,14 +5555,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#fff7ed',
+    backgroundColor: '#fdf2f8',
     borderWidth: 1,
-    borderColor: '#fed7aa',
+    borderColor: '#fce7f3',
   },
   userEditBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
   },
   userDeleteBtn: {
     flexDirection: 'row',
@@ -5408,8 +5595,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rolePickerItemActive: {
-    borderColor: Colors.primaryOrange,
-    backgroundColor: '#fff7ed',
+    borderColor: Colors.primaryRose,
+    backgroundColor: '#fdf2f8',
   },
   rolePickerItemText: {
     fontSize: 12,
@@ -5417,7 +5604,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   rolePickerItemTextActive: {
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
     fontWeight: '800',
   },
   toolsSectionHeader: {
@@ -5432,13 +5619,14 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   toolsAddBtn: {
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     gap: 4,
+    ...Shadows.small,
   },
   toolsAddBtnText: {
     color: Colors.textWhite,
@@ -5476,7 +5664,7 @@ const styles = StyleSheet.create({
   couponCodeText: {
     fontSize: 15,
     fontWeight: '900',
-    color: Colors.primaryOrange,
+    color: Colors.primaryRose,
     letterSpacing: 0.5,
   },
   couponDetailText: {
@@ -5564,7 +5752,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   submitBtn: {
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: Colors.primaryRose,
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
