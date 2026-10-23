@@ -258,6 +258,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.scrollContent}
             bounces={false}
+            nestedScrollEnabled={true}
           >
             {/* View 1: Payment Success */}
             {paymentSuccess ? (
@@ -538,9 +539,17 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                     )}
                   </TouchableOpacity>
 
-                  {/* Expandable Dropdown List of Packages */}
+                  {/* Expandable Dropdown List of Packages (Scrollable) */}
                   {isCourseDropdownOpen && (
-                    <View style={styles.dropdownMenu}>
+                    <ScrollView
+                      style={styles.dropdownMenu}
+                      contentContainerStyle={styles.dropdownMenuContent}
+                      nestedScrollEnabled={true}
+                      keyboardShouldPersistTaps="handled"
+                      showsVerticalScrollIndicator={true}
+                      persistentScrollbar={true}
+                      bounces={true}
+                    >
                       {dynamicCourses.map((pkg, index) => {
                         const isSelected = course === pkg;
                         return (
@@ -571,7 +580,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                           </TouchableOpacity>
                         );
                       })}
-                    </View>
+                    </ScrollView>
                   )}
                 </View>
 
@@ -860,6 +869,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Shadows.medium,
     maxHeight: 220,
+  },
+  dropdownMenuContent: {
+    flexGrow: 0,
+    paddingVertical: 2,
   },
   dropdownOption: {
     flexDirection: 'row',
