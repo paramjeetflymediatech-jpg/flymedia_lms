@@ -150,57 +150,108 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
     return `${hour}:${minute} ${ampm}`;
   };
 
+  const completedCount = bookedSessions.filter((s) => s.isPast).length;
+
   return (
     <View style={[styles.screen, { paddingTop: topPadding }]}>
-      {/* HEADER */}
+      {/* ELEVATED MODERN HEADER */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
+          <ArrowLeft size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.headerTitleWrap}>
           <View style={styles.portalBadge}>
-            <Sparkles size={12} color={Colors.primaryOrange} />
-            <Text style={styles.portalBadgeText}>STUDENT PORTAL</Text>
+            <Sparkles size={11} color={Colors.primaryOrange} />
+            <Text style={styles.portalBadgeText}>STUDENT LEARNING SPACE</Text>
           </View>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {user?.name ? `${user.name.split(' ')[0]}'s Learning Space` : 'My Student Dashboard'}
+            {user?.name ? `${user.name.split(' ')[0]}'s Workspace` : 'My Learning Space'}
           </Text>
         </View>
 
-        <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
-          <RotateCcw size={18} color={Colors.textSecondary} />
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn} activeOpacity={0.7}>
+            <RotateCcw size={16} color={Colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerAvatarBtn}
+            onPress={() => navigation.navigate('ProfileTab')}
+            activeOpacity={0.8}
+            accessibilityLabel="Go to Profile"
+          >
+            {user?.avatar ? (
+              <Image source={{ uri: formatImageUrl(user.avatar) }} style={styles.headerAvatarImg} />
+            ) : (
+              <Text style={styles.headerAvatarInitial}>
+                {user?.name ? user.name[0].toUpperCase() : 'U'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* SEGMENTED TAB BAR */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'overview' && styles.activeTabItem]}
-          onPress={() => setActiveTab('overview')}
-        >
-          <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>Overview</Text>
-        </TouchableOpacity>
+      {/* SLEEK FLOATING SEGMENTED TAB BAR */}
+      <View style={styles.tabBarWrapper}>
+        <View style={styles.segmentedTabBar}>
+          <TouchableOpacity
+            style={[styles.segmentTab, activeTab === 'overview' && styles.segmentTabActive]}
+            onPress={() => setActiveTab('overview')}
+            activeOpacity={0.85}
+          >
+            <Sparkles
+              size={13}
+              color={activeTab === 'overview' ? Colors.primaryOrange : Colors.textMuted}
+            />
+            <Text style={[styles.segmentTabText, activeTab === 'overview' && styles.segmentTabTextActive]}>
+              Overview
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'sessions' && styles.activeTabItem]}
-          onPress={() => setActiveTab('sessions')}
-        >
-          <Text style={[styles.tabText, activeTab === 'sessions' && styles.activeTabText]}>
-            My Sessions {upcomingSessions.length > 0 && `(${upcomingSessions.length})`}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentTab, activeTab === 'sessions' && styles.segmentTabActive]}
+            onPress={() => setActiveTab('sessions')}
+            activeOpacity={0.85}
+          >
+            <Video
+              size={13}
+              color={activeTab === 'sessions' ? Colors.primaryOrange : Colors.textMuted}
+            />
+            <Text style={[styles.segmentTabText, activeTab === 'sessions' && styles.segmentTabTextActive]}>
+              Sessions
+            </Text>
+            {upcomingSessions.length > 0 && (
+              <View style={styles.tabBadge}>
+                <Text style={styles.tabBadgeText}>{upcomingSessions.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'packages' && styles.activeTabItem]}
-          onPress={() => setActiveTab('packages')}
-        >
-          <Text style={[styles.tabText, activeTab === 'packages' && styles.activeTabText]}>Packages</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentTab, activeTab === 'packages' && styles.segmentTabActive]}
+            onPress={() => setActiveTab('packages')}
+            activeOpacity={0.85}
+          >
+            <BookOpen
+              size={13}
+              color={activeTab === 'packages' ? Colors.primaryOrange : Colors.textMuted}
+            />
+            <Text style={[styles.segmentTabText, activeTab === 'packages' && styles.segmentTabTextActive]}>
+              Packages
+            </Text>
+            {enrolledPackages.length > 0 && (
+              <View style={styles.tabBadge}>
+                <Text style={styles.tabBadgeText}>{enrolledPackages.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* CONTENT BODY */}
@@ -212,7 +263,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
       ) : (
         <ScrollView
           style={styles.contentContainer}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 32 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 36 }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primaryOrange]} />}
           showsVerticalScrollIndicator={false}
         >
@@ -221,21 +272,34 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
             <View style={styles.tabContent}>
               {/* WELCOME HERO CARD */}
               <View style={styles.heroCard}>
-                <View style={styles.heroGlow} />
+                <View style={styles.heroCircle1} />
+                <View style={styles.heroCircle2} />
+
                 <View style={styles.heroContent}>
+                  <View style={styles.heroTopTagRow}>
+                    <View style={styles.heroStatusPill}>
+                      <View style={styles.heroStatusDot} />
+                      <Text style={styles.heroStatusText}>
+                        {user?.studentCategory ? `${user.studentCategory} Scholar` : 'Active Learner'}
+                      </Text>
+                    </View>
+                    <Text style={styles.heroBatchText}>Class of 2026</Text>
+                  </View>
+
                   <Text style={styles.heroGreeting}>Welcome back, {user?.name || 'Student'} 👋</Text>
                   <Text style={styles.heroSubtitle}>
-                    Ready to elevate your skills? Connect with certified industry mentors for 1-on-1 coaching.
+                    Accelerate your career with 1-on-1 certified mentorship, practical live code labs, and portfolio reviews.
                   </Text>
 
                   <View style={styles.heroActions}>
                     <TouchableOpacity
                       style={styles.heroPrimaryBtn}
                       onPress={() => setActiveTab('packages')}
-                      activeOpacity={0.85}
+                      activeOpacity={0.88}
                     >
-                      <BookOpen size={16} color={Colors.textWhite} />
+                      <BookOpen size={14} color={Colors.textPrimary} />
                       <Text style={styles.heroPrimaryBtnText}>My Packages</Text>
+                      <ChevronRight size={14} color={Colors.textPrimary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -243,33 +307,81 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                       onPress={() => setActiveTab('sessions')}
                       activeOpacity={0.85}
                     >
+                      <Video size={14} color="#ffffff" />
                       <Text style={styles.heroSecondaryBtnText}>View Sessions</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
-              {/* STATS 3-CARD GRID */}
+              {/* STATS 4-CARD BALANCED 2x2 GRID */}
               <View style={styles.statsGrid}>
-                <View style={styles.statCard}>
-                  <View style={[styles.statIconWrap, { backgroundColor: '#eff6ff' }]}>
-                    <BookOpen size={20} color="#2563eb" />
+                {/* 1. Enrolled Packages */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.8}
+                  onPress={() => setActiveTab('packages')}
+                >
+                  <View style={styles.statCardTop}>
+                    <View style={[styles.statIconWrap, { backgroundColor: '#eff6ff' }]}>
+                      <BookOpen size={18} color="#2563eb" />
+                    </View>
+                    <View style={[styles.statMiniTag, { backgroundColor: '#dbeafe' }]}>
+                      <Text style={[styles.statMiniTagText, { color: '#1d4ed8' }]}>Active</Text>
+                    </View>
                   </View>
                   <Text style={styles.statValue}>{stats.packagesCount}</Text>
                   <Text style={styles.statLabel}>Enrolled Packages</Text>
-                </View>
+                </TouchableOpacity>
 
-                <View style={styles.statCard}>
-                  <View style={[styles.statIconWrap, { backgroundColor: '#fef3c7' }]}>
-                    <Video size={20} color="#d97706" />
+                {/* 2. Upcoming Live */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.8}
+                  onPress={() => setActiveTab('sessions')}
+                >
+                  <View style={styles.statCardTop}>
+                    <View style={[styles.statIconWrap, { backgroundColor: '#fff7ed' }]}>
+                      <Video size={18} color="#ea580c" />
+                    </View>
+                    <View style={[styles.statMiniTag, { backgroundColor: '#ffedd5' }]}>
+                      <Text style={[styles.statMiniTagText, { color: '#c2410c' }]}>Live</Text>
+                    </View>
                   </View>
                   <Text style={styles.statValue}>{stats.upcomingSessionsCount}</Text>
-                  <Text style={styles.statLabel}>Upcoming Live</Text>
-                </View>
+                  <Text style={styles.statLabel}>Upcoming Sessions</Text>
+                </TouchableOpacity>
 
+                {/* 3. Completed Sessions */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setSessionFilter('COMPLETED');
+                    setActiveTab('sessions');
+                  }}
+                >
+                  <View style={styles.statCardTop}>
+                    <View style={[styles.statIconWrap, { backgroundColor: '#ecfdf5' }]}>
+                      <CheckCircle size={18} color="#059669" />
+                    </View>
+                    <View style={[styles.statMiniTag, { backgroundColor: '#d1fae5' }]}>
+                      <Text style={[styles.statMiniTagText, { color: '#047857' }]}>Done</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>{completedCount}</Text>
+                  <Text style={styles.statLabel}>Completed Classes</Text>
+                </TouchableOpacity>
+
+                {/* 4. Certificates */}
                 <View style={styles.statCard}>
-                  <View style={[styles.statIconWrap, { backgroundColor: '#f3e8ff' }]}>
-                    <Award size={20} color="#7c3aed" />
+                  <View style={styles.statCardTop}>
+                    <View style={[styles.statIconWrap, { backgroundColor: '#f5f3ff' }]}>
+                      <Award size={18} color="#7c3aed" />
+                    </View>
+                    <View style={[styles.statMiniTag, { backgroundColor: '#ede9fe' }]}>
+                      <Text style={[styles.statMiniTagText, { color: '#6d28d9' }]}>Earned</Text>
+                    </View>
                   </View>
                   <Text style={styles.statValue}>{stats.certificatesCount}</Text>
                   <Text style={styles.statLabel}>Certificates</Text>
@@ -320,9 +432,9 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                       onPress={() => handleJoinLiveClass(nextSession.id, nextSession.meetLink)}
                       activeOpacity={0.85}
                     >
-                      <Video size={18} color={Colors.textWhite} />
+                      <Video size={17} color={Colors.textWhite} />
                       <Text style={styles.joinMeetBtnText}>
-                        {nextSession.meetLink ? 'Join Google Meet' : 'Meeting Link (Pending Tutor)'}
+                        {nextSession.meetLink ? 'Join Live Google Meet' : 'Meeting Link (Pending Tutor)'}
                       </Text>
                       <ExternalLink size={14} color={Colors.textWhite} />
                     </TouchableOpacity>
@@ -330,17 +442,22 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                 </View>
               ) : (
                 <View style={styles.emptySessionBanner}>
-                  <Calendar size={28} color={Colors.primaryOrange} />
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.emptySessionTitle}>No Upcoming Sessions</Text>
-                    <Text style={styles.emptySessionSub}>Check your enrolled packages for scheduled class timings.</Text>
+                  <View style={styles.emptySessionIconWrap}>
+                    <Calendar size={22} color={Colors.primaryOrange} />
                   </View>
-                  <TouchableOpacity
-                    style={styles.emptySessionBookBtn}
-                    onPress={() => setActiveTab('packages')}
-                  >
-                    <Text style={styles.emptySessionBookBtnText}>View Packages</Text>
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.emptySessionTitle}>No Sessions Scheduled Today</Text>
+                    <Text style={styles.emptySessionSub}>
+                      Your schedule is clear! Check your enrolled packages to book or join your next lesson.
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.emptySessionBookBtn}
+                      onPress={() => setActiveTab('packages')}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.emptySessionBookBtnText}>Browse Packages →</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </View>
@@ -653,65 +770,128 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: '#f1f5f9',
+    backgroundColor: '#ffffff',
   },
   backBtn: {
-    padding: 6,
-    borderRadius: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitleWrap: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 12,
   },
   portalBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#fff7ed',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 2,
   },
   portalBadgeText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
-    color: Colors.primaryOrange,
+    color: '#ea580c',
     letterSpacing: 0.5,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   refreshBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: Colors.background,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: 12,
+  headerAvatarBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ffedd5',
+    borderWidth: 1.5,
+    borderColor: '#f97316',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerAvatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  headerAvatarInitial: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#ea580c',
+  },
+  tabBarWrapper: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: '#f1f5f9',
   },
-  tabItem: {
+  segmentedTabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    padding: 3,
+    borderRadius: 14,
+  },
+  segmentTab: {
     flex: 1,
-    paddingVertical: 8,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 11,
   },
-  activeTabItem: {
-    backgroundColor: '#fff7ed', // orange-50
+  segmentTabActive: {
+    backgroundColor: '#ffffff',
+    ...Shadows.small,
   },
-  tabText: {
+  segmentTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: '#64748b',
   },
-  activeTabText: {
-    color: Colors.primaryOrange,
+  segmentTabTextActive: {
+    color: '#0f172a',
     fontWeight: '800',
+  },
+  tabBadge: {
+    backgroundColor: '#ea580c',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+    marginLeft: 2,
+  },
+  tabBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   contentContainer: {
     flex: 1,
@@ -736,34 +916,78 @@ const styles = StyleSheet.create({
   },
   /* HERO CARD */
   heroCard: {
-    borderRadius: 20,
-    backgroundColor: '#ea580c', // Orange-600
-    overflow: 'hidden',
+    borderRadius: 22,
+    backgroundColor: '#ea580c',
     padding: 20,
+    position: 'relative',
+    overflow: 'hidden',
     ...Shadows.medium,
   },
-  heroGlow: {
+  heroCircle1: {
     position: 'absolute',
-    top: -40,
-    right: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    top: -50,
+    right: -30,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  heroCircle2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -40,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   heroContent: {
     position: 'relative',
     zIndex: 1,
   },
+  heroTopTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  heroStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  heroStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  heroBatchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
   heroGreeting: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 21,
+    fontWeight: '900',
     color: Colors.textWhite,
+    letterSpacing: -0.3,
   },
   heroSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 6,
+    fontSize: 12.5,
+    color: 'rgba(255, 255, 255, 0.92)',
+    marginTop: 5,
     lineHeight: 18,
   },
   heroActions: {
@@ -774,63 +998,81 @@ const styles = StyleSheet.create({
   heroPrimaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    gap: 5,
+    backgroundColor: '#ffffff',
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    ...Shadows.small,
   },
   heroPrimaryBtnText: {
-    color: Colors.textWhite,
-    fontSize: 13,
-    fontWeight: '700',
+    color: '#0f172a',
+    fontSize: 12.5,
+    fontWeight: '800',
   },
   heroSecondaryBtn: {
-    backgroundColor: Colors.textWhite,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 12,
   },
   heroSecondaryBtnText: {
-    color: '#ea580c',
-    fontSize: 13,
-    fontWeight: '800',
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '700',
   },
-  /* STATS GRID */
+  /* STATS 4-CARD 2x2 GRID */
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   statCard: {
-    flex: 1,
-    minWidth: '45%',
+    flexBasis: '48%',
+    flexGrow: 1,
     backgroundColor: Colors.surface,
     padding: 14,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#e2e8f0',
     ...Shadows.small,
+  },
+  statCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   statIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  statMiniTag: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  statMiniTagText: {
+    fontSize: 10,
+    fontWeight: '800',
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
-    color: Colors.textPrimary,
+    color: '#0f172a',
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: '#64748b',
     marginTop: 2,
   },
   /* SECTION WRAP */
@@ -878,7 +1120,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#fed7aa', // orange-200
+    borderColor: '#fed7aa',
     ...Shadows.small,
   },
   nextSessionTop: {
@@ -935,32 +1177,45 @@ const styles = StyleSheet.create({
   emptySessionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#fed7aa',
+    gap: 14,
+    ...Shadows.small,
+  },
+  emptySessionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: '#fff7ed',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptySessionTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+    fontWeight: '800',
+    color: '#0f172a',
   },
   emptySessionSub: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: '#64748b',
     marginTop: 2,
+    lineHeight: 16,
   },
   emptySessionBookBtn: {
     backgroundColor: '#ea580c',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginTop: 8,
   },
   emptySessionBookBtnText: {
     color: Colors.textWhite,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11.5,
+    fontWeight: '800',
   },
   bookedSessionItem: {
     flexDirection: 'row',
