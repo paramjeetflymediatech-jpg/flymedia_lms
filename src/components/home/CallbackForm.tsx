@@ -52,21 +52,39 @@ export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) 
     setLoading(true);
     setError('');
 
-    const formData = new FormData(e.currentTarget);
-    const course = formData.get('course') || selectedCourse;
-    if (course) {
-      formData.set('message', `Interested in ₹99 Demo Class for course: ${course}`);
-    }
+    const formEl = e.currentTarget;
+    const formData = new FormData(formEl);
+    const name = (formData.get('name') as string)?.trim();
+    const email = (formData.get('email') as string)?.trim();
+    const phone = (formData.get('phone') as string)?.trim();
+    const course = (formData.get('course') as string)?.trim() || selectedCourse;
 
     try {
-      const res = await submitInquiryAction(formData);
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setSuccess(true);
+      const res = await fetch('/api/payment/demo-initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          course: course || 'General Inquiry',
+          mode,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.redirectUrl) {
+        // Direct 1-click redirection straight to PhonePe Gateway
+        window.location.href = data.redirectUrl;
+        return;
       }
-    } catch (err) {
-      setError('Something went wrong. Please try again later.');
+
+      // Fallback: capture lead even if gateway issue
+      await submitInquiryAction(formData).catch(() => {});
+      setError(data.error || 'Could not connect to PhonePe gateway. Our team will contact you directly.');
+    } catch (err: any) {
+      await submitInquiryAction(formData).catch(() => {});
+      setError(err?.message || 'Network error while connecting to PhonePe gateway.');
     } finally {
       setLoading(false);
     }
@@ -254,10 +272,16 @@ export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) 
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
           {loading ? (
-            'Booking Demo Class...'
+            <span className="inline-flex items-center gap-2">
+              <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span>Redirecting to PhonePe Gateway...</span>
+            </span>
           ) : (
             <>
-              <span>Confirm Demo Class Booking</span>
+              <span>Pay ₹99 & Book Demo via PhonePe</span>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-black">₹99</span>
               <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -267,10 +291,13 @@ export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) 
         </span>
       </button>
 
-      <div className="pt-1 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
-        <span>🔒 100% verified mentors</span>
+      <div className="pt-1 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 flex-wrap gap-2">
+        <span className="flex items-center gap-1.5 font-bold text-slate-600">
+          <span>🛡️</span>
+          <span>Official PhonePe PG (UPI, Cards & Netbanking)</span>
+        </span>
         <a href="tel:+919779324178" className="font-bold text-rose-600 hover:underline">
-          📞 Or Call +91-97793-24178
+          📞 Helpline +91-97793-24178
         </a>
       </div>
     </form>

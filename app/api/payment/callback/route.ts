@@ -104,13 +104,24 @@ async function handleCallback(req: Request) {
         });
       }
 
-      return NextResponse.redirect(new URL('/payment/success', baseUrl));
+      const isDemo = searchParams.get('demo') === 'true' || payment.transactionId.startsWith('DEMO_');
+      const successUrl = isDemo
+        ? `${baseUrl}/payment/success?demo=true&transactionId=${payment.transactionId}`
+        : `${baseUrl}/payment/success?transactionId=${payment.transactionId}`;
+
+      return NextResponse.redirect(new URL(successUrl, baseUrl));
     } else {
       payment.status = 'FAILED';
       await payment.save();
     }
 
-    return NextResponse.redirect(new URL('/payment/failed', baseUrl));
+    const isDemo = searchParams.get('demo') === 'true' || (payment && payment.transactionId.startsWith('DEMO_'));
+    const failedUrl = isDemo
+      ? `${baseUrl}/payment/failed?demo=true&reason=payment_declined`
+      : `${baseUrl}/payment/failed`;
+
+    return NextResponse.redirect(new URL(failedUrl, baseUrl));
+
   } catch (error) {
     console.error('Payment callback error:', error);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;

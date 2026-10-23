@@ -1,6 +1,13 @@
 import Link from 'next/link';
 
-export default function PaymentSuccessPage() {
+export default async function PaymentSuccessPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ demo?: string; transactionId?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const isDemo = resolvedParams.demo === 'true';
+
   return (
     <>
       <style>{`
@@ -34,7 +41,7 @@ export default function PaymentSuccessPage() {
 
         <div className="relative z-10 w-full max-w-lg">
           {/* Glassmorphism Card */}
-          <div className="bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(230,8,112,0.15)] rounded-3xl p-10 text-center border border-white/60 transform transition-all hover:scale-[1.01] duration-500">
+          <div className="bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(230,8,112,0.15)] rounded-3xl p-8 sm:p-10 text-center border border-white/60 transform transition-all hover:scale-[1.01] duration-500">
             
             {/* Animated Brand Theme Icon Container */}
             <div className="relative mx-auto flex items-center justify-center h-28 w-28 mb-8 animate-float">
@@ -44,28 +51,50 @@ export default function PaymentSuccessPage() {
                 style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               >
                 <svg className="h-12 w-12 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {/* Confetti-like stars around the checkmark */}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
 
-            <h2 className="text-4xl font-extrabold text-transparent bg-clip-text mb-4 tracking-tight" style={{ backgroundImage: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}>
-              Payment Successful!
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black uppercase tracking-wider mb-3">
+              <span>{isDemo ? '⚡ ₹99 Demo Payment Confirmed' : '✓ Verified Payment'}</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text mb-4 tracking-tight" style={{ backgroundImage: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}>
+              {isDemo ? 'Demo Class Booked!' : 'Payment Successful!'}
             </h2>
-            <p className="text-slate-600 text-lg mb-10 leading-relaxed font-medium">
-              Thank you for your purchase! Your enrollment is confirmed and you are ready to start learning.
+            <p className="text-slate-600 text-base sm:text-lg mb-8 leading-relaxed font-medium">
+              {isDemo
+                ? 'Thank you! Your 1-on-1 demo slot has been secured with PhonePe. Your senior mentor has been assigned and will connect within 15 minutes to confirm your timing.'
+                : 'Thank you for your purchase! Your enrollment is confirmed and you are ready to start learning.'}
             </p>
             
+            {isDemo && (
+              <div className="mb-8 p-4 bg-rose-50/60 rounded-2xl border border-rose-100 text-left space-y-2 text-xs font-bold text-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Amount Paid:</span>
+                  <span className="text-emerald-600 font-black text-sm">₹99.00</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Tuition Benefit:</span>
+                  <span className="text-rose-600 font-extrabold">100% Credited on Admission</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Counselor Hotline:</span>
+                  <a href="tel:+919779324178" className="text-slate-900 underline font-black">+91-97793-24178</a>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <Link 
-                href="/dashboard"
-                className="group relative inline-flex items-center justify-center w-full px-8 py-4 text-lg font-bold text-white transition-all duration-300 rounded-2xl hover:opacity-90 shadow-lg shadow-rose-500/25 overflow-hidden"
+                href={isDemo ? '/' : '/dashboard'}
+                className="group relative inline-flex items-center justify-center w-full px-8 py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 rounded-2xl hover:opacity-90 shadow-lg shadow-rose-500/25 overflow-hidden"
                 style={{ background: 'linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%)' }}
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
                 <span className="relative z-10 flex items-center gap-2">
-                  Go to My Dashboard
+                  {isDemo ? 'Return to Home' : 'Go to My Dashboard'}
                   <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>

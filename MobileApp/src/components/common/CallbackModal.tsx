@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
   Alert,
   Linking,
   ActivityIndicator,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { Colors, Shadows } from '../../theme/colors';
 import {
@@ -27,9 +29,14 @@ import {
   MessageCircle,
   ShieldCheck,
   Check,
+  RefreshCw,
+  ExternalLink,
+  ArrowRight,
+  AlertCircle,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { FlymediaContact } from '../../constants/contact';
+import { ApiService } from '../../services/api';
 
 interface CallbackModalProps {
   visible: boolean;
@@ -51,37 +58,135 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   onClose,
   defaultCourse = 'Full Stack MERN',
 }) => {
-  const { submitCallback } = useAuth();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [course, setCourse] = useState(defaultCourse);
   const [mode, setMode] = useState<'HYBRID' | 'ONLINE' | 'OFFLINE'>('HYBRID');
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isWaitingForPhonePe, setIsWaitingForPhonePe] = useState(false);
+  const [activeTxnId, setActiveTxnId] = useState<string | null>(null);
+  const [activeRedirectUrl, setActiveRedirectUrl] = useState<string | null>(null);
+  const [checkingLiveStatus, setCheckingLiveStatus] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
-  const handleSubmit = async () => {
+  // Ref to prevent stale closures inside AppState listener
+  const waitingRef = useRef(isWaitingForPhonePe);
+  const txnIdRef = useRef(activeTxnId);
+  waitingRef.current = isWaitingForPhonePe;
+  txnIdRef.current = activeTxnId;
+
+  // Reset state when modal opens or closes
+  useEffect(() => {
+    if (visible) {
+      setLoading(false);
+      setIsWaitingForPhonePe(false);
+      setActiveTxnId(null);
+      setActiveRedirectUrl(null);
+      setCheckingLiveStatus(false);
+      setPaymentSuccess(false);
+      setPaymentError('');
+    }
+  }, [visible, defaultCourse]);
+
+  // Automatically check status with PhonePe when app returns from background / browser
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && waitingRef.current && txnIdRef.current) {
+        await verifyPaymentWithPhonePe(txnIdRef.current);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const verifyPaymentWithPhonePe = async (txnId: string) => {
+    setCheckingLiveStatus(true);
+    setPaymentError('');
+
+    try {
+      await new Promise(resolve => setTimeout(() => resolve(null), 1200));
+      const res = await ApiService.checkPaymentStatus(txnId, user?.token || '');
+      if (res && res.success) {
+        setIsWaitingForPhonePe(false);
+        setPaymentSuccess(true);
+      } else {
+        // If still pending, user can click refresh
+      }
+    } catch {
+      // Ignored
+    } finally {
+      setCheckingLiveStatus(false);
+    }
+  };
+
+  const handleBookAndPay = async () => {
     if (!name.trim()) {
       Alert.alert('Name Required', 'Please enter your full name.');
       return;
     }
-    const cleanPhone = phone.trim();
-    if (!cleanPhone || cleanPhone.length < 8) {
+    const cleanPhone = phone.trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
       Alert.alert('Valid Phone Required', 'Please enter a valid 10-digit mobile number.');
       return;
     }
 
     setLoading(true);
-    const finalCourseName = `${course} (${mode === 'OFFLINE' ? 'Campus' : mode === 'ONLINE' ? 'Online' : 'Hybrid'}) - ₹99 Demo`;
-    await submitCallback(name.trim(), cleanPhone, finalCourseName);
-    setLoading(false);
-    setSubmitted(true);
+    setPaymentError('');
 
-    setTimeout(() => {
-      setSubmitted(false);
-      setName('');
-      setPhone('');
-      onClose();
-    }, 2500);
+    try {
+      const finalCourseName = `${course} (${mode === 'OFFLINE' ? 'Campus' : mode === 'ONLINE' ? 'Online' : 'Hybrid'})`;
+
+      const res = await ApiService.initiateDemoPayment(
+        {
+          name: name.trim(),
+          phone: cleanPhone,
+          course: finalCourseName,
+          mode,
+        },
+        user?.token
+      );
+
+      setLoading(false);
+
+      if (res && res.success && res.redirectUrl) {
+        const txn = res.transactionId || `DEMO_${Date.now()}`;
+        setActiveTxnId(txn);
+        setActiveRedirectUrl(res.redirectUrl);
+        setIsWaitingForPhonePe(true);
+
+        // Direct redirection straight to PhonePe Gateway
+        Linking.openURL(res.redirectUrl).catch(() => {
+          Alert.alert('Browser Error', 'Could not open PhonePe gateway. Please try again.');
+        });
+        return;
+      }
+
+      setPaymentError(res?.error || 'Could not initiate PhonePe payment. Please try again.');
+    } catch (e: any) {
+      setLoading(false);
+      setPaymentError(e?.message || 'Network error while connecting to PhonePe gateway.');
+    }
+  };
+
+  const handleCancelWaiting = () => {
+    setIsWaitingForPhonePe(false);
+    setActiveTxnId(null);
+    setActiveRedirectUrl(null);
+    setCheckingLiveStatus(false);
+    setPaymentError('Payment was not completed. You can retry anytime.');
+  };
+
+  const handleFinish = () => {
+    setPaymentSuccess(false);
+    setIsWaitingForPhonePe(false);
+    setName('');
+    setPhone('');
+    onClose();
   };
 
   return (
@@ -115,14 +220,15 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
             contentContainerStyle={styles.scrollContent}
             bounces={false}
           >
-            {submitted ? (
+            {/* View 1: Payment Success */}
+            {paymentSuccess ? (
               <View style={styles.successContainer}>
                 <View style={styles.successIconCircle}>
                   <CheckCircle size={44} color="#059669" />
                 </View>
-                <Text style={styles.successTitle}>Demo Class Booked!</Text>
+                <Text style={styles.successTitle}>Demo Class Confirmed!</Text>
                 <Text style={styles.successText}>
-                  Your 1-on-1 demo request has been prioritized. Our senior academic counselor will connect via WhatsApp & Call within 15 minutes to confirm your scheduled slot.
+                  Thank you, <Text style={{ fontWeight: 'bold' }}>{name}</Text>! Your ₹99 payment has been verified with PhonePe. Your 1-on-1 demo slot is secured.
                 </Text>
 
                 <View style={styles.bookedDetailsCard}>
@@ -135,17 +241,94 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                     <Text style={styles.bookedValue}>{course}</Text>
                   </View>
                   <View style={styles.bookedDetailRow}>
-                    <Text style={styles.bookedLabel}>Special Fee:</Text>
-                    <Text style={[styles.bookedValue, { color: '#059669', fontWeight: '900' }]}>⚡ ₹99 Only</Text>
+                    <Text style={styles.bookedLabel}>Amount Paid:</Text>
+                    <Text style={[styles.bookedValue, { color: '#059669', fontWeight: '900' }]}>₹99.00 (PhonePe)</Text>
                   </View>
+                  {activeTxnId ? (
+                    <View style={styles.bookedDetailRow}>
+                      <Text style={styles.bookedLabel}>Transaction ID:</Text>
+                      <Text style={[styles.bookedValue, { fontSize: 11 }]}>{activeTxnId}</Text>
+                    </View>
+                  ) : null}
                 </View>
 
                 <View style={styles.confirmedBadge}>
                   <Check size={14} color="#059669" />
-                  <Text style={styles.confirmedBadgeText}>Direct Mentor Allocation in Progress</Text>
+                  <Text style={styles.confirmedBadgeText}>Senior Academic Mentor Assigned</Text>
                 </View>
+
+                <TouchableOpacity
+                  style={styles.finishBtn}
+                  onPress={handleFinish}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.finishBtnText}>Done / Return</Text>
+                </TouchableOpacity>
+              </View>
+            ) : isWaitingForPhonePe ? (
+              /* View 2: Waiting for PhonePe Gateway completion */
+              <View style={styles.waitingContainer}>
+                <View style={styles.phonePeLogoCircle}>
+                  <ActivityIndicator size="large" color="#6739B7" />
+                </View>
+                <Text style={styles.waitingTitle}>Redirected to PhonePe</Text>
+                <Text style={styles.waitingSubtitle}>
+                  Please complete the ₹99 Demo Class payment on the PhonePe checkout page in your browser.
+                </Text>
+
+                <View style={styles.waitingAmountCard}>
+                  <Text style={styles.waitingAmountLabel}>Demo Class Fee</Text>
+                  <Text style={styles.waitingAmountValue}>₹99.00</Text>
+                  <Text style={styles.waitingAmountBenefit}>100% Credited Back on Course Enrollment</Text>
+                </View>
+
+                {paymentError ? (
+                  <View style={styles.errorNotice}>
+                    <AlertCircle size={15} color="#DC2626" />
+                    <Text style={styles.errorNoticeText}>{paymentError}</Text>
+                  </View>
+                ) : null}
+
+                {/* Status Check Button */}
+                <TouchableOpacity
+                  style={styles.checkStatusBtn}
+                  onPress={() => activeTxnId && verifyPaymentWithPhonePe(activeTxnId)}
+                  disabled={checkingLiveStatus}
+                  activeOpacity={0.85}
+                >
+                  {checkingLiveStatus ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <View style={styles.btnRow}>
+                      <RefreshCw size={15} color="#ffffff" />
+                      <Text style={styles.checkStatusBtnText}>Check Payment Status</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                {/* Re-open Gateway Button */}
+                {activeRedirectUrl ? (
+                  <TouchableOpacity
+                    style={styles.reopenBtn}
+                    onPress={() => Linking.openURL(activeRedirectUrl).catch(() => {})}
+                    activeOpacity={0.8}
+                  >
+                    <ExternalLink size={14} color={Colors.textSecondary} />
+                    <Text style={styles.reopenBtnText}>Re-open PhonePe Page</Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Cancel / Return */}
+                <TouchableOpacity
+                  style={styles.cancelWaitingBtn}
+                  onPress={handleCancelWaiting}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.cancelWaitingBtnText}>Cancel & Edit Details</Text>
+                </TouchableOpacity>
               </View>
             ) : (
+              /* View 3: Demo Class Booking & PhonePe Payment Form */
               <View>
                 {/* Header Badge */}
                 <View style={styles.headerTagRow}>
@@ -180,6 +363,13 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                     <Text style={styles.pillarText}>Fee Credited</Text>
                   </View>
                 </View>
+
+                {paymentError ? (
+                  <View style={styles.errorNotice}>
+                    <AlertCircle size={15} color="#DC2626" />
+                    <Text style={styles.errorNoticeText}>{paymentError}</Text>
+                  </View>
+                ) : null}
 
                 {/* Form Field 1: Full Name */}
                 <View style={styles.fieldGroup}>
@@ -289,24 +479,33 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   </View>
                 </View>
 
-                {/* Primary Action Button */}
+                {/* Primary Action Button: Direct PhonePe Redirect */}
                 <TouchableOpacity
                   style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                  onPress={handleSubmit}
+                  onPress={handleBookAndPay}
                   disabled={loading}
                   activeOpacity={0.85}
                 >
                   {loading ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <View style={styles.btnRow}>
+                      <ActivityIndicator size="small" color="#ffffff" />
+                      <Text style={styles.submitButtonText}>Connecting to PhonePe...</Text>
+                    </View>
                   ) : (
                     <View style={styles.submitButtonInner}>
-                      <Text style={styles.submitButtonText}>Confirm Demo Class Booking</Text>
+                      <Text style={styles.submitButtonText}>Pay ₹99 & Book via PhonePe</Text>
                       <View style={styles.submitPricePill}>
                         <Text style={styles.submitPricePillText}>₹99</Text>
                       </View>
                     </View>
                   )}
                 </TouchableOpacity>
+
+                {/* Trust Badge */}
+                <View style={styles.trustBadgeRow}>
+                  <ShieldCheck size={13} color="#059669" />
+                  <Text style={styles.trustBadgeText}>Official PhonePe Gateway (UPI, Cards, QR & Netbanking)</Text>
+                </View>
 
                 {/* Direct Counselor Call & WhatsApp Options */}
                 <View style={styles.directContactRow}>
@@ -320,21 +519,13 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.directContactBtn, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}
+                    style={[styles.directContactBtn, styles.directContactBtnWhatsApp]}
                     onPress={() => Linking.openURL(FlymediaContact.whatsappUrl).catch(() => {})}
                     activeOpacity={0.8}
                   >
                     <MessageCircle size={13} color="#059669" />
-                    <Text style={[styles.directContactBtnText, { color: '#059669' }]}>WhatsApp</Text>
+                    <Text style={[styles.directContactBtnText, { color: '#059669' }]}>WhatsApp Chat</Text>
                   </TouchableOpacity>
-                </View>
-
-                {/* Trust Footer */}
-                <View style={styles.trustFooter}>
-                  <ShieldCheck size={13} color={Colors.textMuted} />
-                  <Text style={styles.trustFooterText}>
-                    100% verified mentors • No spam guarantee • 15-min call response
-                  </Text>
                 </View>
               </View>
             )}
@@ -348,140 +539,141 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#ffffff',
-    borderRadius: 24,
-    width: '100%',
-    maxWidth: 440,
-    maxHeight: '90%',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    maxHeight: '92%',
+    paddingHorizontal: 22,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     ...Shadows.medium,
     position: 'relative',
     overflow: 'hidden',
   },
   topAccentStrip: {
-    height: 4,
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 5,
     backgroundColor: Colors.primaryRose,
   },
-  scrollContent: {
-    padding: 22,
-    paddingTop: 24,
-  },
   closeBtn: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
+    alignSelf: 'flex-end',
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    marginBottom: 4,
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+
+  /* Header Badge */
   headerTagRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
-    paddingRight: 32,
+    marginTop: 4,
   },
   specialPriceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#fdf2f8',
+    gap: 4,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fce7f3',
+    borderRadius: 20,
   },
   specialPriceBadgeText: {
     fontSize: 10,
     fontWeight: '900',
     color: Colors.primaryRose,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   slotLiveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#fff7ed',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
   },
   livePulseDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.primaryOrange,
+    backgroundColor: '#F59E0B',
   },
   slotLiveBadgeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: Colors.primaryOrange,
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#B45309',
+    letterSpacing: 0.3,
   },
+
+  /* Titles */
   modalTitle: {
     fontSize: 20,
     fontWeight: '900',
     color: Colors.textPrimary,
-    letterSpacing: -0.3,
-    marginBottom: 4,
+    letterSpacing: -0.4,
+    marginBottom: 5,
   },
   modalSubtitle: {
     fontSize: 12,
-    lineHeight: 18,
-    color: Colors.textMuted,
-    marginBottom: 14,
+    lineHeight: 17,
+    color: Colors.textSecondary,
+    marginBottom: 12,
   },
+
+  /* 3 Value Pillars */
   pillarsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 16,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    marginBottom: 16,
   },
   pillarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   pillarText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: '#334155',
   },
+
+  /* Form Fields */
   fieldGroup: {
-    marginBottom: 14,
+    marginBottom: 13,
   },
   inputLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: Colors.textSecondary,
-    marginBottom: 6,
+    color: '#475569',
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
+    marginBottom: 6,
   },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
     paddingHorizontal: 12,
     height: 48,
   },
@@ -489,93 +681,96 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   countryCodeBadge: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
+    paddingRight: 8,
+    marginRight: 6,
+    borderRightWidth: 1,
+    borderRightColor: '#CBD5E1',
   },
   countryCodeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
   },
   textInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '600',
     color: Colors.textPrimary,
+    paddingVertical: 0,
   },
+
+  /* Mode Selector */
   modeToggleGroup: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+    padding: 3,
+    gap: 4,
   },
   modeToggleBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    paddingVertical: 9,
-    borderRadius: 10,
+    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 11,
   },
   modeToggleBtnActive: {
     backgroundColor: Colors.primaryRose,
-    borderColor: Colors.primaryRose,
+    ...Shadows.small,
   },
   modeToggleText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
     color: Colors.textSecondary,
   },
   modeToggleTextActive: {
     color: '#ffffff',
-    fontWeight: '800',
+    fontWeight: '900',
   },
+
+  /* Course Chips */
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    marginBottom: 4,
   },
   courseChip: {
-    backgroundColor: '#f1f5f9',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E2E8F0',
   },
   courseChipActive: {
-    backgroundColor: '#fdf2f8',
-    borderColor: '#f472b6',
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FDA4AF',
   },
   courseChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: '#64748B',
   },
   courseChipTextActive: {
     color: Colors.primaryRose,
     fontWeight: '800',
   },
+
+  /* Action Button */
   submitButton: {
     backgroundColor: Colors.primaryRose,
-    borderRadius: 14,
-    height: 52,
+    borderRadius: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
-    marginBottom: 12,
-    ...Shadows.brand,
+    ...Shadows.medium,
   },
   submitButtonDisabled: {
-    opacity: 0.65,
+    opacity: 0.7,
   },
   submitButtonInner: {
     flexDirection: 'row',
@@ -584,56 +779,184 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   submitButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: '900',
+    color: '#ffffff',
     letterSpacing: 0.2,
   },
   submitPricePill: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   submitPricePillText: {
-    color: '#ffffff',
     fontSize: 11,
     fontWeight: '900',
+    color: '#ffffff',
   },
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+
+  /* Trust badge */
+  trustBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 10,
+  },
+  trustBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#059669',
+  },
+
+  /* Direct Contacts */
   directContactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 14,
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
   directContactBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: 10,
-    backgroundColor: '#fdf2f8',
+    gap: 5,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#FFF1F2',
     borderWidth: 1,
-    borderColor: '#fce7f3',
+    borderColor: '#FECDD3',
+  },
+  directContactBtnWhatsApp: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
   },
   directContactBtnText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '800',
     color: Colors.primaryRose,
   },
-  trustFooter: {
-    flexDirection: 'row',
+
+  /* Waiting Screen */
+  waitingContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  phonePeLogoCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#EDE7F6',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    marginBottom: 14,
   },
-  trustFooterText: {
-    fontSize: 10,
-    color: Colors.textMuted,
+  waitingTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#6739B7',
+    marginBottom: 6,
+  },
+  waitingSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.textSecondary,
     textAlign: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 16,
   },
+  waitingAmountCard: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  waitingAmountLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+  },
+  waitingAmountValue: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#059669',
+    marginVertical: 2,
+  },
+  waitingAmountBenefit: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryRose,
+  },
+  checkStatusBtn: {
+    width: '100%',
+    backgroundColor: '#6739B7',
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    ...Shadows.small,
+  },
+  checkStatusBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  reopenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  reopenBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textDecorationLine: 'underline',
+  },
+  cancelWaitingBtn: {
+    paddingVertical: 6,
+  },
+  cancelWaitingBtnText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: Colors.textLight,
+  },
+  errorNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+  },
+  errorNoticeText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: '#DC2626',
+    fontWeight: '600',
+  },
+
+  /* Success View */
   successContainer: {
     alignItems: 'center',
     paddingVertical: 20,
@@ -642,7 +965,7 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -650,38 +973,39 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: Colors.textPrimary,
-    marginBottom: 8,
+    color: '#059669',
+    marginBottom: 6,
   },
   successText: {
-    fontSize: 13,
-    color: Colors.textMuted,
+    fontSize: 12.5,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 19,
-    marginBottom: 16,
+    lineHeight: 18,
+    marginBottom: 18,
+    paddingHorizontal: 8,
   },
   bookedDetailsCard: {
     width: '100%',
-    backgroundColor: '#f8fafc',
-    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 16,
-    gap: 6,
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
+    gap: 8,
   },
   bookedDetailRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   bookedLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   bookedValue: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
     color: Colors.textPrimary,
   },
@@ -689,16 +1013,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#ECFDF5',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
+    borderRadius: 20,
+    marginBottom: 20,
   },
   confirmedBadgeText: {
     fontSize: 11,
     fontWeight: '800',
     color: '#059669',
+  },
+  finishBtn: {
+    width: '100%',
+    backgroundColor: '#059669',
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  finishBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 });

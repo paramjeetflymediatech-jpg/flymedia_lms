@@ -259,6 +259,34 @@ export const ApiService = {
   },
 
   /**
+   * Initiates direct PhonePe gateway checkout for ₹99 Demo Class
+   */
+  async initiateDemoPayment(payload: {
+    name: string;
+    phone: string;
+    email?: string;
+    course?: string;
+    mode?: string;
+  }, token?: string): Promise<{ success: boolean; redirectUrl?: string; error?: string; transactionId?: string; message?: string }> {
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_BASE_URL.replace('/v1', '')}/payment/demo-initiate`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to connect to PhonePe payment gateway' };
+    }
+  },
+
+  /**
    * Checks live PhonePe payment status from backend
    */
   async checkPaymentStatus(transactionId: string, token: string): Promise<{ success: boolean; status?: string; message?: string; error?: string }> {
