@@ -172,7 +172,6 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         <Header
           showBackButton
           onBackPress={() => navigation.goBack()}
-          title="Course Not Found"
         />
         <View style={[styles.centerContent, { padding: 24, flex: 1 }]}>
           <Text style={styles.notFoundTitle}>Course Not Available</Text>
@@ -199,24 +198,11 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
 
   return (
     <View style={styles.screen}>
-      {/* PROFESSIONAL BRAND HEADER */}
+      {/* UNIFIED BRAND HEADER WITH LOGO & HELP BUTTON */}
       <Header
         showBackButton
         onBackPress={() => navigation.goBack()}
-        title="Course Details"
-        subtitle={course.category || 'Professional Program'}
-        rightAction={
-          !isTutor ? (
-            <TouchableOpacity
-              style={styles.headerDemoBadge}
-              onPress={() => setCallbackModalVisible(true)}
-              activeOpacity={0.8}
-            >
-              <Sparkles size={11} color={Colors.primaryRose} />
-              <Text style={styles.headerDemoText}>₹99 Demo</Text>
-            </TouchableOpacity>
-          ) : undefined
-        }
+        onCallPress={() => setCallbackModalVisible(true)}
       />
 
       <ScrollView

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
+import { CallbackModal } from '../components/common/CallbackModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
@@ -46,6 +47,7 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<PackageFilter>('ALL');
+  const [callbackModalVisible, setCallbackModalVisible] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -133,7 +135,9 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
 
   return (
     <View style={styles.screen}>
-      <Header subtitle="My Learning & Purchased Packages" />
+      <Header
+        onCallPress={() => setCallbackModalVisible(true)}
+      />
 
       <ScrollView
         style={styles.container}
@@ -601,6 +605,12 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CallbackModal
+        visible={callbackModalVisible}
+        onClose={() => setCallbackModalVisible(false)}
+        defaultCourse="My Learning Support"
+      />
     </View>
   );
 };

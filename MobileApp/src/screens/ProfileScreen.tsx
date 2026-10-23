@@ -17,6 +17,7 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { formatImageUrl } from '../utils/imageUrl';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
+import { CallbackModal } from '../components/common/CallbackModal';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user, login, register, logout, deleteAccount, updateProfile } = useAuth();
 
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [callbackModalVisible, setCallbackModalVisible] = useState(false);
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -227,9 +229,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   return (
     <View style={styles.screen}>
       <Header
-        subtitle="Account & Campus Info"
-        showMenuButton={Boolean(user && !editModalVisible)}
-        onMenuPress={() => setEditModalVisible(true)}
+        onCallPress={() => setCallbackModalVisible(true)}
       />
 
       <ScrollView
@@ -685,6 +685,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           onSave={updateProfile}
         />
       )}
+
+      <CallbackModal
+        visible={callbackModalVisible}
+        onClose={() => setCallbackModalVisible(false)}
+        defaultCourse="Account & Admission Help"
+      />
     </View>
   );
 };

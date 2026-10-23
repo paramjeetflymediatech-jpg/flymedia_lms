@@ -33,6 +33,8 @@ import {
   RotateCcw,
 } from 'lucide-react-native';
 import { formatImageUrl, prefetchImages } from '../utils/imageUrl';
+import { Header } from '../components/common/Header';
+import { CallbackModal } from '../components/common/CallbackModal';
 import { CachedImage } from '../components/common/CachedImage';
 
 type StudentTab = 'overview' | 'sessions' | 'packages';
@@ -51,6 +53,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
   const [activeTab, setActiveTab] = useState<StudentTab>(route?.params?.initialTab || 'overview');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [callbackModalVisible, setCallbackModalVisible] = useState(false);
 
   useEffect(() => {
     if (route?.params?.initialTab) {
@@ -165,49 +168,13 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
   const completedCount = bookedSessions.filter((s) => s.isPast).length;
 
   return (
-    <View style={[styles.screen, { paddingTop: topPadding }]}>
-      {/* ELEVATED MODERN HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <ArrowLeft size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
-
-        <View style={styles.headerTitleWrap}>
-          <View style={styles.portalBadge}>
-            <Sparkles size={11} color={Colors.primaryOrange} />
-            <Text style={styles.portalBadgeText}>STUDENT LEARNING SPACE</Text>
-          </View>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {user?.name ? `${user.name.split(' ')[0]}'s Workspace` : 'My Learning Space'}
-          </Text>
-        </View>
-
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn} activeOpacity={0.7}>
-            <RotateCcw size={16} color={Colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.headerAvatarBtn}
-            onPress={() => navigation.navigate('ProfileTab')}
-            activeOpacity={0.8}
-            accessibilityLabel="Go to Profile"
-          >
-            {user?.avatar ? (
-              <CachedImage uri={user.avatar} style={styles.headerAvatarImg} />
-            ) : (
-              <Text style={styles.headerAvatarInitial}>
-                {user?.name ? user.name[0].toUpperCase() : 'U'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.screen}>
+      {/* UNIFIED BRAND HEADER WITH LOGO & HELP BUTTON */}
+      <Header
+        showBackButton
+        onBackPress={() => navigation.goBack()}
+        onCallPress={() => setCallbackModalVisible(true)}
+      />
 
       {/* SLEEK FLOATING SEGMENTED TAB BAR */}
       <View style={styles.tabBarWrapper}>
@@ -769,6 +736,12 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
           )}
         </ScrollView>
       )}
+
+      <CallbackModal
+        visible={callbackModalVisible}
+        onClose={() => setCallbackModalVisible(false)}
+        defaultCourse="Student Learning Space Support"
+      />
     </View>
   );
 };

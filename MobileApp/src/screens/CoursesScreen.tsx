@@ -77,7 +77,6 @@ export const CoursesScreen: React.FC<CoursesScreenProps> = ({ navigation }) => {
   return (
     <View style={styles.screen}>
       <Header
-        subtitle="Explore All Programs"
         onCallPress={() => setCallbackModalVisible(true)}
       />
 
