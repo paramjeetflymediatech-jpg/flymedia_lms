@@ -111,7 +111,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       if (res.didCancel) return;
       if (res.errorCode) {
-        Alert.alert('Photo Error', res.errorMessage || 'Could not access photos');
+        if (res.errorCode === 'camera_unavailable') {
+          Alert.alert('Camera Unavailable', 'Camera is not available on simulator. Please use "Choose from Gallery" or test on a physical device.');
+        } else if (res.errorCode === 'permission') {
+          Alert.alert('Permission Denied', 'Please allow photo access in device settings to select a profile picture.');
+        } else {
+          Alert.alert('Photo Error', res.errorMessage || 'Could not access photos');
+        }
         return;
       }
 
