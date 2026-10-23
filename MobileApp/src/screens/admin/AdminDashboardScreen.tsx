@@ -1227,46 +1227,11 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
   return (
     <View style={styles.screen}>
-      {/* UNIFIED BRAND HEADER WITH LOGO & ADMIN CONTROLS */}
+      {/* UNIFIED BRAND HEADER WITH SAME LOGO & HELP BUTTON */}
       <Header
         showBackButton={Boolean(navigation.canGoBack && navigation.canGoBack())}
         onBackPress={() => navigation.goBack()}
-        showHelpButton={false}
-        rightAction={
-          <View style={styles.headerRightActions}>
-            <View style={styles.adminBadge}>
-              <ShieldCheck size={11} color={Colors.primaryRose} />
-              <Text style={styles.adminBadgeText}>ADMIN</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.headerActionBtn}
-              onPress={() => setAddCourseModal(true)}
-              activeOpacity={0.85}
-            >
-              <PlusCircle size={13} color="#ffffff" />
-              <Text style={styles.headerActionBtnText}>+ Course</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.toolsIconBtn, activeTab === 'tools' && styles.toolsIconBtnActive]}
-              onPress={() => setActiveTab('tools')}
-              activeOpacity={0.85}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Tag size={13} color={activeTab === 'tools' ? Colors.primaryRose : Colors.textSecondary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.logoutBtn}
-              onPress={handleLogout}
-              activeOpacity={0.85}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <LogOut size={13} color="#dc2626" />
-            </TouchableOpacity>
-          </View>
-        }
+        showHelpButton={true}
       />
 
       {/* MAIN CONTENT AREA */}
@@ -1283,7 +1248,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           />
         }
       >
-        {/* MASTER ADMIN WELCOME & SYSTEM HEALTH CARD */}
+        {/* MASTER ADMIN WELCOME & EXECUTIVE STATUS CARD */}
         <View style={styles.adminHeroCard}>
           <View style={styles.adminHeroTop}>
             <View style={styles.adminAvatar}>
@@ -1291,49 +1256,69 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
               </Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.adminHeroTitle} numberOfLines={1}>
-                {user?.name || 'Administrator'}
-              </Text>
-              <Text style={styles.adminHeroSub}>
-                Flymedia Master Suite • Central Control Center
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Text style={styles.adminHeroTitle} numberOfLines={1}>
+                  {user?.name || 'Administrator'}
+                </Text>
+                <View style={styles.adminBadge}>
+                  <ShieldCheck size={11} color={Colors.primaryRose} />
+                  <Text style={styles.adminBadgeText}>ADMIN</Text>
+                </View>
+              </View>
+              <Text style={styles.adminHeroSub} numberOfLines={1}>
+                Master Control • {stats.totalCourses} Programs • {stats.totalEnrollments} Enrolled
               </Text>
               <View style={styles.adminLiveStatus}>
                 <View style={styles.adminLiveDot} />
                 <Text style={styles.adminLiveText}>System Online • Cloud Synced</Text>
               </View>
             </View>
+
+            {/* Dedicated Executive Sign Out Button */}
+            <TouchableOpacity
+              style={styles.adminLogoutBtn}
+              onPress={handleLogout}
+              activeOpacity={0.82}
+            >
+              <LogOut size={13} color="#dc2626" />
+              <Text style={styles.adminLogoutText}>Sign Out</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Quick Shortcuts Bar */}
           <View style={styles.quickShortcutsRow}>
             <TouchableOpacity
-              style={styles.shortcutPill}
+              style={[styles.shortcutPill, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}
               onPress={() => setAddCourseModal(true)}
               activeOpacity={0.75}
             >
               <PlusCircle size={13} color={Colors.primaryRose} />
-              <Text style={[styles.shortcutPillText, { color: Colors.primaryRose }]}>+ Course</Text>
+              <Text style={[styles.shortcutPillText, { color: Colors.primaryRose, fontWeight: '800' }]}>
+                + Course
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.shortcutPill}
+              style={[styles.shortcutPill, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
               onPress={() => navigateToTab('leads')}
               activeOpacity={0.75}
             >
               <PhoneCall size={13} color="#2563EB" />
-              <Text style={[styles.shortcutPillText, { color: '#2563EB' }]}>
+              <Text style={[styles.shortcutPillText, { color: '#2563EB', fontWeight: '800' }]}>
                 Leads ({stats.totalLeads})
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.shortcutPill}
+              style={[styles.shortcutPill, { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}
               onPress={() => navigateToTab('tools')}
               activeOpacity={0.75}
             >
               <Ticket size={13} color="#7C3AED" />
-              <Text style={[styles.shortcutPillText, { color: '#7C3AED' }]}>Coupons</Text>
+              <Text style={[styles.shortcutPillText, { color: '#7C3AED', fontWeight: '800' }]}>
+                Coupons
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -5115,6 +5100,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#059669',
+  },
+  adminLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  adminLogoutText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#DC2626',
   },
   quickShortcutsRow: {
     flexDirection: 'row',
