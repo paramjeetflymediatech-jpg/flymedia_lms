@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { CoursesScreen } from '../screens/CoursesScreen';
+import { GalleryScreen } from '../screens/GalleryScreen';
 import { CourseDetailScreen } from '../screens/CourseDetailScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -16,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Home,
   BookOpen,
+  Images,
   GraduationCap,
   User,
 } from 'lucide-react-native';
@@ -99,6 +101,16 @@ function MainTabs() {
           tabBarLabel: 'Courses',
           tabBarIcon: ({ color, focused }) => (
             <TabIconItem Icon={BookOpen} color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="GalleryTab"
+        component={GalleryScreen}
+        options={{
+          tabBarLabel: 'Gallery',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIconItem Icon={Images} color={color} focused={focused} />
           ),
         }}
       />

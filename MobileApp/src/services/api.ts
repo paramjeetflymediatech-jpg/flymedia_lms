@@ -51,6 +51,29 @@ export const ApiService = {
   },
 
   /**
+   * Fetches full gallery items for the Gallery screen
+   */
+  async getGalleryItems(): Promise<GalleryItem[]> {
+    try {
+      const response = await fetch(`https://course.flymediatech.com/api/gallery`);
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && Array.isArray(json.items)) {
+          return json.items;
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching gallery items:', e);
+    }
+    try {
+      const homeData = await this.getHomeData();
+      return homeData.gallery || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
    * Submits inquiry directly to database
    */
   async submitInquiry(data: { name: string; phone: string; course?: string; email?: string }): Promise<boolean> {
