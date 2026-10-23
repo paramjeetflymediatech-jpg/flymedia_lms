@@ -6,7 +6,6 @@ import {
   ImageSourcePropType,
   StyleSheet,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
@@ -18,7 +17,7 @@ interface CachedImageProps extends Omit<ImageProps, 'source'> {
 }
 
 const DEFAULT_FALLBACK =
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=75';
 
 export const CachedImage: React.FC<CachedImageProps> = ({
   uri,
@@ -32,15 +31,29 @@ export const CachedImage: React.FC<CachedImageProps> = ({
   ...rest
 }) => {
   const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Extract flat border radius if passed in style so container and image corners match perfectly
+  const flattenedStyle = StyleSheet.flatten(style) || {};
+  const borderRadius = flattenedStyle.borderRadius || 0;
+  const borderTopLeftRadius = flattenedStyle.borderTopLeftRadius || borderRadius;
+  const borderTopRightRadius = flattenedStyle.borderTopRightRadius || borderRadius;
+  const borderBottomLeftRadius = flattenedStyle.borderBottomLeftRadius || borderRadius;
+  const borderBottomRightRadius = flattenedStyle.borderBottomRightRadius || borderRadius;
+
+  const cornerRadiusStyle = {
+    borderTopLeftRadius,
+    borderTopRightRadius,
+    borderBottomLeftRadius,
+    borderBottomRightRadius,
+  };
 
   // Determine image source with 'force-cache'
   let resolvedSource: ImageSourcePropType;
 
   if (hasError) {
     resolvedSource = { uri: fallbackUri, cache: 'force-cache' };
-  } else if (uri !== undefined) {
+  } else if (uri !== undefined && uri !== null) {
     const formatted = formatImageUrl(uri);
     resolvedSource = { uri: formatted, cache: 'force-cache' };
   } else if (source && typeof source === 'object' && 'uri' in source && (source as { uri?: string }).uri) {
@@ -56,41 +69,33 @@ export const CachedImage: React.FC<CachedImageProps> = ({
     resolvedSource = { uri: fallbackUri, cache: 'force-cache' };
   }
 
-  const handleLoadSuccess = () => {
-    setIsLoading(false);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
-    <View style={[styles.container, style]}>
-      {/* Background Placeholder Skeleton */}
-      <View style={[StyleSheet.absoluteFill, styles.placeholder]} />
+    <View style={[styles.container, style, cornerRadiusStyle]}>
+      {/* Background Placeholder Skeleton - visible until image loads */}
+      {!isLoaded && <View style={[StyleSheet.absoluteFill, styles.placeholder, cornerRadiusStyle]} />}
 
       {/* Optional subtle spinner if explicitly requested */}
-      {isLoading && showLoader && (
+      {!isLoaded && showLoader && (
         <View style={[StyleSheet.absoluteFill, styles.loaderContainer]}>
           <ActivityIndicator size="small" color="#94A3B8" />
         </View>
       )}
 
-      {/* Fast Cached Image */}
-      <Animated.Image
+      {/* Instant Native Image with zero fade delay */}
+      <Image
         {...rest}
         source={resolvedSource}
-        style={[StyleSheet.absoluteFill, style, { opacity: fadeAnim }]}
+        style={[StyleSheet.absoluteFill, cornerRadiusStyle]}
         resizeMode={resizeMode}
-        onLoad={handleLoadSuccess}
+        fadeDuration={0}
+        onLoad={() => setIsLoaded(true)}
         onLoadEnd={() => {
-          setIsLoading(false);
+          setIsLoaded(true);
           if (onLoadEnd) onLoadEnd();
         }}
         onError={(e) => {
           setHasError(true);
-          setIsLoading(false);
+          setIsLoaded(true);
           if (onError) onError(e);
         }}
       />

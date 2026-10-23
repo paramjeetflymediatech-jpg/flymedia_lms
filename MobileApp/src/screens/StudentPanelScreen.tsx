@@ -32,7 +32,7 @@ import {
   AlertCircle,
   RotateCcw,
 } from 'lucide-react-native';
-import { formatImageUrl } from '../utils/imageUrl';
+import { formatImageUrl, prefetchImages } from '../utils/imageUrl';
 import { CachedImage } from '../components/common/CachedImage';
 
 type StudentTab = 'overview' | 'sessions' | 'packages';
@@ -88,6 +88,17 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
         setUpcomingSessions(res.upcomingSessions || []);
         setEnrolledPackages(res.enrolledPackages || []);
         setBookedSessions(res.bookedSessions || []);
+
+        // Proactively prefetch images into disk cache for instant display
+        if (res.enrolledPackages) {
+          prefetchImages(res.enrolledPackages.map((p: any) => p.thumbnail));
+        }
+        if (res.upcomingSessions) {
+          prefetchImages(res.upcomingSessions.map((s: any) => s.tutorAvatar));
+        }
+        if (res.nextSession?.tutorAvatar) {
+          prefetchImages([res.nextSession.tutorAvatar]);
+        }
       }
     } catch (err) {
       console.warn('Failed to load student dashboard:', err);

@@ -16,6 +16,7 @@ import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { ApiService } from '../services/api';
+import { prefetchImages } from '../utils/imageUrl';
 import { useAuth } from '../context/AuthContext';
 import { Course, Testimonial, FaqItem, GalleryItem } from '../types';
 import { FlymediaContact } from '../constants/contact';
@@ -111,6 +112,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       setFaqs(data.faqs);
       if (data.gallery && data.gallery.length > 0) {
         setGallery(data.gallery);
+      }
+      // Proactively prefetch course and gallery thumbnails in background
+      if (data.courses) {
+        prefetchImages(data.courses.map(c => c.thumbnail));
+      }
+      if (data.gallery) {
+        prefetchImages(data.gallery.map(g => g.thumbnailUrl || g.mediaUrl));
       }
     } catch (e) {
       console.warn('Error loading dynamic home data:', e);
