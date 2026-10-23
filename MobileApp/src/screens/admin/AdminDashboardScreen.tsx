@@ -75,7 +75,16 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const { user, logout, updateProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
-  const bottomPadding = insets.bottom > 0 ? Math.min(insets.bottom, 6) : 2;
+  const bottomPadding = insets.bottom > 0 ? Math.max(insets.bottom, 22) : 10;
+
+  const adminDisplayName = (() => {
+    if (!user?.name) return 'Admin';
+    if (user.name.includes('@')) {
+      const part = user.name.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return user.name.split(' ')[0];
+  })();
 
   useEffect(() => {
     if (!user) {
@@ -1248,24 +1257,26 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             activeOpacity={0.8}
             accessibilityLabel="Admin Profile & Settings"
           >
-            {user?.avatar ? (
-              <Image
-                source={{
-                  uri: user.avatar.startsWith('data:')
-                    ? user.avatar
-                    : formatImageUrl(user.avatar),
-                }}
-                style={styles.headerProfileAvatar}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.headerProfileInitialWrap}>
-                <Text style={styles.headerProfileInitialText}>
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                </Text>
-              </View>
-            )}
-            <View style={styles.headerProfileOnlineDot} />
+            <View style={styles.headerProfileAvatarWrap}>
+              {user?.avatar ? (
+                <Image
+                  source={{
+                    uri: user.avatar.startsWith('data:')
+                      ? user.avatar
+                      : formatImageUrl(user.avatar),
+                  }}
+                  style={styles.headerProfileAvatar}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.headerProfileInitialWrap}>
+                  <Text style={styles.headerProfileInitialText}>
+                    {adminDisplayName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.headerProfileOnlineDot} />
+            </View>
           </TouchableOpacity>
         }
       />
@@ -1294,173 +1305,219 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= OVERVIEW TAB ================= */}
             {activeTab === 'overview' && (
               <View>
-                {/* Clean Overview Header */}
+                {/* Executive Welcome Card */}
                 <View style={styles.overviewHeaderRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.overviewGreeting}>Welcome, {user?.name?.split(' ')[0] || 'Admin'}</Text>
-                    <Text style={styles.overviewSubtitle}>Platform Performance & Live Operations</Text>
+                    <View style={styles.overviewBadgeRow}>
+                      <View style={styles.overviewStatusDot} />
+                      <Text style={styles.overviewBadgeText}>COMMAND CENTER • LIVE</Text>
+                    </View>
+                    <Text style={styles.overviewGreeting}>Welcome back, {adminDisplayName}</Text>
+                    <Text style={styles.overviewSubtitle}>Platform health & live student inquiry monitor</Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.overviewProfilePill}
-                    onPress={() => setAdminProfileViewVisible(true)}
-                    activeOpacity={0.8}
-                  >
-                    <ShieldCheck size={12} color={Colors.primaryRose} />
-                    <Text style={styles.overviewProfilePillText}>Profile</Text>
-                  </TouchableOpacity>
                 </View>
 
-                {/* Quick Shortcuts Bar */}
-                <View style={[styles.quickShortcutsRow, { marginBottom: 14 }]}>
+                {/* Quick Actions Hub - 4 Modern Touchpoints */}
+                <View style={styles.quickActionsGrid}>
                   <TouchableOpacity
-                    style={[styles.shortcutPill, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}
+                    style={styles.quickActionTile}
                     onPress={() => setAddCourseModal(true)}
                     activeOpacity={0.75}
                   >
-                    <PlusCircle size={13} color={Colors.primaryRose} />
-                    <Text style={[styles.shortcutPillText, { color: Colors.primaryRose, fontWeight: '800' }]}>
-                      + Course
-                    </Text>
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#FFF1F2' }]}>
+                      <PlusCircle size={20} color={Colors.primaryRose} strokeWidth={2.4} />
+                    </View>
+                    <Text style={styles.quickActionLabel}>+ Course</Text>
+                    <Text style={styles.quickActionSub}>Publish</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.shortcutPill, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
+                    style={styles.quickActionTile}
                     onPress={() => navigateToTab('leads')}
                     activeOpacity={0.75}
                   >
-                    <PhoneCall size={13} color="#2563EB" />
-                    <Text style={[styles.shortcutPillText, { color: '#2563EB', fontWeight: '800' }]}>
-                      Leads ({stats.totalLeads})
-                    </Text>
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                      <PhoneCall size={19} color="#2563EB" strokeWidth={2.2} />
+                      {stats.totalLeads > 0 && (
+                        <View style={styles.quickActionCountBadge}>
+                          <Text style={styles.quickActionCountText}>
+                            {stats.totalLeads > 99 ? '99+' : stats.totalLeads}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.quickActionLabel}>Leads Hub</Text>
+                    <Text style={styles.quickActionSub}>Callbacks</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.shortcutPill, { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}
+                    style={styles.quickActionTile}
                     onPress={() => navigateToTab('tools')}
                     activeOpacity={0.75}
                   >
-                    <Ticket size={13} color="#7C3AED" />
-                    <Text style={[styles.shortcutPillText, { color: '#7C3AED', fontWeight: '800' }]}>
-                      Coupons
-                    </Text>
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#F5F3FF' }]}>
+                      <Ticket size={20} color="#7C3AED" strokeWidth={2.2} />
+                    </View>
+                    <Text style={styles.quickActionLabel}>Coupons</Text>
+                    <Text style={styles.quickActionSub}>Promos</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.shortcutPill}
+                    style={styles.quickActionTile}
                     onPress={onRefresh}
                     activeOpacity={0.75}
                   >
-                    <RotateCcw size={13} color={Colors.textSecondary} />
-                    <Text style={styles.shortcutPillText}>Sync</Text>
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#ECFDF5' }]}>
+                      <RotateCcw size={19} color="#059669" strokeWidth={2.2} />
+                    </View>
+                    <Text style={styles.quickActionLabel}>Refresh</Text>
+                    <Text style={styles.quickActionSub}>Live Sync</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* METRICS GRID - 6 SYMMETRICAL CARDS */}
+                {/* METRICS GRID - 6 HIGH-IMPACT TILES */}
                 <View style={styles.statsGrid}>
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#FECDD3' }]}
                     onPress={() => navigateToTab('courses')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#FFF1F2' }]}>
-                      <BookOpen size={19} color={Colors.primaryRose} />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#FFF1F2' }]}>
+                        <BookOpen size={18} color={Colors.primaryRose} strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#FFF1F2' }]}>
+                        <Text style={[styles.statBadgeText, { color: Colors.primaryRose }]}>TRACKS</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalCourses}</Text>
                     <Text style={styles.statLabel}>Career Tracks</Text>
-                    <Text style={styles.statSubLabel}>Live courses published</Text>
+                    <Text style={styles.statSubHint}>Live & Published →</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#BFDBFE' }]}
                     onPress={() => navigateToTab('leads')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#EFF6FF' }]}>
-                      <PhoneCall size={19} color="#2563EB" />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                        <PhoneCall size={18} color="#2563EB" strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#EFF6FF' }]}>
+                        <Text style={[styles.statBadgeText, { color: '#2563EB' }]}>INQUIRIES</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalLeads}</Text>
                     <Text style={styles.statLabel}>Student Leads</Text>
-                    <Text style={styles.statSubLabel}>Inquiries & Callbacks</Text>
+                    <Text style={styles.statSubHint}>Inquiries active →</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#A7F3D0' }]}
                     onPress={() => navigateToTab('enrollments')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#ECFDF5' }]}>
-                      <GraduationCap size={19} color="#059669" />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#ECFDF5' }]}>
+                        <GraduationCap size={18} color="#059669" strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.statBadgeText, { color: '#059669' }]}>PAID</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalEnrollments}</Text>
                     <Text style={styles.statLabel}>Enrollments</Text>
-                    <Text style={styles.statSubLabel}>Active paid students</Text>
+                    <Text style={styles.statSubHint}>Active students →</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#DDD6FE' }]}
                     onPress={() => navigateToTab('tutors')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#F5F3FF' }]}>
-                      <Award size={19} color="#7C3AED" />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#F5F3FF' }]}>
+                        <Award size={18} color="#7C3AED" strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#F5F3FF' }]}>
+                        <Text style={[styles.statBadgeText, { color: '#7C3AED' }]}>FACULTY</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalTutors}</Text>
-                    <Text style={styles.statLabel}>Faculty Team</Text>
-                    <Text style={styles.statSubLabel}>Assigned mentors</Text>
+                    <Text style={styles.statLabel}>Instructors</Text>
+                    <Text style={styles.statSubHint}>Assigned mentors →</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#FDE68A' }]}
                     onPress={() => navigateToTab('users')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#FFFBEB' }]}>
-                      <Users size={19} color="#D97706" />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#FFFBEB' }]}>
+                        <Users size={18} color="#D97706" strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#FFFBEB' }]}>
+                        <Text style={[styles.statBadgeText, { color: '#D97706' }]}>USERS</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalUsers}</Text>
-                    <Text style={styles.statLabel}>Registered Users</Text>
-                    <Text style={styles.statSubLabel}>Students & Accounts</Text>
+                    <Text style={styles.statLabel}>Registered</Text>
+                    <Text style={styles.statSubHint}>Accounts created →</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.statCard}
+                    style={[styles.statCard, { borderColor: '#FBCFE8' }]}
                     onPress={() => navigateToTab('tools')}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.statIconWrap, { backgroundColor: '#FDF2F8' }]}>
-                      <Ticket size={19} color="#DB2777" />
+                    <View style={styles.statCardTopRow}>
+                      <View style={[styles.statIconWrap, { backgroundColor: '#FDF2F8' }]}>
+                        <Ticket size={18} color="#DB2777" strokeWidth={2.4} />
+                      </View>
+                      <View style={[styles.statBadgePill, { backgroundColor: '#FDF2F8' }]}>
+                        <Text style={[styles.statBadgeText, { color: '#DB2777' }]}>PROMOS</Text>
+                      </View>
                     </View>
                     <Text style={styles.statNumber}>{stats.totalCoupons}</Text>
-                    <Text style={styles.statLabel}>Promo Coupons</Text>
-                    <Text style={styles.statSubLabel}>Discount campaigns</Text>
+                    <Text style={styles.statLabel}>Coupons</Text>
+                    <Text style={styles.statSubHint}>Active campaigns →</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* QUICK PUBLISH BANNER */}
+                {/* ELEGANT BRAND ACTION BANNER */}
                 <TouchableOpacity
                   style={styles.actionBanner}
                   onPress={() => setAddCourseModal(true)}
                   activeOpacity={0.85}
                 >
-                  <View style={styles.actionBannerContent}>
-                    <Sparkles size={20} color={Colors.primaryRose} />
-                    <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.actionBannerTitle}>Launch Career Track</Text>
-                      <Text style={styles.actionBannerSub}>
-                        Add courses, specify fees, syllabus modules and publish instantly across apps & web.
-                      </Text>
-                    </View>
-                    <View style={styles.actionBannerPill}>
-                      <Text style={styles.actionBannerPillText}>+ Create</Text>
-                    </View>
+                  <View style={styles.actionBannerLeftIcon}>
+                    <Sparkles size={20} color={Colors.primaryRose} strokeWidth={2.4} />
+                  </View>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.actionBannerTitle}>Launch a Career Track</Text>
+                    <Text style={styles.actionBannerSub}>
+                      Configure curriculum, fee packages, and publish to students across app & web.
+                    </Text>
+                  </View>
+                  <View style={styles.actionBannerPill}>
+                    <Text style={styles.actionBannerPillText}>+ Create</Text>
                   </View>
                 </TouchableOpacity>
 
                 {/* RECENT LEADS PREVIEW */}
                 <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>Latest Student Inquiries</Text>
-                  <TouchableOpacity onPress={() => navigateToTab('leads')}>
-                    <Text style={styles.seeAllText}>View All ({leads.length})</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.sectionTitle}>Latest Student Inquiries</Text>
+                    {leads.length > 0 && (
+                      <View style={styles.sectionCountBadge}>
+                        <Text style={styles.sectionCountBadgeText}>{leads.length}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <TouchableOpacity onPress={() => navigateToTab('leads')} activeOpacity={0.7}>
+                    <Text style={styles.seeAllText}>View All ({leads.length}) →</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -5022,36 +5079,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
-    paddingTop: 3,
+    paddingTop: 6,
     shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-    elevation: 6,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 8,
   },
   bottomNavItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 1,
+    paddingVertical: 2,
   },
   bottomNavIconWrap: {
-    width: 36,
-    height: 22,
-    borderRadius: 11,
+    width: 38,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     backgroundColor: 'transparent',
   },
   bottomNavIconWrapActive: {
-    backgroundColor: 'rgba(230, 8, 112, 0.12)',
+    backgroundColor: 'rgba(230, 8, 112, 0.1)',
   },
   bottomNavLabel: {
-    fontSize: 9.5,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     color: Colors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
   },
   bottomNavLabelActive: {
     color: Colors.primaryRose,
@@ -5095,37 +5152,50 @@ const styles = StyleSheet.create({
   /* Header Profile Avatar Button */
   headerProfileBtn: {
     padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerProfileAvatarWrap: {
     position: 'relative',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    shadowColor: Colors.primaryRose,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerProfileAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF1F2',
     borderWidth: 2,
-    borderColor: Colors.primaryRose,
+    borderColor: '#FECDD3',
   },
   headerProfileInitialWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#FFF1F2',
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: '#FECDD3',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerProfileInitialText: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '900',
     color: Colors.primaryRose,
   },
   headerProfileOnlineDot: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    bottom: -1,
+    right: -1,
+    width: 11,
+    height: 11,
+    borderRadius: 5.5,
     backgroundColor: '#10B981',
     borderWidth: 2,
     borderColor: '#ffffff',
@@ -5133,39 +5203,94 @@ const styles = StyleSheet.create({
 
   /* Overview Header Strip */
   overviewHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
     paddingHorizontal: 2,
   },
-  overviewGreeting: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: Colors.textPrimary,
-    letterSpacing: -0.3,
-  },
-  overviewSubtitle: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  overviewProfilePill: {
+  overviewBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
+    gap: 6,
+    marginBottom: 4,
   },
-  overviewProfilePillText: {
+  overviewStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#10B981',
+  },
+  overviewBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#059669',
+    letterSpacing: 0.8,
+  },
+  overviewGreeting: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    letterSpacing: -0.4,
+  },
+  overviewSubtitle: {
+    fontSize: 12.5,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+
+  /* Modern 4-Tile Quick Actions Hub */
+  quickActionsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  quickActionTile: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...Shadows.small,
+  },
+  quickActionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    position: 'relative',
+  },
+  quickActionCountBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -5,
+    backgroundColor: '#2563EB',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  quickActionCountText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  quickActionLabel: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: Colors.primaryRose,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  quickActionSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    marginTop: 1,
   },
 
   /* Master Admin Hero Card */
@@ -5320,84 +5445,112 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  /* 6-Card Stats Grid */
+  /* 6-Card High Impact Stats Grid */
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   statCard: {
     width: '48.5%',
     backgroundColor: '#ffffff',
     borderRadius: 18,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    padding: 14,
+    borderWidth: 1.5,
     ...Shadows.small,
   },
+  statCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
   statIconWrap: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+  },
+  statBadgePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  statBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   statNumber: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
     color: Colors.textPrimary,
+    letterSpacing: -0.5,
     marginBottom: 2,
   },
   statLabel: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+    fontSize: 13,
+    color: Colors.textPrimary,
     fontWeight: '800',
   },
-  statSubLabel: {
-    fontSize: 10,
+  statSubHint: {
+    fontSize: 10.5,
     color: Colors.textMuted,
-    marginTop: 2,
-    fontWeight: '500',
+    marginTop: 3,
+    fontWeight: '600',
   },
+
+  /* Elegant Action Banner */
   actionBanner: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFF1F2',
     borderRadius: 18,
-    padding: 16,
+    padding: 14,
     marginBottom: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    ...Shadows.medium,
-  },
-  actionBannerContent: {
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
     flexDirection: 'row',
     alignItems: 'center',
+    ...Shadows.small,
+  },
+  actionBannerLeftIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
   },
   actionBannerTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 14.5,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    letterSpacing: -0.2,
     marginBottom: 2,
   },
   actionBannerSub: {
     fontSize: 11,
-    color: '#94a3b8',
-    lineHeight: 16,
+    color: Colors.textSecondary,
+    lineHeight: 15,
   },
   actionBannerPill: {
     backgroundColor: Colors.primaryRose,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
-    marginLeft: 8,
+    borderRadius: 11,
     ...Shadows.small,
   },
   actionBannerPillText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '900',
   },
+
+  /* Section Header & Count Badges */
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -5409,6 +5562,19 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: Colors.textPrimary,
     letterSpacing: -0.2,
+  },
+  sectionCountBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  sectionCountBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#2563EB',
   },
   seeAllText: {
     fontSize: 12,
