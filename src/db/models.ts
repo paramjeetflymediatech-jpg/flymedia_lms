@@ -80,6 +80,19 @@ User.init(
   { sequelize, modelName: 'User', tableName: 'users' }
 );
 
+// Auto-heal/migrate missing user profile columns in live database
+if (typeof window === 'undefined') {
+  (async () => {
+    try {
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `phone` VARCHAR(255) NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `educationDetails` JSON NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `addressDetails` JSON NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `familyDetails` JSON NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `studentCategory` VARCHAR(255) NULL;').catch(() => {});
+    } catch (_) {}
+  })();
+}
+
 // ==========================================
 // 1.5 CATEGORY MODEL
 // ==========================================

@@ -10,7 +10,8 @@
     "db:sync": "tsx scripts/dbSync.ts",
     "db:fresh": "tsx scripts/reset-and-seed-fresh.ts",
     "db:migrate": "tsx scripts/addResetTokenTable.ts",
-    "db:migrate:live": "tsx scripts/migrateLiveDB.ts"
+    "db:migrate:live": "tsx scripts/migrateLiveDB.ts",
+    "db:migrate:profile": "tsx scripts/add-user-profile-cols.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
