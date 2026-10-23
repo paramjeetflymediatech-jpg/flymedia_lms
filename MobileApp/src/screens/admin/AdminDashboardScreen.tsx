@@ -74,7 +74,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const { user, logout, updateProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+  const bottomPadding = insets.bottom > 0 ? Math.min(insets.bottom, 6) : 2;
 
   useEffect(() => {
     if (!user) {
@@ -2930,7 +2930,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
               </View>
             )}
 
-            <View style={{ height: bottomPadding + 30 }} />
+            <View style={{ height: bottomPadding + 6 }} />
           </>
         )}
       </ScrollView>
@@ -2944,7 +2944,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'overview' && styles.bottomNavIconWrapActive]}>
             <LayoutDashboard
-              size={18}
+              size={16}
               color={activeTab === 'overview' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'overview' ? 2.4 : 1.8}
             />
@@ -2961,7 +2961,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'courses' && styles.bottomNavIconWrapActive]}>
             <BookOpen
-              size={18}
+              size={16}
               color={activeTab === 'courses' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'courses' ? 2.4 : 1.8}
             />
@@ -2985,7 +2985,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'leads' && styles.bottomNavIconWrapActive]}>
             <PhoneCall
-              size={18}
+              size={16}
               color={activeTab === 'leads' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'leads' ? 2.4 : 1.8}
             />
@@ -3009,7 +3009,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'enrollments' && styles.bottomNavIconWrapActive]}>
             <GraduationCap
-              size={18}
+              size={16}
               color={activeTab === 'enrollments' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'enrollments' ? 2.4 : 1.8}
             />
@@ -3033,7 +3033,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'tutors' && styles.bottomNavIconWrapActive]}>
             <Award
-              size={18}
+              size={16}
               color={activeTab === 'tutors' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'tutors' ? 2.4 : 1.8}
             />
@@ -3057,7 +3057,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         >
           <View style={[styles.bottomNavIconWrap, activeTab === 'users' && styles.bottomNavIconWrapActive]}>
             <Users
-              size={18}
+              size={16}
               color={activeTab === 'users' ? Colors.primaryRose : Colors.textMuted}
               strokeWidth={activeTab === 'users' ? 2.4 : 1.8}
             />
@@ -5035,23 +5035,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
-    paddingTop: 8,
+    paddingTop: 3,
     shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 6,
   },
   bottomNavItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 2,
+    paddingVertical: 1,
   },
   bottomNavIconWrap: {
-    width: 44,
-    height: 28,
-    borderRadius: 14,
+    width: 36,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -5061,10 +5061,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(230, 8, 112, 0.12)',
   },
   bottomNavLabel: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '700',
     color: Colors.textMuted,
-    marginTop: 3,
+    marginTop: 1,
   },
   bottomNavLabelActive: {
     color: Colors.primaryRose,
@@ -5072,16 +5072,16 @@ const styles = StyleSheet.create({
   },
   tabBadge: {
     position: 'absolute',
-    top: -2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    top: -3,
+    right: 0,
+    minWidth: 13,
+    height: 13,
+    borderRadius: 6.5,
     backgroundColor: Colors.primaryRose,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 1.5,
+    paddingHorizontal: 2,
+    borderWidth: 1,
     borderColor: '#ffffff',
   },
   tabBadgeText: {
