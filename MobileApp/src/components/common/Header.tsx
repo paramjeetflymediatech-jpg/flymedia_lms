@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../theme/colors';
-import { PhoneCall, ArrowLeft } from 'lucide-react-native';
+import { PhoneCall, ArrowLeft, Menu } from 'lucide-react-native';
 import { FlymediaContact } from '../../constants/contact';
 
 export interface HeaderProps {
@@ -18,6 +18,8 @@ export interface HeaderProps {
   showHelpButton?: boolean;
   showBackButton?: boolean;
   onBackPress?: () => void;
+  showMenuButton?: boolean;
+  onMenuPress?: () => void;
   subtitle?: string;
   title?: string;
   rightAction?: React.ReactNode;
@@ -28,6 +30,8 @@ export const Header: React.FC<HeaderProps> = ({
   showHelpButton = true,
   showBackButton = false,
   onBackPress,
+  showMenuButton = false,
+  onMenuPress,
   rightAction,
 }) => {
   const insets = useSafeAreaInsets();
@@ -44,8 +48,20 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View style={[styles.container, { paddingTop: topPadding + 6 }]}>
       <View style={styles.headerRow}>
-        {/* Left Side: Optional Back Button + Brand Logo */}
+        {/* Left Side: Optional Menu Button + Optional Back Button + Brand Logo */}
         <View style={styles.brandGroup}>
+          {showMenuButton && (
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={onMenuPress}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Open navigation menu"
+            >
+              <Menu size={20} color={Colors.textPrimary} strokeWidth={2.4} />
+            </TouchableOpacity>
+          )}
+
           {showBackButton && (
             <TouchableOpacity
               style={styles.backButton}
@@ -111,6 +127,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     flex: 1,
+  },
+  menuButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backButton: {
     width: 36,

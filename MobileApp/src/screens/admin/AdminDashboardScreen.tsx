@@ -62,6 +62,7 @@ import { formatImageUrl } from '../../utils/imageUrl';
 import { Header } from '../../components/common/Header';
 import { FlymediaContact } from '../../constants/contact';
 import { AdminEditProfileModal } from '../../components/admin/AdminEditProfileModal';
+import { AdminDrawerModal } from '../../components/admin/AdminDrawerModal';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'tutors' | 'users' | 'tools';
 
@@ -165,6 +166,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [addUserModal, setAddUserModal] = useState(false);
   const [editUserModal, setEditUserModal] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
@@ -1230,8 +1232,10 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
   return (
     <View style={styles.screen}>
-      {/* UNIFIED BRAND HEADER WITH SAME LOGO & HELP BUTTON */}
+      {/* UNIFIED BRAND HEADER WITH HAMBURGER MENU */}
       <Header
+        showMenuButton={true}
+        onMenuPress={() => setDrawerVisible(true)}
         showBackButton={Boolean(navigation.canGoBack && navigation.canGoBack())}
         onBackPress={() => navigation.goBack()}
         showHelpButton={true}
@@ -4900,6 +4904,29 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           onSave={updateProfile}
         />
       )}
+
+      <AdminDrawerModal
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        activeTab={activeTab}
+        onSelectTab={(tab) => setActiveTab(tab)}
+        user={user}
+        stats={stats}
+        onOpenEditProfile={() => setEditProfileModalVisible(true)}
+        onAddCourse={() => setAddCourseModal(true)}
+        onAddTutor={() => {
+          setEditingTutorData(null);
+          setTutorFormName('');
+          setTutorFormEmail('');
+          setTutorFormPassword('');
+          setTutorFormBio('');
+          setTutorFormPackageIds([]);
+          setTutorModalOpen(true);
+        }}
+        onAddUser={() => setAddUserModal(true)}
+        onAddCoupon={() => setAddCouponModal(true)}
+        onLogout={handleLogout}
+      />
     </View>
   );
 };
