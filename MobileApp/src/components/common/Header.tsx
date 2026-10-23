@@ -9,9 +9,12 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../theme/colors';
 import { PhoneCall, ArrowLeft, Menu } from 'lucide-react-native';
 import { FlymediaContact } from '../../constants/contact';
+import { useAuth } from '../../context/AuthContext';
+import { formatImageUrl } from '../../utils/imageUrl';
 
 export interface HeaderProps {
   onCallPress?: () => void;
@@ -23,6 +26,8 @@ export interface HeaderProps {
   subtitle?: string;
   title?: string;
   rightAction?: React.ReactNode;
+  showProfileButton?: boolean;
+  onProfilePress?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,8 +38,17 @@ export const Header: React.FC<HeaderProps> = ({
   showMenuButton = false,
   onMenuPress,
   rightAction,
+  showProfileButton = true,
+  onProfilePress,
 }) => {
   const insets = useSafeAreaInsets();
+  let navigation: any = null;
+  try {
+    navigation = useNavigation();
+  } catch {
+    navigation = null;
+  }
+  const { user } = useAuth();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
 
   const handleHelpPress = () => {
@@ -44,6 +58,33 @@ export const Header: React.FC<HeaderProps> = ({
       Linking.openURL(`tel:${FlymediaContact.phoneRaw}`).catch(() => {});
     }
   };
+
+  const handleProfilePress = () => {
+    if (onProfilePress) {
+      onProfilePress();
+      return;
+    }
+    if (navigation) {
+      try {
+        navigation.navigate('ProfileTab');
+      } catch {
+        try {
+          navigation.navigate('Main', { screen: 'ProfileTab' });
+        } catch {
+          // navigation fallback
+        }
+      }
+    }
+  };
+
+  const displayName = (() => {
+    if (!user?.name) return 'Student';
+    if (user.name.includes('@')) {
+      const part = user.name.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return user.name;
+  })();
 
   return (
     <View style={[styles.container, { paddingTop: topPadding + 6 }]}>
@@ -81,9 +122,37 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </View>
 
-        {/* Right Side: Unified Help Pill Button */}
+        {/* Right Side: Custom action, or Student Profile Avatar, or Help Pill Button */}
         {rightAction ? (
           rightAction
+        ) : showProfileButton && user ? (
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={handleProfilePress}
+            activeOpacity={0.8}
+            accessibilityLabel="Student Profile"
+          >
+            <View style={styles.profileAvatarWrap}>
+              {user.avatar ? (
+                <Image
+                  source={{
+                    uri: user.avatar.startsWith('data:')
+                      ? user.avatar
+                      : formatImageUrl(user.avatar),
+                  }}
+                  style={styles.profileAvatar}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.profileInitialWrap}>
+                  <Text style={styles.profileInitialText}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.profileOnlineDot} />
+            </View>
+          </TouchableOpacity>
         ) : showHelpButton ? (
           <TouchableOpacity
             style={styles.callButton}
@@ -151,6 +220,56 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 142,
     height: 32,
+  },
+  profileBtn: {
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileAvatarWrap: {
+    position: 'relative',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    shadowColor: Colors.primaryRose,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 2,
+    borderColor: '#FECDD3',
+  },
+  profileInitialWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 2,
+    borderColor: '#FECDD3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileInitialText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: Colors.primaryRose,
+  },
+  profileOnlineDot: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 11,
+    height: 11,
+    borderRadius: 5.5,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   callButton: {
     flexDirection: 'row',
