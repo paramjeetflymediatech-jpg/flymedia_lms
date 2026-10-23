@@ -12,7 +12,9 @@ import {
   Platform,
   KeyboardAvoidingView,
   Linking,
+  Image,
 } from 'react-native';
+import { formatImageUrl } from '../../utils/imageUrl';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../../theme/colors';
 import { User, EducationDetails, AddressDetails, FamilyDetails } from '../../types';
@@ -417,9 +419,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* Profile Card Summary */}
               <View style={styles.heroCard}>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroAvatarText}>
-                    {name ? name[0].toUpperCase() : 'U'}
-                  </Text>
+                  {user.avatar ? (
+                    <Image
+                      source={{ uri: formatImageUrl(user.avatar) }}
+                      style={{ width: '100%', height: '100%', borderRadius: 28 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={styles.heroAvatarText}>
+                      {name ? name[0].toUpperCase() : 'U'}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.heroInfo}>
                   <Text style={styles.heroName}>{name || 'Student Name'}</Text>
@@ -946,9 +956,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* Drawer Header */}
               <View style={styles.drawerHeader}>
                 <View style={styles.drawerAvatarWrap}>
-                  <Text style={styles.drawerAvatarText}>
-                    {name ? name[0].toUpperCase() : 'U'}
-                  </Text>
+                  {user.avatar ? (
+                    <Image
+                      source={{ uri: formatImageUrl(user.avatar) }}
+                      style={{ width: '100%', height: '100%', borderRadius: 22 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={styles.drawerAvatarText}>
+                      {name ? name[0].toUpperCase() : 'U'}
+                    </Text>
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.drawerStudentName} numberOfLines={1}>

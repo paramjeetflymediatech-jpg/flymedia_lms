@@ -1182,7 +1182,19 @@ export async function updateTutorProfile(formData: FormData) {
       dbUser.trialExpectations = trialExpectationsStr.split('\n').map(s => s.trim()).filter(Boolean);
     }
 
-    if (avatarFile && avatarFile.size > 0) {
+    const avatarDataUrl = formData.get('avatarDataUrl') as string | null;
+    if (avatarDataUrl && avatarDataUrl.startsWith('data:image')) {
+      const matches = avatarDataUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const uniqueName = `avatar-tutor-${user.id}-${Date.now()}.${ext}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await fs.promises.mkdir(uploadDir, { recursive: true }).catch(() => {});
+        await fs.promises.writeFile(path.join(uploadDir, uniqueName), buffer);
+        dbUser.avatar = `/uploads/${uniqueName}`;
+      }
+    } else if (avatarFile && avatarFile.size > 0) {
       const bytes = await avatarFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const safeName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '');
@@ -1497,7 +1509,19 @@ export async function updateStudentProfile(formData: FormData) {
 
     if (studentCategory) dbUser.studentCategory = studentCategory;
 
-    if (avatarFile && avatarFile.size > 0) {
+    const avatarDataUrl = formData.get('avatarDataUrl') as string | null;
+    if (avatarDataUrl && avatarDataUrl.startsWith('data:image')) {
+      const matches = avatarDataUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const uniqueName = `avatar-student-${user.id}-${Date.now()}.${ext}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await fs.promises.mkdir(uploadDir, { recursive: true }).catch(() => {});
+        await fs.promises.writeFile(path.join(uploadDir, uniqueName), buffer);
+        dbUser.avatar = `/uploads/${uniqueName}`;
+      }
+    } else if (avatarFile && avatarFile.size > 0) {
       const bytes = await avatarFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const safeName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '');

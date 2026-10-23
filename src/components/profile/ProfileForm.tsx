@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Swal from 'sweetalert2';
+import AvatarAdjustModal from './AvatarAdjustModal';
 
 interface ProfileFormProps {
   user: any;
@@ -11,6 +12,47 @@ interface ProfileFormProps {
 export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Avatar adjustment states
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar || null);
+  const [adjustedAvatarDataUrl, setAdjustedAvatarDataUrl] = useState<string | null>(null);
+  const [imageToAdjust, setImageToAdjust] = useState<string | null>(null);
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageToAdjust(reader.result as string);
+        setIsAdjustModalOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleAdjustCurrent = () => {
+    if (avatarPreview) {
+      setImageToAdjust(avatarPreview);
+      setIsAdjustModalOpen(true);
+    }
+  };
+
+  const handleCropConfirm = (croppedDataUrl: string) => {
+    setAvatarPreview(croppedDataUrl);
+    setAdjustedAvatarDataUrl(croppedDataUrl);
+    setIsAdjustModalOpen(false);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+      title: 'Picture adjusted! Click Save Changes to apply.',
+      showConfirmButton: false,
+      timer: 3500,
+      timerProgressBar: true,
+    });
+  };
 
   // Create initials for avatar fallback
   const initials = user.name 
@@ -50,39 +92,59 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
   );
 
   return (
-    <form action={handleAction} className="px-6 sm:px-10 pb-10">
-      
-      {/* Avatar & Title */}
-      <div className="relative flex justify-between items-end pt-6 md:pt-10 mb-8">
-        <div className="flex items-end gap-6">
-          <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-white shadow-md relative overflow-hidden ${isEditing ? 'group' : ''}`}>
-            {user.avatar ? (
-              <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-3xl md:text-5xl font-bold text-orange-600">
-                {initials}
+    <>
+      <form action={handleAction} className="px-6 sm:px-10 pb-10">
+        <input type="hidden" name="avatarDataUrl" value={adjustedAvatarDataUrl || ''} />
+        
+        {/* Avatar & Title */}
+        <div className="relative flex justify-between items-end pt-6 md:pt-10 mb-8">
+          <div className="flex items-end gap-6">
+            <div className="relative">
+              <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-white shadow-md relative overflow-hidden ${isEditing ? 'group' : ''}`}>
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-3xl md:text-5xl font-bold text-orange-600">
+                    {initials}
+                  </div>
+                )}
+                
+                {isEditing && (
+                  <>
+                    <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold backdrop-blur-sm pointer-events-none p-2 text-center">
+                      <svg className="w-5 h-5 mb-1 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      <span>Upload & Adjust</span>
+                    </div>
+                    <input 
+                      type="file" 
+                      name="avatar" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                      title="Select new avatar to adjust"
+                    />
+                  </>
+                )}
               </div>
-            )}
-            
-            {isEditing && (
-              <>
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold backdrop-blur-sm pointer-events-none">
-                  Change Photo
-                </div>
-                <input 
-                  type="file" 
-                  name="avatar" 
-                  accept="image/*"
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                  title="Upload new avatar"
-                />
-              </>
-            )}
-          </div>
-          <div className="mb-2 md:mb-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{user.name || 'Student Name'}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+
+              {/* Adjust Current Button */}
+              {isEditing && avatarPreview && (
+                <button
+                  type="button"
+                  onClick={handleAdjustCurrent}
+                  className="absolute -bottom-2 -right-1 z-20 px-2.5 py-1 bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-orange-600 rounded-full text-[11px] font-bold shadow-md flex items-center gap-1 transition-all"
+                  title="Adjust framing, zoom and rotation"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  Adjust
+                </button>
+              )}
+            </div>
+
+            <div className="mb-2 md:mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{user.name || 'Student Name'}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
               <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{user.role}</p>
               {user.studentCategory && (
                 <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
@@ -527,5 +589,14 @@ export default function ProfileForm({ user, updateAction }: ProfileFormProps) {
         </div>
       </div>
     </form>
+
+    {/* Profile Picture Adjustment & Cropping Modal */}
+    <AvatarAdjustModal
+      isOpen={isAdjustModalOpen}
+      imageSrc={imageToAdjust || ''}
+      onClose={() => setIsAdjustModalOpen(false)}
+      onConfirm={handleCropConfirm}
+    />
+  </>
   );
 }
