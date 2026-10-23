@@ -13,7 +13,9 @@ import {
   KeyboardAvoidingView,
   Linking,
   Image,
+  PermissionsAndroid,
 } from 'react-native';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { formatImageUrl } from '../../utils/imageUrl';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../../theme/colors';
@@ -43,6 +45,7 @@ import {
   Building,
   Mail,
   Compass,
+  Camera,
 } from 'lucide-react-native';
 
 interface EditProfileModalProps {
@@ -141,12 +144,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   // Category
   const [studentCategory, setStudentCategory] = useState(user.studentCategory || 'General');
 
+  // Avatar state
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar || null);
+  const [newAvatarBase64, setNewAvatarBase64] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
   // Reset form whenever modal opens with fresh user data
   useEffect(() => {
     if (visible && user) {
       setName(user.name || '');
       setPhone(user.phone || '');
       setBio(user.bio || '');
+      setAvatarPreview(user.avatar || null);
+      setNewAvatarBase64(null);
 
       const e: EducationDetails = user.educationDetails || {};
       setHighestQualification(e.highestQualification || '');
@@ -174,6 +184,88 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       setHamburgerOpen(false);
     }
   }, [visible, user]);
+
+  const handlePickAvatar = () => {
+    Alert.alert(
+      'Profile Photo',
+      'Choose an option to update your profile photo',
+      [
+        {
+          text: 'Take Photo',
+          onPress: () => pickImage('camera'),
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: () => pickImage('gallery'),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const pickImage = async (source: 'camera' | 'gallery') => {
+    try {
+      if (Platform.OS === 'android' && source === 'camera') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'App needs camera permission to capture your profile picture.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Cancel',
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'Camera permission is required to take a photo.');
+          return;
+        }
+      }
+
+      const options = {
+        mediaType: 'photo' as const,
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.8 as const,
+        includeBase64: true,
+      };
+
+      const res = source === 'camera'
+        ? await launchCamera(options)
+        : await launchImageLibrary(options);
+
+      if (res.didCancel) return;
+      if (res.errorCode) {
+        Alert.alert('Photo Error', res.errorMessage || 'Could not access photos');
+        return;
+      }
+
+      const asset = res.assets?.[0];
+      if (!asset?.base64) {
+        Alert.alert('Error', 'Could not read image file');
+        return;
+      }
+
+      setUploadingAvatar(true);
+      const dataUrl = `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`;
+      setAvatarPreview(asset.uri || dataUrl);
+      setNewAvatarBase64(dataUrl);
+
+      const result = await onSave({ avatar: dataUrl });
+      setUploadingAvatar(false);
+
+      if (result.success) {
+        Alert.alert('Photo Updated ✨', 'Your new profile picture has been updated successfully!');
+      } else {
+        Alert.alert('Upload Failed', result.error || 'Failed to update profile photo');
+      }
+    } catch (err: any) {
+      setUploadingAvatar(false);
+      Alert.alert('Error', err.message || 'Failed to pick image');
+    }
+  };
 
   // Compute profile completion score
   const computeCompletion = () => {
@@ -243,6 +335,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       name: name.trim(),
       phone: phone.trim() || undefined,
       bio: bio.trim() || undefined,
+      avatar: newAvatarBase64 || undefined,
       educationDetails: {
         highestQualification: highestQualification || undefined,
         collegeOrSchool: collegeOrSchool.trim() || undefined,
@@ -418,10 +511,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <View>
               {/* Profile Card Summary */}
               <View style={styles.heroCard}>
-                <View style={styles.heroAvatar}>
-                  {user.avatar ? (
+                <TouchableOpacity
+                  style={styles.heroAvatar}
+                  activeOpacity={0.82}
+                  onPress={handlePickAvatar}
+                >
+                  {avatarPreview ? (
                     <Image
-                      source={{ uri: formatImageUrl(user.avatar) }}
+                      source={{ uri: formatImageUrl(avatarPreview) }}
                       style={{ width: '100%', height: '100%', borderRadius: 28 }}
                       resizeMode="cover"
                     />
@@ -430,17 +527,36 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                       {name ? name[0].toUpperCase() : 'U'}
                     </Text>
                   )}
-                </View>
+                  {uploadingAvatar && (
+                    <View style={styles.avatarLoadingOverlay}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                  <View style={styles.avatarCameraBadge}>
+                    <Camera size={11} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+
                 <View style={styles.heroInfo}>
                   <Text style={styles.heroName}>{name || 'Student Name'}</Text>
                   <Text style={styles.heroEmail}>{user.email}</Text>
                   <View style={styles.heroBadgeRow}>
+                    <TouchableOpacity
+                      style={styles.changePhotoBtn}
+                      activeOpacity={0.75}
+                      onPress={handlePickAvatar}
+                    >
+                      <Camera size={12} color={Colors.primaryRose} />
+                      <Text style={styles.changePhotoBtnText}>
+                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                      </Text>
+                    </TouchableOpacity>
+
                     <View style={styles.categoryBadge}>
                       <Text style={styles.categoryBadgeText}>
                         {studentCategory || 'General'}
                       </Text>
                     </View>
-                    <Text style={styles.roleLabel}>Student Account</Text>
                   </View>
                 </View>
               </View>
@@ -1269,14 +1385,52 @@ const styles = StyleSheet.create({
     ...Shadows.small,
   },
   heroAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#fdf2f8',
     borderWidth: 2,
     borderColor: 'rgba(230, 8, 112, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primaryRose,
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.small,
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  changePhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  changePhotoBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: Colors.primaryRose,
   },
   heroAvatarText: {
     fontSize: 22,

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
 import { User } from '../../../../../src/db/models';
 import { getAuthUserFromRequest } from '../jwt';
 
@@ -97,7 +99,26 @@ export async function PUT(request: Request) {
     // Update allowable fields
     if (body.name !== undefined) user.name = body.name?.trim() || user.name;
     if (body.bio !== undefined) user.bio = body.bio;
-    if (body.avatar !== undefined) user.avatar = body.avatar;
+    // Handle avatar upload (supports base64 data URL or direct URL)
+    const rawAvatar = body.avatarDataUrl || body.avatar;
+    if (rawAvatar && typeof rawAvatar === 'string' && rawAvatar.startsWith('data:image')) {
+      try {
+        const matches = rawAvatar.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+          const buffer = Buffer.from(matches[2], 'base64');
+          const uniqueName = `avatar-${user.id}-${Date.now()}.${ext}`;
+          const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+          await fs.promises.mkdir(uploadDir, { recursive: true }).catch(() => {});
+          await fs.promises.writeFile(path.join(uploadDir, uniqueName), buffer);
+          user.avatar = `/uploads/${uniqueName}`;
+        }
+      } catch (uploadErr) {
+        console.error('Failed to save avatar image:', uploadErr);
+      }
+    } else if (body.avatar !== undefined) {
+      user.avatar = body.avatar;
+    }
     if (body.phone !== undefined) user.phone = body.phone?.trim() || null;
     if (body.educationDetails !== undefined) user.educationDetails = body.educationDetails;
     if (body.addressDetails !== undefined) user.addressDetails = body.addressDetails;

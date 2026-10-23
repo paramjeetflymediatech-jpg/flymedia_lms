@@ -11,7 +11,10 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
+  PermissionsAndroid,
 } from 'react-native';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { formatImageUrl } from '../utils/imageUrl';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
@@ -36,6 +39,7 @@ import {
   BookOpen,
   Sparkles,
   Award,
+  Camera,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -52,6 +56,86 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handlePickAvatar = () => {
+    Alert.alert(
+      'Profile Photo',
+      'Choose an option to update your profile photo',
+      [
+        {
+          text: 'Take Photo',
+          onPress: () => pickImage('camera'),
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: () => pickImage('gallery'),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const pickImage = async (source: 'camera' | 'gallery') => {
+    try {
+      if (Platform.OS === 'android' && source === 'camera') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'App needs camera permission to capture your profile picture.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Cancel',
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'Camera permission is required to take a photo.');
+          return;
+        }
+      }
+
+      const options = {
+        mediaType: 'photo' as const,
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.8 as const,
+        includeBase64: true,
+      };
+
+      const res = source === 'camera'
+        ? await launchCamera(options)
+        : await launchImageLibrary(options);
+
+      if (res.didCancel) return;
+      if (res.errorCode) {
+        Alert.alert('Photo Error', res.errorMessage || 'Could not access photos');
+        return;
+      }
+
+      const asset = res.assets?.[0];
+      if (!asset?.base64) {
+        Alert.alert('Error', 'Could not read image file');
+        return;
+      }
+
+      setUploadingAvatar(true);
+      const dataUrl = `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`;
+      const result = await updateProfile({ avatar: dataUrl });
+      setUploadingAvatar(false);
+
+      if (result.success) {
+        Alert.alert('Photo Updated ✨', 'Your new profile picture has been updated successfully!');
+      } else {
+        Alert.alert('Upload Failed', result.error || 'Failed to update profile photo');
+      }
+    } catch (err: any) {
+      setUploadingAvatar(false);
+      Alert.alert('Error', err.message || 'Failed to pick image');
+    }
+  };
 
   const handleAuthSubmit = async () => {
     if (!email || !password) {
@@ -150,11 +234,42 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           /* LOGGED IN USER PROFILE */
           <View>
             <View style={styles.profileCard}>
-              <View style={styles.avatarWrap}>
-                <Text style={styles.avatarLetter}>
-                  {user.name ? user.name[0].toUpperCase() : 'U'}
+              <TouchableOpacity
+                style={styles.avatarWrap}
+                activeOpacity={0.82}
+                onPress={handlePickAvatar}
+              >
+                {user.avatar ? (
+                  <Image
+                    source={{ uri: formatImageUrl(user.avatar) }}
+                    style={styles.avatarImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text style={styles.avatarLetter}>
+                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                  </Text>
+                )}
+                {uploadingAvatar && (
+                  <View style={styles.avatarLoadingOverlay}>
+                    <ActivityIndicator size="small" color="#fff" />
+                  </View>
+                )}
+                <View style={styles.avatarCameraBadge}>
+                  <Camera size={13} color="#fff" />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.changePhotoBadge}
+                activeOpacity={0.75}
+                onPress={handlePickAvatar}
+              >
+                <Camera size={12} color={Colors.primaryOrange} />
+                <Text style={styles.changePhotoBadgeText}>
+                  {uploadingAvatar ? 'Uploading Photo...' : 'Change Photo'}
                 </Text>
-              </View>
+              </TouchableOpacity>
 
               <Text style={styles.profileName}>{user.name}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
@@ -589,18 +704,62 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   avatarWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: Colors.orangeLight,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: Colors.primaryOrange,
-    marginBottom: 12,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 34,
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 36,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryOrange,
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.small,
+  },
+  changePhotoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 3.5,
+    borderRadius: 14,
+    marginBottom: 10,
+  },
+  changePhotoBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryOrange,
   },
   avatarLetter: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '900',
     color: Colors.primaryOrange,
   },
