@@ -1,1 +1,2 @@
-export { POST, dynamic } from '../../../payment/demo-initiate/route';
+export const dynamic = 'force-dynamic';
+export { POST } from '../../../payment/demo-initiate/route';
