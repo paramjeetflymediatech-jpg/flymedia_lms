@@ -1,22 +1,61 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { submitInquiryAction } from '../../../app/actions';
 
-export default function CallbackForm() {
+interface CallbackFormProps {
+  defaultCourse?: string;
+}
+
+export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState(defaultCourse);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  // Auto-scroll when URL has #callback or #demo-form
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash === '#callback' || hash === '#demo-form') {
+        const el = document.getElementById('callback') || document.getElementById('demo-form');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setIsHighlighted(true);
+          setTimeout(() => setIsHighlighted(false), 2500);
+        }
+      }
+    };
+
+    // Check search params for pre-selected course if not passed
+    const params = new URLSearchParams(window.location.search);
+    const paramCourse = params.get('course');
+    if (paramCourse && !defaultCourse) {
+      setSelectedCourse(paramCourse);
+    }
+
+    // Run on initial load with a slight delay for hydration
+    const timer = setTimeout(handleHash, 250);
+    window.addEventListener('hashchange', handleHash);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', handleHash);
+    };
+  }, [defaultCourse]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     const formData = new FormData(e.currentTarget);
-    const course = formData.get('course');
+    const course = formData.get('course') || selectedCourse;
     if (course) {
-      formData.set('message', `Interested in course: ${course}`);
+      formData.set('message', `Interested in ₹99 Demo Class for course: ${course}`);
     }
 
     try {
@@ -40,19 +79,27 @@ export default function CallbackForm() {
           ✅
         </div>
         <h4 className="text-2xl font-black">Demo Class Request Received!</h4>
-        <p className="font-medium text-emerald-600">Our advisor will connect with you shortly to confirm your ₹99 demo class schedule and details.</p>
-        <button 
+        <p className="font-medium text-emerald-600">
+          Our admissions advisor will connect with you shortly to confirm your ₹99 one-on-one demo class schedule and details.
+        </p>
+        <button
           onClick={() => setSuccess(false)}
           className="mt-6 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors text-sm shadow-sm"
         >
-          Submit Another Request
+          Book Another Demo
         </button>
       </div>
     );
   }
 
   return (
-    <form className="space-y-5 animate-in fade-in duration-500" onSubmit={handleSubmit}>
+    <form
+      id="demo-form"
+      className={`space-y-5 transition-all duration-700 rounded-2xl ${
+        isHighlighted ? 'ring-4 ring-rose-500/50 p-2 bg-rose-50/20' : ''
+      }`}
+      onSubmit={handleSubmit}
+    >
       {error && (
         <div className="p-4 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-100 text-center">
           {error}
@@ -95,14 +142,19 @@ export default function CallbackForm() {
         <div className="relative">
           <select
             name="course"
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
             required
             className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-medium appearance-none"
           >
             <option value="" className="text-slate-400">Select Training Course...</option>
-            <option value="digital-marketing" className="text-slate-900">Digital Marketing</option>
-            <option value="web-development" className="text-slate-900">Web Development (MERN Stack)</option>
-            <option value="video-editing" className="text-slate-900">Video Editing</option>
-            <option value="graphic-designing" className="text-slate-900">Graphic Designing</option>
+            <option value="digital-marketing" className="text-slate-900">Digital Marketing Masterclass</option>
+            <option value="web-development" className="text-slate-900">Web Development (Full Stack MERN)</option>
+            <option value="video-editing" className="text-slate-900">Video Editing & VFX</option>
+            <option value="graphic-designing" className="text-slate-900">Graphic Designing & UI/UX</option>
+            <option value="python-data-science" className="text-slate-900">Python & Data Science</option>
+            <option value="seo-performance-marketing" className="text-slate-900">SEO & Performance Marketing</option>
+            <option value="other-course" className="text-slate-900">Other / Customized Track</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-5 pointer-events-none text-slate-500">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -117,7 +169,11 @@ export default function CallbackForm() {
         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
         <span className="relative z-10 flex items-center justify-center gap-2">
           {loading ? 'Booking Demo Class...' : 'Book Demo Class (₹99)'}
-          {!loading && <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
+          {!loading && (
+            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          )}
         </span>
       </button>
     </form>

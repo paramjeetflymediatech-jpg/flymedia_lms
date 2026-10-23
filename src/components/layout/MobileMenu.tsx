@@ -47,6 +47,14 @@ export default function MobileMenu({ session }: MobileMenuProps) {
           <Link href="/gallery" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Success Gallery
           </Link>
+          <Link
+            href="/#callback"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-rose-600 bg-rose-50 border border-rose-100"
+          >
+            <span>Book Demo Class</span>
+            <span className="text-xs font-black bg-rose-500 text-white px-2.5 py-0.5 rounded-full">⚡ ₹99</span>
+          </Link>
 
           <div className="pt-4 border-t border-slate-100 flex flex-col space-y-4">
             {session ? (

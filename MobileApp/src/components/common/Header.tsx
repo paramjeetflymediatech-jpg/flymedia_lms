@@ -1,47 +1,130 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Shadows } from '../../theme/colors';
-import { PhoneCall, Sparkles } from 'lucide-react-native';
+import { Colors } from '../../theme/colors';
+import { PhoneCall, ArrowLeft, Menu } from 'lucide-react-native';
 
-interface HeaderProps {
+export interface HeaderProps {
   onCallPress?: () => void;
   subtitle?: string;
   showHelpButton?: boolean;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
+  showMenuButton?: boolean;
+  onMenuPress?: () => void;
+  title?: string;
+  rightAction?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onCallPress, subtitle, showHelpButton = true }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onCallPress,
+  subtitle,
+  showHelpButton = true,
+  showBackButton = false,
+  onBackPress,
+  showMenuButton = false,
+  onMenuPress,
+  title,
+  rightAction,
+}) => {
   const insets = useSafeAreaInsets();
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
 
   return (
     <View style={[styles.container, { paddingTop: topPadding + 6 }]}>
-      <View style={styles.brandRow}>
-        <Image
-          source={require('../../assets/logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-        {subtitle && (
-          <View style={styles.subtitleBadge}>
-            <Text style={styles.subtitleText} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          </View>
-        )}
-      </View>
+      {showBackButton ? (
+        <View style={styles.navRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBackPress}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ArrowLeft size={19} color={Colors.textPrimary} strokeWidth={2.2} />
+          </TouchableOpacity>
 
-      {showHelpButton && onCallPress && (
-        <TouchableOpacity
-          style={styles.callButton}
-          onPress={onCallPress}
-          activeOpacity={0.82}
-        >
-          <View style={styles.callIconPulse}>
-            <PhoneCall size={12} color={Colors.textWhite} />
+          <View style={styles.navCenter}>
+            {title ? (
+              <View style={styles.titleWrapper}>
+                <Text style={styles.navTitle} numberOfLines={1}>
+                  {title}
+                </Text>
+                {subtitle && (
+                  <Text style={styles.navSubtitle} numberOfLines={1}>
+                    {subtitle}
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.logoImageNav}
+                resizeMode="contain"
+              />
+            )}
           </View>
-          <Text style={styles.callButtonText}>Help</Text>
-        </TouchableOpacity>
+
+          <View style={styles.navRight}>
+            {rightAction ? (
+              rightAction
+            ) : showHelpButton && onCallPress ? (
+              <TouchableOpacity
+                style={styles.callButton}
+                onPress={onCallPress}
+                activeOpacity={0.82}
+              >
+                <View style={styles.callIconPulse}>
+                  <PhoneCall size={12} color={Colors.textWhite} />
+                </View>
+                <Text style={styles.callButtonText}>Help</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.placeholderBox} />
+            )}
+          </View>
+        </View>
+      ) : (
+        <View style={styles.standardRow}>
+          <View style={styles.brandRow}>
+            {showMenuButton && (
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={onMenuPress}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Menu size={20} color={Colors.textPrimary} strokeWidth={2.2} />
+              </TouchableOpacity>
+            )}
+            <Image
+              source={require('../../assets/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            {subtitle && (
+              <View style={styles.subtitleBadge}>
+                <Text style={styles.subtitleText} numberOfLines={1}>
+                  {subtitle}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {rightAction ? (
+            rightAction
+          ) : showHelpButton && onCallPress ? (
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={onCallPress}
+              activeOpacity={0.82}
+            >
+              <View style={styles.callIconPulse}>
+                <PhoneCall size={12} color={Colors.textWhite} />
+              </View>
+              <Text style={styles.callButtonText}>Help</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       )}
     </View>
   );
@@ -49,9 +132,6 @@ export const Header: React.FC<HeaderProps> = ({ onCallPress, subtitle, showHelpB
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: '#ffffff',
@@ -62,7 +142,86 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 3,
-    zIndex: 10,
+    zIndex: 20,
+  },
+  standardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  menuButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  navCenter: {
+    flex: 1,
+    marginHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    letterSpacing: -0.2,
+    textAlign: 'center',
+  },
+  navSubtitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    marginTop: 1,
+    textAlign: 'center',
+  },
+  logoImageNav: {
+    width: 130,
+    height: 28,
+  },
+  navRight: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    minWidth: 38,
+  },
+  placeholderBox: {
+    width: 38,
   },
   brandRow: {
     flexDirection: 'row',

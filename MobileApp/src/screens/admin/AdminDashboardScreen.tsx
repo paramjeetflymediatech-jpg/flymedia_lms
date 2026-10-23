@@ -52,6 +52,9 @@ import {
   Star,
   UserCheck,
   ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
 
@@ -158,6 +161,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [editUserModal, setEditUserModal] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
 
   // Lead Status Modal
   const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -2572,8 +2576,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                           <Text style={styles.userAvatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.userNameText}>{u.name || 'User'}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                            <Text style={styles.userNameText}>{u.name || 'User'}</Text>
+                            {u.studentCategory && (
+                              <View style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                <Text style={{ fontSize: 10, fontWeight: '700', color: '#C2410C' }}>{u.studentCategory}</Text>
+                              </View>
+                            )}
+                          </View>
                           <Text style={styles.userEmailText}>{u.email || 'N/A'}</Text>
+                          {u.phone ? (
+                            <Text style={[styles.userJoinedText, { color: Colors.textSecondary, fontWeight: '500' }]}>
+                              📞 {u.phone}
+                            </Text>
+                          ) : null}
                           <Text style={styles.userJoinedText}>
                             Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Recently'}
                           </Text>
@@ -2589,8 +2605,78 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
                         </View>
                       </View>
 
-                      {/* USER ACTION BUTTONS: EDIT & DELETE */}
+                      {/* Expandable Student Background Dossier */}
+                      {expandedStudentId === u.id && (
+                        <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.borderLight }}>
+                          {/* Education */}
+                          <View style={{ backgroundColor: '#F8FAFC', borderRadius: 12, padding: 10, marginBottom: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <Text style={{ fontSize: 12, fontWeight: '700', color: Colors.textPrimary }}>🎓 Academic Background</Text>
+                              {u.educationDetails?.currentlyStudying ? (
+                                <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#047857' }}>Currently Studying</Text>
+                                </View>
+                              ) : (
+                                <Text style={{ fontSize: 10, color: Colors.textMuted }}>Completed</Text>
+                              )}
+                            </View>
+                            <Text style={{ fontSize: 12, color: Colors.textSecondary, marginBottom: 2 }}>
+                              <Text style={{ fontWeight: '600' }}>Highest Qualification: </Text>
+                              {u.educationDetails?.highestQualification || 'Not specified'}
+                            </Text>
+                            <Text style={{ fontSize: 12, color: Colors.textSecondary, marginBottom: 2 }}>
+                              <Text style={{ fontWeight: '600' }}>College/School: </Text>
+                              {u.educationDetails?.collegeOrSchool || 'Not specified'}
+                            </Text>
+                            <View style={{ flexDirection: 'row', gap: 12, marginTop: 2 }}>
+                              <Text style={{ fontSize: 11, color: Colors.textMuted }}>Passing: {u.educationDetails?.passingYear || 'N/A'}</Text>
+                              <Text style={{ fontSize: 11, color: Colors.textMuted }}>Marks/CGPA: {u.educationDetails?.percentageOrCgpa || 'N/A'}</Text>
+                            </View>
+                            {u.educationDetails?.currentlyStudying && (
+                              <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                                <Text style={{ fontSize: 11, color: '#EA580C', fontWeight: '600' }}>
+                                  Pursuing: {u.educationDetails?.currentCourse || 'Enrolled'} @ {u.educationDetails?.currentInstitution || 'Campus'}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Address & Family */}
+                          <View style={{ backgroundColor: '#F8FAFC', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 }}>📍 Address & Family</Text>
+                            <Text style={{ fontSize: 11, color: Colors.textSecondary, marginBottom: 2 }}>
+                              <Text style={{ fontWeight: '600' }}>Address: </Text>
+                              {u.addressDetails?.addressLine ? `${u.addressDetails.addressLine}, ${u.addressDetails?.city || ''} ${u.addressDetails?.state || ''} ${u.addressDetails?.pincode || ''}` : 'Not provided'}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: Colors.textSecondary, marginBottom: 2 }}>
+                              <Text style={{ fontWeight: '600' }}>Parents: </Text>
+                              {u.familyDetails?.fatherName ? `Father: ${u.familyDetails.fatherName}` : ''}
+                              {u.familyDetails?.motherName ? ` | Mother: ${u.familyDetails.motherName}` : ''}
+                              {!u.familyDetails?.fatherName && !u.familyDetails?.motherName ? 'Not provided' : ''}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: Colors.textSecondary }}>
+                              <Text style={{ fontWeight: '600' }}>Guardian Phone: </Text>
+                              {u.familyDetails?.guardianPhone || 'N/A'} | <Text style={{ fontWeight: '600' }}>Occ: </Text>{u.familyDetails?.familyOccupation || 'N/A'} | <Text style={{ fontWeight: '600' }}>Income: </Text>{u.familyDetails?.annualIncome || 'N/A'}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {/* USER ACTION BUTTONS: EDIT & DELETE & DOSSIER */}
                       <View style={styles.userActionRow}>
+                        {u.role === 'STUDENT' && (
+                          <TouchableOpacity
+                            style={[styles.userEditBtn, { borderColor: '#FED7AA', backgroundColor: expandedStudentId === u.id ? '#FFF7ED' : '#FAFAFA' }]}
+                            onPress={() => setExpandedStudentId(expandedStudentId === u.id ? null : u.id)}
+                            activeOpacity={0.8}
+                          >
+                            <GraduationCap size={13} color={Colors.primaryOrange} />
+                            <Text style={[styles.userEditBtnText, { color: Colors.primaryOrange }]}>
+                              {expandedStudentId === u.id ? 'Hide Details' : 'Student Dossier'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
                           style={styles.userEditBtn}
                           onPress={() => handleOpenEditUser(u)}

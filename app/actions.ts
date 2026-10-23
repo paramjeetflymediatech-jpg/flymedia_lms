@@ -1430,14 +1430,72 @@ export async function updateStudentProfile(formData: FormData) {
 
   const name = formData.get('name') as string;
   const bio = formData.get('bio') as string;
+  const phone = formData.get('phone') as string;
   const avatarFile = formData.get('avatar') as File | null;
 
+  // Education details
+  const highestQualification = formData.get('highestQualification') as string;
+  const collegeOrSchool = formData.get('collegeOrSchool') as string;
+  const passingYear = formData.get('passingYear') as string;
+  const percentageOrCgpa = formData.get('percentageOrCgpa') as string;
+  const currentlyStudying = formData.get('currentlyStudying') === 'true' || formData.get('currentlyStudying') === 'on';
+  const currentCourse = formData.get('currentCourse') as string;
+  const currentInstitution = formData.get('currentInstitution') as string;
+
+  // Address details
+  const addressLine = formData.get('addressLine') as string;
+  const city = formData.get('city') as string;
+  const state = formData.get('state') as string;
+  const pincode = formData.get('pincode') as string;
+
+  // Family details
+  const fatherName = formData.get('fatherName') as string;
+  const motherName = formData.get('motherName') as string;
+  const guardianPhone = formData.get('guardianPhone') as string;
+  const familyOccupation = formData.get('familyOccupation') as string;
+  const annualIncome = formData.get('annualIncome') as string;
+
+  // Category
+  const studentCategory = formData.get('studentCategory') as string;
+
   try {
+    try {
+      await User.sync({ alter: true });
+    } catch (e) {}
+
     const dbUser = await User.findByPk(user.id);
     if (!dbUser) return { error: 'User not found' };
 
     if (name) dbUser.name = name;
     if (bio !== null) dbUser.bio = bio;
+    if (phone !== undefined) dbUser.phone = phone?.trim() || null;
+
+    dbUser.educationDetails = {
+      highestQualification: highestQualification || dbUser.educationDetails?.highestQualification || '',
+      collegeOrSchool: collegeOrSchool || dbUser.educationDetails?.collegeOrSchool || '',
+      passingYear: passingYear || dbUser.educationDetails?.passingYear || '',
+      percentageOrCgpa: percentageOrCgpa || dbUser.educationDetails?.percentageOrCgpa || '',
+      currentlyStudying: currentlyStudying,
+      currentCourse: currentCourse || dbUser.educationDetails?.currentCourse || '',
+      currentInstitution: currentInstitution || dbUser.educationDetails?.currentInstitution || '',
+    };
+
+    dbUser.addressDetails = {
+      addressLine: addressLine || dbUser.addressDetails?.addressLine || '',
+      city: city || dbUser.addressDetails?.city || '',
+      state: state || dbUser.addressDetails?.state || '',
+      pincode: pincode || dbUser.addressDetails?.pincode || '',
+    };
+
+    dbUser.familyDetails = {
+      fatherName: fatherName || dbUser.familyDetails?.fatherName || '',
+      motherName: motherName || dbUser.familyDetails?.motherName || '',
+      guardianPhone: guardianPhone || dbUser.familyDetails?.guardianPhone || '',
+      familyOccupation: familyOccupation || dbUser.familyDetails?.familyOccupation || '',
+      annualIncome: annualIncome || dbUser.familyDetails?.annualIncome || '',
+    };
+
+    if (studentCategory) dbUser.studentCategory = studentCategory;
 
     if (avatarFile && avatarFile.size > 0) {
       const bytes = await avatarFile.arrayBuffer();
@@ -1539,6 +1597,46 @@ export async function adminUpdateUser(userId: string, formData: FormData) {
       if (skillsStr !== null && skillsStr !== undefined) {
         user.skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
       }
+    }
+
+    const phone = formData.get('phone') as string;
+    if (phone !== null && phone !== undefined) user.phone = phone.trim() || null;
+
+    const studentCategory = formData.get('studentCategory') as string;
+    if (studentCategory) user.studentCategory = studentCategory;
+
+    const highestQualification = formData.get('highestQualification') as string;
+    if (highestQualification !== null && highestQualification !== undefined) {
+      user.educationDetails = {
+        highestQualification: highestQualification || user.educationDetails?.highestQualification || '',
+        collegeOrSchool: (formData.get('collegeOrSchool') as string) || user.educationDetails?.collegeOrSchool || '',
+        passingYear: (formData.get('passingYear') as string) || user.educationDetails?.passingYear || '',
+        percentageOrCgpa: (formData.get('percentageOrCgpa') as string) || user.educationDetails?.percentageOrCgpa || '',
+        currentlyStudying: formData.get('currentlyStudying') === 'true' || formData.get('currentlyStudying') === 'on',
+        currentCourse: (formData.get('currentCourse') as string) || user.educationDetails?.currentCourse || '',
+        currentInstitution: (formData.get('currentInstitution') as string) || user.educationDetails?.currentInstitution || '',
+      };
+    }
+
+    const addressLine = formData.get('addressLine') as string;
+    if (addressLine !== null && addressLine !== undefined) {
+      user.addressDetails = {
+        addressLine: addressLine || user.addressDetails?.addressLine || '',
+        city: (formData.get('city') as string) || user.addressDetails?.city || '',
+        state: (formData.get('state') as string) || user.addressDetails?.state || '',
+        pincode: (formData.get('pincode') as string) || user.addressDetails?.pincode || '',
+      };
+    }
+
+    const fatherName = formData.get('fatherName') as string;
+    if (fatherName !== null && fatherName !== undefined) {
+      user.familyDetails = {
+        fatherName: fatherName || user.familyDetails?.fatherName || '',
+        motherName: (formData.get('motherName') as string) || user.familyDetails?.motherName || '',
+        guardianPhone: (formData.get('guardianPhone') as string) || user.familyDetails?.guardianPhone || '',
+        familyOccupation: (formData.get('familyOccupation') as string) || user.familyDetails?.familyOccupation || '',
+        annualIncome: (formData.get('annualIncome') as string) || user.familyDetails?.annualIncome || '',
+      };
     }
 
     if (password) {

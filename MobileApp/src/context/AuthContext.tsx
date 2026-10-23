@@ -20,6 +20,7 @@ interface AuthContextType {
     couponCode?: string;
     paymentDetails?: any;
   }) => Promise<{ success: boolean; error?: string; requireAuth?: boolean; transactionId?: string; payment?: any; redirectUrl?: string; requiresRedirect?: boolean }>;
+  updateProfile: (profileData: Partial<User>) => Promise<{ success: boolean; error?: string; user?: User }>;
   submitCallback: (name: string, phone: string, course: string) => Promise<boolean>;
 }
 
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshEnrollments: async () => { },
   enrollCourse: async () => ({ success: false }),
   purchaseCourse: async () => ({ success: false }),
+  updateProfile: async () => ({ success: false }),
   submitCallback: async () => false,
 });
 
@@ -254,6 +256,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error || res.message || 'Failed to process payment.' };
   };
 
+  const updateProfile = async (profileData: Partial<User>) => {
+    try {
+      if (!user || !user.token) {
+        return { success: false, error: 'Sign in required' };
+      }
+
+      const res = await ApiService.updateProfile(user.token, profileData);
+      if (res && res.success && res.user) {
+        const updatedUser: User = {
+          ...user,
+          ...res.user,
+          token: user.token,
+        };
+        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return { success: true, user: updatedUser };
+      }
+      return { success: false, error: res?.error || 'Failed to update profile' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to update profile' };
+    }
+  };
+
   const submitCallback = async (name: string, phone: string, course: string) => {
     return await ApiService.submitInquiry({ name, phone, course });
   };
@@ -271,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshEnrollments,
         enrollCourse,
         purchaseCourse,
+        updateProfile,
         submitCallback,
       }}
     >

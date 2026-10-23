@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
+import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { useAuth } from '../context/AuthContext';
 import { FlymediaContact } from '../constants/contact';
 import {
@@ -31,6 +32,10 @@ import {
   Users,
   Trash2,
   AlertTriangle,
+  Pencil,
+  BookOpen,
+  Sparkles,
+  Award,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -38,8 +43,9 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, login, register, logout, deleteAccount } = useAuth();
+  const { user, login, register, logout, deleteAccount, updateProfile } = useAuth();
 
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -129,7 +135,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <Header subtitle="Account & Campus Info" />
+      <Header
+        subtitle="Account & Campus Info"
+        showMenuButton={Boolean(user)}
+        onMenuPress={() => setEditModalVisible(true)}
+      />
 
       <ScrollView
         style={styles.container}
@@ -152,6 +162,126 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <View style={styles.roleBadge}>
                 <ShieldCheck size={14} color={Colors.primaryOrange} />
                 <Text style={styles.roleText}>{user.role} ACCOUNT</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.editProfileBtn}
+                onPress={() => setEditModalVisible(true)}
+                activeOpacity={0.82}
+              >
+                <Pencil size={13} color={Colors.textWhite} />
+                <Text style={styles.editProfileBtnText}>Edit Academic & Family Profile</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* STUDENT ACADEMIC, ADDRESS & FAMILY DOSSIER */}
+            <View style={styles.dossierCard}>
+              <View style={styles.dossierHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={styles.dossierHeaderIcon}>
+                    <GraduationCap size={18} color={Colors.primaryRose} />
+                  </View>
+                  <View>
+                    <Text style={styles.dossierTitle}>Academic & Background Dossier</Text>
+                    <Text style={styles.dossierSubtitle}>Education, Residence & Family Details</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.dossierEditLink}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Pencil size={12} color={Colors.primaryRose} />
+                  <Text style={styles.dossierEditLinkText}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* SECTION 1: EDUCATION */}
+              <View style={styles.dossierRow}>
+                <View style={[styles.dossierRowIcon, { backgroundColor: '#eff6ff' }]}>
+                  <BookOpen size={16} color="#2563eb" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                    <Text style={styles.dossierRowLabel}>Education History</Text>
+                    {user.educationDetails?.currentlyStudying ? (
+                      <View style={styles.studyBadgeActive}>
+                        <Text style={styles.studyBadgeActiveText}>Currently Studying</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.studyBadgeDone}>
+                        <Text style={styles.studyBadgeDoneText}>Completed</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.dossierRowVal}>
+                    {user.educationDetails?.highestQualification || 'Qualification pending update'}
+                  </Text>
+                  {user.educationDetails?.collegeOrSchool ? (
+                    <Text style={styles.dossierRowSub}>
+                      {user.educationDetails.collegeOrSchool}
+                      {user.educationDetails.passingYear ? ` • Class of ${user.educationDetails.passingYear}` : ''}
+                      {user.educationDetails.percentageOrCgpa ? ` (${user.educationDetails.percentageOrCgpa})` : ''}
+                    </Text>
+                  ) : null}
+                  {user.educationDetails?.currentlyStudying && user.educationDetails?.currentCourse ? (
+                    <Text style={styles.currentStudySub}>
+                      Pursuing: {user.educationDetails.currentCourse} {user.educationDetails.currentInstitution ? `@ ${user.educationDetails.currentInstitution}` : ''}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+
+              <View style={styles.dossierDivider} />
+
+              {/* SECTION 2: RESIDENTIAL ADDRESS */}
+              <View style={styles.dossierRow}>
+                <View style={[styles.dossierRowIcon, { backgroundColor: '#f0fdf4' }]}>
+                  <MapPin size={16} color="#059669" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dossierRowLabel}>Address & Location</Text>
+                  <Text style={styles.dossierRowVal}>
+                    {user.addressDetails?.city
+                      ? `${user.addressDetails.city}, ${user.addressDetails.state || ''} ${user.addressDetails.pincode ? `• PIN ${user.addressDetails.pincode}` : ''}`
+                      : 'Address not added yet'}
+                  </Text>
+                  {user.addressDetails?.addressLine ? (
+                    <Text style={styles.dossierRowSub}>{user.addressDetails.addressLine}</Text>
+                  ) : null}
+                </View>
+              </View>
+
+              <View style={styles.dossierDivider} />
+
+              {/* SECTION 3: FAMILY & CATEGORY */}
+              <View style={styles.dossierRow}>
+                <View style={[styles.dossierRowIcon, { backgroundColor: '#fff7ed' }]}>
+                  <Users size={16} color={Colors.primaryOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                    <Text style={styles.dossierRowLabel}>Family & Social Category</Text>
+                    <View style={styles.categoryPill}>
+                      <Text style={styles.categoryPillText}>
+                        {user.studentCategory || 'GENERAL'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.dossierRowVal}>
+                    {user.familyDetails?.fatherName
+                      ? `Father: ${user.familyDetails.fatherName}${user.familyDetails.familyOccupation ? ` (${user.familyDetails.familyOccupation})` : ''}`
+                      : 'Father/Guardian info pending'}
+                  </Text>
+                  {user.familyDetails?.motherName ? (
+                    <Text style={styles.dossierRowSub}>Mother: {user.familyDetails.motherName}</Text>
+                  ) : null}
+                  {user.familyDetails?.guardianPhone || user.phone ? (
+                    <Text style={styles.dossierRowSub}>
+                      Emergency / Guardian Contact: {user.familyDetails?.guardianPhone || user.phone}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             </View>
 
@@ -424,6 +554,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {user && (
+        <EditProfileModal
+          visible={editModalVisible}
+          onClose={() => setEditModalVisible(false)}
+          user={user}
+          onSave={updateProfile}
+        />
+      )}
     </View>
   );
 };
@@ -490,6 +629,162 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.primaryOrange,
     letterSpacing: 0.5,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primaryRose,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginTop: 14,
+    shadowColor: Colors.primaryRose,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  editProfileBtnText: {
+    color: Colors.textWhite,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  dossierCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 16,
+    ...Shadows.small,
+  },
+  dossierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 14,
+    marginBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  dossierHeaderIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#fdf2f8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dossierTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  dossierSubtitle: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  dossierEditLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fdf2f8',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.25)',
+  },
+  dossierEditLinkText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.primaryRose,
+  },
+  dossierRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  dossierRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  dossierRowLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  dossierRowVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginTop: 2,
+  },
+  dossierRowSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  currentStudySub: {
+    fontSize: 11,
+    color: '#2563eb',
+    fontWeight: '700',
+    marginTop: 3,
+  },
+  dossierDivider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginVertical: 12,
+  },
+  studyBadgeActive: {
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  studyBadgeActiveText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#1d4ed8',
+  },
+  studyBadgeDone: {
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  studyBadgeDoneText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  categoryPill: {
+    backgroundColor: '#fff7ed',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  categoryPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primaryOrange,
+    letterSpacing: 0.3,
   },
   infoSection: {
     backgroundColor: Colors.surface,

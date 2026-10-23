@@ -312,7 +312,7 @@ export default async function HomePage() {
                           <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-orange-600 transition-colors line-clamp-2">
                             {pkg.title}
                           </h3>
-                          
+
                           <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-3">
                             {pkg.description?.replace(/<[^>]*>?/gm, '')}
                           </p>
@@ -322,11 +322,10 @@ export default async function HomePage() {
                         <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
                           {pkg.mode ? (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] font-bold text-slate-600 tracking-wide">
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                pkg.mode === 'ONLINE' ? 'bg-emerald-500' :
-                                pkg.mode === 'OFFLINE' ? 'bg-amber-500' :
-                                'bg-orange-500'
-                              }`} />
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pkg.mode === 'ONLINE' ? 'bg-emerald-500' :
+                                  pkg.mode === 'OFFLINE' ? 'bg-amber-500' :
+                                    'bg-orange-500'
+                                }`} />
                               <span>{pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}</span>
                             </div>
                           ) : <div />}
@@ -339,7 +338,7 @@ export default async function HomePage() {
                           </div>
                         </div>
                       </div>
-                      
+
                     </Link>
                   </GsapReveal>
                 ))}
@@ -349,7 +348,7 @@ export default async function HomePage() {
         </section>
 
         {/* Expert Mentor & Apply Section */}
-        <section className="py-16 bg-slate-50 relative overflow-hidden border-t border-slate-100">
+        <section id="callback" className="py-16 bg-slate-50 relative overflow-hidden border-t border-slate-100 scroll-mt-24">
           {/* Animated Glow Backdrops */}
           <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/5 blur-[100px] -z-10 rounded-full animate-pulse" />
           <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-rose-500/5 blur-[100px] -z-10 rounded-full" />

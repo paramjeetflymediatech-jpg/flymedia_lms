@@ -22,6 +22,32 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare trialExpectations: CreationOptional<string[] | null>;
   declare credits: CreationOptional<number>;
 
+  // Student Profile Fields
+  declare phone: CreationOptional<string | null>;
+  declare educationDetails: CreationOptional<{
+    highestQualification?: string;
+    collegeOrSchool?: string;
+    passingYear?: string;
+    percentageOrCgpa?: string;
+    currentlyStudying?: boolean;
+    currentCourse?: string;
+    currentInstitution?: string;
+  } | null>;
+  declare addressDetails: CreationOptional<{
+    addressLine?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  } | null>;
+  declare familyDetails: CreationOptional<{
+    fatherName?: string;
+    motherName?: string;
+    guardianPhone?: string;
+    familyOccupation?: string;
+    annualIncome?: string;
+  } | null>;
+  declare studentCategory: CreationOptional<string | null>;
+
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare assignedPackages?: NonAttribute<Package[]>;
@@ -43,6 +69,11 @@ User.init(
     skills: { type: DataTypes.JSON, allowNull: true },
     trialExpectations: { type: DataTypes.JSON, allowNull: true },
     credits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
+    phone: { type: DataTypes.STRING(50), allowNull: true },
+    educationDetails: { type: DataTypes.JSON, allowNull: true },
+    addressDetails: { type: DataTypes.JSON, allowNull: true },
+    familyDetails: { type: DataTypes.JSON, allowNull: true },
+    studentCategory: { type: DataTypes.STRING(50), allowNull: true },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

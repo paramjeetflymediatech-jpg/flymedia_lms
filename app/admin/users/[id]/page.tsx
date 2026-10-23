@@ -90,6 +90,16 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
                 <p className="font-semibold text-slate-700">{user.email}</p>
               </div>
               <div>
+                <p className="text-xs text-slate-500">Phone</p>
+                <p className="font-semibold text-slate-700">{user.phone || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Category</p>
+                <span className="inline-block mt-0.5 px-2.5 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                  {user.studentCategory || 'General'}
+                </span>
+              </div>
+              <div>
                 <p className="text-xs text-slate-500">Joined Date</p>
                 <p className="font-semibold text-slate-700">{new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
@@ -135,6 +145,120 @@ export default async function AdminUserDetailsPage({ params }: { params: Promise
               This user has no active enrollments.
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Student Academic & Family Background Dossier */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Education Details */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>🎓</span> Education Details
+            </h2>
+            {user.educationDetails?.currentlyStudying ? (
+              <span className="px-2 py-0.5 text-[11px] font-bold bg-emerald-100 text-emerald-700 rounded-full">
+                Currently Studying
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-600 rounded-full">
+                Completed
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-xs text-slate-400">Past Qualification</p>
+              <p className="font-semibold text-slate-800">{user.educationDetails?.highestQualification || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">School / College</p>
+              <p className="font-semibold text-slate-800">{user.educationDetails?.collegeOrSchool || 'Not specified'}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs text-slate-400">Passing Year</p>
+                <p className="font-semibold text-slate-800">{user.educationDetails?.passingYear || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Marks / CGPA</p>
+                <p className="font-semibold text-slate-800">{user.educationDetails?.percentageOrCgpa || 'N/A'}</p>
+              </div>
+            </div>
+
+            {user.educationDetails?.currentlyStudying && (
+              <div className="mt-2 pt-2 border-t border-slate-100 bg-orange-50/40 p-3 rounded-xl">
+                <p className="text-xs font-semibold text-orange-800">Current Pursuits</p>
+                <p className="text-xs text-slate-700 font-medium mt-1">Course: {user.educationDetails?.currentCourse || 'N/A'}</p>
+                <p className="text-xs text-slate-600 mt-0.5">Institution: {user.educationDetails?.currentInstitution || 'N/A'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Address Details */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>📍</span> Residence & Address
+            </h2>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-xs text-slate-400">Street / House Address</p>
+              <p className="font-semibold text-slate-800">{user.addressDetails?.addressLine || 'Not provided'}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs text-slate-400">City</p>
+                <p className="font-semibold text-slate-800">{user.addressDetails?.city || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">State</p>
+                <p className="font-semibold text-slate-800">{user.addressDetails?.state || 'N/A'}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">PIN Code</p>
+              <p className="font-semibold text-slate-800">{user.addressDetails?.pincode || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Family Information */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>👨‍👩‍👧</span> Family Information
+            </h2>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs text-slate-400">Father's Name</p>
+                <p className="font-semibold text-slate-800">{user.familyDetails?.fatherName || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Mother's Name</p>
+                <p className="font-semibold text-slate-800">{user.familyDetails?.motherName || 'Not specified'}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Guardian Contact</p>
+              <p className="font-semibold text-slate-800">{user.familyDetails?.guardianPhone || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Family Occupation</p>
+              <p className="font-semibold text-slate-800">{user.familyDetails?.familyOccupation || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Annual Family Income</p>
+              <p className="font-semibold text-slate-800">{user.familyDetails?.annualIncome || 'Not specified'}</p>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { Course, Testimonial, FaqItem, Mentor, Enrollment, GalleryItem } from '../types';
+import { Course, Testimonial, FaqItem, Mentor, Enrollment, GalleryItem, User } from '../types';
 
 export const API_BASE_URL = 'https://course.flymediatech.com/api/v1';
 
@@ -269,6 +269,25 @@ export const ApiService = {
       return await response.json();
     } catch (e) {
       return { success: false };
+    }
+  },
+
+  /**
+   * Updates authenticated user profile details (education, address, family, category)
+   */
+  async updateProfile(token: string, data: any): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to update profile' };
     }
   },
 

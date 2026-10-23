@@ -26,7 +26,19 @@ export async function GET(request: Request) {
 
     const users = await User.findAll({
       where: whereClause,
-      attributes: ['id', 'name', 'email', 'role', 'createdAt', 'rating'],
+      attributes: [
+        'id',
+        'name',
+        'email',
+        'role',
+        'createdAt',
+        'rating',
+        'phone',
+        'educationDetails',
+        'addressDetails',
+        'familyDetails',
+        'studentCategory',
+      ],
       order: [['createdAt', 'DESC']],
       limit: 150,
     });

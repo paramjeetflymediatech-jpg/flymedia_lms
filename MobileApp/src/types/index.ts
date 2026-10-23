@@ -34,6 +34,31 @@ export interface Course {
   mode?: string;
 }
 
+export interface EducationDetails {
+  highestQualification?: string;
+  collegeOrSchool?: string;
+  passingYear?: string;
+  percentageOrCgpa?: string;
+  currentlyStudying?: boolean;
+  currentCourse?: string;
+  currentInstitution?: string;
+}
+
+export interface AddressDetails {
+  addressLine?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+}
+
+export interface FamilyDetails {
+  fatherName?: string;
+  motherName?: string;
+  guardianPhone?: string;
+  familyOccupation?: string;
+  annualIncome?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -41,6 +66,12 @@ export interface User {
   phone?: string;
   role: 'STUDENT' | 'TUTOR' | 'ADMIN';
   token?: string;
+  bio?: string;
+  avatar?: string;
+  educationDetails?: EducationDetails | null;
+  addressDetails?: AddressDetails | null;
+  familyDetails?: FamilyDetails | null;
+  studentCategory?: string | null;
 }
 
 export interface Enrollment {
