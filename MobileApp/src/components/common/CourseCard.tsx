@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Course } from '../../types';
 import { Colors, Shadows } from '../../theme/colors';
 import { Star, Clock, Users, ChevronRight, Zap } from 'lucide-react-native';
-import { formatImageUrl } from '../../utils/imageUrl';
+import { CachedImage } from './CachedImage';
 
 interface CourseCardProps {
   course: Course;
@@ -11,9 +11,6 @@ interface CourseCardProps {
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
-  const imageUrl = formatImageUrl(course.thumbnail);
-  const [imgError, setImgError] = useState(false);
-
   return (
     <TouchableOpacity
       style={styles.card}
@@ -22,15 +19,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
     >
       {/* Course Thumbnail Image */}
       <View style={styles.imageContainer}>
-        <Image
-          source={{
-            uri: imgError
-              ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
-              : imageUrl,
-          }}
+        <CachedImage
+          uri={course.thumbnail}
           style={styles.thumbnail}
           resizeMode="cover"
-          onError={() => setImgError(true)}
         />
         <View style={styles.imageOverlayGradient} />
 

@@ -15,6 +15,7 @@ import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CallbackModal } from '../components/common/CallbackModal';
 import { PaymentModal } from '../components/common/PaymentModal';
+import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
 import { Course } from '../types';
@@ -226,15 +227,10 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         {/* HERO BANNER CARD */}
         <View style={styles.heroCard}>
           <View style={styles.heroImageContainer}>
-            <Image
-              source={{
-                uri: imgError
-                  ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
-                  : formatImageUrl(course.thumbnail),
-              }}
+            <CachedImage
+              uri={course.thumbnail}
               style={styles.heroImage}
               resizeMode="cover"
-              onError={() => setImgError(true)}
             />
             {/* Subtle Dark Overlay */}
             <View style={styles.heroOverlay} />

@@ -18,6 +18,7 @@ import { formatImageUrl } from '../utils/imageUrl';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
+import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
 import { FlymediaContact } from '../constants/contact';
 import {
@@ -246,8 +247,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 onPress={handlePickAvatar}
               >
                 {user.avatar ? (
-                  <Image
-                    source={{ uri: formatImageUrl(user.avatar) }}
+                  <CachedImage
+                    uri={user.avatar}
                     style={styles.avatarImage}
                     resizeMode="cover"
                   />

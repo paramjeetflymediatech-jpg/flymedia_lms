@@ -19,6 +19,7 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { formatImageUrl } from '../../utils/imageUrl';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../../theme/colors';
+import { CachedImage } from '../common/CachedImage';
 import { User, EducationDetails, AddressDetails, FamilyDetails } from '../../types';
 import { FlymediaContact } from '../../constants/contact';
 import {
@@ -523,8 +524,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   onPress={handlePickAvatar}
                 >
                   {avatarPreview ? (
-                    <Image
-                      source={{ uri: formatImageUrl(avatarPreview) }}
+                    <CachedImage
+                      uri={avatarPreview}
                       style={{ width: '100%', height: '100%', borderRadius: 28 }}
                       resizeMode="cover"
                     />
@@ -1079,8 +1080,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <View style={styles.drawerHeader}>
                 <View style={styles.drawerAvatarWrap}>
                   {user.avatar ? (
-                    <Image
-                      source={{ uri: formatImageUrl(user.avatar) }}
+                    <CachedImage
+                      uri={user.avatar}
                       style={{ width: '100%', height: '100%', borderRadius: 22 }}
                       resizeMode="cover"
                     />

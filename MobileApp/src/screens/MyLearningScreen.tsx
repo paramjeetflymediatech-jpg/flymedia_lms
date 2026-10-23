@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
+import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
 import {
@@ -376,8 +377,8 @@ export const MyLearningScreen: React.FC<MyLearningScreenProps> = ({ navigation }
                   <View key={pkg.id} style={styles.packageCard}>
                     {/* THUMBNAIL BANNER */}
                     <View style={styles.thumbnailContainer}>
-                      <Image
-                        source={{ uri: formatImageUrl(pkg.thumbnail) }}
+                      <CachedImage
+                        uri={pkg.thumbnail}
                         style={styles.packageThumbnail}
                         resizeMode="cover"
                       />

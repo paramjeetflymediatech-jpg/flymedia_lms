@@ -46,6 +46,7 @@ import {
   MapPin,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../../utils/imageUrl';
+import { CachedImage } from '../../components/common/CachedImage';
 
 type TutorTab = 'overview' | 'packages' | 'classes' | 'students' | 'profile';
 
@@ -830,7 +831,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 ) : (
                   recentStudents.slice(0, 4).map((student) => (
                     <View key={student.id} style={styles.studentItemRow}>
-                      <Image source={{ uri: formatImageUrl(student.avatar) }} style={styles.studentAvatarSm} />
+                      <CachedImage uri={student.avatar} style={styles.studentAvatarSm} />
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <Text style={styles.studentItemName}>{student.name}</Text>
                         <Text style={styles.studentItemCourse}>{student.enrolledIn}</Text>
@@ -976,7 +977,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                       {/* Top banner / image */}
                       <View style={styles.tutorPkgHeader}>
                         {pkg.image || pkg.thumbnail ? (
-                          <Image source={{ uri: formatImageUrl(pkg.image || pkg.thumbnail) }} style={styles.tutorPkgThumb} />
+                          <CachedImage uri={pkg.image || pkg.thumbnail} style={styles.tutorPkgThumb} />
                         ) : (
                           <View style={styles.tutorPkgThumbFallback}>
                             <BookOpen size={24} color="#2563eb" />
@@ -1117,7 +1118,7 @@ export const TutorPanelScreen: React.FC<TutorPanelScreenProps> = ({ navigation }
                 <View style={{ gap: 10 }}>
                   {recentStudents.map((st) => (
                     <View key={st.id} style={styles.studentFullCard}>
-                      <Image source={{ uri: formatImageUrl(st.avatar) }} style={styles.studentFullAvatar} />
+                      <CachedImage uri={st.avatar} style={styles.studentFullAvatar} />
                       <View style={{ flex: 1, marginLeft: 14 }}>
                         <Text style={styles.studentFullName}>{st.name}</Text>
                         <Text style={styles.studentFullEmail}>{st.email}</Text>

@@ -14,6 +14,7 @@ import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { CachedImage } from '../components/common/CachedImage';
 import { ApiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Course, Testimonial, FaqItem, GalleryItem } from '../types';
@@ -349,8 +350,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             >
               {/* Media Thumbnail */}
               <View style={styles.galleryImageWrap}>
-                <Image
-                  source={{ uri: item.thumbnailUrl || item.mediaUrl }}
+                <CachedImage
+                  uri={item.thumbnailUrl || item.mediaUrl}
                   style={styles.galleryImage}
                   resizeMode="cover"
                 />

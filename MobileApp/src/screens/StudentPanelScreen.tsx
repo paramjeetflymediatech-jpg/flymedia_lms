@@ -33,6 +33,7 @@ import {
   RotateCcw,
 } from 'lucide-react-native';
 import { formatImageUrl } from '../utils/imageUrl';
+import { CachedImage } from '../components/common/CachedImage';
 
 type StudentTab = 'overview' | 'sessions' | 'packages';
 
@@ -187,7 +188,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
             accessibilityLabel="Go to Profile"
           >
             {user?.avatar ? (
-              <Image source={{ uri: formatImageUrl(user.avatar) }} style={styles.headerAvatarImg} />
+              <CachedImage uri={user.avatar} style={styles.headerAvatarImg} />
             ) : (
               <Text style={styles.headerAvatarInitial}>
                 {user?.name ? user.name[0].toUpperCase() : 'U'}
@@ -401,8 +402,8 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
 
                   <View style={styles.nextSessionCard}>
                     <View style={styles.nextSessionTop}>
-                      <Image
-                        source={{ uri: formatImageUrl(nextSession.tutorAvatar) }}
+                      <CachedImage
+                        uri={nextSession.tutorAvatar}
                         style={styles.tutorAvatarSm}
                       />
                       <View style={{ flex: 1, marginLeft: 12 }}>
@@ -523,8 +524,8 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                         </View>
 
                         <View style={styles.sessionCardBody}>
-                          <Image
-                            source={{ uri: formatImageUrl(session.tutor?.avatar) }}
+                          <CachedImage
+                            uri={session.tutor?.avatar}
                             style={styles.sessionCardAvatar}
                           />
                           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -585,8 +586,8 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                         </View>
 
                         <View style={styles.sessionCardBody}>
-                          <Image
-                            source={{ uri: formatImageUrl(session.tutorAvatar) }}
+                          <CachedImage
+                            uri={session.tutorAvatar}
                             style={styles.sessionCardAvatar}
                           />
                           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -671,7 +672,7 @@ export const StudentPanelScreen: React.FC<StudentPanelScreenProps> = ({ route, n
                       <View key={pkg.id} style={styles.packageCard}>
                         {/* Thumbnail & Badges */}
                         <View style={styles.packageThumbWrap}>
-                          <Image source={{ uri: formatImageUrl(pkg.thumbnail) }} style={styles.packageThumb} />
+                          <CachedImage uri={pkg.thumbnail} style={styles.packageThumb} />
                           <View style={styles.packageThumbOverlay}>
                             <View style={styles.packageCategoryBadge}>
                               <Text style={styles.packageCategoryText}>{pkg.category || 'Training'}</Text>

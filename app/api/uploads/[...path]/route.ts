@@ -17,6 +17,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
       return new NextResponse('Not Found', { status: 404 });
     }
 
+    const stat = await fs.promises.stat(filePath);
+    const etag = `W/"${stat.size.toString(16)}-${stat.mtime.getTime().toString(16)}"`;
+    
+    // Check conditional request for 304 Not Modified
+    const ifNoneMatch = req.headers.get('if-none-match');
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    }
+
     const fileBuffer = await fs.promises.readFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
     
@@ -35,7 +50,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     return new NextResponse(fileBuffer, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'ETag': etag,
+        'Last-Modified': stat.mtime.toUTCString(),
       },
     });
   } catch (error) {
