@@ -63,6 +63,7 @@ import { Header } from '../../components/common/Header';
 import { FlymediaContact } from '../../constants/contact';
 import { AdminEditProfileModal } from '../../components/admin/AdminEditProfileModal';
 import { AdminDrawerModal } from '../../components/admin/AdminDrawerModal';
+import { AdminProfileViewModal } from '../../components/admin/AdminProfileViewModal';
 
 type AdminTab = 'overview' | 'courses' | 'leads' | 'enrollments' | 'tutors' | 'users' | 'tools';
 
@@ -166,6 +167,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
   const [addUserModal, setAddUserModal] = useState(false);
   const [editUserModal, setEditUserModal] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
+  const [adminProfileViewVisible, setAdminProfileViewVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -1232,13 +1234,40 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
 
   return (
     <View style={styles.screen}>
-      {/* UNIFIED BRAND HEADER WITH HAMBURGER MENU */}
+      {/* UNIFIED BRAND HEADER WITH HAMBURGER MENU & PROFILE BUTTON */}
       <Header
         showMenuButton={true}
         onMenuPress={() => setDrawerVisible(true)}
         showBackButton={Boolean(navigation.canGoBack && navigation.canGoBack())}
         onBackPress={() => navigation.goBack()}
-        showHelpButton={true}
+        showHelpButton={false}
+        rightAction={
+          <TouchableOpacity
+            style={styles.headerProfileBtn}
+            onPress={() => setAdminProfileViewVisible(true)}
+            activeOpacity={0.8}
+            accessibilityLabel="Admin Profile & Settings"
+          >
+            {user?.avatar ? (
+              <Image
+                source={{
+                  uri: user.avatar.startsWith('data:')
+                    ? user.avatar
+                    : formatImageUrl(user.avatar),
+                }}
+                style={styles.headerProfileAvatar}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.headerProfileInitialWrap}>
+                <Text style={styles.headerProfileInitialText}>
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                </Text>
+              </View>
+            )}
+            <View style={styles.headerProfileOnlineDot} />
+          </TouchableOpacity>
+        }
       />
 
       {/* MAIN CONTENT AREA */}
@@ -1255,120 +1284,6 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
           />
         }
       >
-        {/* MASTER ADMIN WELCOME & EXECUTIVE STATUS CARD */}
-        <View style={styles.adminHeroCard}>
-          <View style={styles.adminHeroTop}>
-            {/* Interactive Admin Avatar with Photo or Initial */}
-            <TouchableOpacity
-              style={styles.adminAvatarWrap}
-              onPress={() => setEditProfileModalVisible(true)}
-              activeOpacity={0.8}
-            >
-              {user?.avatar ? (
-                <Image
-                  source={{ uri: user.avatar.startsWith('data:') ? user.avatar : formatImageUrl(user.avatar) }}
-                  style={styles.adminAvatarImg}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.adminAvatar}>
-                  <Text style={styles.adminAvatarText}>
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.avatarEditBadge}>
-                <Camera size={9} color="#ffffff" strokeWidth={2.4} />
-              </View>
-            </TouchableOpacity>
-
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <Text style={styles.adminHeroTitle} numberOfLines={1}>
-                  {user?.name || 'Administrator'}
-                </Text>
-                <View style={styles.adminBadge}>
-                  <ShieldCheck size={11} color={Colors.primaryRose} />
-                  <Text style={styles.adminBadgeText}>ADMIN</Text>
-                </View>
-              </View>
-              <Text style={styles.adminHeroSub} numberOfLines={1}>
-                {user?.phone ? `📞 ${user.phone} • ` : ''}Master Control
-              </Text>
-              <View style={styles.adminLiveStatus}>
-                <View style={styles.adminLiveDot} />
-                <Text style={styles.adminLiveText}>System Online • Cloud Synced</Text>
-              </View>
-            </View>
-
-            {/* Right Buttons: Edit Profile & Sign Out */}
-            <View style={styles.adminHeroActionsCol}>
-              <TouchableOpacity
-                style={styles.adminEditProfileBtn}
-                onPress={() => setEditProfileModalVisible(true)}
-                activeOpacity={0.82}
-              >
-                <Pencil size={11} color={Colors.primaryRose} />
-                <Text style={styles.adminEditProfileBtnText}>Edit Profile</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.adminLogoutBtn}
-                onPress={handleLogout}
-                activeOpacity={0.82}
-              >
-                <LogOut size={11} color="#dc2626" />
-                <Text style={styles.adminLogoutText}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Quick Shortcuts Bar */}
-          <View style={styles.quickShortcutsRow}>
-            <TouchableOpacity
-              style={[styles.shortcutPill, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}
-              onPress={() => setAddCourseModal(true)}
-              activeOpacity={0.75}
-            >
-              <PlusCircle size={13} color={Colors.primaryRose} />
-              <Text style={[styles.shortcutPillText, { color: Colors.primaryRose, fontWeight: '800' }]}>
-                + Course
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.shortcutPill, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
-              onPress={() => navigateToTab('leads')}
-              activeOpacity={0.75}
-            >
-              <PhoneCall size={13} color="#2563EB" />
-              <Text style={[styles.shortcutPillText, { color: '#2563EB', fontWeight: '800' }]}>
-                Leads ({stats.totalLeads})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.shortcutPill, { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}
-              onPress={() => navigateToTab('tools')}
-              activeOpacity={0.75}
-            >
-              <Ticket size={13} color="#7C3AED" />
-              <Text style={[styles.shortcutPillText, { color: '#7C3AED', fontWeight: '800' }]}>
-                Coupons
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.shortcutPill}
-              onPress={onRefresh}
-              activeOpacity={0.75}
-            >
-              <RotateCcw size={13} color={Colors.textSecondary} />
-              <Text style={styles.shortcutPillText}>Sync</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {loading ? (
           <View style={styles.loaderWrap}>
             <ActivityIndicator size="large" color={Colors.primaryRose} />
@@ -1379,6 +1294,67 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
             {/* ================= OVERVIEW TAB ================= */}
             {activeTab === 'overview' && (
               <View>
+                {/* Clean Overview Header */}
+                <View style={styles.overviewHeaderRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.overviewGreeting}>Welcome, {user?.name?.split(' ')[0] || 'Admin'}</Text>
+                    <Text style={styles.overviewSubtitle}>Platform Performance & Live Operations</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.overviewProfilePill}
+                    onPress={() => setAdminProfileViewVisible(true)}
+                    activeOpacity={0.8}
+                  >
+                    <ShieldCheck size={12} color={Colors.primaryRose} />
+                    <Text style={styles.overviewProfilePillText}>Profile</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Quick Shortcuts Bar */}
+                <View style={[styles.quickShortcutsRow, { marginBottom: 14 }]}>
+                  <TouchableOpacity
+                    style={[styles.shortcutPill, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}
+                    onPress={() => setAddCourseModal(true)}
+                    activeOpacity={0.75}
+                  >
+                    <PlusCircle size={13} color={Colors.primaryRose} />
+                    <Text style={[styles.shortcutPillText, { color: Colors.primaryRose, fontWeight: '800' }]}>
+                      + Course
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.shortcutPill, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
+                    onPress={() => navigateToTab('leads')}
+                    activeOpacity={0.75}
+                  >
+                    <PhoneCall size={13} color="#2563EB" />
+                    <Text style={[styles.shortcutPillText, { color: '#2563EB', fontWeight: '800' }]}>
+                      Leads ({stats.totalLeads})
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.shortcutPill, { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}
+                    onPress={() => navigateToTab('tools')}
+                    activeOpacity={0.75}
+                  >
+                    <Ticket size={13} color="#7C3AED" />
+                    <Text style={[styles.shortcutPillText, { color: '#7C3AED', fontWeight: '800' }]}>
+                      Coupons
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.shortcutPill}
+                    onPress={onRefresh}
+                    activeOpacity={0.75}
+                  >
+                    <RotateCcw size={13} color={Colors.textSecondary} />
+                    <Text style={styles.shortcutPillText}>Sync</Text>
+                  </TouchableOpacity>
+                </View>
+
                 {/* METRICS GRID - 6 SYMMETRICAL CARDS */}
                 <View style={styles.statsGrid}>
                   <TouchableOpacity
@@ -4905,6 +4881,17 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ navi
         />
       )}
 
+      <AdminProfileViewModal
+        visible={adminProfileViewVisible}
+        onClose={() => setAdminProfileViewVisible(false)}
+        user={user}
+        onEditProfile={() => {
+          setAdminProfileViewVisible(false);
+          setEditProfileModalVisible(true);
+        }}
+        onLogout={handleLogout}
+      />
+
       <AdminDrawerModal
         visible={drawerVisible}
         onClose={() => setDrawerVisible(false)}
@@ -5103,6 +5090,82 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: Colors.textMuted,
     fontSize: 13,
+  },
+
+  /* Header Profile Avatar Button */
+  headerProfileBtn: {
+    padding: 2,
+    position: 'relative',
+  },
+  headerProfileAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: Colors.primaryRose,
+  },
+  headerProfileInitialWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerProfileInitialText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.primaryRose,
+  },
+  headerProfileOnlineDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+
+  /* Overview Header Strip */
+  overviewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  overviewGreeting: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  overviewSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  overviewProfilePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  overviewProfilePillText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: Colors.primaryRose,
   },
 
   /* Master Admin Hero Card */
