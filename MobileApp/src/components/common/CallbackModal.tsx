@@ -34,6 +34,8 @@ import {
   ArrowRight,
   AlertCircle,
   Mail,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { FlymediaContact } from '../../constants/contact';
@@ -45,26 +47,28 @@ interface CallbackModalProps {
   defaultCourse?: string;
 }
 
-const POPULAR_COURSES = [
-  'Full Stack MERN',
-  'Web Development',
-  'Digital Marketing',
-  'Video Editing & VFX',
-  'Graphic Design & UI/UX',
-  'Python & AI',
+const DEFAULT_PACKAGES = [
+  'Creative Graphic Design & UI/UX Bootcamp',
+  'Web Development & Designing Bootcamp',
+  'Professional Video Editing & Motion Graphics',
+  'Full Stack MERN Developer Program with AI',
+  'Digital Marketing & Growth Specialist',
+  'Python & AI Data Science',
+  'Other / Customized Training Track',
 ];
 
 export const CallbackModal: React.FC<CallbackModalProps> = ({
   visible,
   onClose,
-  defaultCourse = 'Full Stack MERN',
+  defaultCourse = 'Web Development & Designing Bootcamp',
 }) => {
   const { user } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [course, setCourse] = useState(defaultCourse);
-  const [dynamicCourses, setDynamicCourses] = useState<string[]>(POPULAR_COURSES);
+  const [dynamicCourses, setDynamicCourses] = useState<string[]>(DEFAULT_PACKAGES);
+  const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const [mode, setMode] = useState<'HYBRID' | 'ONLINE' | 'OFFLINE'>('HYBRID');
   const [loading, setLoading] = useState(false);
   const [isWaitingForPhonePe, setIsWaitingForPhonePe] = useState(false);
@@ -82,8 +86,8 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
         if (isMounted && res && Array.isArray(res.courses) && res.courses.length > 0) {
           const titles = res.courses.map((c) => c.title).filter(Boolean);
           if (titles.length > 0) {
-            setDynamicCourses(titles);
-            if (!course || course === 'Full Stack MERN') {
+            setDynamicCourses([...titles, 'Other / Customized Training Track']);
+            if (!course || course === 'Web Development & Designing Bootcamp' || course === 'Full Stack MERN') {
               setCourse(titles[0]);
             }
           }
@@ -108,6 +112,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       if (user?.name && !name) setName(user.name);
       if (user?.email && !email) setEmail(user.email);
       if (user?.phone && !phone) setPhone(user.phone);
+      setIsCourseDropdownOpen(false);
       setLoading(false);
       setIsWaitingForPhonePe(false);
       setActiveTxnId(null);
@@ -503,38 +508,71 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   </View>
                 </View>
 
-                {/* Form Field 3: Course Selection */}
+                {/* Form Field 4: Course Package Select Dropdown */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.inputLabel}>Select Career Program</Text>
-                  {/* Quick Select Chips from Live Courses */}
-                  <View style={styles.chipsContainer}>
-                    {dynamicCourses.map((c) => {
-                      const isSelected = course.toLowerCase().includes(c.toLowerCase());
-                      return (
-                        <TouchableOpacity
-                          key={c}
-                          style={[styles.courseChip, isSelected && styles.courseChipActive]}
-                          onPress={() => setCourse(c)}
-                          activeOpacity={0.75}
-                        >
-                          <Text style={[styles.courseChipText, isSelected && styles.courseChipTextActive]}>
-                            {c}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
+                  <Text style={styles.inputLabel}>Select Course Package</Text>
 
-                  <View style={[styles.inputBox, { marginTop: 8 }]}>
-                    <BookOpen size={16} color={Colors.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      value={course}
-                      onChangeText={setCourse}
-                      placeholder="Or type custom course / topic..."
-                      placeholderTextColor={Colors.textLight}
-                    />
-                  </View>
+                  {/* Select Dropdown Trigger Box */}
+                  <TouchableOpacity
+                    style={[
+                      styles.selectTrigger,
+                      isCourseDropdownOpen && styles.selectTriggerActive,
+                    ]}
+                    onPress={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
+                    activeOpacity={0.8}
+                  >
+                    <BookOpen size={16} color={Colors.primaryRose} style={styles.inputIcon} />
+                    <Text
+                      style={[
+                        styles.selectTriggerText,
+                        !course && styles.selectTriggerTextPlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {course || '-- Choose Course Package --'}
+                    </Text>
+                    {isCourseDropdownOpen ? (
+                      <ChevronUp size={18} color={Colors.primaryRose} />
+                    ) : (
+                      <ChevronDown size={18} color={Colors.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Expandable Dropdown List of Packages */}
+                  {isCourseDropdownOpen && (
+                    <View style={styles.dropdownMenu}>
+                      {dynamicCourses.map((pkg, index) => {
+                        const isSelected = course === pkg;
+                        return (
+                          <TouchableOpacity
+                            key={`${pkg}-${index}`}
+                            style={[
+                              styles.dropdownOption,
+                              isSelected && styles.dropdownOptionSelected,
+                              index === dynamicCourses.length - 1 && { borderBottomWidth: 0 },
+                            ]}
+                            onPress={() => {
+                              setCourse(pkg);
+                              setIsCourseDropdownOpen(false);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.dropdownOptionText,
+                                isSelected && styles.dropdownOptionTextSelected,
+                              ]}
+                            >
+                              {pkg}
+                            </Text>
+                            {isSelected && (
+                              <Check size={16} color={Colors.primaryRose} strokeWidth={2.5} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
 
                 {/* Primary Action Button: Direct PhonePe Redirect */}
@@ -788,31 +826,61 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  /* Course Chips */
-  chipsContainer: {
+  /* Course Select Dropdown */
+  selectTrigger: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 4,
-  },
-  courseChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 48,
   },
-  courseChipActive: {
+  selectTriggerActive: {
+    borderColor: Colors.primaryRose,
     backgroundColor: '#FFF1F2',
-    borderColor: '#FDA4AF',
   },
-  courseChipText: {
-    fontSize: 11,
+  selectTriggerText: {
+    flex: 1,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#64748B',
+    color: Colors.textPrimary,
   },
-  courseChipTextActive: {
+  selectTriggerTextPlaceholder: {
+    color: Colors.textLight,
+    fontWeight: '500',
+  },
+  dropdownMenu: {
+    marginTop: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    overflow: 'hidden',
+    ...Shadows.medium,
+    maxHeight: 220,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#FFF1F2',
+  },
+  dropdownOptionText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginRight: 8,
+  },
+  dropdownOptionTextSelected: {
     color: Colors.primaryRose,
     fontWeight: '800',
   },
