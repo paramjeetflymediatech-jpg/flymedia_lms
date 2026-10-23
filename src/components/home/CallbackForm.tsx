@@ -259,12 +259,12 @@ export default function CallbackForm({ defaultCourse = '', initialCourses }: Cal
         </div>
       </div>
 
-      {/* Dynamic Course Selection */}
+      {/* Course Package Selection in Select HTML Tag */}
       <div className="space-y-2">
         <label className="text-xs font-black text-slate-600 uppercase tracking-wider flex items-center justify-between">
-          <span>Select Career Program</span>
+          <span>Select Course Package</span>
           {fetchingCourses && (
-            <span className="text-[10px] text-slate-400 font-semibold animate-pulse">Loading live courses...</span>
+            <span className="text-[10px] text-slate-400 font-semibold animate-pulse">Loading packages...</span>
           )}
         </label>
 
@@ -277,21 +277,21 @@ export default function CallbackForm({ defaultCourse = '', initialCourses }: Cal
             className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all font-semibold text-sm appearance-none cursor-pointer"
           >
             <option value="" disabled className="text-slate-400">
-              -- Select Your Career Program Track --
+              -- Choose Course Package --
             </option>
             {courses.length > 0 ? (
-              courses.map((c) => (
-                <option key={c.id} value={c.title}>
-                  {c.title}
+              courses.map((pkg) => (
+                <option key={pkg.id} value={pkg.title}>
+                  {pkg.title}
                 </option>
               ))
             ) : (
               <>
-                <option value="Full Stack Web Development (MERN)">Full Stack Web Development (MERN)</option>
-                <option value="Digital Marketing Masterclass">Digital Marketing Masterclass</option>
-                <option value="Video Editing & Motion Graphics">Video Editing & Motion Graphics</option>
-                <option value="Graphic Designing & UI/UX">Graphic Designing & UI/UX</option>
-                <option value="Python & AI Data Science">Python & AI Data Science</option>
+                <option value="Creative Graphic Design & UI/UX Bootcamp">Creative Graphic Design & UI/UX Bootcamp</option>
+                <option value="Web Development & Designing Bootcamp">Web Development & Designing Bootcamp</option>
+                <option value="Professional Video Editing & Motion Graphics">Professional Video Editing & Motion Graphics</option>
+                <option value="Full Stack MERN Developer Program with AI">Full Stack MERN Developer Program with AI</option>
+                <option value="Digital Marketing & Growth Specialist">Digital Marketing & Growth Specialist</option>
               </>
             )}
             <option value="Other / Customized Training Track">Other / Customized Training Track</option>
@@ -302,30 +302,6 @@ export default function CallbackForm({ defaultCourse = '', initialCourses }: Cal
             </svg>
           </div>
         </div>
-
-        {/* Quick selection pills from dynamic live courses */}
-        {courses.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[11px] font-bold text-slate-400 self-center mr-1">Quick Select:</span>
-            {courses.slice(0, 5).map((c) => {
-              const isSelected = selectedCourse === c.title;
-              return (
-                <button
-                  type="button"
-                  key={c.id}
-                  onClick={() => setSelectedCourse(c.title)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                    isSelected
-                      ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {c.title.length > 25 ? `${c.title.slice(0, 25)}...` : c.title}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <button
