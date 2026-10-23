@@ -33,6 +33,7 @@ import {
   ExternalLink,
   ArrowRight,
   AlertCircle,
+  Mail,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { FlymediaContact } from '../../constants/contact';
@@ -59,9 +60,11 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   defaultCourse = 'Full Stack MERN',
 }) => {
   const { user } = useAuth();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [course, setCourse] = useState(defaultCourse);
+  const [dynamicCourses, setDynamicCourses] = useState<string[]>(POPULAR_COURSES);
   const [mode, setMode] = useState<'HYBRID' | 'ONLINE' | 'OFFLINE'>('HYBRID');
   const [loading, setLoading] = useState(false);
   const [isWaitingForPhonePe, setIsWaitingForPhonePe] = useState(false);
@@ -70,6 +73,28 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   const [checkingLiveStatus, setCheckingLiveStatus] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+
+  // Dynamically load live published courses from backend
+  useEffect(() => {
+    let isMounted = true;
+    ApiService.getHomeData()
+      .then((res) => {
+        if (isMounted && res && Array.isArray(res.courses) && res.courses.length > 0) {
+          const titles = res.courses.map((c) => c.title).filter(Boolean);
+          if (titles.length > 0) {
+            setDynamicCourses(titles);
+            if (!course || course === 'Full Stack MERN') {
+              setCourse(titles[0]);
+            }
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Ref to prevent stale closures inside AppState listener
   const waitingRef = useRef(isWaitingForPhonePe);
@@ -80,6 +105,9 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   // Reset state when modal opens or closes
   useEffect(() => {
     if (visible) {
+      if (user?.name && !name) setName(user.name);
+      if (user?.email && !email) setEmail(user.email);
+      if (user?.phone && !phone) setPhone(user.phone);
       setLoading(false);
       setIsWaitingForPhonePe(false);
       setActiveTxnId(null);
@@ -88,7 +116,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       setPaymentSuccess(false);
       setPaymentError('');
     }
-  }, [visible, defaultCourse]);
+  }, [visible, defaultCourse, user]);
 
   // Automatically check status with PhonePe when app returns from background / browser
   useEffect(() => {
@@ -129,6 +157,11 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       Alert.alert('Name Required', 'Please enter your full name.');
       return;
     }
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      Alert.alert('Valid Email Required', 'Please enter a valid email address.');
+      return;
+    }
     const cleanPhone = phone.trim().replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
       Alert.alert('Valid Phone Required', 'Please enter a valid 10-digit mobile number.');
@@ -144,6 +177,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       const res = await ApiService.initiateDemoPayment(
         {
           name: name.trim(),
+          email: cleanEmail,
           phone: cleanPhone,
           course: finalCourseName,
           mode,
@@ -236,6 +270,12 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                     <Text style={styles.bookedLabel}>Student:</Text>
                     <Text style={styles.bookedValue}>{name}</Text>
                   </View>
+                  {email ? (
+                    <View style={styles.bookedDetailRow}>
+                      <Text style={styles.bookedLabel}>Email:</Text>
+                      <Text style={styles.bookedValue}>{email}</Text>
+                    </View>
+                  ) : null}
                   <View style={styles.bookedDetailRow}>
                     <Text style={styles.bookedLabel}>Course:</Text>
                     <Text style={styles.bookedValue}>{course}</Text>
@@ -387,7 +427,25 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   </View>
                 </View>
 
-                {/* Form Field 2: Phone */}
+                {/* Form Field 2: Email Address */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.inputLabel}>Email Address</Text>
+                  <View style={styles.inputBox}>
+                    <Mail size={16} color={Colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="e.g. rahul@example.com"
+                      placeholderTextColor={Colors.textLight}
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                </View>
+
+                {/* Form Field 3: Phone */}
                 <View style={styles.fieldGroup}>
                   <Text style={styles.inputLabel}>Mobile / WhatsApp Number</Text>
                   <View style={styles.inputBox}>
@@ -448,9 +506,9 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                 {/* Form Field 3: Course Selection */}
                 <View style={styles.fieldGroup}>
                   <Text style={styles.inputLabel}>Select Career Program</Text>
-                  {/* Quick Select Chips */}
+                  {/* Quick Select Chips from Live Courses */}
                   <View style={styles.chipsContainer}>
-                    {POPULAR_COURSES.map((c) => {
+                    {dynamicCourses.map((c) => {
                       const isSelected = course.toLowerCase().includes(c.toLowerCase());
                       return (
                         <TouchableOpacity

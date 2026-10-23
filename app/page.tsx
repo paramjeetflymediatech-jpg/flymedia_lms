@@ -25,12 +25,26 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   let packages: Package[] = [];
+  let allCoursesList: { id: string; title: string; category?: string }[] = [];
   let testimonials: any[] = [];
   let faqs: any[] = [];
   let galleryItems: any[] = [];
 
   try {
-    packages = await Package.findAll({ where: { status: 'PUBLISHED' }, limit: 4 });
+    const [featuredPkgs, allPkgs] = await Promise.all([
+      Package.findAll({ where: { status: 'PUBLISHED' }, limit: 4 }),
+      Package.findAll({
+        where: { status: 'PUBLISHED' },
+        attributes: ['id', 'title', 'slug', 'category'],
+        order: [['title', 'ASC']],
+      }),
+    ]);
+    packages = featuredPkgs;
+    allCoursesList = allPkgs.map(p => ({
+      id: p.slug || p.id,
+      title: p.title,
+      category: p.category || 'General',
+    }));
     const testimonialsData = await Testimonial.findAll({
       where: { isActive: true },
       order: [['createdAt', 'DESC']],
@@ -413,7 +427,7 @@ export default async function HomePage() {
                       <h3 className="text-3xl sm:text-4xl font-black text-slate-900">Book ₹99 Demo Class</h3>
                       <p className="text-slate-500 font-medium text-sm sm:text-base">Experience live 1-on-1 industry training for just ₹99. Select your preferred course and our mentor will connect with you.</p>
                     </div>
-                    <CallbackForm />
+                    <CallbackForm initialCourses={allCoursesList} />
                   </div>
                 </div>
               </div>

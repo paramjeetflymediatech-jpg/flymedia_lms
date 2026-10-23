@@ -3,16 +3,53 @@
 import { useState, useEffect } from 'react';
 import { submitInquiryAction } from '../../../app/actions';
 
-interface CallbackFormProps {
-  defaultCourse?: string;
+export interface CourseOption {
+  id: string;
+  title: string;
+  category?: string;
 }
 
-export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) {
+interface CallbackFormProps {
+  defaultCourse?: string;
+  initialCourses?: CourseOption[];
+}
+
+export default function CallbackForm({ defaultCourse = '', initialCourses }: CallbackFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(defaultCourse);
   const [isHighlighted, setIsHighlighted] = useState(false);
+  const [courses, setCourses] = useState<CourseOption[]>(initialCourses || []);
+  const [fetchingCourses, setFetchingCourses] = useState(false);
+
+  // Dynamically load live published courses if not provided
+  useEffect(() => {
+    if (initialCourses && initialCourses.length > 0) {
+      setCourses(initialCourses);
+      return;
+    }
+
+    let isMounted = true;
+    setFetchingCourses(true);
+    fetch('/api/courses/list')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.courses) && data.courses.length > 0) {
+          setCourses(data.courses);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to dynamically fetch courses list:', err);
+      })
+      .finally(() => {
+        if (isMounted) setFetchingCourses(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialCourses]);
 
   // Auto-scroll when URL has #callback or #demo-form
   useEffect(() => {
@@ -222,47 +259,73 @@ export default function CallbackForm({ defaultCourse = '' }: CallbackFormProps) 
         </div>
       </div>
 
-      {/* Course Selection */}
+      {/* Dynamic Course Selection */}
       <div className="space-y-2">
-        <label className="text-xs font-black text-slate-600 uppercase tracking-wider">Select Career Program</label>
-        <div className="flex flex-wrap gap-1.5">
-          {POPULAR_COURSES.map((c) => (
-            <button
-              type="button"
-              key={c.id}
-              onClick={() => setSelectedCourse(c.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                selectedCourse === c.id
-                  ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-xs'
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
+        <label className="text-xs font-black text-slate-600 uppercase tracking-wider flex items-center justify-between">
+          <span>Select Career Program</span>
+          {fetchingCourses && (
+            <span className="text-[10px] text-slate-400 font-semibold animate-pulse">Loading live courses...</span>
+          )}
+        </label>
 
-        <div className="relative mt-2">
+        <div className="relative">
           <select
             name="course"
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all font-semibold text-sm appearance-none"
+            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all font-semibold text-sm appearance-none cursor-pointer"
           >
-            <option value="" className="text-slate-400">Or choose specific course track...</option>
-            <option value="digital-marketing">Digital Marketing Masterclass</option>
-            <option value="web-development">Web Development (Full Stack MERN)</option>
-            <option value="video-editing">Video Editing & VFX</option>
-            <option value="graphic-designing">Graphic Designing & UI/UX</option>
-            <option value="python-data-science">Python & Data Science</option>
-            <option value="seo-performance-marketing">SEO & Performance Marketing</option>
-            <option value="other-course">Other / Customized Track</option>
+            <option value="" disabled className="text-slate-400">
+              -- Select Your Career Program Track --
+            </option>
+            {courses.length > 0 ? (
+              courses.map((c) => (
+                <option key={c.id} value={c.title}>
+                  {c.title}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Full Stack Web Development (MERN)">Full Stack Web Development (MERN)</option>
+                <option value="Digital Marketing Masterclass">Digital Marketing Masterclass</option>
+                <option value="Video Editing & Motion Graphics">Video Editing & Motion Graphics</option>
+                <option value="Graphic Designing & UI/UX">Graphic Designing & UI/UX</option>
+                <option value="Python & AI Data Science">Python & AI Data Science</option>
+              </>
+            )}
+            <option value="Other / Customized Training Track">Other / Customized Training Track</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
         </div>
+
+        {/* Quick selection pills from dynamic live courses */}
+        {courses.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <span className="text-[11px] font-bold text-slate-400 self-center mr-1">Quick Select:</span>
+            {courses.slice(0, 5).map((c) => {
+              const isSelected = selectedCourse === c.title;
+              return (
+                <button
+                  type="button"
+                  key={c.id}
+                  onClick={() => setSelectedCourse(c.title)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                    isSelected
+                      ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {c.title.length > 25 ? `${c.title.slice(0, 25)}...` : c.title}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <button
