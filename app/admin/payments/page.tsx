@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../../src/lib/auth';
-import { Payment } from '../../../src/db/models';
+import { Payment, User, Package, Inquiry } from '../../../src/db/models';
 import Pagination from '../../../src/components/admin/Pagination';
+import PaymentsTable from '../../../src/components/admin/PaymentsTable';
 
 export const revalidate = 0;
 
@@ -13,7 +14,7 @@ export default async function AdminPaymentsPage({
 
   const resolvedSearchParams = await searchParams;
   const page = parseInt(resolvedSearchParams.page || '1', 10) || 1;
-  const limit = 10;
+  const limit = 15;
   const offset = (page - 1) * limit;
 
   const [allPayments, paginatedData] = await Promise.all([
@@ -22,29 +23,85 @@ export default async function AdminPaymentsPage({
       limit,
       offset,
       order: [['createdAt', 'DESC']],
-    })
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email', 'phone', 'avatar', 'role', 'freeDemoCredits', 'referralCode'],
+          required: false,
+        },
+        {
+          model: Package,
+          attributes: ['id', 'title', 'slug', 'thumbnail', 'price'],
+          required: false,
+        },
+      ],
+    }),
   ]);
 
-  const payments = paginatedData.rows.map(p => p.toJSON());
+  const rawPayments = paginatedData.rows.map((p) => p.toJSON() as any);
+
+  // Retrieve inquiries to fallback phone numbers if student entered it during demo checkout
+  const userEmails = [...new Set(rawPayments.map((p: any) => p.User?.email).filter(Boolean))];
+  const phoneByEmail = new Map<string, string>();
+  if (userEmails.length > 0) {
+    const inquiries = await Inquiry.findAll({
+      where: { email: userEmails },
+      attributes: ['email', 'phone'],
+      order: [['createdAt', 'DESC']],
+    });
+    inquiries.forEach((inq) => {
+      if (inq.phone && !phoneByEmail.has(inq.email)) {
+        phoneByEmail.set(inq.email, inq.phone);
+      }
+    });
+  }
+
+  const payments = rawPayments.map((p: any) => ({
+    id: p.id,
+    transactionId: p.transactionId,
+    amount: p.amount,
+    status: p.status,
+    provider: p.provider,
+    createdAt: p.createdAt,
+    user: p.User
+      ? {
+          id: p.User.id,
+          name: p.User.name,
+          email: p.User.email,
+          phone: p.User.phone || (p.User.email ? phoneByEmail.get(p.User.email) : null) || null,
+          avatar: p.User.avatar,
+          role: p.User.role,
+          freeDemoCredits: p.User.freeDemoCredits,
+          referralCode: p.User.referralCode,
+        }
+      : null,
+    package: p.Package
+      ? {
+          id: p.Package.id,
+          title: p.Package.title,
+          slug: p.Package.slug,
+          thumbnail: p.Package.thumbnail,
+          price: p.Package.price,
+        }
+      : null,
+  }));
+
   const totalPages = Math.ceil(paginatedData.count / limit) || 1;
-  
+
   const totalRevenue = allPayments
-    .filter(p => p.status === 'SUCCESS')
+    .filter((p) => p.status === 'SUCCESS')
     .reduce((sum, p) => sum + Number(p.amount), 0);
-    
-  const successfulTransactions = allPayments.filter(p => p.status === 'SUCCESS').length;
-  const refunds = allPayments.filter(p => p.status === 'FAILED').length; // For simplicity, using failed as refunds or just 0
+
+  const successfulTransactions = allPayments.filter((p) => p.status === 'SUCCESS').length;
+  const refunds = allPayments.filter((p) => p.status === 'FAILED').length;
 
   return (
     <div className="p-6 md:p-10 space-y-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Payments & Revenue</h1>
-          <p className="text-sm text-slate-500">Track transactions, refunds, and revenue analytics.</p>
+          <p className="text-sm text-slate-500">Track transactions, customer details, and booking analytics.</p>
         </div>
-        <button className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
-          Export CSV
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -66,56 +123,28 @@ export default async function AdminPaymentsPage({
       </div>
 
       <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">Recent Transactions</h3>
-        </div>
-        {payments.length === 0 ? (
-          <p className="p-6 text-xs text-slate-400 italic text-center">No transactions found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="text-xs font-bold text-slate-400 uppercase bg-slate-50">
-                <tr>
-                  <th className="px-6 py-4">Transaction ID</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Mode</th>
-                  <th className="px-6 py-4">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{p.transactionId}</td>
-                    <td className="px-6 py-4 font-bold">₹{Number(p.amount).toFixed(2)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
-                        p.status === 'SUCCESS' ? 'bg-green-100 text-green-700' :
-                        p.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                        'bg-orange-100 text-orange-700'
-                      }`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-xs">{p.provider}</td>
-                    <td className="px-6 py-4 text-xs text-slate-400">
-                      {new Date(p.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Recent Transactions</h3>
+            <p className="text-xs text-slate-400">View student contact info, programs booked, and transaction statuses</p>
           </div>
-        )}
-        <Pagination 
-          page={page} 
-          totalPages={totalPages} 
-          totalItems={paginatedData.count} 
-          limit={limit} 
-          baseUrl="/admin/payments" 
-        />
-      </div>
+          <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+            {paginatedData.count} Total Records
+          </span>
+        </div>
 
+        <PaymentsTable payments={payments} />
+
+        <div className="p-4 border-t border-slate-100">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={paginatedData.count}
+            limit={limit}
+            baseUrl="/admin/payments"
+          />
+        </div>
+      </div>
     </div>
   );
 }
