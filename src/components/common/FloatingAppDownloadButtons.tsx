@@ -1,17 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import QRCode from 'qrcode';
 import { AppStoreLinks } from '../../constants/appLinks';
 
 export default function FloatingAppDownloadButtons() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isPinned, setIsPinned] = useState<boolean>(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Generate device-detection QR Code on mount
+  // Generate device-detection QR Code on mount if on homepage
   useEffect(() => {
+    if (pathname !== '/') return;
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://course.flymediatech.com';
     const target = `${origin}/app`;
 
@@ -30,7 +33,7 @@ export default function FloatingAppDownloadButtons() {
       .catch((err) => {
         console.error('Failed to generate app download QR code:', err);
       });
-  }, []);
+  }, [pathname]);
 
   // Close on outside click (mobile or desktop outside click)
   useEffect(() => {
@@ -55,6 +58,11 @@ export default function FloatingAppDownloadButtons() {
     setIsPinned(false);
     setIsOpen(false);
   };
+
+  // Only render on homepage ('/')
+  if (pathname !== '/') {
+    return null;
+  }
 
   return (
     <div

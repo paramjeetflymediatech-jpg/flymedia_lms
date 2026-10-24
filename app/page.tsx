@@ -188,8 +188,7 @@ export default async function HomePage() {
                   <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/20 blur-[100px] rounded-full" />
                   <div className="relative z-10 space-y-8">
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight flex flex-wrap gap-x-2 md:gap-x-3">
-                      <SplitText text="We Don't Just Educate," type="words" delay={0.2} className="text-white" />
-                      <SplitText text="We Give Opportunities." type="words" delay={0.4} className="bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent" />
+                      <SplitText text="We Don't Just Educate,We Give Opportunities." type="words" delay={0.2} className="bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent" />
                     </h2>
                     <div className="grid md:grid-cols-2 gap-8 text-slate-300 font-medium text-base sm:text-lg leading-relaxed mt-4">
                       <GsapReveal animation="slideUp" delay={0.6}>
@@ -214,22 +213,22 @@ export default async function HomePage() {
         <section className="bg-slate-950 text-white relative z-20">
           <GsapHorizontalScroll>
             <div className="flex px-4 md:px-20 gap-8 sm:gap-16 items-center">
-              <div className="w-[85vw] sm:w-[40vw] shrink-0 space-y-6">
+              <div className="w-[85vw] sm:w-[40vw]">
                 <h3 className="text-4xl sm:text-6xl font-black text-white leading-tight">
                   Choice That Makes a <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-400">Huge Difference</span> In Your Career
                 </h3>
                 <p className="text-slate-400 text-lg font-medium">Scroll to see why students choose Flymedia Technology.</p>
               </div>
 
-              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors h-auto min-h-[450px] lg:min-h-[500px] flex flex-col">
-                <div className="w-16 h-16 bg-orange-500/20 text-orange-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
+              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors flex flex-col">
+                <div className="w-16  bg-orange-500/20 text-orange-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                 </div>
                 <h4 className="text-2xl sm:text-3xl font-bold text-white mb-6">Hands-on Training</h4>
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed flex-1">We believe that students can gain more skills if they do the practice on their own. Our courses are designed to be fully hands-on so that students can gain the skills and understand the concept in detail. Gaining the skills by doing hands-on practice allows the student to solve real-life scenarios.</p>
               </div>
 
-              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors h-auto min-h-[450px] lg:min-h-[500px] flex flex-col">
+              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors flex flex-col">
                 <div className="w-16 h-16 bg-rose-500/20 text-rose-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
@@ -237,7 +236,7 @@ export default async function HomePage() {
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed flex-1">Our trainers are expert IT professionals who have years of experience guiding students in online AI courses in India. Students get the opportunity to gain skills related to IT and AI, along with web designing, graphic designing or any of the courses they opt for.</p>
               </div>
 
-              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors h-auto min-h-[450px] lg:min-h-[500px] flex flex-col pr-8">
+              <div className="w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] shrink-0 bg-white/5 backdrop-blur-xl p-8 sm:p-10 lg:p-12 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors flex flex-col pr-8">
                 <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-3xl flex items-center justify-center mb-8 shrink-0">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                 </div>
@@ -338,8 +337,8 @@ export default async function HomePage() {
                           {pkg.mode ? (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] font-bold text-slate-600 tracking-wide">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pkg.mode === 'ONLINE' ? 'bg-emerald-500' :
-                                  pkg.mode === 'OFFLINE' ? 'bg-amber-500' :
-                                    'bg-orange-500'
+                                pkg.mode === 'OFFLINE' ? 'bg-amber-500' :
+                                  'bg-orange-500'
                                 }`} />
                               <span>{pkg.mode === 'BOTH' ? 'Online & Offline' : pkg.mode}</span>
                             </div>
@@ -527,26 +526,6 @@ export default async function HomePage() {
                   referrerPolicy="no-referrer-when-downgrade"
                   className="grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 w-full h-full"
                 ></iframe>
-
-                {/* Floating Info Card */}
-                <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl shadow-black/10 max-w-sm border border-slate-100">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shrink-0">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900">Headquarters</h4>
-                      <p className="text-sm font-bold text-orange-500">Ludhiana, Punjab</p>
-                    </div>
-                  </div>
-                  <p className="text-slate-600 text-sm font-medium leading-relaxed mb-4">
-                    First Floor, Plot 20, Vishal Nagar Ext, opposite Kashish Cafe, Vishal Nagar, Jawaddi Taksal, Ludhiana, Punjab 141013, India
-                  </p>
-                  <a href="https://www.google.com/maps/dir//Learn+With+Flymedia,+First+Floor,+Plot+20,+Vishal+Nagar+Ext,+opposite+Kashish+Cafe,+Vishal+Nagar,+Jawaddi+Taksal,+Ludhiana,+Punjab+141013,+India/@30.9003452,75.8566733,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x391a83053a2c6f9d:0x1beaed8f1198aa16!2m2!1d75.820215!2d30.8795234?authuser=0&hl=en-GB&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors duration-300 text-sm">
-                    Get Directions
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                  </a>
-                </div>
               </div>
             </GsapReveal>
           </div>

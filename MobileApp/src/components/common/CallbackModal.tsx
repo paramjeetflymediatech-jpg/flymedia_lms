@@ -440,10 +440,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                     <Check size={12} color="#059669" />
                     <Text style={styles.pillarText}>Live Hands-on Project</Text>
                   </View>
-                  <View style={styles.pillarItem}>
-                    <Check size={12} color="#059669" />
-                    <Text style={styles.pillarText}>Fee Credited</Text>
-                  </View>
+                  
                 </View>
 
                 {paymentError ? (

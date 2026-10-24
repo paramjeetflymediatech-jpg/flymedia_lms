@@ -186,15 +186,12 @@ export default function CallbackForm({ defaultCourse = '', initialCourses }: Cal
             Limited Daily Slots
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-rose-200/40">
+        <div className="grid grid-cols-2 gap-2 text-center pt-1 border-t border-rose-200/40">
           <div className="text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1">
             <span className="text-emerald-500">✓</span> 1-on-1 Mentor
           </div>
           <div className="text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1">
             <span className="text-emerald-500">✓</span> Live Hands-on Code
-          </div>
-          <div className="text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1">
-            <span className="text-emerald-500">✓</span> Fee Credited Back
           </div>
         </div>
       </div>
