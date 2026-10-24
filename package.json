@@ -11,7 +11,8 @@
     "db:fresh": "tsx scripts/reset-and-seed-fresh.ts",
     "db:migrate": "tsx scripts/addResetTokenTable.ts",
     "db:migrate:live": "tsx scripts/migrateLiveDB.ts",
-    "db:migrate:profile": "tsx scripts/add-user-profile-cols.ts"
+    "db:migrate:profile": "tsx scripts/add-user-profile-cols.ts",
+    "build:apk": "cd MobileApp && export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home && cd android && ./gradlew assembleRelease && cd ../.. && mkdir -p public/downloads && cp MobileApp/android/app/build/outputs/apk/release/app-release.apk public/downloads/flymedia-lms.apk"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
