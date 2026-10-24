@@ -80,6 +80,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </Link>
 
             <div className="pt-4 pb-2">
+              <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Rewards & Invite</p>
+            </div>
+            <Link href="/dashboard/referrals" onClick={() => setIsMobileMenuOpen(false)} className={getLinkClass('/dashboard/referrals')}>
+              <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V4a2 2 0 114 0v4m-4-4a2 2 0 10-4 0v4m-2 4h12a2 2 0 012 2v7a2 2 0 01-2 2H6a2 2 0 01-2-2v-7a2 2 0 012-2z" /></svg>
+              <span className="flex-1">Refer & Earn</span>
+              <span className="text-[10px] font-black bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">FREE</span>
+            </Link>
+
+            <div className="pt-4 pb-2">
               <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Account</p>
             </div>
             <Link href="/dashboard/profile" onClick={() => setIsMobileMenuOpen(false)} className={getLinkClass('/dashboard/profile')}>

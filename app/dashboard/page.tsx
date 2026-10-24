@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { requireAuth } from '../../src/lib/auth';
-import { Enrollment, Package, LiveClass, Certificate } from '../../src/db/models';
+import { Enrollment, Package, LiveClass, Certificate, User, Referral } from '../../src/db/models';
+import { generateReferralCode } from '../../src/lib/referral';
+import StudentReferralInvite from '../../src/components/dashboard/StudentReferralInvite';
 
 export const revalidate = 0; // Dynamic dashboard
 
@@ -28,6 +30,39 @@ export default async function StudentDashboardPage() {
   const certificates = await Certificate.findAll({
     where: { userId: user.id },
   });
+
+  // Fetch student referral details
+  const studentProfile = await User.findByPk(user.id, {
+    attributes: ['id', 'name', 'referralCode', 'referralsCount', 'freeDemoCredits'],
+    include: [
+      {
+        model: Referral,
+        as: 'referralsGiven',
+        include: [{ model: User, as: 'referredUser', attributes: ['id', 'name', 'createdAt'] }],
+      },
+    ],
+  });
+
+  // Ensure referral code is persisted
+  let referralCode = studentProfile?.referralCode;
+  if (!referralCode && studentProfile) {
+    referralCode = generateReferralCode(studentProfile.name);
+    studentProfile.referralCode = referralCode;
+    await studentProfile.save().catch(() => {});
+  }
+  if (!referralCode) {
+    referralCode = `FLY-${user.id.slice(0, 6).toUpperCase()}`;
+  }
+
+  const friendsReferred = studentProfile?.referralsCount || (studentProfile?.referralsGiven?.length || 0);
+  const freeDemosLeft = studentProfile?.freeDemoCredits || 0;
+  const freeDemosUsed = Math.max(0, friendsReferred - freeDemosLeft);
+  const referredFriendsList = (studentProfile?.referralsGiven || []).map((r: any) => ({
+    id: r.id,
+    friendName: r.referredUser?.name || 'Friend',
+    joinedAt: r.createdAt,
+    rewardStatus: 'Free ₹99 Demo Class Unlocked',
+  }));
 
   // Extract upcoming classes
   let allUpcomingClasses: any[] = [];
@@ -85,7 +120,7 @@ export default async function StudentDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
             <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
               📦
@@ -95,6 +130,7 @@ export default async function StudentDashboardPage() {
               <p className="text-2xl font-bold text-slate-900">{enrollments.length}</p>
             </div>
           </div>
+
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
             <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
               📅
@@ -104,6 +140,7 @@ export default async function StudentDashboardPage() {
               <p className="text-2xl font-bold text-slate-900">{allUpcomingClasses.length}</p>
             </div>
           </div>
+
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
             <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl shrink-0">
               🎓
@@ -113,7 +150,32 @@ export default async function StudentDashboardPage() {
               <p className="text-2xl font-bold text-slate-900">{certificates.length}</p>
             </div>
           </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+              🎁
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium text-slate-500">Free Demos Left</p>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-black px-1.5 py-0.5 rounded">
+                  REFERRAL
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-emerald-600">{freeDemosLeft}</p>
+            </div>
+          </div>
         </div>
+
+        {/* Student Referral & Invite Link Section */}
+        <StudentReferralInvite
+          referralCode={referralCode}
+          friendsReferred={friendsReferred}
+          freeDemosLeft={freeDemosLeft}
+          freeDemosUsed={freeDemosUsed}
+          referredFriends={referredFriendsList}
+          compact={false}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Next Class */}

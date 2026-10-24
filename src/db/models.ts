@@ -55,6 +55,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare assignedPackages?: NonAttribute<Package[]>;
+  declare referralsGiven?: NonAttribute<Referral[]>;
+  declare referralReceived?: NonAttribute<Referral | null>;
 }
 
 User.init(

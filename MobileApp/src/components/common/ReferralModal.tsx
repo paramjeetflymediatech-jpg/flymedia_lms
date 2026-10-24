@@ -44,6 +44,7 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({
 }) => {
   const { user, refreshProfile } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [referralCode, setReferralCode] = useState(user?.referralCode || 'FLY-LMS');
   const [referralsCount, setReferralsCount] = useState(user?.referralsCount || 0);
@@ -110,6 +111,16 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({
     Alert.alert(
       'Referral Code Copied! ✨',
       `Your code "${referralCode}" is ready to share with your friends.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleCopyLink = () => {
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+    Alert.alert(
+      'Invite Link Copied! 🔗',
+      `Invite link "${shareUrl}" is ready. Send it to your friends on WhatsApp or message!`,
       [{ text: 'OK' }]
     );
   };
@@ -243,6 +254,36 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({
                     </Text>
                   </View>
                 </View>
+              </View>
+            </View>
+
+            {/* YOUR INVITE LINK CARD */}
+            <View style={styles.linkCard}>
+              <View style={styles.linkLabelRow}>
+                <Text style={styles.linkCardLabel}>YOUR UNIQUE INVITE LINK</Text>
+                <Text style={styles.linkCardBadge}>Auto-Applies Code</Text>
+              </View>
+              <View style={styles.linkRow}>
+                <Text style={styles.linkText} numberOfLines={1} ellipsizeMode="middle">
+                  {shareUrl}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.copyBtn, copiedLink && styles.copyBtnSuccess]}
+                  onPress={handleCopyLink}
+                  activeOpacity={0.8}
+                >
+                  {copiedLink ? (
+                    <>
+                      <CheckCircle2 size={14} color="#059669" />
+                      <Text style={[styles.copyBtnText, { color: '#059669' }]}>Copied!</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} color={Colors.primaryRose} />
+                      <Text style={styles.copyBtnText}>Copy Link</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -524,6 +565,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#64748B',
     lineHeight: 16,
+  },
+  linkCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    marginBottom: 12,
+  },
+  linkLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  linkCardLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#475569',
+    letterSpacing: 0.8,
+  },
+  linkCardBadge: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Colors.primaryRose,
+    backgroundColor: '#FFE4E6',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  linkText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+    backgroundColor: '#EDF2F7',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   codeCard: {
     backgroundColor: '#FFF1F2',
