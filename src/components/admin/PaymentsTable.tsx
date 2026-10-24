@@ -156,7 +156,6 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
               <tr>
                 <th className="px-6 py-3.5">Student / User</th>
                 <th className="px-6 py-3.5">Program / Booking</th>
-                <th className="px-6 py-3.5">Transaction ID</th>
                 <th className="px-6 py-3.5">Amount</th>
                 <th className="px-6 py-3.5">Status</th>
                 <th className="px-6 py-3.5">Date & Time</th>
@@ -228,48 +227,14 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
                     {/* Program / Booking */}
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        {isDemo ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-200">
-                            ⚡ ₹99 1-ON-1 DEMO CLASS
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
-                            📦 FULL COURSE
-                          </span>
-                        )}
+                       
                         <div className="font-semibold text-slate-800 text-xs line-clamp-2 max-w-[220px]">
                           {p.package?.title || (isDemo ? '1-on-1 Demo Session' : 'General Course')}
                         </div>
                       </div>
                     </td>
 
-                    {/* Transaction ID & Mode */}
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-xs font-semibold text-slate-800">
-                            {p.transactionId}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(p.transactionId)}
-                            className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
-                            title="Copy Transaction ID"
-                          >
-                            {copiedTxnId === p.transactionId ? (
-                              <span className="text-[10px] text-emerald-600 font-bold">✓</span>
-                            ) : (
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Via {p.provider || 'PhonePe'}
-                        </span>
-                      </div>
-                    </td>
+                  
 
                     {/* Amount */}
                     <td className="px-6 py-4">
