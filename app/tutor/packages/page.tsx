@@ -47,7 +47,7 @@ export default async function TutorPackagesPage() {
     where: { tutorId: user.id },
     attributes: ['packageId'],
   });
-  const otherPackageIds = [...new Set(otherClasses.map((c) => c.packageId))];
+  const otherPackageIds = [...new Set(otherClasses.map((c) => c.packageId).filter(Boolean))] as string[];
 
   const assignedList = (tutorData?.assignedPackages || []).map((p) => p.toJSON() as any);
   const existingAssignedIds = new Set(assignedList.map((p) => p.id));

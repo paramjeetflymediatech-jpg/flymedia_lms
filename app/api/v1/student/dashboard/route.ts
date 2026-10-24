@@ -73,20 +73,46 @@ export async function GET(request: Request) {
     // 3. Fetch Certificates count
     const certificatesCount = await Certificate.count({ where: { userId } });
 
+    // 3.5 Fetch Direct Scheduled Classes (1-on-1 or multiple student sessions)
+    const directLiveClasses = await LiveClass.findAll({
+      where: {
+        [Op.or]: [
+          { studentId: userId },
+          {
+            studentIds: {
+              [Op.ne]: null,
+            },
+          },
+        ],
+      },
+      include: [
+        { model: User, as: 'tutor', attributes: ['id', 'name', 'avatar', 'professionTitle'] },
+        { model: Package, as: 'package', attributes: ['title', 'thumbnail'] },
+      ],
+    });
+
+    const assignedDirectClasses = directLiveClasses.filter((c: any) => {
+      if (c.studentId === userId) return true;
+      if (Array.isArray(c.studentIds) && c.studentIds.includes(userId)) return true;
+      return false;
+    });
+
     // 4. Extract and sort upcoming live classes and 1-on-1 sessions
     const now = new Date();
     const upcomingSessions: any[] = [];
+    const seenLiveClassIds = new Set<string>();
 
     // Live Classes from enrolled packages
     enrollments.forEach((enr: any) => {
       const pkg = enr.Package;
       if (pkg?.liveClasses) {
         pkg.liveClasses.forEach((lc: any) => {
+          seenLiveClassIds.add(lc.id);
           const lcStart = new Date(lc.startTime);
           if (lcStart >= now) {
             upcomingSessions.push({
               id: lc.id,
-              type: 'BATCH_LIVE',
+              type: lc.sessionType === 'ONE_ON_ONE' ? 'ONE_ON_ONE' : 'BATCH_LIVE',
               title: lc.title || pkg.title,
               packageTitle: pkg.title,
               startTime: lc.startTime,
@@ -97,6 +123,27 @@ export async function GET(request: Request) {
               tutorAvatar: resolveFullImageUrl(lc.tutor?.avatar),
             });
           }
+        });
+      }
+    });
+
+    // Directly assigned live classes (1-on-1 or assigned group)
+    assignedDirectClasses.forEach((lc: any) => {
+      if (seenLiveClassIds.has(lc.id)) return;
+      seenLiveClassIds.add(lc.id);
+      const lcStart = new Date(lc.startTime);
+      if (lcStart >= now) {
+        upcomingSessions.push({
+          id: lc.id,
+          type: lc.sessionType === 'ONE_ON_ONE' ? 'ONE_ON_ONE' : 'BATCH_LIVE',
+          title: lc.title,
+          packageTitle: lc.package?.title || (lc.sessionType === 'ONE_ON_ONE' ? '1-on-1 Session' : 'Direct Live Class'),
+          startTime: lc.startTime,
+          duration: lc.duration || 60,
+          meetLink: lc.meetLink || null,
+          status: lc.status || 'SCHEDULED',
+          tutorName: lc.tutor?.name || 'Assigned Instructor',
+          tutorAvatar: resolveFullImageUrl(lc.tutor?.avatar),
         });
       }
     });

@@ -25,7 +25,7 @@ export default async function TutorStudentsPage() {
   const packageIds = [...new Set([
     ...classes.map((c) => c.packageId),
     ...assignedTutors.map((a) => a.packageId),
-  ])];
+  ])].filter((id): id is string => Boolean(id));
 
   // 2. Fetch enrollments for these packages
   let enrollmentsData: any[] = [];

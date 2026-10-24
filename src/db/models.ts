@@ -117,6 +117,10 @@ if (typeof window === 'undefined') {
           PRIMARY KEY (\`id\`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       `).catch(() => {});
+      await sequelize.query('ALTER TABLE `live_classes` MODIFY `packageId` CHAR(36) BINARY NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `live_classes` ADD COLUMN `studentId` CHAR(36) BINARY NULL;').catch(() => {});
+      await sequelize.query("ALTER TABLE `live_classes` ADD COLUMN `sessionType` ENUM('ONE_ON_ONE', 'GROUP') NOT NULL DEFAULT 'GROUP';").catch(() => {});
+      await sequelize.query('ALTER TABLE `live_classes` ADD COLUMN `studentIds` JSON NULL;').catch(() => {});
     } catch (_) {}
   })();
 }
@@ -234,8 +238,11 @@ Package.init(
 // ==========================================
 export class LiveClass extends Model<InferAttributes<LiveClass>, InferCreationAttributes<LiveClass>> {
   declare id: CreationOptional<string>;
-  declare packageId: ForeignKey<Package['id']>;
+  declare packageId: CreationOptional<ForeignKey<Package['id']> | null>;
   declare tutorId: ForeignKey<User['id']>;
+  declare studentId: CreationOptional<ForeignKey<User['id']> | null>;
+  declare sessionType: CreationOptional<'ONE_ON_ONE' | 'GROUP'>;
+  declare studentIds: CreationOptional<string[] | null>;
   declare scheduleId: CreationOptional<string | null>;
   declare classNumber: CreationOptional<number | null>;
   declare title: string;
@@ -247,13 +254,17 @@ export class LiveClass extends Model<InferAttributes<LiveClass>, InferCreationAt
   declare updatedAt: CreationOptional<Date>;
   declare package?: NonAttribute<Package>;
   declare tutor?: NonAttribute<User>;
+  declare student?: NonAttribute<User>;
 }
 
 LiveClass.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    packageId: { type: DataTypes.UUID, allowNull: false, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
+    packageId: { type: DataTypes.UUID, allowNull: true, references: { model: 'packages', key: 'id' }, onDelete: 'CASCADE' },
     tutorId: { type: DataTypes.UUID, allowNull: true, references: { model: 'users', key: 'id' }, onDelete: 'SET NULL' },
+    studentId: { type: DataTypes.UUID, allowNull: true, references: { model: 'users', key: 'id' }, onDelete: 'SET NULL' },
+    sessionType: { type: DataTypes.ENUM('ONE_ON_ONE', 'GROUP'), allowNull: false, defaultValue: 'GROUP' },
+    studentIds: { type: DataTypes.JSON, allowNull: true },
     scheduleId: { type: DataTypes.UUID, allowNull: true, references: { model: 'class_schedules', key: 'id' }, onDelete: 'SET NULL' },
     classNumber: { type: DataTypes.INTEGER, allowNull: true },
     title: { type: DataTypes.STRING(255), allowNull: false },
@@ -924,6 +935,10 @@ LiveClass.belongsTo(Package, { foreignKey: 'packageId' });
 // Tutor has many LiveClasses
 User.hasMany(LiveClass, { as: 'teachingClasses', foreignKey: 'tutorId' });
 LiveClass.belongsTo(User, { as: 'tutor', foreignKey: 'tutorId' });
+
+// Student 1-on-1 assigned LiveClasses
+User.hasMany(LiveClass, { as: 'assignedLiveClasses', foreignKey: 'studentId' });
+LiveClass.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
 
 // User has many Enrollments
 User.hasMany(Enrollment, { as: 'enrollments', foreignKey: 'userId', onDelete: 'CASCADE' });

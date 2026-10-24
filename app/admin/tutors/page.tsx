@@ -36,18 +36,27 @@ export default async function AdminTutorsPage() {
     order: [['createdAt', 'DESC']],
   });
 
-  // 4. Fetch upcoming and scheduled live classes
+  // 4. Fetch upcoming and scheduled live classes (including 1-on-1 assigned student)
   const liveClassesData = await LiveClass.findAll({
     include: [
       { model: Package, as: 'Package', attributes: ['id', 'title', 'slug'] },
       { model: User, as: 'tutor', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'student', attributes: ['id', 'name', 'email', 'avatar'] },
     ],
     order: [['startTime', 'ASC']],
     limit: 100,
   });
 
+  // 5. Fetch all registered students for 1-on-1 and custom class scheduling
+  const studentsData = await User.findAll({
+    where: { role: 'STUDENT' },
+    attributes: ['id', 'name', 'email', 'freeDemoCredits', 'avatar'],
+    order: [['name', 'ASC']],
+  });
+
   const tutors = tutorsData.map((t) => t.toJSON());
   const packages = packagesData.map((p) => p.toJSON());
+  const students = studentsData.map((s) => s.toJSON());
   const schedules = schedulesData.map((s) => {
     const json = s.toJSON() as any;
     return {
@@ -71,7 +80,7 @@ export default async function AdminTutorsPage() {
             Tutor Management & Class Scheduling
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Add tutors, assign packages (Web Development, Video Editing, etc.), set recurring day schedules, and provide class meet links.
+            Add tutors, schedule 1-on-1 sessions with specific students, create multi-student classes, and generate recurring package batches.
           </p>
         </div>
       </div>
@@ -81,6 +90,7 @@ export default async function AdminTutorsPage() {
         packages={packages as any}
         initialSchedules={schedules as any}
         initialLiveClasses={liveClasses as any}
+        students={students as any}
       />
     </div>
   );

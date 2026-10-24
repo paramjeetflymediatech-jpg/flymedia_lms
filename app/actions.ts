@@ -2252,5 +2252,103 @@ export async function adminDeleteSchedule(scheduleId: string) {
   }
 }
 
+export async function adminScheduleClass(formData: FormData) {
+  await requireAdmin();
+
+  const sessionType = (formData.get('sessionType') as string) || 'ONE_ON_ONE'; // 'ONE_ON_ONE' or 'GROUP'
+  const tutorId = formData.get('tutorId') as string;
+  const studentId = formData.get('studentId') as string; // for 1-on-1
+  const studentIdsJson = formData.get('studentIds') as string; // for group (JSON string)
+  const packageId = (formData.get('packageId') as string) || null;
+  const title = formData.get('title') as string;
+  const startTimeStr = formData.get('startTime') as string;
+  const duration = Number(formData.get('duration')) || 60;
+  const meetLink = formData.get('meetLink') as string;
+  const deductDemoCredit = formData.get('deductDemoCredit') === 'true' || formData.get('deductDemoCredit') === '1';
+
+  if (!tutorId || !title || !startTimeStr || !meetLink) {
+    return { error: 'Please provide tutor, class title, start time, and meeting link.' };
+  }
+
+  const tutor = await User.findByPk(tutorId);
+  if (!tutor) return { error: 'Selected tutor not found' };
+
+  let resolvedStudentId: string | null = null;
+  let resolvedStudentIds: string[] = [];
+
+  if (sessionType === 'ONE_ON_ONE') {
+    if (!studentId) {
+      return { error: 'Please select the specific student for this 1-on-1 session.' };
+    }
+    const student = await User.findByPk(studentId);
+    if (!student) return { error: 'Selected student not found' };
+
+    resolvedStudentId = student.id;
+    resolvedStudentIds = [student.id];
+
+    // Deduct demo credit if requested and student has available credits
+    if (deductDemoCredit && (student.freeDemoCredits || 0) > 0) {
+      await student.decrement('freeDemoCredits', { by: 1 });
+    }
+  } else {
+    // Group class with specific students or package
+    if (studentIdsJson) {
+      try {
+        const parsed = JSON.parse(studentIdsJson);
+        if (Array.isArray(parsed)) {
+          resolvedStudentIds = parsed;
+        }
+      } catch (_) {
+        const rawList = formData.getAll('studentIds') as string[];
+        if (rawList.length > 0) resolvedStudentIds = rawList;
+      }
+    }
+  }
+
+  try {
+    const startTime = new Date(startTimeStr);
+
+    const liveClass = await LiveClass.create({
+      packageId: packageId && packageId.trim() ? packageId.trim() : null,
+      tutorId,
+      studentId: resolvedStudentId,
+      sessionType: sessionType === 'ONE_ON_ONE' ? 'ONE_ON_ONE' : 'GROUP',
+      studentIds: resolvedStudentIds.length > 0 ? resolvedStudentIds : null,
+      title: title.trim(),
+      meetLink: meetLink.trim(),
+      startTime,
+      duration,
+      status: 'SCHEDULED',
+    });
+
+    // Auto-create enrollment if package was selected and student not yet enrolled
+    if (packageId && packageId.trim()) {
+      const studentIdsToEnroll = resolvedStudentId ? [resolvedStudentId] : resolvedStudentIds;
+      for (const sId of studentIdsToEnroll) {
+        const exists = await Enrollment.findOne({ where: { userId: sId, packageId: packageId.trim() } });
+        if (!exists) {
+          await Enrollment.create({ userId: sId, packageId: packageId.trim() }).catch(() => {});
+        }
+      }
+    }
+
+    revalidatePath('/admin/tutors');
+    revalidatePath('/dashboard');
+    revalidatePath('/admin/enrollments');
+
+    return {
+      success: true,
+      message: sessionType === 'ONE_ON_ONE'
+        ? `1-on-1 session scheduled successfully!`
+        : `Class scheduled successfully for ${resolvedStudentIds.length > 0 ? resolvedStudentIds.length + ' students' : 'group'}!`,
+      liveClassId: liveClass.id,
+    };
+  } catch (error: any) {
+    console.error('Schedule custom class error:', error);
+    return { error: error?.message || 'Failed to schedule class' };
+  }
+}
+
+
 
 

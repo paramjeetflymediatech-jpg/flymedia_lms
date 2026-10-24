@@ -3,6 +3,7 @@ import { requireAuth } from '../../src/lib/auth';
 import { Enrollment, Package, LiveClass, Certificate, User, Referral } from '../../src/db/models';
 import { generateReferralCode } from '../../src/lib/referral';
 import StudentReferralInvite from '../../src/components/dashboard/StudentReferralInvite';
+import { Op } from 'sequelize';
 
 export const revalidate = 0; // Dynamic dashboard
 
@@ -64,7 +65,7 @@ export default async function StudentDashboardPage() {
     rewardStatus: 'Free ₹99 Demo Class Unlocked',
   }));
 
-  // Extract upcoming classes
+  // Extract upcoming classes from enrolled packages
   let allUpcomingClasses: any[] = [];
   const now = new Date();
 
@@ -93,6 +94,67 @@ export default async function StudentDashboardPage() {
       enrolledAt: enroll.enrolledAt,
     };
   }).filter(Boolean);
+
+  // Also fetch 1-on-1 personal classes or directly assigned multi-student classes
+  try {
+    const directClasses = await LiveClass.findAll({
+      where: {
+        [Op.or]: [
+          { studentId: user.id },
+          { sessionType: 'ONE_ON_ONE', studentId: user.id },
+        ],
+        startTime: { [Op.gt]: now },
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+      include: [
+        { model: User, as: 'tutor', attributes: ['id', 'name', 'avatar'] },
+        { model: Package, as: 'Package', attributes: ['id', 'title', 'slug', 'thumbnail'] },
+      ],
+    });
+
+    directClasses.forEach((dc: any) => {
+      const json = dc.toJSON();
+      if (!allUpcomingClasses.some((c) => c.id === json.id)) {
+        allUpcomingClasses.push({
+          ...json,
+          packageTitle: json.Package?.title || (json.sessionType === 'ONE_ON_ONE' ? '1-on-1 Live Mentorship' : 'Special Live Session'),
+          packageSlug: json.Package?.slug || '',
+          packageThumbnail: json.Package?.thumbnail || null,
+          tutorName: json.tutor?.name || 'Assigned Tutor',
+        });
+      }
+    });
+
+    // Check multi-student group classes where studentIds contains user.id
+    const multiClasses = await LiveClass.findAll({
+      where: {
+        sessionType: 'GROUP',
+        startTime: { [Op.gt]: now },
+        status: { [Op.ne]: 'CANCELLED' },
+      },
+      include: [
+        { model: User, as: 'tutor', attributes: ['id', 'name', 'avatar'] },
+        { model: Package, as: 'Package', attributes: ['id', 'title', 'slug', 'thumbnail'] },
+      ],
+    });
+
+    multiClasses.forEach((mc: any) => {
+      const json = mc.toJSON();
+      if (Array.isArray(json.studentIds) && json.studentIds.includes(user.id)) {
+        if (!allUpcomingClasses.some((c) => c.id === json.id)) {
+          allUpcomingClasses.push({
+            ...json,
+            packageTitle: json.Package?.title || 'Group Live Session',
+            packageSlug: json.Package?.slug || '',
+            packageThumbnail: json.Package?.thumbnail || null,
+            tutorName: json.tutor?.name || 'Assigned Tutor',
+          });
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('Error fetching direct student classes:', err);
+  }
 
   // Sort upcoming classes by start time
   allUpcomingClasses.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
@@ -166,17 +228,7 @@ export default async function StudentDashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Student Referral & Invite Link Section */}
-        <StudentReferralInvite
-          referralCode={referralCode}
-          friendsReferred={friendsReferred}
-          freeDemosLeft={freeDemosLeft}
-          freeDemosUsed={freeDemosUsed}
-          referredFriends={referredFriendsList}
-          compact={false}
-        />
-
+ 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Next Class */}
           <div className="lg:col-span-2 space-y-6">
@@ -195,8 +247,25 @@ export default async function StudentDashboardPage() {
                     <span className="text-xs font-bold mt-2 px-2 py-1 bg-orange-100 rounded-md">LIVE</span>
                   </div>
                 )}
-                <div className="flex-1 w-full space-y-4">
+
+                <div className="flex-1 flex flex-col justify-between">
                   <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      {nextClass.sessionType === 'ONE_ON_ONE' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-gradient-to-r from-rose-500/15 to-orange-500/15 text-rose-600 border border-rose-200">
+                          ⚡ 1-on-1 PERSONAL SESSION
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200">
+                          👥 LIVE CLASS
+                        </span>
+                      )}
+                      {nextClass.tutorName && (
+                        <span className="text-xs font-semibold text-slate-500">
+                          Mentor: <strong className="text-slate-700">{nextClass.tutorName}</strong>
+                        </span>
+                      )}
+                    </div>
                     <h3 className="font-bold text-lg text-slate-900 line-clamp-1">{nextClass.title}</h3>
                     <p className="text-sm text-slate-500 font-medium">
                       Package: {nextClass.packageTitle}

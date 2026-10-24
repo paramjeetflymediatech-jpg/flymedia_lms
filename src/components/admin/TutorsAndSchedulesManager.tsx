@@ -9,6 +9,7 @@ import {
   adminGenerateClassSchedule,
   adminDeleteSchedule,
   adminDeleteLiveClass,
+  adminScheduleClass,
 } from '../../../app/actions';
 
 interface PackageItem {
@@ -17,6 +18,14 @@ interface PackageItem {
   category: string;
   slug: string;
   totalClasses?: number;
+}
+
+interface StudentItem {
+  id: string;
+  name: string | null;
+  email: string;
+  freeDemoCredits?: number;
+  avatar?: string | null;
 }
 
 interface TutorItem {
@@ -48,8 +57,11 @@ interface ScheduleItem {
 
 interface LiveClassItem {
   id: string;
-  packageId: string;
+  packageId?: string | null;
   tutorId: string;
+  studentId?: string | null;
+  sessionType?: 'ONE_ON_ONE' | 'GROUP';
+  studentIds?: string[] | null;
   scheduleId?: string | null;
   classNumber?: number | null;
   title: string;
@@ -59,6 +71,7 @@ interface LiveClassItem {
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
   package?: PackageItem;
   tutor?: TutorItem;
+  student?: StudentItem;
 }
 
 export default function TutorsAndSchedulesManager({
@@ -66,14 +79,45 @@ export default function TutorsAndSchedulesManager({
   packages,
   initialSchedules,
   initialLiveClasses,
+  students = [],
 }: {
   initialTutors: TutorItem[];
   packages: PackageItem[];
   initialSchedules: ScheduleItem[];
   initialLiveClasses: LiveClassItem[];
+  students?: StudentItem[];
 }) {
   const [activeTab, setActiveTab] = useState<'tutors' | 'schedule' | 'classes'>('tutors');
   
+  // Custom 1-on-1 and Group Class Modal State
+  const [isScheduleClassModalOpen, setIsScheduleClassModalOpen] = useState(false);
+  const [customSessionType, setCustomSessionType] = useState<'ONE_ON_ONE' | 'GROUP'>('ONE_ON_ONE');
+  const [customTutorId, setCustomTutorId] = useState<string>(initialTutors[0]?.id || '');
+  const [customStudentId, setCustomStudentId] = useState<string>(students[0]?.id || '');
+  const [customSelectedStudentIds, setCustomSelectedStudentIds] = useState<string[]>([]);
+  const [customStudentSearch, setCustomStudentSearch] = useState<string>('');
+  const [customPackageId, setCustomPackageId] = useState<string>('');
+  const [customTitle, setCustomTitle] = useState<string>('1-on-1 Free Demo Session');
+  
+  const getDefaultDateTime = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(11, 0, 0, 0);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const [customStartTime, setCustomStartTime] = useState<string>(getDefaultDateTime());
+  const [customDuration, setCustomDuration] = useState<number>(60);
+  const [customMeetLink, setCustomMeetLink] = useState<string>('https://meet.google.com/');
+  const [customDeductCredit, setCustomDeductCredit] = useState<boolean>(true);
+  const [customSchedulePending, setCustomSchedulePending] = useState<boolean>(false);
+  const [classesFilter, setClassesFilter] = useState<'all' | 'one_on_one' | 'group'>('all');
+
   // Tutors state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTutor, setEditingTutor] = useState<TutorItem | null>(null);
@@ -242,6 +286,94 @@ export default function TutorsAndSchedulesManager({
     });
   };
 
+  // Handle Custom 1-on-1 / Multi-Student Class Submit
+  const handleCustomClassSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!customTutorId) {
+      Swal.fire('Missing Tutor', 'Please select a tutor for this class.', 'warning');
+      return;
+    }
+    if (customSessionType === 'ONE_ON_ONE' && !customStudentId) {
+      Swal.fire('Missing Student', 'Please select a student for this 1-on-1 session.', 'warning');
+      return;
+    }
+    if (customSessionType === 'GROUP' && customSelectedStudentIds.length === 0 && !customPackageId) {
+      Swal.fire('Missing Audience', 'Please select at least one student or choose a package for this group class.', 'warning');
+      return;
+    }
+    if (!customTitle.trim()) {
+      Swal.fire('Missing Title', 'Please enter a class title or topic.', 'warning');
+      return;
+    }
+    if (!customMeetLink.trim()) {
+      Swal.fire('Missing Meeting Link', 'Please provide a valid Google Meet or Zoom URL.', 'warning');
+      return;
+    }
+
+    setCustomSchedulePending(true);
+    const formData = new FormData();
+    formData.append('sessionType', customSessionType);
+    formData.append('tutorId', customTutorId);
+    if (customSessionType === 'ONE_ON_ONE') {
+      formData.append('studentId', customStudentId);
+      formData.append('deductDemoCredit', customDeductCredit ? 'true' : 'false');
+    } else {
+      formData.append('studentIds', JSON.stringify(customSelectedStudentIds));
+    }
+    if (customPackageId) {
+      formData.append('packageId', customPackageId);
+    }
+    formData.append('title', customTitle.trim());
+    formData.append('startTime', customStartTime);
+    formData.append('duration', String(customDuration));
+    formData.append('meetLink', customMeetLink.trim());
+
+    const res = await adminScheduleClass(formData);
+    setCustomSchedulePending(false);
+
+    if (res?.error) {
+      Swal.fire('Error', res.error, 'error');
+    } else {
+      Swal.fire('Scheduled!', res?.message || 'Class scheduled successfully.', 'success');
+      setIsScheduleClassModalOpen(false);
+      setActiveTab('classes');
+    }
+  };
+
+  const toggleStudentSelection = (sId: string) => {
+    if (customSelectedStudentIds.includes(sId)) {
+      setCustomSelectedStudentIds(customSelectedStudentIds.filter((id) => id !== sId));
+    } else {
+      setCustomSelectedStudentIds([...customSelectedStudentIds, sId]);
+    }
+  };
+
+  const selectAllFilteredStudents = (filteredList: StudentItem[]) => {
+    const newIds = new Set([...customSelectedStudentIds, ...filteredList.map((s) => s.id)]);
+    setCustomSelectedStudentIds(Array.from(newIds));
+  };
+
+  const clearAllSelectedStudents = () => {
+    setCustomSelectedStudentIds([]);
+  };
+
+  const filteredStudents = students.filter((s) => {
+    if (!customStudentSearch.trim()) return true;
+    const q = customStudentSearch.toLowerCase();
+    return (s.name || '').toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
+  });
+
+  const selectedOneOnOneStudent = students.find((s) => s.id === customStudentId);
+
+  const filteredLiveClasses = initialLiveClasses.filter((lc) => {
+    if (classesFilter === 'one_on_one') return lc.sessionType === 'ONE_ON_ONE' || !!lc.studentId;
+    if (classesFilter === 'group') return lc.sessionType === 'GROUP' || (!lc.studentId && lc.sessionType !== 'ONE_ON_ONE');
+    return true;
+  });
+
+  const oneOnOneCount = initialLiveClasses.filter((lc) => lc.sessionType === 'ONE_ON_ONE' || !!lc.studentId).length;
+  const groupCount = initialLiveClasses.filter((lc) => lc.sessionType === 'GROUP' || (!lc.studentId && lc.sessionType !== 'ONE_ON_ONE')).length;
+
   // Find currently selected tutor's packages
   const activeTutor = initialTutors.find((t) => t.id === selectedTutorId);
   const tutorPackages = activeTutor?.assignedPackages || [];
@@ -259,7 +391,7 @@ export default function TutorsAndSchedulesManager({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            🧑‍🏫 Tutors & Assigned Packages ({initialTutors.length})
+            🧑‍🏫 Tutors & Packages ({initialTutors.length})
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
@@ -269,7 +401,7 @@ export default function TutorsAndSchedulesManager({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            📅 Recurring Schedule Generator
+            📅 Recurring Batch Generator
           </button>
           <button
             onClick={() => setActiveTab('classes')}
@@ -283,17 +415,31 @@ export default function TutorsAndSchedulesManager({
           </button>
         </div>
 
-        {activeTab === 'tutors' && (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Primary Action Button: Schedule 1-on-1 or Multi-Student Class */}
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+            type="button"
+            onClick={() => setIsScheduleClassModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
-            Add New Tutor
+            <span>+ Schedule 1-on-1 / Group Class</span>
           </button>
-        )}
+
+          {activeTab === 'tutors' && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Tutor
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ============================================================== */}
@@ -692,18 +838,55 @@ export default function TutorsAndSchedulesManager({
 
           {/* Individual Live Classes List */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold text-sm text-slate-900">All Scheduled Live Classes ({initialLiveClasses.length})</h3>
                 <p className="text-xs text-slate-500">
-                  Track individual class sessions, meet links, and completion statuses.
+                  Track individual 1-on-1 sessions, group classes, meet links, and completion statuses.
                 </p>
+              </div>
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setClassesFilter('all')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                    classesFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  All ({initialLiveClasses.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClassesFilter('one_on_one')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                    classesFilter === 'one_on_one'
+                      ? 'bg-rose-600 text-white shadow-sm'
+                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+                  }`}
+                >
+                  ⚡ 1-on-1 ({oneOnOneCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClassesFilter('group')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                    classesFilter === 'group'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  👥 Group ({groupCount})
+                </button>
               </div>
             </div>
 
-            {initialLiveClasses.length === 0 ? (
+            {filteredLiveClasses.length === 0 ? (
               <p className="text-xs text-slate-400 italic py-6 text-center">
-                No scheduled live classes found. Use the Schedule Generator to schedule classes.
+                No classes match the selected filter. Click "+ Schedule 1-on-1 / Group Class" above to create one.
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -711,8 +894,8 @@ export default function TutorsAndSchedulesManager({
                   <thead>
                     <tr className="border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                       <th className="py-3 px-3">Class #</th>
-                      <th className="py-3 px-3">Class Title & Package</th>
-                      <th className="py-3 px-3">Tutor</th>
+                      <th className="py-3 px-3">Class Title & Type</th>
+                      <th className="py-3 px-3">Assigned Tutor</th>
                       <th className="py-3 px-3">Date & Time</th>
                       <th className="py-3 px-3">Meet Link</th>
                       <th className="py-3 px-3">Status</th>
@@ -720,7 +903,7 @@ export default function TutorsAndSchedulesManager({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs">
-                    {initialLiveClasses.map((lc) => {
+                    {filteredLiveClasses.map((lc) => {
                       const classTime = new Date(lc.startTime);
                       const isPast = classTime.getTime() + (lc.duration * 60000) < Date.now();
 
@@ -732,11 +915,31 @@ export default function TutorsAndSchedulesManager({
                             </span>
                           </td>
                           <td className="py-3 px-3">
-                            <p className="font-bold text-slate-900">{lc.title}</p>
-                            <p className="text-[11px] text-slate-500">{lc.package?.title}</p>
+                            <div className="space-y-1">
+                              <p className="font-bold text-slate-900">{lc.title}</p>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {lc.sessionType === 'ONE_ON_ONE' || lc.studentId ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-rose-500/15 to-orange-500/15 text-rose-600 border border-rose-200">
+                                    ⚡ 1-on-1 • Student: {lc.student?.name || lc.student?.email || 'Assigned Student'}
+                                  </span>
+                                ) : lc.studentIds && lc.studentIds.length > 0 ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
+                                    👥 {lc.studentIds.length} Students Assigned
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
+                                    📦 Package Batch
+                                  </span>
+                                )}
+                                {lc.package?.title && (
+                                  <span className="text-[11px] text-slate-400">({lc.package.title})</span>
+                                )}
+                              </div>
+                            </div>
                           </td>
                           <td className="py-3 px-3 text-slate-700 font-medium">
-                            {lc.tutor?.name || lc.tutor?.email || 'Assigned Tutor'}
+                            <div className="font-bold text-slate-900">{lc.tutor?.name || 'Assigned Tutor'}</div>
+                            <div className="text-[11px] text-slate-400">{lc.tutor?.email}</div>
                           </td>
                           <td className="py-3 px-3">
                             <div className="font-medium text-slate-900">
@@ -764,7 +967,7 @@ export default function TutorsAndSchedulesManager({
                           <td className="py-3 px-3">
                             {isPast ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
-                                CONDUCTED (PASSED)
+                                CONDUCTED
                               </span>
                             ) : (
                               <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-md">
@@ -1042,6 +1245,394 @@ export default function TutorsAndSchedulesManager({
                   className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50"
                 >
                   {tutorPending ? 'Saving...' : 'Update Tutor & Packages'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: SCHEDULE 1-ON-1 OR MULTI-STUDENT CLASS                  */}
+      {/* ============================================================== */}
+      {isScheduleClassModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh] border border-slate-100">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white">
+              <div className="space-y-0.5">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-black uppercase tracking-wider">
+                  <span>⚡ LIVE CLASS SCHEDULER</span>
+                </div>
+                <h3 className="text-lg font-black text-white">
+                  Schedule Class: 1-on-1 or Multiple Students
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Assign a specific student for private mentorship/demo, or select multiple students for a group class.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScheduleClassModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCustomClassSubmit} className="p-6 overflow-y-auto space-y-5">
+              {/* 1. SESSION TYPE SELECTOR */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-2">
+                  1. Session Format <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div
+                    onClick={() => {
+                      setCustomSessionType('ONE_ON_ONE');
+                      if (customTitle === 'Group Live Class') {
+                        setCustomTitle('1-on-1 Free Demo Session');
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${
+                      customSessionType === 'ONE_ON_ONE'
+                        ? 'border-rose-500 bg-rose-50/40 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="sessionTypeChoice"
+                      value="ONE_ON_ONE"
+                      checked={customSessionType === 'ONE_ON_ONE'}
+                      onChange={() => setCustomSessionType('ONE_ON_ONE')}
+                      className="mt-0.5 text-rose-600 focus:ring-rose-500"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900">⚡ 1-on-1 Session</span>
+                        <span className="text-[10px] font-black bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">DEMO / PRIVATE</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Dedicated 1-on-1 private class for a specific student with the assigned tutor.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setCustomSessionType('GROUP');
+                      if (customTitle === '1-on-1 Free Demo Session') {
+                        setCustomTitle('Group Live Class');
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${
+                      customSessionType === 'GROUP'
+                        ? 'border-blue-500 bg-blue-50/40 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="sessionTypeChoice"
+                      value="GROUP"
+                      checked={customSessionType === 'GROUP'}
+                      onChange={() => setCustomSessionType('GROUP')}
+                      className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900">👥 Multiple Students</span>
+                        <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">BATCH / GROUP</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Select multiple specific students or a package batch to attend together.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. ASSIGNED TUTOR */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  2. Assigned Tutor <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={customTutorId}
+                  onChange={(e) => setCustomTutorId(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                >
+                  <option value="">Select Tutor...</option>
+                  {initialTutors.map((tutor) => (
+                    <option key={tutor.id} value={tutor.id}>
+                      {tutor.name || 'Tutor'} ({tutor.email}) {tutor.professionTitle ? `• ${tutor.professionTitle}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 3. STUDENT SELECTION */}
+              {customSessionType === 'ONE_ON_ONE' ? (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                      3. Select Specific Student <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-slate-500">
+                      {students.length} Registered Students
+                    </span>
+                  </div>
+
+                  <select
+                    value={customStudentId}
+                    onChange={(e) => setCustomStudentId(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/25 focus:border-rose-500 bg-white"
+                  >
+                    <option value="">Choose Student for 1-on-1 Class...</option>
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.name || 'Student'} ({student.email})
+                        {(student.freeDemoCredits || 0) > 0 ? ` [🎁 ${student.freeDemoCredits} Demo Credit]` : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Student Demo Credit Indicator & Deduction Toggle */}
+                  {selectedOneOnOneStudent && (
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-slate-200/60">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-600">Free Demo Balance:</span>
+                        {(selectedOneOnOneStudent.freeDemoCredits || 0) > 0 ? (
+                          <span className="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                            🎁 {selectedOneOnOneStudent.freeDemoCredits} Free Demo Pass Available
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">
+                            0 Free Demo Passes
+                          </span>
+                        )}
+                      </div>
+
+                      {(selectedOneOnOneStudent.freeDemoCredits || 0) > 0 && (
+                        <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+                          <input
+                            type="checkbox"
+                            checked={customDeductCredit}
+                            onChange={(e) => setCustomDeductCredit(e.target.checked)}
+                            className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          />
+                          <span>Deduct 1 Demo Credit for this session</span>
+                        </label>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* MULTI-STUDENT SELECTOR */
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                        3. Select Multiple Students
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        Check all students who should be invited to this group class:
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black px-2.5 py-1 bg-blue-100 text-blue-800 rounded-lg">
+                        {customSelectedStudentIds.length} Selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => selectAllFilteredStudents(filteredStudents)}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={clearAllSelectedStudents}
+                        className="text-[11px] font-bold text-slate-500 hover:text-slate-800 hover:underline"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search Filter Input */}
+                  <input
+                    type="text"
+                    value={customStudentSearch}
+                    onChange={(e) => setCustomStudentSearch(e.target.value)}
+                    placeholder="Search students by name or email..."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/25"
+                  />
+
+                  {/* Scrollable Checkbox List */}
+                  <div className="max-h-52 overflow-y-auto space-y-1.5 p-2 bg-white rounded-xl border border-slate-200">
+                    {filteredStudents.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4 italic">No matching students found.</p>
+                    ) : (
+                      filteredStudents.map((st) => {
+                        const isSelected = customSelectedStudentIds.includes(st.id);
+                        return (
+                          <div
+                            key={st.id}
+                            onClick={() => toggleStudentSelection(st.id)}
+                            className={`flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                              isSelected ? 'bg-blue-50/70 border border-blue-200' : 'hover:bg-slate-50 border border-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {}} // handled by row click
+                                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate">{st.name || 'Student'}</p>
+                                <p className="text-[11px] text-slate-500 truncate">{st.email}</p>
+                              </div>
+                            </div>
+                            {(st.freeDemoCredits || 0) > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 shrink-0">
+                                🎁 {st.freeDemoCredits} Demo
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 4. COURSE / PACKAGE (OPTIONAL) */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  4. Associated Package / Course <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
+                <select
+                  value={customPackageId}
+                  onChange={(e) => {
+                    const pkgId = e.target.value;
+                    setCustomPackageId(pkgId);
+                    if (pkgId) {
+                      const selPkg = packages.find((p) => p.id === pkgId);
+                      if (selPkg) {
+                        setCustomTitle(
+                          customSessionType === 'ONE_ON_ONE'
+                            ? `1-on-1 Demo Session: ${selPkg.title}`
+                            : `${selPkg.title} Live Class`
+                        );
+                      }
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                >
+                  <option value="">No Specific Package (Standalone 1-on-1 Demo / Mentorship)</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.title} ({pkg.category})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 5. CLASS TITLE */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  5. Class Title / Topic <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="e.g. 1-on-1 Free Demo Class: Full Stack Web Development"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                />
+              </div>
+
+              {/* 6. DATE, TIME, DURATION */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                    6. Date & Start Time <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={customStartTime}
+                    onChange={(e) => setCustomStartTime(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                    Duration (Minutes)
+                  </label>
+                  <select
+                    value={customDuration}
+                    onChange={(e) => setCustomDuration(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                  >
+                    <option value="30">30 Minutes (Quick Demo / Doubt)</option>
+                    <option value="45">45 Minutes</option>
+                    <option value="60">60 Minutes (1 Hour)</option>
+                    <option value="90">90 Minutes (1.5 Hours)</option>
+                    <option value="120">120 Minutes (2 Hours)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 7. GOOGLE MEET LINK */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  7. Google Meet / Zoom Link <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={customMeetLink}
+                  onChange={(e) => setCustomMeetLink(e.target.value)}
+                  placeholder="https://meet.google.com/abc-defg-hij"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 bg-white"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Students and tutor will receive this live meeting link directly on their dashboards.
+                </p>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsScheduleClassModalOpen(false)}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={customSchedulePending}
+                  className="px-6 py-2.5 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md disabled:opacity-50 flex items-center gap-2"
+                >
+                  {customSchedulePending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      <span>Scheduling Class...</span>
+                    </>
+                  ) : (
+                    <span>Confirm & Schedule Class →</span>
+                  )}
                 </button>
               </div>
             </form>

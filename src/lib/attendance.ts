@@ -113,13 +113,16 @@ export async function recordStudentClassJoin(userId: string, liveClassId: string
     return { success: false, error: 'Meet link has not been provided yet' };
   }
 
-  // Find enrollment for this student and package
-  const enrollment = await Enrollment.findOne({
-    where: {
-      userId,
-      packageId: liveClass.packageId,
-    },
-  });
+  // Find enrollment for this student and package if class is tied to a package
+  let enrollment = null;
+  if (liveClass.packageId) {
+    enrollment = await Enrollment.findOne({
+      where: {
+        userId,
+        packageId: liveClass.packageId,
+      },
+    });
+  }
 
   if (enrollment) {
     // Record or update attendance
