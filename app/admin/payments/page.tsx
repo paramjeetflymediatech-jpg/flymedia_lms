@@ -134,16 +134,6 @@ export default async function AdminPaymentsPage({
         </div>
 
         <PaymentsTable payments={payments} />
-
-        <div className="p-4 border-t border-slate-100">
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalItems={paginatedData.count}
-            limit={limit}
-            baseUrl="/admin/payments"
-          />
-        </div>
       </div>
     </div>
   );

@@ -10,10 +10,10 @@ interface PaginationProps {
 }
 
 export default function Pagination({ page, totalPages, totalItems, limit, baseUrl, searchParams = {} }: PaginationProps) {
-  if (totalPages <= 1) return null;
+  if (totalItems === 0) return null;
 
   const offset = (page - 1) * limit;
-  const startItem = totalItems === 0 ? 0 : offset + 1;
+  const startItem = offset + 1;
   const endItem = Math.min(offset + limit, totalItems);
 
   const getUrl = (pageNum: number) => {

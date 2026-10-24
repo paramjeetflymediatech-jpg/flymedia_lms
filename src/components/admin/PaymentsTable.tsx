@@ -42,6 +42,8 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SUCCESS' | 'PENDING' | 'FAILED'>('ALL');
   const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null);
   const [copiedTxnId, setCopiedTxnId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   const filteredPayments = useMemo(() => {
     return payments.filter((p) => {
@@ -61,6 +63,18 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
       return txnMatch || nameMatch || emailMatch || phoneMatch || pkgMatch;
     });
   }, [payments, statusFilter, searchTerm]);
+
+  // Reset to page 1 on filter or search change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const totalItems = filteredPayments.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedPayments = filteredPayments.slice(startIndex, endIndex);
 
   const copyToClipboard = (text: string) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -135,7 +149,8 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
           <p className="text-xs text-slate-400">Try adjusting your filters or search keywords.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="text-[11px] font-bold text-slate-400 uppercase bg-slate-50/80 tracking-wider">
               <tr>
@@ -149,7 +164,7 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-              {filteredPayments.map((p) => {
+              {paginatedPayments.map((p) => {
                 const isDemo = p.transactionId?.startsWith('DEMO_') || p.transactionId?.startsWith('FREE_DEMO_');
                 const cleanPhone = getCleanPhone(p.user?.phone);
                 const initial = p.user?.name ? p.user.name.charAt(0).toUpperCase() : '?';
@@ -320,7 +335,87 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
             </tbody>
           </table>
         </div>
-      )}
+
+        {/* Pagination Bar */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
+            <span>
+              Showing <strong className="text-slate-900">{totalItems === 0 ? 0 : startIndex + 1}</strong> to{' '}
+              <strong className="text-slate-900">{endIndex}</strong> of{' '}
+              <strong className="text-slate-900">{totalItems}</strong> entries
+            </span>
+            <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+              <span className="text-slate-400">Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
+                safePage <= 1
+                  ? 'border-slate-200 text-slate-300 bg-slate-100/50 cursor-not-allowed'
+                  : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 cursor-pointer shadow-sm'
+              }`}
+            >
+              Previous
+            </button>
+
+            {/* Page number buttons */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                .map((pageNum, idx, arr) => {
+                  const prev = arr[idx - 1];
+                  return (
+                    <React.Fragment key={pageNum}>
+                      {prev && pageNum - prev > 1 && (
+                        <span className="px-1 text-slate-400 text-xs">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          safePage === pageNum
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
+                safePage >= totalPages
+                  ? 'border-slate-200 text-slate-300 bg-slate-100/50 cursor-not-allowed'
+                  : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-100 cursor-pointer shadow-sm'
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </>
+    )}
 
       {/* ===================== USER & TRANSACTION DETAILS MODAL ===================== */}
       {selectedPayment && (
