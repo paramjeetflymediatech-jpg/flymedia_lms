@@ -21,6 +21,7 @@ import { CallbackModal } from '../components/common/CallbackModal';
 import { ContactUsModal } from '../components/common/ContactUsModal';
 import { LegalAndAboutModal, LegalModalType } from '../components/common/LegalAndAboutModal';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
+import { ReferralModal } from '../components/common/ReferralModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { useAuth } from '../context/AuthContext';
 import { FlymediaContact } from '../constants/contact';
@@ -50,6 +51,8 @@ import {
   ChevronRight,
   HelpCircle,
   Building2,
+  Gift,
+  Zap,
 } from 'lucide-react-native';
 
 interface ProfileScreenProps {
@@ -68,6 +71,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralModalVisible, setReferralModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -178,7 +183,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         setLoading(false);
         return;
       }
-      res = await register(name, email, password);
+      res = await register(name, email, password, referralCode);
     }
     setLoading(false);
 
@@ -188,6 +193,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setEmail('');
       setPassword('');
       setName('');
+      setReferralCode('');
     }
   };
 
@@ -357,6 +363,44 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 </View>
               </TouchableOpacity>
             )}
+
+            {/* REFER & EARN BANNER CARD */}
+            <TouchableOpacity
+              style={styles.referralBannerCard}
+              onPress={() => setReferralModalVisible(true)}
+              activeOpacity={0.88}
+            >
+              <View style={styles.referralBannerTop}>
+                <View style={styles.referralIconCircle}>
+                  <Gift size={20} color="#ffffff" strokeWidth={2.4} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <Text style={styles.referralBannerTitle}>Refer & Earn Free Demo</Text>
+                    <View style={styles.freeDemoTag}>
+                      <Text style={styles.freeDemoTagText}>⚡ ₹99 FREE</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.referralBannerSub}>
+                    Invite a friend. When they sign up, you get a 1-on-1 ₹99 Demo Class Free!
+                  </Text>
+                </View>
+                <View style={styles.referralArrowCircle}>
+                  <ChevronRight size={16} color="#ffffff" strokeWidth={2.4} />
+                </View>
+              </View>
+
+              <View style={styles.referralBannerBottom}>
+                <View style={styles.referralCodePill}>
+                  <Text style={styles.referralCodePillLabel}>Invite Code:</Text>
+                  <Text style={styles.referralCodePillText}>{user.referralCode || 'FLY-LMS'}</Text>
+                </View>
+                <View style={styles.referralCreditStats}>
+                  <Text style={styles.referralCreditValue}>{user.freeDemoCredits || 0}</Text>
+                  <Text style={styles.referralCreditLabel}>Free Passes</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
 
             {/* ACADEMIC & PERSONAL DETAILS CARD */}
             <View style={styles.infoCard}>
@@ -635,6 +679,26 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 />
               </View>
 
+              {!isLoginTab && (
+                <View style={styles.fieldWrap}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={styles.fieldLabel}>Referral Code (Optional)</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Gift size={11} color={Colors.primaryRose} />
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: Colors.primaryRose }}>Unlock Benefits</Text>
+                    </View>
+                  </View>
+                  <TextInput
+                    style={[styles.fieldInput, { textTransform: 'uppercase', letterSpacing: 1 }]}
+                    placeholder="e.g. FLY-NAV-4A82"
+                    placeholderTextColor={Colors.textLight}
+                    autoCapitalize="characters"
+                    value={referralCode}
+                    onChangeText={setReferralCode}
+                  />
+                </View>
+              )}
+
               <TouchableOpacity
                 style={styles.authSubmitBtn}
                 onPress={handleAuthSubmit}
@@ -845,6 +909,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         isLoggedIn={!!user}
         isDeleting={deleting}
         onDeleteAccount={deleteAccount}
+      />
+
+      <ReferralModal
+        visible={referralModalVisible}
+        onClose={() => setReferralModalVisible(false)}
+        onRedeemFreeDemo={() => setCallbackModalVisible(true)}
       />
     </View>
   );
@@ -1075,6 +1145,100 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  /* Refer & Earn Banner Card */
+  referralBannerCard: {
+    backgroundColor: '#831843', // Deep rose-pink
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    ...Shadows.card,
+  },
+  referralBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  referralIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referralBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+  freeDemoTag: {
+    backgroundColor: '#FDE047',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  freeDemoTagText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#713F12',
+    letterSpacing: 0.3,
+  },
+  referralBannerSub: {
+    fontSize: 11.5,
+    color: '#FCE7F3',
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  referralArrowCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referralBannerBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 12,
+  },
+  referralCodePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  referralCodePillLabel: {
+    fontSize: 11,
+    color: '#FBCFE8',
+    fontWeight: '600',
+  },
+  referralCodePillText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  referralCreditStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  referralCreditValue: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FDE047',
+  },
+  referralCreditLabel: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '700',
   },
 
   /* Academic & Personal Details Card */

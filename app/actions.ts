@@ -65,8 +65,9 @@ export async function loginAction(prevState: any, formData: FormData) {
 }
 export async function registerAction(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = formData.get('password') as string;
+  const referralCode = (formData.get('referralCode') as string || '').trim();
 
   if (!name || !email || !password) {
     return { error: 'All fields are required' };
@@ -78,13 +79,24 @@ export async function registerAction(prevState: any, formData: FormData) {
       return { error: 'An account with this email already exists' };
     }
 
+    const { generateReferralCode, processReferralReward } = await import('../src/lib/referral');
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({
       email,
       name,
       passwordHash,
       role: 'STUDENT',
+      referralCode: generateReferralCode(name),
+      freeDemoCredits: 0,
+      referralsCount: 0,
     });
+
+    if (referralCode) {
+      await processReferralReward({
+        newUserId: user.id,
+        referralCode,
+      });
+    }
 
     await loginUser({
       id: user.id,

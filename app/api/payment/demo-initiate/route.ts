@@ -103,6 +103,70 @@ export async function POST(req: Request) {
       }
     }
 
+    // Check if redeeming via free referral demo class credit
+    const useFreeDemoCredit = Boolean(body.useFreeDemoCredit);
+    if (useFreeDemoCredit && Number(targetUser.freeDemoCredits || 0) > 0) {
+      // Deduct 1 credit
+      targetUser.freeDemoCredits = Math.max(0, Number(targetUser.freeDemoCredits || 0) - 1);
+      await targetUser.save();
+
+      const freeTxnId = `FREE_DEMO_REF_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+      // Register Free Demo inquiry
+      const freeInquiryMessage = `[🎁 FREE ₹99 Demo Class via Referral Reward] Program: ${course} | Mode: ${mode} | Name: ${name.trim()} | Phone: ${cleanPhone}`;
+      await Inquiry.create({
+        name: name.trim(),
+        phone: cleanPhone,
+        email: cleanEmail,
+        message: freeInquiryMessage,
+        status: 'NEW',
+      });
+
+      // Create SUCCESS payment record at ₹0
+      await Payment.create({
+        userId: targetUser.id,
+        packageId: targetPackage.id,
+        amount: 0,
+        transactionId: freeTxnId,
+        status: 'SUCCESS',
+        provider: 'REFERRAL_REWARD',
+      });
+
+      // Notify administrators
+      const adminReceivers = getAdminReceivers();
+      if (adminReceivers.length > 0) {
+        sendMail({
+          to: adminReceivers,
+          subject: `🎁 Free Demo Class Booked via Referral: ${name.trim()}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.5;">
+              <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 20px; border-radius: 12px 12px 0 0; color: white;">
+                <h2 style="margin: 0; font-size: 20px;">🎁 Free Demo Class Booked (Referral Credit)</h2>
+                <p style="margin: 4px 0 0; opacity: 0.9; font-size: 13px;">Student redeemed 1 free demo class earned by referring a friend</p>
+              </div>
+              <div style="background: #ffffff; padding: 20px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+                <p><strong>Student Name:</strong> ${name.trim()}</p>
+                <p><strong>Mobile Number:</strong> ${cleanPhone}</p>
+                <p><strong>Email:</strong> ${cleanEmail}</p>
+                <p><strong>Selected Program:</strong> ${course}</p>
+                <p><strong>Learning Mode:</strong> ${mode}</p>
+                <p><strong>Demo Fee:</strong> ₹0 (Free Demo Class Pass Redeemed)</p>
+                <p><strong>Remaining Referral Credits:</strong> ${targetUser.freeDemoCredits}</p>
+              </div>
+            </div>
+          `,
+        }).catch((e: any) => console.error('Failed to send admin free demo email:', e));
+      }
+
+      return NextResponse.json({
+        success: true,
+        isFreeDemo: true,
+        transactionId: freeTxnId,
+        remainingCredits: targetUser.freeDemoCredits,
+        message: 'Your 1-on-1 demo class has been booked 100% free with your referral reward!',
+      });
+    }
+
     // 3. Register Inquiry in Database so lead is never lost
     const inquiryMessage = `[₹99 Demo Class Booking] Program: ${course} | Mode: ${mode} | Name: ${name.trim()} | Phone: ${cleanPhone}`;
     const inquiry = await Inquiry.create({

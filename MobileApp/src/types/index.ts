@@ -72,6 +72,10 @@ export interface User {
   addressDetails?: AddressDetails | null;
   familyDetails?: FamilyDetails | null;
   studentCategory?: string | null;
+  referralCode?: string;
+  referredBy?: string;
+  freeDemoCredits?: number;
+  referralsCount?: number;
 }
 
 export interface Enrollment {

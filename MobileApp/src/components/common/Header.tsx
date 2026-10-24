@@ -22,10 +22,13 @@ import {
   ChevronRight,
   ChevronDown,
   ShieldCheck,
+  Gift,
+  Sparkles,
 } from 'lucide-react-native';
 import { FlymediaContact } from '../../constants/contact';
 import { useAuth } from '../../context/AuthContext';
 import { formatImageUrl } from '../../utils/imageUrl';
+import { ReferralModal } from './ReferralModal';
 
 export interface HeaderProps {
   onCallPress?: () => void;
@@ -61,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   }
   const { user, logout } = useAuth();
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [referralModalVisible, setReferralModalVisible] = useState(false);
   const topPadding = Math.max(insets.top, Platform.OS === 'ios' ? 44 : 16);
 
   const handleHelpPress = () => {
@@ -284,7 +288,31 @@ export const Header: React.FC<HeaderProps> = ({
                   <ChevronRight size={16} color="#94A3B8" />
                 </TouchableOpacity>
 
-                {/* BUTTON 2: SIGN OUT */}
+                {/* BUTTON 2: REFER & EARN (FREE ₹99 DEMO) */}
+                <TouchableOpacity
+                  style={styles.menuActionBtn}
+                  onPress={() => {
+                    setProfileMenuVisible(false);
+                    setReferralModalVisible(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.menuActionIconWrap, { backgroundColor: '#FEF3C7' }]}>
+                    <Gift size={16} color="#D97706" strokeWidth={2.4} />
+                  </View>
+                  <View style={styles.menuActionContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.menuActionTitle}>Refer & Earn</Text>
+                      <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: Colors.primaryRose }}>FREE ₹99</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.menuActionSub}>Invite friend & get free demo</Text>
+                  </View>
+                  <ChevronRight size={16} color="#94A3B8" />
+                </TouchableOpacity>
+
+                {/* BUTTON 3: SIGN OUT */}
                 <TouchableOpacity
                   style={[styles.menuActionBtn, styles.menuSignOutBtn]}
                   onPress={handleSignOut}
@@ -303,6 +331,13 @@ export const Header: React.FC<HeaderProps> = ({
           </TouchableOpacity>
         </Modal>
       )}
+
+      {/* REFER & EARN MODAL */}
+      <ReferralModal
+        visible={referralModalVisible}
+        onClose={() => setReferralModalVisible(false)}
+        onRedeemFreeDemo={onCallPress}
+      />
     </View>
   );
 };

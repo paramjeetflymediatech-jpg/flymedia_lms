@@ -36,6 +36,7 @@ import {
   Mail,
   ChevronDown,
   ChevronUp,
+  Gift,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { FlymediaContact } from '../../constants/contact';
@@ -62,7 +63,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   onClose,
   defaultCourse = 'Web Development & Designing Bootcamp',
 }) => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -77,6 +78,8 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
   const [checkingLiveStatus, setCheckingLiveStatus] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [useFreeCredit, setUseFreeCredit] = useState(false);
+  const [wasFreeDemo, setWasFreeDemo] = useState(false);
 
   // Dynamically load live published courses from backend
   useEffect(() => {
@@ -120,6 +123,8 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
       setCheckingLiveStatus(false);
       setPaymentSuccess(false);
       setPaymentError('');
+      setWasFreeDemo(false);
+      setUseFreeCredit(Boolean(user?.freeDemoCredits && user.freeDemoCredits > 0));
     }
   }, [visible, defaultCourse, user]);
 
@@ -178,6 +183,7 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
 
     try {
       const finalCourseName = `${course} (${mode === 'OFFLINE' ? 'Campus' : mode === 'ONLINE' ? 'Online' : 'Hybrid'})`;
+      const applyFreeCredit = Boolean(useFreeCredit && user?.freeDemoCredits && user.freeDemoCredits > 0);
 
       const res = await ApiService.initiateDemoPayment(
         {
@@ -186,11 +192,23 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
           phone: cleanPhone,
           course: finalCourseName,
           mode,
+          useFreeDemoCredit: applyFreeCredit,
         },
         user?.token
       );
 
       setLoading(false);
+
+      if (res && res.success && res.isFreeDemo) {
+        setIsWaitingForPhonePe(false);
+        setWasFreeDemo(true);
+        setActiveTxnId(res.transactionId || `FREE_DEMO_${Date.now()}`);
+        setPaymentSuccess(true);
+        if (refreshProfile) {
+          refreshProfile().catch(() => {});
+        }
+        return;
+      }
 
       if (res && res.success && res.redirectUrl) {
         const txn = res.transactionId || `DEMO_${Date.now()}`;
@@ -228,6 +246,8 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
     onClose();
   };
 
+  const isFreeApplied = Boolean(useFreeCredit && user?.freeDemoCredits && user.freeDemoCredits > 0);
+
   return (
     <Modal
       visible={visible}
@@ -263,12 +283,26 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
             {/* View 1: Payment Success */}
             {paymentSuccess ? (
               <View style={styles.successContainer}>
-                <View style={styles.successIconCircle}>
-                  <CheckCircle size={44} color="#059669" />
+                <View style={[styles.successIconCircle, wasFreeDemo && { backgroundColor: '#ECFDF5' }]}>
+                  {wasFreeDemo ? (
+                    <Gift size={44} color="#059669" />
+                  ) : (
+                    <CheckCircle size={44} color="#059669" />
+                  )}
                 </View>
-                <Text style={styles.successTitle}>Demo Class Confirmed!</Text>
+                <Text style={styles.successTitle}>
+                  {wasFreeDemo ? 'Free Demo Class Confirmed! 🎉' : 'Demo Class Confirmed!'}
+                </Text>
                 <Text style={styles.successText}>
-                  Thank you, <Text style={{ fontWeight: 'bold' }}>{name}</Text>! Your ₹99 payment has been verified with PhonePe. Your 1-on-1 demo slot is secured.
+                  {wasFreeDemo ? (
+                    <>
+                      Congratulations, <Text style={{ fontWeight: 'bold' }}>{name}</Text>! Your 1-on-1 live demo slot has been booked <Text style={{ color: '#059669', fontWeight: 'bold' }}>100% Free</Text> using your referral credit.
+                    </>
+                  ) : (
+                    <>
+                      Thank you, <Text style={{ fontWeight: 'bold' }}>{name}</Text>! Your ₹99 payment has been verified with PhonePe. Your 1-on-1 demo slot is secured.
+                    </>
+                  )}
                 </Text>
 
                 <View style={styles.bookedDetailsCard}>
@@ -288,7 +322,9 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   </View>
                   <View style={styles.bookedDetailRow}>
                     <Text style={styles.bookedLabel}>Amount Paid:</Text>
-                    <Text style={[styles.bookedValue, { color: '#059669', fontWeight: '900' }]}>₹99.00 (PhonePe)</Text>
+                    <Text style={[styles.bookedValue, { color: '#059669', fontWeight: '900' }]}>
+                      {wasFreeDemo ? '₹0.00 (Free Referral Pass)' : '₹99.00 (PhonePe)'}
+                    </Text>
                   </View>
                   {activeTxnId ? (
                     <View style={styles.bookedDetailRow}>
@@ -584,9 +620,40 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   )}
                 </View>
 
-                {/* Primary Action Button: Direct PhonePe Redirect */}
+                {/* FREE DEMO CLASS REFERRAL REWARD CARD */}
+                {user?.freeDemoCredits && user.freeDemoCredits > 0 ? (
+                  <TouchableOpacity
+                    style={[styles.referralCreditBanner, useFreeCredit && styles.referralCreditBannerActive]}
+                    onPress={() => setUseFreeCredit(!useFreeCredit)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.referralCreditIconWrap}>
+                      <Gift size={20} color="#059669" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.referralCreditTitle}>1 Free Demo Pass Available</Text>
+                        <View style={styles.freeGreenBadge}>
+                          <Text style={styles.freeGreenBadgeText}>SAVE ₹99</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.referralCreditSub}>
+                        Earned by referring a friend. {useFreeCredit ? 'Free pass applied (Pay ₹0).' : 'Tap to apply and book free.'}
+                      </Text>
+                    </View>
+                    <View style={[styles.creditToggleBox, useFreeCredit && styles.creditToggleBoxChecked]}>
+                      {useFreeCredit && <Check size={14} color="#ffffff" strokeWidth={3} />}
+                    </View>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Primary Action Button: Direct PhonePe Redirect OR Free Redemption */}
                 <TouchableOpacity
-                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                  style={[
+                    styles.submitButton,
+                    isFreeApplied ? styles.submitButtonFree : null,
+                    loading ? styles.submitButtonDisabled : null,
+                  ]}
                   onPress={handleBookAndPay}
                   disabled={loading}
                   activeOpacity={0.85}
@@ -594,13 +661,21 @@ export const CallbackModal: React.FC<CallbackModalProps> = ({
                   {loading ? (
                     <View style={styles.btnRow}>
                       <ActivityIndicator size="small" color="#ffffff" />
-                      <Text style={styles.submitButtonText}>Connecting to PhonePe...</Text>
+                      <Text style={styles.submitButtonText}>
+                        {isFreeApplied ? 'Confirming Free Demo...' : 'Connecting to PhonePe...'}
+                      </Text>
                     </View>
                   ) : (
                     <View style={styles.submitButtonInner}>
-                      <Text style={styles.submitButtonText}>Pay ₹99 & Book via PhonePe</Text>
-                      <View style={styles.submitPricePill}>
-                        <Text style={styles.submitPricePillText}>₹99</Text>
+                      <Text style={styles.submitButtonText}>
+                        {isFreeApplied
+                          ? 'Book 1-on-1 Demo 100% Free'
+                          : 'Pay ₹99 & Book via PhonePe'}
+                      </Text>
+                      <View style={[styles.submitPricePill, isFreeApplied ? styles.submitPricePillFree : null]}>
+                        <Text style={[styles.submitPricePillText, isFreeApplied ? styles.submitPricePillTextFree : null]}>
+                          {isFreeApplied ? '₹0 Free' : '₹99'}
+                        </Text>
                       </View>
                     </View>
                   )}
@@ -1093,6 +1168,78 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: '#DC2626',
     fontWeight: '600',
+  },
+
+  /* Referral Credit Banner */
+  referralCreditBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  referralCreditBannerActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#059669',
+  },
+  referralCreditIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referralCreditTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#065F46',
+  },
+  freeGreenBadge: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+  },
+  freeGreenBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  referralCreditSub: {
+    fontSize: 11,
+    color: '#047857',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  creditToggleBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  creditToggleBoxChecked: {
+    backgroundColor: '#059669',
+    borderColor: '#059669',
+  },
+  submitButtonFree: {
+    backgroundColor: '#059669',
+    shadowColor: '#059669',
+  },
+  submitPricePillFree: {
+    backgroundColor: '#ffffff',
+  },
+  submitPricePillTextFree: {
+    color: '#059669',
   },
 
   /* Success View */

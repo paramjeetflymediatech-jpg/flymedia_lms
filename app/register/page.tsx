@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import RegisterForm from './RegisterForm';
@@ -24,7 +25,9 @@ export default function RegisterPage() {
           {/* Form Section */}
           <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="mx-auto w-full max-w-sm lg:w-[400px]">
-              <RegisterForm />
+              <Suspense fallback={<div className="py-12 text-center text-sm font-semibold text-slate-400">Loading registration form...</div>}>
+                <RegisterForm />
+              </Suspense>
             </div>
           </div>
 

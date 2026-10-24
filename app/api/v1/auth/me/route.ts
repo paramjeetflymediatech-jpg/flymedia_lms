@@ -36,6 +36,10 @@ export async function GET(request: Request) {
         'addressDetails',
         'familyDetails',
         'studentCategory',
+        'referralCode',
+        'referredBy',
+        'freeDemoCredits',
+        'referralsCount',
       ],
     });
 
@@ -44,6 +48,13 @@ export async function GET(request: Request) {
         { success: false, error: 'User not found' },
         { status: 404 }
       );
+    }
+
+    // Auto-generate referralCode if missing
+    if (!user.referralCode) {
+      const { generateReferralCode } = await import('../../../../../src/lib/referral');
+      user.referralCode = generateReferralCode(user.name);
+      await user.save().catch(() => {});
     }
 
     return NextResponse.json({
@@ -60,6 +71,10 @@ export async function GET(request: Request) {
         addressDetails: user.addressDetails || null,
         familyDetails: user.familyDetails || null,
         studentCategory: user.studentCategory || null,
+        referralCode: user.referralCode,
+        referredBy: user.referredBy || null,
+        freeDemoCredits: Number(user.freeDemoCredits || 0),
+        referralsCount: Number(user.referralsCount || 0),
       },
     });
   } catch (error: any) {

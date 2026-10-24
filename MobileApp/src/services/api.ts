@@ -111,17 +111,47 @@ export const ApiService = {
   /**
    * Performs dynamic registration against API
    */
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string, referralCode?: string) {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          referralCode: referralCode ? referralCode.trim() : undefined,
+        }),
       });
       const json = await response.json();
       return json;
     } catch (e: any) {
       return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  /**
+   * Fetches user's referral stats, code, and reward balance
+   */
+  async getReferralDetails(token: string): Promise<{
+    success: boolean;
+    referralCode?: string;
+    referralLink?: string;
+    freeDemoCredits?: number;
+    referralsCount?: number;
+    referredFriends?: Array<{ id: string; friendName: string; joinedAt: string; rewardStatus: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/referral/details`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to fetch referral details' };
     }
   },
 
@@ -259,7 +289,7 @@ export const ApiService = {
   },
 
   /**
-   * Initiates direct PhonePe gateway checkout for ₹99 Demo Class
+   * Initiates direct PhonePe gateway checkout for ₹99 Demo Class or redeems 100% Free via referral credits
    */
   async initiateDemoPayment(payload: {
     name: string;
@@ -267,7 +297,16 @@ export const ApiService = {
     email?: string;
     course?: string;
     mode?: string;
-  }, token?: string): Promise<{ success: boolean; redirectUrl?: string; error?: string; transactionId?: string; message?: string }> {
+    useFreeDemoCredit?: boolean;
+  }, token?: string): Promise<{
+    success: boolean;
+    redirectUrl?: string;
+    error?: string;
+    transactionId?: string;
+    message?: string;
+    isFreeDemo?: boolean;
+    remainingCredits?: number;
+  }> {
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

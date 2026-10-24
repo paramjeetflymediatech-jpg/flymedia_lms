@@ -47,6 +47,10 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     annualIncome?: string;
   } | null>;
   declare studentCategory: CreationOptional<string | null>;
+  declare referralCode: CreationOptional<string | null>;
+  declare referredBy: CreationOptional<string | null>;
+  declare freeDemoCredits: CreationOptional<number>;
+  declare referralsCount: CreationOptional<number>;
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -74,6 +78,10 @@ User.init(
     addressDetails: { type: DataTypes.JSON, allowNull: true },
     familyDetails: { type: DataTypes.JSON, allowNull: true },
     studentCategory: { type: DataTypes.STRING(50), allowNull: true },
+    referralCode: { type: DataTypes.STRING(50), allowNull: true, unique: true },
+    referredBy: { type: DataTypes.STRING(50), allowNull: true },
+    freeDemoCredits: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    referralsCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
@@ -89,6 +97,24 @@ if (typeof window === 'undefined') {
       await sequelize.query('ALTER TABLE `users` ADD COLUMN `addressDetails` JSON NULL;').catch(() => {});
       await sequelize.query('ALTER TABLE `users` ADD COLUMN `familyDetails` JSON NULL;').catch(() => {});
       await sequelize.query('ALTER TABLE `users` ADD COLUMN `studentCategory` VARCHAR(255) NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `referralCode` VARCHAR(50) NULL UNIQUE;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `referredBy` VARCHAR(50) NULL;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `freeDemoCredits` INT NOT NULL DEFAULT 0;').catch(() => {});
+      await sequelize.query('ALTER TABLE `users` ADD COLUMN `referralsCount` INT NOT NULL DEFAULT 0;').catch(() => {});
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS \`referrals\` (
+          \`id\` CHAR(36) BINARY NOT NULL,
+          \`referrerId\` CHAR(36) BINARY NOT NULL,
+          \`referredUserId\` CHAR(36) BINARY NOT NULL,
+          \`referralCode\` VARCHAR(50) NOT NULL,
+          \`rewardDescription\` VARCHAR(255) NOT NULL DEFAULT 'Free ₹99 Demo Class',
+          \`status\` ENUM('COMPLETED', 'PENDING') NOT NULL DEFAULT 'COMPLETED',
+          \`rewardClaimed\` TINYINT(1) NOT NULL DEFAULT 0,
+          \`createdAt\` DATETIME NOT NULL,
+          \`updatedAt\` DATETIME NOT NULL,
+          PRIMARY KEY (\`id\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `).catch(() => {});
     } catch (_) {}
   })();
 }
@@ -976,5 +1002,40 @@ LiveClass.hasMany(ClassAttendance, { as: 'attendances', foreignKey: 'liveClassId
 ClassAttendance.belongsTo(LiveClass, { foreignKey: 'liveClassId' });
 User.hasMany(ClassAttendance, { as: 'attendances', foreignKey: 'studentId', onDelete: 'CASCADE' });
 ClassAttendance.belongsTo(User, { as: 'student', foreignKey: 'studentId' });
+
+// ==========================================
+// 21. REFERRAL MODEL & ASSOCIATIONS
+// ==========================================
+export class Referral extends Model<InferAttributes<Referral>, InferCreationAttributes<Referral>> {
+  declare id: CreationOptional<string>;
+  declare referrerId: ForeignKey<User['id']>;
+  declare referredUserId: ForeignKey<User['id']>;
+  declare referralCode: string;
+  declare rewardDescription: CreationOptional<string>;
+  declare status: CreationOptional<'COMPLETED' | 'PENDING'>;
+  declare rewardClaimed: CreationOptional<boolean>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+Referral.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    referrerId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    referredUserId: { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
+    referralCode: { type: DataTypes.STRING(50), allowNull: false },
+    rewardDescription: { type: DataTypes.STRING(255), allowNull: false, defaultValue: 'Free ₹99 Demo Class' },
+    status: { type: DataTypes.ENUM('COMPLETED', 'PENDING'), allowNull: false, defaultValue: 'COMPLETED' },
+    rewardClaimed: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'Referral', tableName: 'referrals' }
+);
+
+User.hasMany(Referral, { as: 'referralsGiven', foreignKey: 'referrerId', onDelete: 'CASCADE' });
+Referral.belongsTo(User, { as: 'referrer', foreignKey: 'referrerId' });
+User.hasOne(Referral, { as: 'referralReceived', foreignKey: 'referredUserId', onDelete: 'CASCADE' });
+Referral.belongsTo(User, { as: 'referredUser', foreignKey: 'referredUserId' });
 
 

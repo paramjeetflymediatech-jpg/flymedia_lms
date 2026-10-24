@@ -8,10 +8,11 @@ interface AuthContextType {
   isLoading: boolean;
   enrollments: Enrollment[];
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string, referralCode?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   refreshEnrollments: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   enrollCourse: (course: Course) => Promise<{ success: boolean; error?: string; requireAuth?: boolean }>;
   purchaseCourse: (payload: {
     course: Course;
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => { },
   deleteAccount: async () => ({ success: false }),
   refreshEnrollments: async () => { },
+  refreshProfile: async () => { },
   enrollCourse: async () => ({ success: false }),
   purchaseCourse: async () => ({ success: false }),
   updateProfile: async () => ({ success: false }),
@@ -100,6 +102,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setEnrollments(realEnrollments);
   };
 
+  const refreshProfile = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+      if (storedToken) {
+        const meRes = await ApiService.getMe(storedToken);
+        if (meRes && meRes.success && meRes.user) {
+          const verifiedUser: User = {
+            ...meRes.user,
+            token: storedToken,
+          };
+          setUser(verifiedUser);
+          await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(verifiedUser));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh profile:', e);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
       if (!email || !password) {
@@ -128,13 +149,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, referralCode?: string) => {
     try {
       if (!name || !email || !password) {
         return { success: false, error: 'All fields are required' };
       }
 
-      const res = await ApiService.register(name.trim(), email.trim(), password);
+      const res = await ApiService.register(name.trim(), email.trim(), password, referralCode);
       if (res && res.success && res.user && res.token) {
         const authUser: User = {
           ...res.user,
@@ -294,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         deleteAccount,
         refreshEnrollments,
+        refreshProfile,
         enrollCourse,
         purchaseCourse,
         updateProfile,
