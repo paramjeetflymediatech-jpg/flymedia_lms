@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { logoutAction } from '../../../app/actions';
+import AppDownloadButtons from '../common/AppDownloadButtons';
 
 interface MobileMenuProps {
   session: { role: string } | null;
@@ -37,7 +38,7 @@ export default function MobileMenu({ session }: MobileMenuProps) {
 
       {/* Mobile Dropdown */}
       {isOpen && (
-        <div className="absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-xl flex flex-col py-4 px-6 space-y-4 z-50">
+        <div className="absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-xl flex flex-col py-4 px-6 space-y-4 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <Link href="/packages" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Programs
           </Link>
@@ -46,6 +47,21 @@ export default function MobileMenu({ session }: MobileMenuProps) {
           </Link>
           <Link href="/gallery" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-700 hover:text-orange-500">
             Success Gallery
+          </Link>
+          <Link
+            href="/#app"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between text-base font-bold text-slate-700 hover:text-orange-500"
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Mobile App
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+              Free App
+            </span>
           </Link>
           <Link
             href="/#callback"
@@ -91,6 +107,12 @@ export default function MobileMenu({ session }: MobileMenuProps) {
                 </Link>
               </>
             )}
+
+            {/* Quick Mobile App Install Links */}
+            <div className="pt-3 border-t border-slate-100">
+              <p className="text-xs font-semibold text-slate-400 mb-2.5 uppercase tracking-wider">Get the Mobile App</p>
+              <AppDownloadButtons variant="compact" />
+            </div>
           </div>
         </div>
       )}

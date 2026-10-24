@@ -13,6 +13,7 @@ import SplitText from '../src/components/animations/SplitText';
 import SmoothScroller from '../src/components/animations/SmoothScroller';
 import { Package, Testimonial, Faq, GalleryItem } from '../src/db/models';
 import GallerySection from '../src/components/gallery/GallerySection';
+import AppDownloadSection from '../src/components/home/AppDownloadSection';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../src/lib/seo';
 import PageSeoScripts from '../src/components/common/PageSeoScripts';
@@ -461,6 +462,11 @@ export default async function HomePage() {
 
         {/* Success Gallery & Video Reviews Section */}
         <GallerySection items={galleryItems} />
+
+        {/* Flymedia LMS Mobile App Showcase & Download Section */}
+        <div id="app">
+          <AppDownloadSection />
+        </div>
 
         {/* FAQ Section */}
         {faqs.length > 0 && (

@@ -56,6 +56,12 @@ export default async function Header() {
             <span>Gallery</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
           </Link>
+
+          <Link href="/#app" className="hover:text-orange-500 transition-colors relative group flex items-center gap-1.5">
+            <span>Mobile App</span>
+            <span className="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-md">NEW</span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
+          </Link>
         </nav>
 
         {/* Auth CTAs */}
