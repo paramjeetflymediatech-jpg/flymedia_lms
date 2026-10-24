@@ -28,8 +28,12 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Flymedia LMS requires access to your photo library to select a profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Flymedia LMS requires permission to save photos to your photo library.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Flymedia LMS requires camera access to take a profile picture.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Flymedia LMS requires microphone access when capturing video.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
