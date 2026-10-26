@@ -335,9 +335,9 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
                     )}
                   </View>
                 </View>
-                <View style={styles.emiTag}>
+                {/* <View style={styles.emiTag}>
                   <Text style={styles.emiTagText}>No-Cost EMI Available</Text>
-                </View>
+                </View> */}
               </View>
             )}
           </View>

@@ -14,6 +14,7 @@ import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CourseCard } from '../components/common/CourseCard';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { VideoPlayerModal } from '../components/common/VideoPlayerModal';
 import { ContactUsModal } from '../components/common/ContactUsModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { ApiService } from '../services/api';
@@ -98,6 +99,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
   const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState<GalleryItem | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -382,8 +384,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               key={item.id}
               style={styles.galleryCard}
               onPress={() => {
-                if (item.mediaUrl) {
-                  Linking.openURL(item.mediaUrl).catch(() => {});
+                if (item.mediaType === 'VIDEO') {
+                  setPlayingVideo(item);
+                } else {
+                  navigation.navigate('GalleryTab');
                 }
               }}
               activeOpacity={0.9}
@@ -584,6 +588,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* In-App Video Player Modal */}
+      <VideoPlayerModal
+        visible={Boolean(playingVideo)}
+        onClose={() => setPlayingVideo(null)}
+        videoUrl={playingVideo?.mediaUrl}
+        title={playingVideo?.title}
+        studentName={playingVideo?.studentName}
+        companyOrCourse={playingVideo?.companyPlaced || playingVideo?.courseName}
+        salaryPackage={playingVideo?.salaryPackage}
+        description={playingVideo?.description}
+      />
 
       {/* Free Demo Callback Modal */}
       <CallbackModal

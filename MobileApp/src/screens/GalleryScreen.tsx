@@ -14,6 +14,7 @@ import {
 import { Colors, Shadows } from '../theme/colors';
 import { Header } from '../components/common/Header';
 import { CallbackModal } from '../components/common/CallbackModal';
+import { VideoPlayerModal } from '../components/common/VideoPlayerModal';
 import { CachedImage } from '../components/common/CachedImage';
 import { ApiService } from '../services/api';
 import { GalleryItem } from '../types';
@@ -107,6 +108,7 @@ export const GalleryScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<GalleryItem | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<GalleryItem | null>(null);
 
   const fetchGallery = useCallback(async () => {
     try {
@@ -141,9 +143,7 @@ export const GalleryScreen: React.FC = () => {
 
   const handleItemPress = (item: GalleryItem) => {
     if (item.mediaType === 'VIDEO') {
-      if (item.mediaUrl) {
-        Linking.openURL(item.mediaUrl).catch(() => {});
-      }
+      setPlayingVideo(item);
     } else {
       setPreviewPhoto(item);
     }
@@ -385,6 +385,18 @@ export const GalleryScreen: React.FC = () => {
           )}
         </View>
       </Modal>
+
+      {/* IN-APP VIDEO PLAYER MODAL */}
+      <VideoPlayerModal
+        visible={Boolean(playingVideo)}
+        onClose={() => setPlayingVideo(null)}
+        videoUrl={playingVideo?.mediaUrl}
+        title={playingVideo?.title}
+        studentName={playingVideo?.studentName}
+        companyOrCourse={playingVideo?.companyPlaced || playingVideo?.courseName}
+        salaryPackage={playingVideo?.salaryPackage}
+        description={playingVideo?.description}
+      />
 
       {/* CALLBACK / HELP MODAL */}
       <CallbackModal

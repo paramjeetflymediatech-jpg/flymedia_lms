@@ -203,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
             <View style={styles.callIconPulse}>
               <PhoneCall size={12} color={Colors.textWhite} />
             </View>
-            <Text style={styles.callButtonText}>Help</Text>
+            <Text style={styles.callButtonText}>Book Demo</Text>
           </TouchableOpacity>
         ) : null}
       </View>
