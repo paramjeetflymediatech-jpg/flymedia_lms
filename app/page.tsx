@@ -12,8 +12,11 @@ import GsapParallaxText from '../src/components/animations/GsapParallaxText';
 import SplitText from '../src/components/animations/SplitText';
 import SmoothScroller from '../src/components/animations/SmoothScroller';
 import { Package, Testimonial, Faq, GalleryItem } from '../src/db/models';
+import { Op } from 'sequelize';
 import GallerySection from '../src/components/gallery/GallerySection';
+
 import AppDownloadSection from '../src/components/home/AppDownloadSection';
+import FaqSchema from '../src/components/seo/FaqSchema';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../src/lib/seo';
 import PageSeoScripts from '../src/components/common/PageSeoScripts';
@@ -54,10 +57,14 @@ export default async function HomePage() {
     testimonials = testimonialsData.map(t => t.toJSON());
 
     const faqsData = await Faq.findAll({
-      where: { isActive: true },
-      order: [['order', 'ASC'], ['createdAt', 'ASC']]
+      where: {
+        page: { [Op.in]: ['HOME', 'GLOBAL'] },
+        isActive: true,
+      },
+      order: [['order', 'ASC'], ['createdAt', 'ASC']],
     });
     faqs = faqsData.map(f => f.toJSON());
+
 
     try {
       await GalleryItem.sync({ alter: true });
@@ -470,6 +477,7 @@ export default async function HomePage() {
         {/* FAQ Section */}
         {faqs.length > 0 && (
           <section className="py-20 bg-white relative overflow-hidden border-t border-slate-100">
+            <FaqSchema faqs={faqs} />
             <div className="absolute top-0 right-0 -mr-32 -mt-32 w-[500px] h-[500px] rounded-full bg-orange-50/50 blur-3xl pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

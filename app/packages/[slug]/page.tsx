@@ -7,6 +7,7 @@ import { getCurrentUser } from '../../../src/lib/auth';
 import PackageEnrollWidget from '../../../src/components/packages/PackageEnrollWidget';
 import CourseModuleAccordion from '../../../src/components/packages/CourseModuleAccordion';
 import FaqAccordion from '../../../src/components/packages/FaqAccordion';
+import FaqSchema from '../../../src/components/seo/FaqSchema';
 import CertificateToggle from '../../../src/components/packages/CertificateToggle';
 
 import { getSeoMetadata, getSeoSetting } from '../../../src/lib/seo';
@@ -654,6 +655,7 @@ export default async function PackageDetailPage({ params }: Props) {
               {/* FAQs */}
               {faqs.length > 0 && (
                 <section>
+                  <FaqSchema faqs={faqs} />
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-1 h-8 rounded-full bg-gradient-to-b from-rose-500 to-orange-500 flex-shrink-0" />
                     <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Frequently Asked Questions</h2>

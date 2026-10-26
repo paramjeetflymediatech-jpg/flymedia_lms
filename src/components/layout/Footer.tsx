@@ -87,8 +87,8 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/partner-with-us" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
-                  <span>Colleges &amp; Free Edu Trusts</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">New</span>
+                  <span>Partner With Us</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Colleges &amp; Free Edu</span>
                 </Link>
               </li>
               <li>
@@ -205,6 +205,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Flymedia Technology. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center space-x-6 mt-4 md:mt-0 text-xs font-semibold text-white">
+            <Link href="/partner-with-us" className="transition-colors text-emerald-400 hover:text-emerald-300">Partner With Us</Link>
             <Link href="/privacy" className="transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="transition-colors">Terms of Service</Link>
             <Link href="/cookies" className="transition-colors">Cookie Policy</Link>

@@ -1,9 +1,19 @@
 import { requireAdmin } from '../../../../src/lib/auth';
 import { createFaq } from '../actions';
+import { Faq } from '../../../../src/db/models';
+import FaqPageSelector from '../../../../src/components/admin/FaqPageSelector';
 import Link from 'next/link';
 
 export default async function NewFaqPage() {
   await requireAdmin();
+
+  let existingPages: string[] = [];
+  try {
+    const allFaqs = await Faq.findAll({ attributes: ['page'] });
+    existingPages = Array.from(new Set(allFaqs.map(f => f.page).filter(Boolean))) as string[];
+  } catch (err) {
+    console.error('Failed to load existing pages:', err);
+  }
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -12,30 +22,33 @@ export default async function NewFaqPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Add FAQ</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Add Page-Wise FAQ</h1>
+          <p className="text-slate-500 text-sm mt-1">Assign FAQ to an existing page or create a dynamic custom page.</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <form action={createFaq} className="space-y-6">
+          <FaqPageSelector initialPage="HOME" existingPages={existingPages} />
+
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Question</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Question *</label>
             <input 
               type="text" 
               name="question" 
               required
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="e.g., What is the course duration?"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+              placeholder="e.g., How do college students avail benefits?"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Answer</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Answer *</label>
             <textarea 
               name="answer" 
               required
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
               placeholder="Answer goes here..."
             />
           </div>
@@ -46,7 +59,7 @@ export default async function NewFaqPage() {
               type="number" 
               name="order" 
               defaultValue="0"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">Lower numbers appear first.</p>
           </div>
@@ -59,13 +72,13 @@ export default async function NewFaqPage() {
               defaultChecked
               className="w-5 h-5 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
             />
-            <label htmlFor="isActive" className="font-bold text-slate-700">Active</label>
+            <label htmlFor="isActive" className="font-bold text-slate-700 text-sm">Active</label>
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex justify-end">
             <button 
               type="submit"
-              className="px-8 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+              className="px-8 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-sm text-sm"
             >
               Create FAQ
             </button>

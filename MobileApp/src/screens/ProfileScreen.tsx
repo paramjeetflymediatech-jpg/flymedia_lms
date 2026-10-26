@@ -53,7 +53,9 @@ import {
   Building2,
   Gift,
   Zap,
+  HeartHandshake,
 } from 'lucide-react-native';
+
 
 interface ProfileScreenProps {
   navigation: any;
@@ -794,6 +796,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text style={styles.sectionSubtitle}>Transparency, student rights & compliance</Text>
 
           <View style={styles.legalListWrap}>
+            {/* Partner With Us (Colleges & Free Edu Trusts) */}
+            <TouchableOpacity
+              style={styles.legalListItem}
+              onPress={() => navigation.navigate('Partnership')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.legalListIcon, { backgroundColor: '#ECFDF5' }]}>
+                <HeartHandshake size={16} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.legalListTitle}>Partner With Us</Text>
+                  <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#047857' }}>Free Edu</Text>
+                  </View>
+                </View>
+                <Text style={styles.legalListSub}>Colleges tie-up &amp; 100% free education for charity trusts</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+
             {/* About Us */}
             <TouchableOpacity
               style={styles.legalListItem}

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { getSeoMetadata, getSeoSetting } from '../src/lib/seo';
 import SeoScriptRenderer from '../src/components/common/SeoScriptRenderer';
 import FloatingAppDownloadButtons from '../src/components/common/FloatingAppDownloadButtons';
+import DynamicFaqHeadSchema from '../src/components/seo/DynamicFaqHeadSchema';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default async function RootLayout({
     >
       <head>
         <SeoScriptRenderer code={globalSeo?.headerScript} location="head" />
+        <DynamicFaqHeadSchema />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}

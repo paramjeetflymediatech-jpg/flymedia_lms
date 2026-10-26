@@ -1,7 +1,10 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
-import { GalleryItem } from '../../src/db/models';
+import { GalleryItem, Faq } from '../../src/db/models';
+import { Op } from 'sequelize';
 import GallerySection from '../../src/components/gallery/GallerySection';
+import FaqAccordion from '../../src/components/home/FaqAccordion';
+import FaqSchema from '../../src/components/seo/FaqSchema';
 import Link from 'next/link';
 import { Metadata } from 'next';
 
@@ -13,20 +16,34 @@ export const metadata: Metadata = {
 
 export default async function GalleryPage() {
   let items: any[] = [];
+  let galleryFaqs: any[] = [];
 
   try {
     await GalleryItem.sync({ alter: true });
-    const dbItems = await GalleryItem.findAll({
-      where: { isActive: true },
-      order: [
-        ['order', 'ASC'],
-        ['createdAt', 'DESC'],
-      ],
-    });
+    const [dbItems, faqRecords] = await Promise.all([
+      GalleryItem.findAll({
+        where: { isActive: true },
+        order: [
+          ['order', 'ASC'],
+          ['createdAt', 'DESC'],
+        ],
+      }),
+      Faq.findAll({
+        where: {
+          isActive: true,
+          page: { [Op.in]: ['GALLERY', 'GLOBAL'] },
+        },
+        order: [['order', 'ASC'], ['createdAt', 'ASC']],
+      }),
+    ]);
+
     items = dbItems.map((i) => i.toJSON());
+    galleryFaqs = faqRecords.map((f) => f.toJSON());
   } catch (err) {
-    console.error('Failed to load gallery items:', err);
+    console.error('Failed to load gallery items / FAQs:', err);
   }
+
+  const faqsToDisplay = galleryFaqs;
 
   // Fallback demo items if database is clean so the page is immediately beautiful and populated
   if (items.length === 0) {
@@ -139,6 +156,32 @@ export default async function GalleryPage() {
 
         {/* GALLERY COMPONENT */}
         <GallerySection items={items} showViewAll={false} />
+
+        {/* ================= PLACEMENT FAQs ================= */}
+        {galleryFaqs.length > 0 && (
+          <section className="py-24 relative overflow-hidden bg-slate-900/60 border-t border-slate-800">
+            <FaqSchema faqs={galleryFaqs} />
+            <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 relative z-10">
+              <div className="text-center space-y-3">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-extrabold text-xs uppercase tracking-widest backdrop-blur-md">
+                  <span>❓</span>
+                  <span>Placement & Hiring FAQ</span>
+                </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+                  Got Questions About <span className="bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent">Placements?</span>
+                </h2>
+                <p className="text-slate-400 text-base sm:text-lg max-w-xl mx-auto font-medium">
+                  Here are answers to frequently asked questions about our 250+ hiring partners, mock interviews, and career support.
+                </p>
+              </div>
+
+              <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-2xl text-slate-900 border border-slate-200">
+                <FaqAccordion faqs={galleryFaqs} />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* CTA BANNER */}
         <section className="py-20 relative overflow-hidden bg-gradient-to-r from-orange-600 to-rose-600 text-white">

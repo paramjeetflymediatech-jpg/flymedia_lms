@@ -1,6 +1,7 @@
 import Header from '../../src/components/layout/Header';
 import Footer from '../../src/components/layout/Footer';
 import ContactForm from '../../src/components/contact/ContactForm';
+import DynamicPageFaqs from '../../src/components/common/DynamicPageFaqs';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../../src/lib/seo';
 import PageSeoScripts from '../../src/components/common/PageSeoScripts';
@@ -118,6 +119,13 @@ export default function ContactPage() {
             </div>
 
           </div>
+
+          {/* Dynamic Contact FAQs - Only displayed if admin created FAQs for CONTACT */}
+          <DynamicPageFaqs 
+            page="CONTACT" 
+            title="Questions About Admissions & Visits?"
+            subtitle="Get instant answers about campus visits, timing, and fee consultation."
+          />
         </div>
       </main>
       <Footer />

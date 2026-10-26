@@ -855,10 +855,11 @@ Testimonial.init(
 );
 
 // ==========================================
-// 17. FAQ MODEL (HOMEPAGE)
+// 17. FAQ MODEL (PAGE-WISE)
 // ==========================================
 export class Faq extends Model<InferAttributes<Faq>, InferCreationAttributes<Faq>> {
   declare id: CreationOptional<string>;
+  declare page: CreationOptional<string>; // 'HOME', 'PARTNER', 'ABOUT', 'GLOBAL'
   declare question: string;
   declare answer: string;
   declare order: CreationOptional<number>;
@@ -870,6 +871,7 @@ export class Faq extends Model<InferAttributes<Faq>, InferCreationAttributes<Faq
 Faq.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    page: { type: DataTypes.STRING(50), allowNull: false, defaultValue: 'HOME' },
     question: { type: DataTypes.STRING, allowNull: false },
     answer: { type: DataTypes.TEXT, allowNull: false },
     order: { type: DataTypes.INTEGER, defaultValue: 0 },
@@ -879,6 +881,7 @@ Faq.init(
   },
   { sequelize, modelName: 'Faq', tableName: 'faqs' }
 );
+
 
 // ==========================================
 // 18. GALLERY ITEM MODEL (SUCCESS STORIES & REVIEWS)

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Op } from 'sequelize';
 import { Package, Category, Testimonial, Faq, User, GalleryItem } from '../../../../src/db/models';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,10 @@ export async function GET() {
         limit: 10,
       }),
       Faq.findAll({
-        where: { isActive: true },
+        where: {
+          isActive: true,
+          page: { [Op.in]: ['HOME', 'GLOBAL'] },
+        },
         order: [['order', 'ASC'], ['createdAt', 'ASC']],
       }),
       User.findAll({

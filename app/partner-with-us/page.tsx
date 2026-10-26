@@ -4,7 +4,10 @@ import PartnerForm from '../../src/components/partner/PartnerForm';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../../src/lib/seo';
 import PageSeoScripts from '../../src/components/common/PageSeoScripts';
-
+import { Faq } from '../../src/db/models';
+import FaqAccordion from '../../src/components/home/FaqAccordion';
+import FaqSchema from '../../src/components/seo/FaqSchema';
+import { Op } from 'sequelize';
 
 export const revalidate = 0;
 
@@ -16,7 +19,23 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function PartnerWithUsPage() {
+export default async function PartnerWithUsPage() {
+  let partnerFaqs: any[] = [];
+  try {
+    const records = await Faq.findAll({
+      where: {
+        page: { [Op.in]: ['PARTNER', 'GLOBAL'] },
+        isActive: true,
+      },
+      order: [['order', 'ASC'], ['createdAt', 'ASC']],
+    });
+    partnerFaqs = records.map(f => f.toJSON());
+  } catch (err) {
+    console.error('Failed to load partner FAQs:', err);
+  }
+
+  const faqsToDisplay = partnerFaqs;
+
   return (
     <>
       <PageSeoScripts path="/partner-with-us" />
@@ -248,74 +267,41 @@ export default function PartnerWithUsPage() {
         </section>
 
         {/* ================= FAQ SECTION ================= */}
-        <section className="py-16 bg-white border-t border-slate-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <span className="text-xs font-extrabold text-orange-600 uppercase tracking-wider">Got Questions?</span>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight mt-1">Frequently Asked Questions</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <h4 className="text-base font-bold text-slate-900 mb-2">
-                  How do students from partnered colleges avail their training discounts and benefits?
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Once your college signs an official partnership with Flymedia Technology, we issue an exclusive Institutional Code (e.g., GNDEC-FLY2026). Your students simply enter this code during enrollment or register via our dedicated college landing page to immediately avail subsidized pricing, dedicated batch slots, and priority lab allocations.
-                </p>
+        {faqsToDisplay.length > 0 && (
+          <section className="py-16 bg-white border-t border-slate-200">
+            <FaqSchema faqs={faqsToDisplay} />
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <span className="text-xs font-extrabold text-orange-600 uppercase tracking-wider">Got Questions?</span>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight mt-1">Frequently Asked Questions</h2>
               </div>
 
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <h4 className="text-base font-bold text-slate-900 mb-2">
-                  How does Flymedia verify charitable trusts and sponsor 100% free education?
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  We verify the registration of the trust, NGO, or charitable society. Once approved, the authorized trustee or center head shares the list of enrolled students. Flymedia grants full scholarship accounts with zero tuition fees, giving these deserving students access to live mentor sessions, study materials, and certificates at zero cost.
-                </p>
-              </div>
+              <FaqAccordion faqs={faqsToDisplay} />
 
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <h4 className="text-base font-bold text-slate-900 mb-2">
-                  Can we organize on-campus seminars or faculty development workshops?
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Yes! Our senior industry trainers regularly visit affiliated college campuses across Punjab and North India to conduct live technology workshops, AI masterclasses, career orientation sessions, and faculty enablement programs.
-                </p>
-              </div>
-
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <h4 className="text-base font-bold text-slate-900 mb-2">
-                  Where are the live training sessions conducted?
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Students can either attend hands-on practical sessions at our state-of-the-art Ludhiana campus (Vishal Nagar Ext, opposite Kashish Cafe), or join our interactive live online batches with 1-on-1 mentor guidance.
-                </p>
+              {/* Helpline Banner */}
+              <div className="mt-12 p-8 rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 text-white text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+                <div>
+                  <h3 className="text-xl font-black">Need immediate institutional guidance?</h3>
+                  <p className="text-xs text-slate-300 mt-1">Speak directly with our Director of Academic &amp; Social Partnerships.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    href="tel:+919779324178"
+                    className="px-5 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 font-extrabold text-xs text-white transition-all shadow-md"
+                  >
+                    📞 +91-97793-24178
+                  </a>
+                  <a
+                    href="mailto:learnwithflymedia@gmail.com"
+                    className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs text-white transition-all border border-white/20"
+                  >
+                    ✉️ Email Desk
+                  </a>
+                </div>
               </div>
             </div>
-
-            {/* Helpline Banner */}
-            <div className="mt-12 p-8 rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 text-white text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
-              <div>
-                <h3 className="text-xl font-black">Need immediate institutional guidance?</h3>
-                <p className="text-xs text-slate-300 mt-1">Speak directly with our Director of Academic &amp; Social Partnerships.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="tel:+919779324178"
-                  className="px-5 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 font-extrabold text-xs text-white transition-all shadow-md"
-                >
-                  📞 +91-97793-24178
-                </a>
-                <a
-                  href="mailto:learnwithflymedia@gmail.com"
-                  className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs text-white transition-all border border-white/20"
-                >
-                  ✉️ Email Desk
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       <Footer />

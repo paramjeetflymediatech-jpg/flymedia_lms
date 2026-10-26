@@ -337,6 +337,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
+        {/* INSTITUTIONAL & CHARITY PARTNERSHIP BANNER */}
+        <View style={styles.partnershipBanner}>
+          <View style={styles.partnershipContent}>
+            <View style={styles.partnershipBadge}>
+              <Text style={styles.partnershipBadgeText}>CAMPUS CONNECT & 100% FREE EDUCATION</Text>
+            </View>
+            <Text style={styles.partnershipTitle}>Colleges &amp; Charity Trusts</Text>
+            <Text style={styles.partnershipText}>
+              Partner your college for student benefits &amp; placement drives, or register your charitable trust for 100% free tech education for underprivileged youth.
+            </Text>
+            <View style={styles.partnershipBtnRow}>
+              <TouchableOpacity
+                style={styles.partnershipBtnCollege}
+                onPress={() => navigation.navigate('Partnership', { defaultType: 'COLLEGE' })}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.partnershipBtnText}>🎓 College Tie-Up</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.partnershipBtnCharity}
+                onPress={() => navigation.navigate('Partnership', { defaultType: 'CHARITY' })}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.partnershipBtnText}>🌱 Free Edu Trust</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
         {/* SUCCESS GALLERY & VIDEO REVIEWS */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Success Gallery & Video Reviews</Text>
@@ -465,36 +494,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
 
         {/* FAQS ACCORDION */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-          <Text style={styles.sectionSubtitle}>Clear answers to common student inquiries</Text>
-        </View>
+        {faqs.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+              <Text style={styles.sectionSubtitle}>Clear answers to common student inquiries</Text>
+            </View>
 
-        <View style={styles.faqList}>
-          {faqs.map(faq => {
-            const isExpanded = expandedFaq === faq.id;
-            return (
-              <TouchableOpacity
-                key={faq.id}
-                style={styles.faqCard}
-                onPress={() => toggleFaq(faq.id)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.faqHeader}>
-                  <Text style={styles.faqQuestion}>{faq.question}</Text>
-                  {isExpanded ? (
-                    <ChevronUp size={18} color={Colors.primaryOrange} />
-                  ) : (
-                    <ChevronDown size={18} color={Colors.textMuted} />
-                  )}
-                </View>
-                {isExpanded && (
-                  <Text style={styles.faqAnswer}>{faq.answer}</Text>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+            <View style={styles.faqList}>
+              {faqs.map(faq => {
+                const isExpanded = expandedFaq === faq.id;
+                return (
+                  <TouchableOpacity
+                    key={faq.id}
+                    style={styles.faqCard}
+                    onPress={() => toggleFaq(faq.id)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.faqHeader}>
+                      <Text style={styles.faqQuestion}>{faq.question}</Text>
+                      {isExpanded ? (
+                        <ChevronUp size={18} color={Colors.primaryOrange} />
+                      ) : (
+                        <ChevronDown size={18} color={Colors.textMuted} />
+                      )}
+                    </View>
+                    {isExpanded && (
+                      <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         {/* CAMPUS & ADMISSIONS SECTION */}
         <View style={styles.sectionHeader}>
@@ -839,6 +872,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  partnershipBanner: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    marginBottom: 20,
+    backgroundColor: '#0f172a',
+    borderRadius: 22,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+    ...Shadows.medium,
+  },
+  partnershipContent: {
+    gap: 8,
+  },
+  partnershipBadge: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  partnershipBadgeText: {
+    color: '#93c5fd',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  partnershipTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  partnershipText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  partnershipBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  partnershipBtnCollege: {
+    backgroundColor: '#2563eb',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  partnershipBtnCharity: {
+    backgroundColor: '#059669',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  partnershipBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
   galleryScroll: {
     paddingHorizontal: 20,
     gap: 16,

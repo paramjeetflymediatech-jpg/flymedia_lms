@@ -74,13 +74,8 @@ export default async function Header() {
           </div>
 
           {/* Right: Quick Utility Links */}
-          <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
-            <Link href="/partner-with-us" className="text-emerald-400 hover:text-white transition-colors flex items-center gap-1 font-bold">
-              <span>🤝</span>
-              <span>Colleges &amp; Free Edu Trusts</span>
-            </Link>
-            <span className="text-slate-700 hidden sm:inline">|</span>
-            <Link href="/become-tutor" className="text-slate-400 hover:text-white transition-colors hidden sm:inline">
+          <div className="flex items-center gap-4 text-xs font-semibold">
+            <Link href="/become-tutor" className="text-slate-400 hover:text-white transition-colors">
               Teach With Us
             </Link>
           </div>
@@ -106,7 +101,7 @@ export default async function Header() {
         <HeaderSearch />
 
         {/* Center: Clean Navigation Links */}
-        <nav className="hidden lg:flex items-center space-x-6 xl:space-x-7 text-sm font-bold text-slate-700">
+        <nav className="hidden lg:flex items-center space-x-7 xl:space-x-8 text-sm font-bold text-slate-700">
           <Link href="/" className="hover:text-orange-500 transition-colors relative group py-2">
             <span>Home</span>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
@@ -114,12 +109,6 @@ export default async function Header() {
 
           {/* Programs with category dropdown */}
           <ProgramsDropdown categories={categories} />
-
-          <Link href="/partner-with-us" className="hover:text-orange-500 transition-colors relative group py-2 flex items-center gap-1.5">
-            <span>Partnerships</span>
-            <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase tracking-tight">Free Edu</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
-          </Link>
 
           <Link href="/about" className="hover:text-orange-500 transition-colors relative group py-2">
             <span>About Us</span>

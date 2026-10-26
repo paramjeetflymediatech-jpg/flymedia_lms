@@ -4,6 +4,10 @@ import Reveal from '../../src/components/ui/Reveal';
 import { Metadata } from 'next';
 import { getSeoMetadata } from '../../src/lib/seo';
 import PageSeoScripts from '../../src/components/common/PageSeoScripts';
+import { Faq } from '../../src/db/models';
+import { Op } from 'sequelize';
+import FaqAccordion from '../../src/components/home/FaqAccordion';
+import FaqSchema from '../../src/components/seo/FaqSchema';
 
 export const revalidate = 0;
 
@@ -14,7 +18,23 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  let aboutFaqs: any[] = [];
+  try {
+    const records = await Faq.findAll({
+      where: {
+        isActive: true,
+        page: { [Op.in]: ['ABOUT', 'GLOBAL'] },
+      },
+      order: [['order', 'ASC'], ['createdAt', 'ASC']],
+    });
+    aboutFaqs = records.map(f => f.toJSON());
+  } catch (error) {
+    console.error('Failed to load about FAQs:', error);
+  }
+
+  const faqsToDisplay = aboutFaqs;
+
   return (
     <>
       <PageSeoScripts path="/about" />
@@ -140,6 +160,33 @@ export default function AboutPage() {
               </div>
 
             </div>
+
+            {/* FAQ Section */}
+            {faqsToDisplay.length > 0 && (
+              <div className="md:col-span-12 mt-8">
+                <FaqSchema faqs={faqsToDisplay} />
+                <Reveal delay={150} direction="up">
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-[3rem] p-8 sm:p-12 shadow-sm">
+                    <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs uppercase tracking-wider">
+                        <span>❓</span>
+                        <span>Frequently Asked Questions</span>
+                      </div>
+                      <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                        Everything You Need to Know About <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">Flymedia</span>
+                      </h3>
+                      <p className="text-slate-600 font-medium text-base">
+                        Get quick answers about our academy, training methodologies, founders, and career support.
+                      </p>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto">
+                      <FaqAccordion faqs={faqsToDisplay} />
+                    </div>
+                  </div>
+                </Reveal>
+              </div>
+            )}
 
             {/* Contact Action */}
             <div className="md:col-span-12 mt-8">

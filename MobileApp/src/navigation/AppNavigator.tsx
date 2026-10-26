@@ -10,7 +10,9 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { AdminDashboardScreen } from '../screens/admin';
 import { StudentPanelScreen } from '../screens/StudentPanelScreen';
 import { TutorPanelScreen } from '../screens/tutor';
+import { PartnershipScreen } from '../screens/PartnershipScreen';
 import { Colors } from '../theme/colors';
+
 import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -177,7 +179,15 @@ export function AppNavigator() {
           />
         </>
       )}
+      <Stack.Screen
+        name="Partnership"
+        component={PartnershipScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack.Navigator>
   );
 }
+
 

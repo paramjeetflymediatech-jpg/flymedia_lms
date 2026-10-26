@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../../../src/lib/auth';
 import { updateFaq } from '../actions';
 import { Faq } from '../../../../src/db/models';
+import FaqPageSelector from '../../../../src/components/admin/FaqPageSelector';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -14,6 +15,14 @@ export default async function EditFaqPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
+  let existingPages: string[] = [];
+  try {
+    const allFaqs = await Faq.findAll({ attributes: ['page'] });
+    existingPages = Array.from(new Set(allFaqs.map(f => f.page).filter(Boolean))) as string[];
+  } catch (err) {
+    console.error('Failed to load existing pages:', err);
+  }
+
   // We need to bind the ID to the update action
   const updateFaqWithId = updateFaq.bind(null, id);
 
@@ -24,31 +33,34 @@ export default async function EditFaqPage({ params }: { params: Promise<{ id: st
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Edit FAQ</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Edit Page-Wise FAQ</h1>
+          <p className="text-slate-500 text-sm mt-1">Configure which page this FAQ belongs to.</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <form action={updateFaqWithId} className="space-y-6">
+          <FaqPageSelector initialPage={faq.page || 'HOME'} existingPages={existingPages} />
+
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Question</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Question *</label>
             <input 
               type="text" 
               name="question" 
               defaultValue={faq.question}
               required
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Answer</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Answer *</label>
             <textarea 
               name="answer" 
               defaultValue={faq.answer}
               required
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
             />
           </div>
           
@@ -58,7 +70,7 @@ export default async function EditFaqPage({ params }: { params: Promise<{ id: st
               type="number" 
               name="order" 
               defaultValue={faq.order}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
             />
           </div>
 
@@ -70,13 +82,13 @@ export default async function EditFaqPage({ params }: { params: Promise<{ id: st
               defaultChecked={faq.isActive}
               className="w-5 h-5 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
             />
-            <label htmlFor="isActive" className="font-bold text-slate-700">Active</label>
+            <label htmlFor="isActive" className="font-bold text-slate-700 text-sm">Active</label>
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex justify-end">
             <button 
               type="submit"
-              className="px-8 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+              className="px-8 py-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-sm text-sm"
             >
               Update FAQ
             </button>
