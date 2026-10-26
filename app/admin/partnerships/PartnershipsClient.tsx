@@ -3,6 +3,31 @@
 import { useState } from 'react';
 import { updatePartnerApplicationStatus, deletePartnerApplication } from '../../actions';
 import Swal from 'sweetalert2';
+import {
+  Building2,
+  GraduationCap,
+  HeartHandshake,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Search,
+  X,
+  Mail,
+  Phone,
+  MapPin,
+  Users,
+  Calendar,
+  Eye,
+  Trash2,
+  ChevronDown,
+  ExternalLink,
+  MessageCircle,
+  Globe,
+  FileText,
+  AlertCircle,
+  Check,
+  Award,
+} from 'lucide-react';
 
 interface PartnerItem {
   id: string;
@@ -62,7 +87,11 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
     return true;
   });
 
-  const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED', notes?: string) => {
+  const handleStatusChange = async (
+    id: string,
+    newStatus: 'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED',
+    notes?: string
+  ) => {
     setIsUpdating(true);
     try {
       const res = await updatePartnerApplicationStatus(id, newStatus, notes);
@@ -113,7 +142,13 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
         } else {
           setApplications(prev => prev.filter(a => a.id !== id));
           if (activeModalApp?.id === id) setActiveModalApp(null);
-          Swal.fire({ icon: 'success', title: 'Deleted', text: 'Application removed successfully', timer: 1500, showConfirmButton: false });
+          Swal.fire({
+            icon: 'success',
+            title: 'Deleted',
+            text: 'Application removed successfully',
+            timer: 1500,
+            showConfirmButton: false,
+          });
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to delete application';
@@ -132,240 +167,370 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
     await handleStatusChange(activeModalApp.id, activeModalApp.status, notesInput);
   };
 
+  const formatDate = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return isoString;
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* ── Top Metric Cards ───────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Proposals</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">{totalCount}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {/* Total Proposals */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Proposals</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{totalCount}</div>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+            <Building2 className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 shadow-sm">
-          <div className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🎓</span> College Tie-Ups
+        {/* Colleges */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">College Tie-Ups</div>
+            <div className="text-2xl font-black text-indigo-950 mt-1">{collegeCount}</div>
           </div>
-          <div className="text-2xl font-black text-blue-900 mt-1">{collegeCount}</div>
+          <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <GraduationCap className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100 shadow-sm">
-          <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🌱</span> Charity Free Edu
+        {/* Charities */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Charity Free Edu</div>
+            <div className="text-2xl font-black text-emerald-950 mt-1">{charityCount}</div>
           </div>
-          <div className="text-2xl font-black text-emerald-900 mt-1">{charityCount}</div>
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <HeartHandshake className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-100 shadow-sm">
-          <div className="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
-            <span>⏳</span> Pending Review
+        {/* Pending */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Pending Review</div>
+            <div className="text-2xl font-black text-amber-950 mt-1">{pendingCount}</div>
           </div>
-          <div className="text-2xl font-black text-amber-900 mt-1">{pendingCount}</div>
+          <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+            <Clock className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="col-span-2 lg:col-span-1 bg-green-50/50 p-5 rounded-2xl border border-green-100 shadow-sm">
-          <div className="text-xs font-bold text-green-600 uppercase tracking-wider flex items-center gap-1.5">
-            <span>✅</span> Approved
+        {/* Approved */}
+        <div className="col-span-2 lg:col-span-1 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-teal-600 uppercase tracking-wider">Approved Active</div>
+            <div className="text-2xl font-black text-teal-950 mt-1">{approvedCount}</div>
           </div>
-          <div className="text-2xl font-black text-green-900 mt-1">{approvedCount}</div>
+          <div className="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
       </div>
 
-      {/* ── Controls & Filter Bar ──────────────────────────────────── */}
-      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        {/* Type Filter Pills & Search */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
+      {/* ── Filter & Search Toolbar ────────────────────────────────── */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Segmented Type Switcher */}
+          <div className="inline-flex p-1 bg-slate-100/80 rounded-xl border border-slate-200/60 max-w-fit">
             <button
               onClick={() => setSelectedType('ALL')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 selectedType === 'ALL'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Types ({totalCount})
+              <Building2 className="w-3.5 h-3.5" />
+              <span>All Types</span>
+              <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600">
+                {totalCount}
+              </span>
             </button>
 
             <button
               onClick={() => setSelectedType('COLLEGE')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 selectedType === 'COLLEGE'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-indigo-600'
               }`}
             >
-              <span>🎓</span> Colleges ({collegeCount})
+              <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Colleges</span>
+              <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700">
+                {collegeCount}
+              </span>
             </button>
 
             <button
               onClick={() => setSelectedType('CHARITY')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 selectedType === 'CHARITY'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
-                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-emerald-600'
               }`}
             >
-              <span>🌱</span> Charity Trusts ({charityCount})
+              <HeartHandshake className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Charity Trusts</span>
+              <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700">
+                {charityCount}
+              </span>
             </button>
           </div>
 
-          {/* Search Input */}
-          <div className="w-full md:w-80">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                🔍
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search college, person, city..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+          {/* Search Box */}
+          <div className="relative w-full lg:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by college, person, city..."
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Status Filter */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-2">Status:</span>
-          {['ALL', 'PENDING', 'CONTACTED', 'APPROVED', 'REJECTED'].map(st => (
-            <button
-              key={st}
-              onClick={() => setSelectedStatus(st)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                selectedStatus === st
-                  ? 'bg-slate-800 text-white'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
-              }`}
-            >
-              {st === 'ALL' ? 'All Status' : st}
-            </button>
-          ))}
+        {/* Status Filter Badges */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Status:</span>
+
+          {[
+            { id: 'ALL', label: 'All Status', dotColor: 'bg-slate-400' },
+            { id: 'PENDING', label: 'Pending Review', dotColor: 'bg-amber-500' },
+            { id: 'CONTACTED', label: 'Contacted', dotColor: 'bg-blue-500' },
+            { id: 'APPROVED', label: 'Approved', dotColor: 'bg-emerald-500' },
+            { id: 'REJECTED', label: 'Rejected', dotColor: 'bg-rose-500' },
+          ].map(st => {
+            const isActive = selectedStatus === st.id;
+            return (
+              <button
+                key={st.id}
+                onClick={() => setSelectedStatus(st.id)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${
+                  isActive
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : st.dotColor}`} />
+                <span>{st.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* ── Applications Data Table ─────────────────────────────────── */}
-      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b border-slate-100 text-xs uppercase font-extrabold text-slate-500">
-              <tr>
-                <th className="px-6 py-4">Organization &amp; Type</th>
-                <th className="px-6 py-4">Authorized Person</th>
-                <th className="px-6 py-4">Location &amp; Students</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+          <table className="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5">Organization &amp; Type</th>
+                <th className="px-5 py-3.5">Authorized Person</th>
+                <th className="px-5 py-3.5">Location &amp; Scale</th>
+                <th className="px-5 py-3.5">Application Status</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-slate-400 font-medium">
-                    No partnership applications match your filters.
+                  <td colSpan={5} className="px-6 py-16 text-center text-slate-400">
+                    <div className="max-w-xs mx-auto space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 mx-auto flex items-center justify-center text-slate-400">
+                        <Search className="w-5 h-5" />
+                      </div>
+                      <p className="font-semibold text-slate-700 text-sm">No applications found</p>
+                      <p className="text-xs text-slate-400">
+                        No partnership applications match your current filters or search query.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filtered.map(app => {
                   const isCollege = app.type === 'COLLEGE';
+
+                  // Dynamic status pill styling
+                  const statusConfig = {
+                    PENDING: {
+                      badge: 'bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-300',
+                      dot: 'bg-amber-500',
+                      label: 'Pending Review',
+                    },
+                    CONTACTED: {
+                      badge: 'bg-blue-50 text-blue-700 border-blue-200 hover:border-blue-300',
+                      dot: 'bg-blue-500',
+                      label: 'Contacted',
+                    },
+                    APPROVED: {
+                      badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-300',
+                      dot: 'bg-emerald-500',
+                      label: 'Approved',
+                    },
+                    REJECTED: {
+                      badge: 'bg-rose-50 text-rose-700 border-rose-200 hover:border-rose-300',
+                      dot: 'bg-rose-500',
+                      label: 'Rejected',
+                    },
+                  }[app.status];
+
                   return (
-                    <tr key={app.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={app.id} className="hover:bg-slate-50/50 transition-colors group">
                       {/* Organization & Type */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                              isCollege ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex items-start gap-3">
+                          {/* Institution Squircle Icon */}
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
+                              isCollege
+                                ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white'
+                                : 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
                             }`}
                           >
-                            {isCollege ? '🎓 College' : '🌱 Charity Trust'}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            {new Date(app.createdAt).toLocaleDateString()}
-                          </span>
+                            {isCollege ? <GraduationCap className="w-5 h-5" /> : <HeartHandshake className="w-5 h-5" />}
+                          </div>
+
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider ${
+                                  isCollege ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'
+                                }`}
+                              >
+                                {isCollege ? 'College Tie-Up' : 'Charity Trust'}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                {formatDate(app.createdAt)}
+                              </span>
+                            </div>
+
+                            <div
+                              onClick={() => openModal(app)}
+                              className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors cursor-pointer truncate"
+                            >
+                              {app.organizationName}
+                            </div>
+
+                            {app.category && (
+                              <div className="text-xs text-slate-500 line-clamp-1">{app.category}</div>
+                            )}
+                          </div>
                         </div>
-                        <div className="font-extrabold text-slate-900 text-sm">{app.organizationName}</div>
-                        {app.category && <div className="text-xs text-slate-500">{app.category}</div>}
                       </td>
 
                       {/* Authorized Person */}
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-slate-800 text-xs sm:text-sm">{app.contactPerson}</div>
-                        <div className="text-xs text-slate-500">{app.designation}</div>
-                        <div className="flex items-center gap-3 mt-1.5">
-                          <a
-                            href={`mailto:${app.email}`}
-                            title={app.email}
-                            className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1"
-                          >
-                            ✉️ {app.email}
-                          </a>
-                          <a
-                            href={`tel:${app.phone}`}
-                            className="text-xs font-semibold text-slate-700 hover:text-orange-600 flex items-center gap-1"
-                          >
-                            📞 {app.phone}
-                          </a>
+                      <td className="px-5 py-4 align-top">
+                        <div className="space-y-1">
+                          <div className="font-semibold text-slate-900 text-xs sm:text-sm">{app.contactPerson}</div>
+                          <div className="text-xs text-slate-500 font-medium">{app.designation}</div>
+
+                          <div className="flex flex-col gap-0.5 pt-1">
+                            <a
+                              href={`mailto:${app.email}`}
+                              title={app.email}
+                              className="text-xs text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 transition-colors truncate max-w-[220px]"
+                            >
+                              <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate">{app.email}</span>
+                            </a>
+                            <a
+                              href={`tel:${app.phone}`}
+                              className="text-xs text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors"
+                            >
+                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{app.phone}</span>
+                            </a>
+                          </div>
                         </div>
                       </td>
 
-                      {/* Location & Students */}
-                      <td className="px-6 py-4">
-                        <div className="text-xs font-bold text-slate-800">
-                          📍 {app.city}, {app.state}
-                        </div>
-                        <div className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">
-                          👥 {app.studentCount}
+                      {/* Location & Scale */}
+                      <td className="px-5 py-4 align-top">
+                        <div className="space-y-1.5">
+                          <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                            <span>
+                              {app.city}, {app.state}
+                            </span>
+                          </div>
+
+                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
+                            <Users className="w-3 h-3 text-slate-500" />
+                            <span>{app.studentCount} students</span>
+                          </div>
                         </div>
                       </td>
 
-                      {/* Status */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={app.status}
-                          disabled={isUpdating}
-                          onChange={e => handleStatusChange(app.id, e.target.value as 'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED')}
-                          className={`text-xs font-extrabold px-3 py-1.5 rounded-lg border focus:outline-none transition-all cursor-pointer ${
-                            app.status === 'APPROVED'
-                              ? 'bg-green-50 text-green-700 border-green-200'
-                              : app.status === 'CONTACTED'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : app.status === 'REJECTED'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}
-                        >
-                          <option value="PENDING">Pending Review</option>
-                          <option value="CONTACTED">Contacted</option>
-                          <option value="APPROVED">Approved &amp; Active</option>
-                          <option value="REJECTED">Rejected</option>
-                        </select>
+                      {/* Status Dropdown */}
+                      <td className="px-5 py-4 align-top whitespace-nowrap">
+                        <div className="relative inline-block w-40">
+                          <select
+                            value={app.status}
+                            disabled={isUpdating}
+                            onChange={e =>
+                              handleStatusChange(
+                                app.id,
+                                e.target.value as 'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED'
+                              )
+                            }
+                            className={`w-full appearance-none pl-7 pr-8 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-2xs ${statusConfig.badge}`}
+                          >
+                            <option value="PENDING">Pending Review</option>
+                            <option value="CONTACTED">Contacted</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                          </select>
+                          {/* Dot indicator */}
+                          <span
+                            className={`w-2 h-2 rounded-full absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${statusConfig.dot}`}
+                          />
+                          {/* Chevron icon */}
+                          <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-70" />
+                        </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => openModal(app)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 transition-all shadow-sm"
-                        >
-                          View Details
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(app.id, app.organizationName)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-extrabold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 transition-all shadow-sm"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-5 py-4 align-top whitespace-nowrap text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openModal(app)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-indigo-600 shadow-2xs transition-all"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(app.id, app.organizationName)}
+                            title="Delete Application"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -378,114 +543,148 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
 
       {/* ── Detail Modal ───────────────────────────────────────────── */}
       {activeModalApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200 space-y-6">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100 mb-6">
-              <div>
-                <span
-                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block mb-1.5 ${
-                    activeModalApp.type === 'COLLEGE'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-emerald-100 text-emerald-800'
-                  }`}
-                >
-                  {activeModalApp.type === 'COLLEGE' ? '🎓 College Campus Tie-Up' : '🌱 Free Education Charity Trust'}
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                      activeModalApp.type === 'COLLEGE'
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'bg-emerald-50 text-emerald-700'
+                    }`}
+                  >
+                    {activeModalApp.type === 'COLLEGE' ? 'College Campus Tie-Up' : 'Charity Trust Education'}
+                  </span>
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {formatDate(activeModalApp.createdAt)}
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   {activeModalApp.organizationName}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Applied on {new Date(activeModalApp.createdAt).toLocaleDateString()} at{' '}
-                  {new Date(activeModalApp.createdAt).toLocaleTimeString()}
-                </p>
               </div>
 
               <button
                 onClick={() => setActiveModalApp(null)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Quick Contact Buttons */}
-            <div className="flex flex-wrap gap-2.5 mb-6">
+            {/* Quick Contact Chips */}
+            <div className="flex flex-wrap gap-2">
               <a
                 href={`tel:${activeModalApp.phone}`}
-                className="px-4 py-2 rounded-xl bg-orange-50 text-orange-700 hover:bg-orange-600 hover:text-white font-bold text-xs border border-orange-200 transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold text-xs border border-slate-200/80 transition-all flex items-center gap-1.5"
               >
-                <span>📞 Call:</span> {activeModalApp.phone}
+                <Phone className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Call {activeModalApp.phone}</span>
               </a>
 
               <a
                 href={`https://wa.me/${activeModalApp.phone.replace(/[^0-9]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-green-50 text-green-700 hover:bg-green-600 hover:text-white font-bold text-xs border border-green-200 transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-200/80 transition-all flex items-center gap-1.5"
               >
-                <span>💬 WhatsApp</span>
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>WhatsApp</span>
               </a>
 
               <a
                 href={`mailto:${activeModalApp.email}`}
-                className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-semibold text-xs border border-slate-200/80 transition-all flex items-center gap-1.5"
               >
-                <span>✉️ Email:</span> {activeModalApp.email}
+                <Mail className="w-3.5 h-3.5 text-blue-600" />
+                <span>Email {activeModalApp.email}</span>
               </a>
 
               {activeModalApp.website && (
                 <a
-                  href={activeModalApp.website.startsWith('http') ? activeModalApp.website : `https://${activeModalApp.website}`}
+                  href={
+                    activeModalApp.website.startsWith('http')
+                      ? activeModalApp.website
+                      : `https://${activeModalApp.website}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs transition-all flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/80 transition-all flex items-center gap-1.5"
                 >
-                  <span>🌐 Website</span>
+                  <Globe className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Visit Website</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400" />
                 </a>
               )}
             </div>
 
-            {/* Detailed Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100 text-xs mb-6">
+            {/* Information Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs">
               <div>
-                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">Contact Person:</span>
-                <span className="font-extrabold text-slate-900 text-sm mt-0.5 block">{activeModalApp.contactPerson}</span>
-                <span className="text-slate-500">{activeModalApp.designation}</span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">Campus / HQ Location:</span>
-                <span className="font-extrabold text-slate-900 mt-0.5 block">{activeModalApp.city}, {activeModalApp.state}</span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">Student Strength:</span>
-                <span className="font-extrabold text-slate-900 mt-0.5 block">{activeModalApp.studentCount}</span>
+                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
+                  Authorized Contact:
+                </span>
+                <span className="font-bold text-slate-900 text-sm mt-0.5 block">
+                  {activeModalApp.contactPerson}
+                </span>
+                <span className="text-slate-500 font-medium">{activeModalApp.designation}</span>
               </div>
 
               <div>
                 <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
-                  {activeModalApp.type === 'COLLEGE' ? 'Affiliation / AISHE Code:' : 'Trust Reg # / Darpan ID:'}
+                  Campus / Headquarters:
                 </span>
-                <span className="font-extrabold text-slate-900 mt-0.5 block">
-                  {activeModalApp.registrationNumber || 'Not specified'}
+                <span className="font-bold text-slate-900 mt-0.5 block flex items-center gap-1 text-sm">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                  {activeModalApp.city}, {activeModalApp.state}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
+                  Student Strength / Beneficiaries:
+                </span>
+                <span className="font-bold text-slate-900 mt-0.5 block text-sm flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-slate-500" />
+                  {activeModalApp.studentCount} Students
+                </span>
+              </div>
+
+              <div>
+                <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
+                  {activeModalApp.type === 'COLLEGE' ? 'AISHE / Affiliation Code:' : 'Trust Reg / Darpan ID:'}
+                </span>
+                <span className="font-mono font-semibold text-slate-800 mt-0.5 block">
+                  {activeModalApp.registrationNumber || 'Not provided'}
                 </span>
               </div>
 
               {activeModalApp.category && (
-                <div className="col-span-full">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">Category / Stream:</span>
-                  <span className="font-semibold text-slate-800 mt-0.5 block">{activeModalApp.category}</span>
+                <div className="col-span-full pt-1 border-t border-slate-200/60">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Category / Department:
+                  </span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">
+                    {activeModalApp.category}
+                  </span>
                 </div>
               )}
 
               {activeModalApp.interestAreas && (
-                <div className="col-span-full">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">Selected Training Domains:</span>
+                <div className="col-span-full pt-1 border-t border-slate-200/60">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Interested Training Domains:
+                  </span>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {activeModalApp.interestAreas.split(',').map((domain, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 font-semibold text-[11px]">
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-semibold text-xs shadow-2xs"
+                      >
                         {domain.trim()}
                       </span>
                     ))}
@@ -494,11 +693,12 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
               )}
             </div>
 
-            {/* Message/Proposal */}
+            {/* Proposal / Message */}
             {activeModalApp.message && (
-              <div className="mb-6 p-4 bg-orange-50/50 rounded-2xl border border-orange-100">
-                <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 block mb-1">
-                  Message / Special Proposal:
+              <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/70">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 flex items-center gap-1.5 mb-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  Proposal Message / Objectives:
                 </span>
                 <p className="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                   {activeModalApp.message}
@@ -506,52 +706,52 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
               </div>
             )}
 
-            {/* Admin Notes */}
-            <div className="mb-6">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
-                Internal Admin Notes / MoU Progress:
+            {/* Internal Admin Notes */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Internal Administrative Notes / MoU Log:
               </label>
               <textarea
                 value={notesInput}
                 onChange={e => setNotesInput(e.target.value)}
                 rows={3}
-                placeholder="Add notes (e.g. Spoke with TPO on 26 Oct, MoU signed for 120 CSE students, issued code GNDEC26)..."
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                placeholder="Log internal updates (e.g., TPO contacted on 26 Oct, signed MoU for 120 CSE students)..."
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
               <button
                 type="button"
                 onClick={saveAdminNotes}
                 disabled={isUpdating}
-                className="mt-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors"
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors"
               >
                 Save Notes
               </button>
             </div>
 
-            {/* Status Change Bar */}
+            {/* Status Change Footer Bar */}
             <div className="p-4 bg-slate-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <span className="text-xs font-bold text-slate-600">Quick Status Update:</span>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleStatusChange(activeModalApp.id, 'CONTACTED', notesInput)}
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs"
                 >
                   Mark Contacted
                 </button>
                 <button
                   type="button"
                   onClick={() => handleStatusChange(activeModalApp.id, 'APPROVED', notesInput)}
-                  className="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition-colors shadow-sm"
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs"
                 >
                   Approve Partnership &amp; Send Email
                 </button>
                 <button
                   type="button"
                   onClick={() => handleStatusChange(activeModalApp.id, 'REJECTED', notesInput)}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors shadow-2xs"
                 >
-                  Reject
+                  Reject Application
                 </button>
               </div>
             </div>
