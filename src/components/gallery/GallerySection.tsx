@@ -463,6 +463,7 @@ export default function GallerySection({
                   <iframe
                     src={getYouTubeEmbedUrl(activeVideoUrl)}
                     title="Success Video"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     className="w-full h-full border-0"
                   />
