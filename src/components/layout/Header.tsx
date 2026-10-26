@@ -59,7 +59,7 @@ export default async function Header() {
 
             <span className="hidden xl:flex items-center gap-1.5 text-slate-400 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-              <span>Ludhiana Campus • ISO 9001:2015 Certified</span>
+              <span>Ludhiana Campus </span>
             </span>
           </div>
 

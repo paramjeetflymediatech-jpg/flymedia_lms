@@ -337,15 +337,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* INSTITUTIONAL & CHARITY PARTNERSHIP BANNER */}
+        {/* INSTITUTIONAL & NON-PROFIT PARTNERSHIP BANNER */}
         <View style={styles.partnershipBanner}>
           <View style={styles.partnershipContent}>
             <View style={styles.partnershipBadge}>
               <Text style={styles.partnershipBadgeText}>CAMPUS CONNECT & 100% FREE EDUCATION</Text>
             </View>
-            <Text style={styles.partnershipTitle}>Colleges &amp; Charity Trusts</Text>
+            <Text style={styles.partnershipTitle}>Colleges &amp; Non-Profit Orgs</Text>
             <Text style={styles.partnershipText}>
-              Partner your college for student benefits &amp; placement drives, or register your charitable trust for 100% free tech education for underprivileged youth.
+              Partner your college for student benefits &amp; placement drives, or register your non-profit organization for 100% free tech education for underprivileged youth.
             </Text>
             <View style={styles.partnershipBtnRow}>
               <TouchableOpacity
@@ -360,7 +360,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 onPress={() => navigation.navigate('Partnership', { defaultType: 'CHARITY' })}
                 activeOpacity={0.85}
               >
-                <Text style={styles.partnershipBtnText}>🌱 Free Edu Trust</Text>
+                <Text style={styles.partnershipBtnText}>🌱 Free Edu Non-Profit</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -36,7 +36,7 @@ export default async function AdminPartnershipsPage() {
             Partnerships &amp; Tie-Ups
           </h1>
           <p className="text-sm font-medium text-slate-500">
-            Review college collaboration proposals and empower charity trusts with 100% free education.
+            Review college collaboration proposals and empower non-profit organizations with 100% free education.
           </p>
         </div>
       </div>

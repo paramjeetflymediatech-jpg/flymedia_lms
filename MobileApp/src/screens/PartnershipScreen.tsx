@@ -41,12 +41,12 @@ const COLLEGE_CATEGORIES = [
 ];
 
 const CHARITY_CATEGORIES = [
-  'Educational Trust',
+  'Educational Non-Profit Trust',
   'Youth Empowerment NGO',
-  'Child Welfare / Orphanage Support',
+  'Child Welfare / Social Foundation',
   'Social Welfare Society',
-  'Religious Charitable Trust',
-  'CSR / Foundation',
+  'Community Non-Profit Organization',
+  'CSR / Philanthropic Foundation',
 ];
 
 const STUDENT_COUNTS = [
@@ -160,7 +160,7 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
           res.message ||
             (isCollege
               ? 'Thank you! Our Institutional Partnership Dean will connect with your college to activate student benefits.'
-              : 'Thank you! We are proud to partner with your trust to provide 100% free education to your students.'),
+              : 'Thank you! We are proud to partner with your non-profit organization to provide 100% free education to your students.'),
           [
             {
               text: 'OK',
@@ -194,7 +194,7 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
         </TouchableOpacity>
         <View style={styles.navTitleWrap}>
           <Text style={styles.navTitle}>Partner With Us</Text>
-          <Text style={styles.navSubtitle}>Colleges & Free Education Trusts</Text>
+          <Text style={styles.navSubtitle}>Colleges & Free Edu Non-Profit Orgs</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -240,7 +240,7 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
                   !isCollege && { color: '#047857', fontWeight: '800' },
                 ]}
               >
-                Charity Trusts
+                Non-Profit Orgs
               </Text>
               <Text style={styles.freeBadgeText}>100% Free Edu</Text>
             </View>
@@ -265,12 +265,12 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
           <Text style={styles.heroTitle}>
             {isCollege
               ? 'Partner Your College with Flymedia'
-              : 'Free Tech Education for Trust Students'}
+              : 'Free Tech Education for Non-Profit Orgs'}
           </Text>
           <Text style={styles.heroDesc}>
             {isCollege
               ? 'Provide your students with subsidized industrial training, verified ISO certifications, project portfolios, and campus placement drives.'
-              : 'Running a charitable trust or community NGO? We provide 100% free courses, live mentors, and certificates to your underprivileged students.'}
+              : 'Running a non-profit organization or community NGO? We provide 100% free courses, live mentors, and certificates to your underprivileged students.'}
           </Text>
         </View>
 
@@ -279,12 +279,12 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
           <View style={styles.sectionCardHeader}>
             <Building size={18} color={isCollege ? '#2563eb' : '#059669'} />
             <Text style={styles.sectionCardTitle}>
-              {isCollege ? 'College / Institute Information' : 'Trust / Charity Information'}
+              {isCollege ? 'College / Institute Information' : 'Non-Profit Organization Information'}
             </Text>
           </View>
 
           <Text style={styles.inputLabel}>
-            {isCollege ? 'Institution / College Name *' : 'Trust / NGO / Charity Name *'}
+            {isCollege ? 'Institution / College Name *' : 'Non-Profit Org / NGO Name *'}
           </Text>
           <TextInput
             style={styles.textInput}
@@ -293,13 +293,13 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
             placeholder={
               isCollege
                 ? 'e.g. Guru Nanak Dev Engineering College'
-                : 'e.g. Hope Education Charitable Trust'
+                : 'e.g. Hope Social Foundation / NGO'
             }
             placeholderTextColor="#94a3b8"
           />
 
           <Text style={styles.inputLabel}>
-            {isCollege ? 'Institution Category' : 'Trust Category'}
+            {isCollege ? 'Institution Category' : 'Non-Profit Org Category'}
           </Text>
           <ScrollView
             horizontal
@@ -336,13 +336,13 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
           </ScrollView>
 
           <Text style={styles.inputLabel}>
-            {isCollege ? 'AISHE / Affiliation Code (Optional)' : 'Trust Reg # / Darpan ID (Optional)'}
+            {isCollege ? 'AISHE / Affiliation Code (Optional)' : 'NGO Reg # / Darpan ID (Optional)'}
           </Text>
           <TextInput
             style={styles.textInput}
             value={registrationNumber}
             onChangeText={setRegistrationNumber}
-            placeholder={isCollege ? 'e.g. C-12345 or PTU/PU Affiliated' : 'e.g. Trust Reg # / 12A / 80G'}
+            placeholder={isCollege ? 'e.g. C-12345 or PTU/PU Affiliated' : 'e.g. NGO Reg # / Darpan ID / 12A'}
             placeholderTextColor="#94a3b8"
           />
         </View>
@@ -383,7 +383,7 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            placeholder={isCollege ? 'tpo@college.edu.in' : 'contact@trustname.org'}
+            placeholder={isCollege ? 'tpo@college.edu.in' : 'contact@ngo-org.org'}
             placeholderTextColor="#94a3b8"
           />
 

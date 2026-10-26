@@ -13,9 +13,9 @@ export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
   return getSeoMetadata('/partner-with-us', {
-    title: 'Partner With Us | College Tie-Ups & 100% Free Education for Trusts | Flymedia',
+    title: 'Partner With Us | College Tie-Ups & 100% Free Education for Non-Profit Orgs | Flymedia',
     description:
-      'Partner your College or University with Flymedia for student training benefits, or register your Charitable Trust/NGO to provide 100% free tech education to underprivileged students.',
+      'Partner your College or University with Flymedia for student training benefits, or register your Non-Profit Organization/NGO to provide 100% free tech education to underprivileged students.',
   });
 }
 
@@ -57,7 +57,7 @@ export default async function PartnerWithUsPage() {
               </span>
               <span className="text-slate-500">•</span>
               <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                🌱 100% Free Education for Charity Trusts
+                🌱 100% Free Education for Non-Profit Orgs
               </span>
             </div>
 
@@ -97,16 +97,16 @@ export default async function PartnerWithUsPage() {
               </div>
               <div>
                 <div className="text-3xl lg:text-4xl font-black text-emerald-400">100% Free</div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">For Registered Trusts</div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">For Non-Profit Orgs</div>
               </div>
               <div>
                 <div className="text-3xl lg:text-4xl font-black text-white">10,000+</div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Students Trained</div>
               </div>
-              <div>
+              {/* <div>
                 <div className="text-3xl lg:text-4xl font-black text-rose-400">ISO 9001:2015</div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Certified Academy</div>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
@@ -187,20 +187,20 @@ export default async function PartnerWithUsPage() {
               </a>
             </div>
 
-            {/* Pillar 2: Community Trusts & Charities */}
+            {/* Pillar 2: Non-Profit Organizations & NGOs */}
             <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xl shadow-emerald-500/5 hover:border-emerald-300 transition-all group flex flex-col justify-between">
               <div>
                 <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-2xl font-black mb-6 group-hover:scale-110 transition-transform">
                   🌱
                 </div>
                 <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 mb-3">
-                  For Charities, Trusts &amp; NGOs
+                  For Non-Profit Organizations &amp; NGOs
                 </span>
                 <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-4">
                   100% Free Education for Underprivileged Students
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">
-                  Education is the ultimate equalizer. If your charitable trust or NGO supports students who cannot afford
+                  Education is the ultimate equalizer. If your non-profit organization or NGO supports students who cannot afford
                   technical coaching, we provide 100% free courses, mentors, and certificates to empower their lives.
                 </p>
 
@@ -243,7 +243,7 @@ export default async function PartnerWithUsPage() {
                 href="#partner-form-section"
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200 hover:border-emerald-600"
               >
-                Register Your Trust for Free Education &rarr;
+                Register Your Non-Profit Org for Free Education &rarr;
               </a>
             </div>
           </div>

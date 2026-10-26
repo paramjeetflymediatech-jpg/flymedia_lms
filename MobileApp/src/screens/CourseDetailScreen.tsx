@@ -284,13 +284,13 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
 
               <View style={styles.infoDivider} />
 
-              <View style={styles.infoCol}>
+              {/* <View style={styles.infoCol}>
                 <View style={styles.infoIconWrap}>
                   <Award size={14} color="#059669" />
                 </View>
                 <Text style={styles.infoVal}>Certified</Text>
                 <Text style={styles.infoSub}>ISO Verified</Text>
-              </View>
+              </View> */}
             </View>
 
             {/* ENROLLMENT STATUS / PRICE DISPLAY */}
@@ -531,7 +531,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
         )}
 
         {/* ACCREDITED CERTIFICATION CARD */}
-        <View style={styles.certCard}>
+        {/* <View style={styles.certCard}>
           <View style={styles.certIconWrap}>
             <Award size={26} color={Colors.primaryRose} />
           </View>
@@ -545,7 +545,7 @@ export const CourseDetailScreen: React.FC<CourseDetailScreenProps> = ({
               Upon capstone project submission, earn a verifiable digital certificate recognized across top IT & digital enterprises.
             </Text>
           </View>
-        </View>
+        </View> */}
 
         {/* WHY FLYMEDIA TECHNOLOGIES TRUST BADGES */}
         <View style={styles.trustCard}>

@@ -2430,7 +2430,7 @@ export async function submitPartnerApplication(prevState: any, formData: FormDat
 
     const successMessage = application.type === 'COLLEGE'
       ? `Thank you! Your institutional tie-up request for ${organizationName} has been received. Our partnership dean will connect with you to activate student benefits!`
-      : `Thank you! Your trust/charity application for ${organizationName} has been received. We are proud to partner with you to provide 100% free education to your students!`;
+      : `Thank you! Your non-profit organization application for ${organizationName} has been received. We are proud to partner with you to provide 100% free education to your students!`;
 
     return {
       success: true,

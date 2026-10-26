@@ -202,10 +202,10 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
           </div>
         </div>
 
-        {/* Charities */}
+        {/* Non-Profit Orgs */}
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Charity Free Edu</div>
+            <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Non-Profit Free Edu</div>
             <div className="text-2xl font-black text-emerald-950 mt-1">{charityCount}</div>
           </div>
           <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -280,7 +280,7 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
               }`}
             >
               <HeartHandshake className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Charity Trusts</span>
+              <span>Non-Profit Orgs</span>
               <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700">
                 {charityCount}
               </span>
@@ -417,7 +417,7 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
                                   isCollege ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'
                                 }`}
                               >
-                                {isCollege ? 'College Tie-Up' : 'Charity Trust'}
+                                {isCollege ? 'College Tie-Up' : 'Non-Profit Org'}
                               </span>
                               <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
                                 <Calendar className="w-3 h-3 text-slate-400" />
@@ -556,7 +556,7 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
                         : 'bg-emerald-50 text-emerald-700'
                     }`}
                   >
-                    {activeModalApp.type === 'COLLEGE' ? 'College Campus Tie-Up' : 'Charity Trust Education'}
+                    {activeModalApp.type === 'COLLEGE' ? 'College Campus Tie-Up' : 'Non-Profit Org Free Education'}
                   </span>
                   <span className="text-xs text-slate-400 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
@@ -656,7 +656,7 @@ export default function PartnershipsClient({ initialApplications }: Partnerships
 
               <div>
                 <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px]">
-                  {activeModalApp.type === 'COLLEGE' ? 'AISHE / Affiliation Code:' : 'Trust Reg / Darpan ID:'}
+                  {activeModalApp.type === 'COLLEGE' ? 'AISHE / Affiliation Code:' : 'Non-Profit / NGO Reg / Darpan ID:'}
                 </span>
                 <span className="font-mono font-semibold text-slate-800 mt-0.5 block">
                   {activeModalApp.registrationNumber || 'Not provided'}

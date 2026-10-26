@@ -812,7 +812,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     <Text style={{ fontSize: 9, fontWeight: '800', color: '#047857' }}>Free Edu</Text>
                   </View>
                 </View>
-                <Text style={styles.legalListSub}>Colleges tie-up &amp; 100% free education for charity trusts</Text>
+                <Text style={styles.legalListSub}>Colleges tie-up &amp; 100% free education for non-profit orgs</Text>
               </View>
               <ChevronRight size={16} color={Colors.textLight} />
             </TouchableOpacity>

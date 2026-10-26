@@ -86,9 +86,15 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/partner-with-us" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
-                  <span>Partner With Us</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">Colleges &amp; Free Edu</span>
+                <Link href="/partner-with-us?type=college#partner-form-section" className="text-blue-400 hover:text-blue-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
+                  <span>College Tie-Ups</span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 font-extrabold">Campus MoU</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/partner-with-us?type=charity#partner-form-section" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
+                  <span>Non-Profit Org Tie-Ups</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 font-extrabold">100% Free Edu</span>
                 </Link>
               </li>
               <li>
@@ -205,7 +211,8 @@ export default function Footer() {
             © {new Date().getFullYear()} Flymedia Technology. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center space-x-6 mt-4 md:mt-0 text-xs font-semibold text-white">
-            <Link href="/partner-with-us" className="transition-colors text-emerald-400 hover:text-emerald-300">Partner With Us</Link>
+            <Link href="/partner-with-us?type=college" className="transition-colors text-blue-400 hover:text-blue-300">College Tie-Ups</Link>
+            <Link href="/partner-with-us?type=charity" className="transition-colors text-emerald-400 hover:text-emerald-300">Non-Profit Org Free Education</Link>
             <Link href="/privacy" className="transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="transition-colors">Terms of Service</Link>
             <Link href="/cookies" className="transition-colors">Cookie Policy</Link>

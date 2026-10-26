@@ -1093,7 +1093,7 @@ export const ApiService = {
   },
 
   /**
-   * Submit College / Charity Partnership Application
+   * Submit College / Non-Profit Org Partnership Application
    */
   async submitPartnershipApplication(data: {
 

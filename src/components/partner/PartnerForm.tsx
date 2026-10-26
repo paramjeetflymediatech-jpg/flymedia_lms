@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { submitPartnerApplication } from '../../../app/actions';
 import Swal from 'sweetalert2';
 
@@ -18,12 +18,12 @@ const COLLEGE_CATEGORIES = [
 ];
 
 const CHARITY_CATEGORIES = [
-  'Registered Educational Trust',
+  'Registered Educational Non-Profit Trust',
   'Non-Profit / NGO for Youth Education',
-  'Child Welfare & Orphanage Support Trust',
-  'Community Empowerment Society',
-  'Religious / Gurudwara / Temple Charitable Trust',
-  'CSR / Philanthropic Foundation',
+  'Child Welfare & Orphanage Support Foundation',
+  'Community Social Welfare Society',
+  'Religious / Gurudwara / Temple Non-Profit Trust',
+  'CSR / Philanthropic Non-Profit Foundation',
 ];
 
 const COLLEGE_INTERESTS = [
@@ -51,6 +51,24 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const applyTypeFromUrl = () => {
+        const search = window.location.search.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        if (search.includes('type=charity') || search.includes('type=trust') || hash.includes('charity') || hash.includes('trust')) {
+          setPartnerType('CHARITY');
+        } else if (search.includes('type=college') || hash.includes('college')) {
+          setPartnerType('COLLEGE');
+        }
+      };
+
+      applyTypeFromUrl();
+      window.addEventListener('hashchange', applyTypeFromUrl);
+      return () => window.removeEventListener('hashchange', applyTypeFromUrl);
+    }
+  }, []);
 
   const isCollege = partnerType === 'COLLEGE';
 
@@ -146,7 +164,7 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
             🤝
           </span>
           <span className="text-left leading-tight">
-            <span className="block font-black">Trusts & Charities</span>
+            <span className="block font-black">Non-Profit Organizations</span>
             <span className="block text-[11px] font-semibold text-emerald-600">100% Free Education</span>
           </span>
         </button>
@@ -160,12 +178,12 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
               {isCollege ? '🏛️ Institutional Partnership' : '🌱 Social Impact & Free Education'}
             </div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              {isCollege ? 'Partner Your College with Flymedia' : 'Empower Your Trust Students with Free Education'}
+              {isCollege ? 'Partner Your College with Flymedia' : 'Empower Your Non-Profit Org with Free Education'}
             </h3>
             <p className="text-sm text-slate-300 mt-1 max-w-2xl">
               {isCollege
                 ? 'Fill this form to enable your college students to avail subsidized industrial training, customized curriculum batches, verified ISO certifications, and dedicated campus placements.'
-                : 'Run a charitable trust, community foundation, or free learning center? Partner with Flymedia to provide 100% zero-cost tech training, live mentorship, and certificates to your students.'}
+                : 'Run a non-profit organization, charitable trust, or free learning center? Partner with Flymedia to provide 100% zero-cost tech training, live mentorship, and certificates to your students.'}
             </p>
           </div>
 
@@ -194,26 +212,26 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
         <div>
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs">1</span>
-            {isCollege ? 'College / University Information' : 'Trust / Charity Information'}
+            {isCollege ? 'College / University Information' : 'Non-Profit Organization Information'}
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                {isCollege ? 'College / Institute / University Name *' : 'Trust / Foundation / Charity Name *'}
+                {isCollege ? 'College / Institute / University Name *' : 'Non-Profit Organization / NGO Name *'}
               </label>
               <input
                 type="text"
                 name="organizationName"
                 required
-                placeholder={isCollege ? 'e.g. Guru Nanak Dev Engineering College' : 'e.g. Hope Education Charitable Trust'}
+                placeholder={isCollege ? 'e.g. Guru Nanak Dev Engineering College' : 'e.g. Hope Social Foundation / Trust'}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                {isCollege ? 'Institution Type / Stream' : 'Trust Type / Category'}
+                {isCollege ? 'Institution Type / Stream' : 'Non-Profit Org Category'}
               </label>
               <select
                 name="category"
@@ -242,12 +260,12 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                {isCollege ? 'AISHE / Affiliation Code (Optional)' : 'Trust Reg No. / 12A / 80G / Darpan ID (Optional)'}
+                {isCollege ? 'AISHE / Affiliation Code (Optional)' : 'Non-Profit / NGO Reg No. / 12A / 80G / Darpan ID (Optional)'}
               </label>
               <input
                 type="text"
                 name="registrationNumber"
-                placeholder={isCollege ? 'e.g. C-12345 or PTU/PU Affiliated' : 'e.g. Trust Reg # / Darpan ID'}
+                placeholder={isCollege ? 'e.g. C-12345 or PTU/PU Affiliated' : 'e.g. NGO Reg # / Darpan ID'}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               />
             </div>
