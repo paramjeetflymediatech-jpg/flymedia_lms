@@ -7,9 +7,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance, Referral, PartnerApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers, sendPartnerApplicationAdminNotification, sendPartnerApplicationApplicantConfirmation, sendPartnerApprovalEmail } from '../src/lib/mailer';
+
 import { normalizePath } from '../src/lib/seo';
 
 // Helper to slugify string
@@ -2349,6 +2350,152 @@ export async function adminScheduleClass(formData: FormData) {
   }
 }
 
+// ==========================================
+// 22. PARTNERSHIP ACTIONS (Colleges & Charities)
+// ==========================================
 
+export async function submitPartnerApplication(prevState: any, formData: FormData) {
+  try {
+    const type = (formData.get('type') as string) || 'COLLEGE';
+    const organizationName = (formData.get('organizationName') as string)?.trim();
+    const category = (formData.get('category') as string)?.trim() || null;
+    const contactPerson = (formData.get('contactPerson') as string)?.trim();
+    const designation = (formData.get('designation') as string)?.trim();
+    const email = (formData.get('email') as string)?.trim()?.toLowerCase();
+    const phone = (formData.get('phone') as string)?.trim();
+    const alternatePhone = (formData.get('alternatePhone') as string)?.trim() || null;
+    const website = (formData.get('website') as string)?.trim() || null;
+    const city = (formData.get('city') as string)?.trim();
+    const state = (formData.get('state') as string)?.trim();
+    const studentCount = (formData.get('studentCount') as string)?.trim();
+    const interestAreas = (formData.get('interestAreas') as string)?.trim() || null;
+    const registrationNumber = (formData.get('registrationNumber') as string)?.trim() || null;
+    const message = (formData.get('message') as string)?.trim() || null;
 
+    if (!organizationName || !contactPerson || !designation || !email || !phone || !city || !state || !studentCount) {
+      return { error: 'Please fill in all required fields marked with *.' };
+    }
 
+    if (!email.includes('@') || !email.includes('.')) {
+      return { error: 'Please provide a valid email address.' };
+    }
+
+    const application = await PartnerApplication.create({
+      type: type === 'CHARITY' ? 'CHARITY' : 'COLLEGE',
+      organizationName,
+      category,
+      contactPerson,
+      designation,
+      email,
+      phone,
+      alternatePhone,
+      website,
+      city,
+      state,
+      studentCount,
+      interestAreas,
+      registrationNumber,
+      message,
+      status: 'PENDING',
+    });
+
+    // Notify configured admins & superadmins
+    sendPartnerApplicationAdminNotification({
+      id: application.id,
+      type: application.type,
+      organizationName,
+      category,
+      contactPerson,
+      designation,
+      email,
+      phone,
+      alternatePhone,
+      city,
+      state,
+      studentCount,
+      interestAreas,
+      registrationNumber,
+      message,
+    }).catch((err) => console.error('Failed to send admin notification for partnership:', err));
+
+    // Send confirmation to applicant
+    sendPartnerApplicationApplicantConfirmation({
+      type: application.type,
+      organizationName,
+      contactPerson,
+      email,
+    }).catch((err) => console.error('Failed to send confirmation to partner applicant:', err));
+
+    revalidatePath('/admin/partnerships');
+
+    const successMessage = application.type === 'COLLEGE'
+      ? `Thank you! Your institutional tie-up request for ${organizationName} has been received. Our partnership dean will connect with you to activate student benefits!`
+      : `Thank you! Your trust/charity application for ${organizationName} has been received. We are proud to partner with you to provide 100% free education to your students!`;
+
+    return {
+      success: true,
+      message: successMessage,
+      applicationId: application.id,
+    };
+  } catch (error: any) {
+    console.error('Error submitting partner application:', error);
+    return { error: error?.message || 'Failed to submit application. Please check your inputs and try again.' };
+  }
+}
+
+export async function updatePartnerApplicationStatus(
+  id: string,
+  status: 'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED',
+  adminNotes?: string
+) {
+  try {
+    await requireAdmin();
+
+    const application = await PartnerApplication.findByPk(id);
+    if (!application) {
+      return { error: 'Partnership application not found.' };
+    }
+
+    const previousStatus = application.status;
+    application.status = status;
+    if (adminNotes !== undefined) {
+      application.adminNotes = adminNotes;
+    }
+    await application.save();
+
+    // If newly approved, trigger official approval email to partner
+    if (status === 'APPROVED' && previousStatus !== 'APPROVED') {
+      sendPartnerApprovalEmail({
+        type: application.type,
+        organizationName: application.organizationName,
+        contactPerson: application.contactPerson,
+        email: application.email,
+        adminNotes: application.adminNotes,
+      }).catch((err) => console.error('Failed to send partner approval email:', err));
+    }
+
+    revalidatePath('/admin/partnerships');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error updating partner application:', error);
+    return { error: error?.message || 'Failed to update partner application status.' };
+  }
+}
+
+export async function deletePartnerApplication(id: string) {
+  try {
+    await requireAdmin();
+
+    const application = await PartnerApplication.findByPk(id);
+    if (!application) {
+      return { error: 'Partnership application not found.' };
+    }
+
+    await application.destroy();
+    revalidatePath('/admin/partnerships');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting partner application:', error);
+    return { error: error?.message || 'Failed to delete partner application.' };
+  }
+}

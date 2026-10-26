@@ -85,8 +85,13 @@ export default function Footer() {
                   Browse Courses
                 </Link>
               </li>
-             
-               <li>
+              <li>
+                <Link href="/partner-with-us" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
+                  <span>Colleges &amp; Free Edu Trusts</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">New</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/become-tutor" className="text-orange-500 hover:text-orange-400 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
                   Become a Tutor
                   <span className="relative flex h-2 w-2">

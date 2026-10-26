@@ -1082,13 +1082,38 @@ export const ApiService = {
       const response = await fetch(`${API_BASE_URL}/classes/${encodeURIComponent(classId)}/join`, {
         method: 'POST',
         headers: {
+  /**
+   * Submit College / Charity Partnership Application
+   */
+  async submitPartnershipApplication(data: {
+    type: 'COLLEGE' | 'CHARITY';
+    organizationName: string;
+    category?: string;
+    contactPerson: string;
+    designation: string;
+    email: string;
+    phone: string;
+    alternatePhone?: string;
+    website?: string;
+    city: string;
+    state: string;
+    studentCount: string;
+    interestAreas?: string;
+    registrationNumber?: string;
+    message?: string;
+  }): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/partnerships`, {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify(data),
       });
       return await response.json();
     } catch (e: any) {
-      return { success: false, error: e.message || 'Network error' };
+      return { success: false, error: e?.message || 'Network error submitting partnership' };
     }
   },
 };
+

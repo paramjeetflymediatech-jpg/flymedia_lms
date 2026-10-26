@@ -1055,4 +1055,61 @@ Referral.belongsTo(User, { as: 'referrer', foreignKey: 'referrerId' });
 User.hasOne(Referral, { as: 'referralReceived', foreignKey: 'referredUserId', onDelete: 'CASCADE' });
 Referral.belongsTo(User, { as: 'referredUser', foreignKey: 'referredUserId' });
 
+// ==========================================
+// 22. PARTNER APPLICATION MODEL (Colleges & Charities)
+// ==========================================
+export class PartnerApplication extends Model<InferAttributes<PartnerApplication>, InferCreationAttributes<PartnerApplication>> {
+  declare id: CreationOptional<string>;
+  declare type: 'COLLEGE' | 'CHARITY';
+  declare organizationName: string;
+  declare category: CreationOptional<string | null>;
+  declare contactPerson: string;
+  declare designation: string;
+  declare email: string;
+  declare phone: string;
+  declare alternatePhone: CreationOptional<string | null>;
+  declare website: CreationOptional<string | null>;
+  declare city: string;
+  declare state: string;
+  declare studentCount: string;
+  declare interestAreas: CreationOptional<string | null>;
+  declare registrationNumber: CreationOptional<string | null>;
+  declare message: CreationOptional<string | null>;
+  declare status: CreationOptional<'PENDING' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>;
+  declare adminNotes: CreationOptional<string | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+PartnerApplication.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    type: { type: DataTypes.ENUM('COLLEGE', 'CHARITY'), allowNull: false },
+    organizationName: { type: DataTypes.STRING(255), allowNull: false },
+    category: { type: DataTypes.STRING(100), allowNull: true },
+    contactPerson: { type: DataTypes.STRING(255), allowNull: false },
+    designation: { type: DataTypes.STRING(150), allowNull: false },
+    email: { type: DataTypes.STRING(255), allowNull: false },
+    phone: { type: DataTypes.STRING(50), allowNull: false },
+    alternatePhone: { type: DataTypes.STRING(50), allowNull: true },
+    website: { type: DataTypes.STRING(255), allowNull: true },
+    city: { type: DataTypes.STRING(100), allowNull: false },
+    state: { type: DataTypes.STRING(100), allowNull: false },
+    studentCount: { type: DataTypes.STRING(50), allowNull: false },
+    interestAreas: { type: DataTypes.TEXT, allowNull: true },
+    registrationNumber: { type: DataTypes.STRING(100), allowNull: true },
+    message: { type: DataTypes.TEXT, allowNull: true },
+    status: { 
+      type: DataTypes.ENUM('PENDING', 'CONTACTED', 'APPROVED', 'REJECTED'), 
+      allowNull: false, 
+      defaultValue: 'PENDING' 
+    },
+    adminNotes: { type: DataTypes.TEXT, allowNull: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'PartnerApplication', tableName: 'partner_applications' }
+);
+
+
 

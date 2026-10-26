@@ -59,6 +59,10 @@ export default function MobileMenu({ session }: MobileMenuProps) {
           <Link href="/packages" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-800 hover:text-orange-500">
             All Programs
           </Link>
+          <Link href="/partner-with-us" onClick={() => setIsOpen(false)} className="text-base font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-between">
+            <span>Partner With Us (Colleges &amp; Trusts)</span>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Free Edu</span>
+          </Link>
           <Link href="/about" onClick={() => setIsOpen(false)} className="text-base font-bold text-slate-800 hover:text-orange-500">
             About Us
           </Link>

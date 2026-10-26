@@ -410,3 +410,261 @@ export async function sendTutorRejectionEmail(to: string, name: string) {
     html,
   });
 }
+
+// ── Partnership Emails ──────────────────────────────────────────
+
+export async function sendPartnerApplicationAdminNotification(application: {
+  id: string;
+  type: 'COLLEGE' | 'CHARITY';
+  organizationName: string;
+  category?: string | null;
+  contactPerson: string;
+  designation: string;
+  email: string;
+  phone: string;
+  alternatePhone?: string | null;
+  city: string;
+  state: string;
+  studentCount: string;
+  interestAreas?: string | null;
+  registrationNumber?: string | null;
+  message?: string | null;
+}) {
+  const isCollege = application.type === 'COLLEGE';
+  const typeLabel = isCollege ? 'College / University Partnership' : 'Trust / NGO Free Education Initiative';
+  const receivers = getEmailReceivers();
+
+  if (receivers.length === 0) return;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Partnership Application</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:${isCollege ? 'linear-gradient(135deg, #1e3a8a, #3b82f6)' : 'linear-gradient(135deg, #065f46, #10b981)'};padding:28px 32px;color:#ffffff;">
+              <span style="display:inline-block;padding:4px 12px;background:rgba(255,255,255,0.2);border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">
+                ${typeLabel}
+              </span>
+              <h1 style="margin:0;font-size:22px;font-weight:800;">New Partnership Request Received</h1>
+              <p style="margin:6px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">${application.organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px;">
+              <h3 style="margin:0 0 16px;font-size:16px;color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">Organization & Representative Details</h3>
+              <table width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;color:#334155;">
+                <tr><td width="35%" style="color:#64748b;font-weight:600;">Organization Name:</td><td style="font-weight:700;color:#0f172a;">${application.organizationName}</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Partnership Type:</td><td><strong>${typeLabel}</strong></td></tr>
+                ${application.category ? `<tr><td style="color:#64748b;font-weight:600;">Category / Domain:</td><td>${application.category}</td></tr>` : ''}
+                <tr><td style="color:#64748b;font-weight:600;">Contact Person:</td><td>${application.contactPerson} (${application.designation})</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Official Email:</td><td><a href="mailto:${application.email}" style="color:#2563eb;text-decoration:none;">${application.email}</a></td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Phone / WhatsApp:</td><td><a href="tel:${application.phone}" style="color:#0f172a;text-decoration:none;">${application.phone}</a> ${application.alternatePhone ? ` / ${application.alternatePhone}` : ''}</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Location:</td><td>${application.city}, ${application.state}</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Student Count:</td><td><strong>${application.studentCount} students</strong></td></tr>
+                ${application.registrationNumber ? `<tr><td style="color:#64748b;font-weight:600;">Registration / Code:</td><td>${application.registrationNumber}</td></tr>` : ''}
+                ${application.interestAreas ? `<tr><td style="color:#64748b;font-weight:600;">Interest Areas:</td><td>${application.interestAreas}</td></tr>` : ''}
+              </table>
+
+              ${application.message ? `
+              <div style="margin-top:20px;padding:16px;background:#f8fafc;border-left:4px solid ${isCollege ? '#3b82f6' : '#10b981'};border-radius:6px;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;">Message / Proposal:</p>
+                <p style="margin:0;font-size:14px;color:#1e293b;white-space:pre-wrap;line-height:1.5;">${application.message}</p>
+              </div>
+              ` : ''}
+
+              <div style="margin-top:28px;text-align:center;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://learnwithflymedia.com'}/admin/partnerships" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;font-weight:700;font-size:13px;border-radius:10px;">
+                  Open Partnerships in Admin Panel &rarr;
+                </a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: receivers,
+    subject: `[Partnership Application] ${typeLabel} - ${application.organizationName}`,
+    html,
+  });
+}
+
+export async function sendPartnerApplicationApplicantConfirmation(application: {
+  type: 'COLLEGE' | 'CHARITY';
+  organizationName: string;
+  contactPerson: string;
+  email: string;
+}) {
+  const isCollege = application.type === 'COLLEGE';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Application Received - Flymedia Technology</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%);padding:32px 36px;color:#ffffff;text-align:center;">
+              <h1 style="margin:0;font-size:24px;font-weight:800;">Thank You for Partnering With Us</h1>
+              <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.9);">Flymedia Technology Institutional & Community Network</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Dear ${application.contactPerson},</h2>
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                We have successfully received the partnership proposal on behalf of <strong>${application.organizationName}</strong>.
+              </p>
+
+              ${isCollege ? `
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:18px;margin-bottom:20px;">
+                <h4 style="margin:0 0 8px;font-size:14px;color:#1e40af;font-weight:700;">What Happens Next for Your College:</h4>
+                <ul style="margin:0;padding-left:18px;font-size:13px;color:#1e3a8a;line-height:1.6;">
+                  <li>Our Institutional Partnerships Director will review your requirements.</li>
+                  <li>We will customize exclusive student benefits, including subsidized batch pricing, campus workshops, and industrial certifications.</li>
+                  <li>We'll schedule an introductory call to formalize the MoU / institutional tie-up.</li>
+                </ul>
+              </div>
+              ` : `
+              <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:18px;margin-bottom:20px;">
+                <h4 style="margin:0 0 8px;font-size:14px;color:#065f46;font-weight:700;">Our Commitment to 100% Free Education:</h4>
+                <ul style="margin:0;padding-left:18px;font-size:13px;color:#047857;line-height:1.6;">
+                  <li>We salute <strong>${application.organizationName}</strong> for empowering underprivileged students!</li>
+                  <li>Verified students from your trust will receive <strong>100% free enrollment</strong> across our industry-relevant skill tracks.</li>
+                  <li>Our CSR coordinator will reach out within 24–48 hours to grant your institution free education access passes.</li>
+                </ul>
+              </div>
+              `}
+
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                If you have any urgent queries, you can reach out directly to our institutional desk at 
+                <a href="tel:+919779324178" style="color:#ea580c;font-weight:700;text-decoration:none;">+91-97793-24178</a> or reply to this email.
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0 16px;"/>
+
+              <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
+                Warm regards,<br/>
+                <strong>Team Flymedia Technology</strong><br/>
+                Ludhiana, Punjab | learnwithflymedia@gmail.com
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: application.email,
+    subject: isCollege 
+      ? `College Partnership Request Received - ${application.organizationName}`
+      : `Free Education Partnership Request Received - ${application.organizationName}`,
+    html,
+  });
+}
+
+export async function sendPartnerApprovalEmail(application: {
+  type: 'COLLEGE' | 'CHARITY';
+  organizationName: string;
+  contactPerson: string;
+  email: string;
+  adminNotes?: string | null;
+}) {
+  const isCollege = application.type === 'COLLEGE';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Partnership Approved - Flymedia Technology</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);padding:32px 36px;color:#ffffff;text-align:center;">
+              <h1 style="margin:0;font-size:24px;font-weight:800;">🎉 Congratulations! Partnership Approved</h1>
+              <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.9);">${application.organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Dear ${application.contactPerson},</h2>
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                We are delighted to welcome <strong>${application.organizationName}</strong> to the Flymedia Technology educational ecosystem!
+              </p>
+
+              ${isCollege ? `
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                Your institution's partnership has been approved. Your students can now avail specialized benefits including subsidized tuition, prioritized live batches, industrial certification, and placement drive access.
+              </p>
+              ` : `
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                Your charity / trust partnership has been approved for <strong>100% Free Education</strong>! Your sponsored students will receive complete zero-cost access to our technical training, live mentor sessions, and recognized certificates.
+              </p>
+              `}
+
+              ${application.adminNotes ? `
+              <div style="background:#f8fafc;border:1px dashed #cbd5e1;padding:16px;border-radius:10px;margin:20px 0;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;">Note from Admissions & Partnership Coordinator:</p>
+                <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.5;">${application.adminNotes}</p>
+              </div>
+              ` : ''}
+
+              <p style="margin:20px 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                Our partnership manager will contact you directly to share your official institutional partner code and onboarding guidelines for your students.
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0 16px;"/>
+
+              <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
+                Warm regards,<br/>
+                <strong>Flymedia Technology Partner Network</strong><br/>
+                Phone: +91-97793-24178 | Email: learnwithflymedia@gmail.com
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: application.email,
+    subject: `Partnership Approved - Welcome ${application.organizationName} to Flymedia!`,
+    html,
+  });
+}
+
