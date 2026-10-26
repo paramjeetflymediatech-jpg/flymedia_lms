@@ -52,7 +52,7 @@ export default async function PartnerWithUsPage(props: {
 
       <main className="min-h-screen bg-slate-50">
         {/* ================= HERO SECTION ================= */}
-        <section className="relative pt-32 pb-24 lg:pt-36 lg:pb-32 bg-slate-950 text-white overflow-hidden">
+        <section className="relative pt-16 pb-24 lg:pt-28 lg:pb-22 bg-slate-950 text-white overflow-hidden">
           {/* Subtle Glows */}
           <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[140px] pointer-events-none" />
           <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[140px] pointer-events-none" />
@@ -105,7 +105,7 @@ export default async function PartnerWithUsPage(props: {
             </div>
 
             {/* Impact Highlights Bar */}
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto pt-10 border-t border-slate-800/80">
+            <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto pt-10 border-t border-slate-800/80">
               <div>
                 <div className="text-3xl lg:text-4xl font-black text-white">45+</div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Colleges &amp; Institutes</div>
