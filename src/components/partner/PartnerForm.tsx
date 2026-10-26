@@ -52,12 +52,26 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
+  // Sync state if defaultType prop changes
+  useEffect(() => {
+    if (defaultType) {
+      setPartnerType(defaultType);
+    }
+  }, [defaultType]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const applyTypeFromUrl = () => {
         const search = window.location.search.toLowerCase();
         const hash = window.location.hash.toLowerCase();
-        if (search.includes('type=charity') || search.includes('type=trust') || hash.includes('charity') || hash.includes('trust')) {
+        if (
+          search.includes('type=charity') ||
+          search.includes('type=trust') ||
+          search.includes('type=nonprofit') ||
+          hash.includes('charity') ||
+          hash.includes('trust') ||
+          hash.includes('nonprofit')
+        ) {
           setPartnerType('CHARITY');
         } else if (search.includes('type=college') || hash.includes('college')) {
           setPartnerType('COLLEGE');
@@ -66,7 +80,28 @@ export default function PartnerForm({ defaultType = 'COLLEGE' }: PartnerFormProp
 
       applyTypeFromUrl();
       window.addEventListener('hashchange', applyTypeFromUrl);
-      return () => window.removeEventListener('hashchange', applyTypeFromUrl);
+      window.addEventListener('popstate', applyTypeFromUrl);
+
+      // Intercept any in-page clicks on partner links to switch tabs instantly
+      const handleGlobalClick = (e: MouseEvent) => {
+        const target = (e.target as HTMLElement)?.closest('a');
+        if (target && target.href) {
+          const href = target.href.toLowerCase();
+          if (href.includes('type=charity') || href.includes('type=trust') || href.includes('type=nonprofit')) {
+            setPartnerType('CHARITY');
+          } else if (href.includes('type=college')) {
+            setPartnerType('COLLEGE');
+          }
+        }
+      };
+
+      document.addEventListener('click', handleGlobalClick);
+
+      return () => {
+        window.removeEventListener('hashchange', applyTypeFromUrl);
+        window.removeEventListener('popstate', applyTypeFromUrl);
+        document.removeEventListener('click', handleGlobalClick);
+      };
     }
   }, []);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -85,6 +85,15 @@ export const PartnershipScreen: React.FC<{ navigation: any; route?: any }> = ({
     route?.params?.defaultType === 'CHARITY' ? 'CHARITY' : 'COLLEGE';
 
   const [partnerType, setPartnerType] = useState<'COLLEGE' | 'CHARITY'>(initialType);
+
+  useEffect(() => {
+    if (route?.params?.defaultType) {
+      const typeFromRoute = route.params.defaultType === 'CHARITY' ? 'CHARITY' : 'COLLEGE';
+      setPartnerType(typeFromRoute);
+      setSelectedInterests([]);
+      setCategory('');
+    }
+  }, [route?.params?.defaultType]);
   const [organizationName, setOrganizationName] = useState('');
   const [category, setCategory] = useState('');
   const [contactPerson, setContactPerson] = useState('');

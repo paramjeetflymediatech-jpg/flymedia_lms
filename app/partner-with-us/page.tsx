@@ -19,7 +19,16 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function PartnerWithUsPage() {
+export default async function PartnerWithUsPage(props: {
+  searchParams?: Promise<{ type?: string }>;
+}) {
+  const searchParams = props.searchParams ? await props.searchParams : undefined;
+  const rawType = (searchParams?.type || '').toLowerCase();
+  const initialType: 'COLLEGE' | 'CHARITY' =
+    rawType === 'charity' || rawType === 'trust' || rawType === 'nonprofit' || rawType === 'ngo'
+      ? 'CHARITY'
+      : 'COLLEGE';
+
   let partnerFaqs: any[] = [];
   try {
     const records = await Faq.findAll({
@@ -52,13 +61,19 @@ export default async function PartnerWithUsPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             {/* Top Badges */}
             <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6">
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
+              <a
+                href="/partner-with-us?type=college#partner-form-section"
+                className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25 transition-all cursor-pointer"
+              >
                 🏛️ College Campus Tie-Ups
-              </span>
+              </a>
               <span className="text-slate-500">•</span>
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <a
+                href="/partner-with-us?type=charity#partner-form-section"
+                className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all cursor-pointer"
+              >
                 🌱 100% Free Education for Non-Profit Orgs
-              </span>
+              </a>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl mx-auto mb-6">
@@ -180,8 +195,8 @@ export default async function PartnerWithUsPage() {
               </div>
 
               <a
-                href="#partner-form-section"
-                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition-all border border-blue-200 hover:border-blue-600"
+                href="/partner-with-us?type=college#partner-form-section"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition-all border border-blue-200 hover:border-blue-600 shadow-sm"
               >
                 Apply for College MoU &amp; Benefits &rarr;
               </a>
@@ -240,8 +255,8 @@ export default async function PartnerWithUsPage() {
               </div>
 
               <a
-                href="#partner-form-section"
-                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200 hover:border-emerald-600"
+                href="/partner-with-us?type=charity#partner-form-section"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200 hover:border-emerald-600 shadow-sm"
               >
                 Register Your Non-Profit Org for Free Education &rarr;
               </a>
@@ -263,7 +278,7 @@ export default async function PartnerWithUsPage() {
             </p>
           </div>
 
-          <PartnerForm />
+          <PartnerForm defaultType={initialType} />
         </section>
 
         {/* ================= FAQ SECTION ================= */}
