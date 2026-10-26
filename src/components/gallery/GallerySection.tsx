@@ -168,11 +168,11 @@ export default function GallerySection({
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
     if (match) {
       videoId = match[1];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&modestbranding=0&playsinline=1&enablejsapi=1`;
+      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&rel=0&playsinline=1`;
     }
     if (url.includes('embed/')) {
       const sep = url.includes('?') ? '&' : '?';
-      return url.includes('controls=') ? url : `${url}${sep}controls=1&autoplay=1&enablejsapi=1&rel=0&playsinline=1`;
+      return url.includes('controls=') ? url : `${url}${sep}controls=1&autoplay=1&rel=0&playsinline=1`;
     }
     return url;
   };
@@ -464,7 +464,6 @@ export default function GallerySection({
                     src={getYouTubeEmbedUrl(activeVideoUrl)}
                     title="Success Video"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                    allowFullScreen
                     className="w-full h-full border-0"
                   />
                 </div>
