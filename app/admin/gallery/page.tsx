@@ -126,9 +126,7 @@ export default async function AdminGalleryPage() {
                             {item.thumbnailUrl ? (
                               <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full bg-slate-950 flex items-center justify-center">
-                                <span className="text-2xl">🎥</span>
-                              </div>
+                              <video src={item.mediaUrl} preload="metadata" muted playsInline className="w-full h-full object-cover" />
                             )}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                               <span className="w-6 h-6 rounded-full bg-white/90 text-orange-600 flex items-center justify-center text-xs font-black">
@@ -144,7 +142,7 @@ export default async function AdminGalleryPage() {
                     <td className="px-6 py-4 max-w-xs">
                       <div className="font-bold text-slate-900 line-clamp-1">{item.title}</div>
                       {item.description && (
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.description}</p>
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-1 break-words [overflow-wrap:anywhere]">{item.description}</p>
                       )}
                       <span className="inline-block mt-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">
                         {item.category.replace('_', ' ')}

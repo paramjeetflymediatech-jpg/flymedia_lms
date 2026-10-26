@@ -153,7 +153,7 @@ export default function TutorProfileContent({ tutor, reviews, currentUserRole, s
                               ))}
                             </div>
                           </div>
-                          <p className="text-sm text-slate-700 leading-relaxed bg-white p-4 rounded-xl border border-slate-100">
+                          <p className="text-sm text-slate-700 leading-relaxed bg-white p-4 rounded-xl border border-slate-100 break-words [overflow-wrap:anywhere]">
                             "{review.comment}"
                           </p>
                         </div>

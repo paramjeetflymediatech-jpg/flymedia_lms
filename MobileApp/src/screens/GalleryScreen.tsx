@@ -109,6 +109,16 @@ export const GalleryScreen: React.FC = () => {
   const [callbackModalVisible, setCallbackModalVisible] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<GalleryItem | null>(null);
   const [playingVideo, setPlayingVideo] = useState<GalleryItem | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const fetchGallery = useCallback(async () => {
     try {
@@ -289,9 +299,26 @@ export const GalleryScreen: React.FC = () => {
 
                     {/* Description if present */}
                     {item.description ? (
-                      <Text style={styles.cardDesc} numberOfLines={2}>
-                        {item.description}
-                      </Text>
+                      <View style={styles.descWrap}>
+                        <Text
+                          style={styles.cardDesc}
+                          numberOfLines={expandedIds.has(item.id) ? undefined : 2}
+                        >
+                          “{item.description}”
+                        </Text>
+                        {item.description.length > 80 && (
+                          <TouchableOpacity
+                            onPress={() => toggleExpand(item.id)}
+                            style={styles.readMoreBtn}
+                            activeOpacity={0.7}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Text style={styles.readMoreText}>
+                              {expandedIds.has(item.id) ? 'Show less' : 'Read full review'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     ) : null}
 
                     {/* Student & Company Footer */}
@@ -379,6 +406,17 @@ export const GalleryScreen: React.FC = () => {
                   <View style={styles.modalPkgBadge}>
                     <Text style={styles.modalPkgBadgeText}>Package: {previewPhoto.salaryPackage}</Text>
                   </View>
+                ) : null}
+                {previewPhoto.description ? (
+                  <ScrollView
+                    style={styles.modalDescScroll}
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator
+                  >
+                    <Text style={styles.modalDescText}>
+                      “{previewPhoto.description}”
+                    </Text>
+                  </ScrollView>
                 ) : null}
               </View>
             </View>
@@ -779,5 +817,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#059669',
+  },
+  descWrap: {
+    marginBottom: 8,
+  },
+  readMoreBtn: {
+    marginTop: 3,
+    alignSelf: 'flex-start',
+  },
+  readMoreText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.primaryRose,
+  },
+  modalDescScroll: {
+    marginTop: 10,
+    maxHeight: 110,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  modalDescText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.textPrimary,
+    fontStyle: 'italic',
   },
 });

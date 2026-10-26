@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,23 @@ import {
   Linking,
   Platform,
   Image,
+  ScrollView,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { X, ExternalLink, Play, Film, Award, AlertCircle } from 'lucide-react-native';
+import {
+  X,
+  ExternalLink,
+  Play,
+  Pause,
+  RotateCcw,
+  RotateCw,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Film,
+  Award,
+  AlertCircle,
+} from 'lucide-react-native';
 import { Colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -108,6 +122,80 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   if (!visible || !videoUrl) return null;
 
   const youtubeId = extractYouTubeId(videoUrl);
+  const webViewRef = useRef<any>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+
+  const handleTogglePlay = () => {
+    const nextPlay = !isPlaying;
+    setIsPlaying(nextPlay);
+    const js = `
+      try {
+        if (window.player && typeof window.player.getPlayerState === 'function') {
+          var state = window.player.getPlayerState();
+          if (state === 1) { window.player.pauseVideo(); }
+          else { window.player.playVideo(); }
+        }
+        var v = document.querySelector('video');
+        if (v) {
+          if (v.paused) { v.play(); } else { v.pause(); }
+        }
+      } catch (e) {}
+      true;
+    `;
+    webViewRef.current?.injectJavaScript(js);
+  };
+
+  const handleSeek = (seconds: number) => {
+    const js = `
+      try {
+        if (window.player && typeof window.player.getCurrentTime === 'function') {
+          var t = window.player.getCurrentTime();
+          window.player.seekTo(Math.max(0, t + (${seconds})), true);
+        }
+        var v = document.querySelector('video');
+        if (v) {
+          v.currentTime = Math.max(0, v.currentTime + (${seconds}));
+        }
+      } catch (e) {}
+      true;
+    `;
+    webViewRef.current?.injectJavaScript(js);
+  };
+
+  const handleToggleMute = () => {
+    const nextMute = !isMuted;
+    setIsMuted(nextMute);
+    const js = `
+      try {
+        if (window.player && typeof window.player.isMuted === 'function') {
+          if (window.player.isMuted()) { window.player.unMute(); }
+          else { window.player.mute(); }
+        }
+        var v = document.querySelector('video');
+        if (v) {
+          v.muted = !v.muted;
+        }
+      } catch (e) {}
+      true;
+    `;
+    webViewRef.current?.injectJavaScript(js);
+  };
+
+  const handleFullscreen = () => {
+    const js = `
+      try {
+        var elem = document.querySelector('video') || document.querySelector('iframe') || document.getElementById('player') || document.documentElement;
+        if (elem) {
+          if (elem.requestFullscreen) { elem.requestFullscreen(); }
+          else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+          else if (elem.webkitEnterFullscreen) { elem.webkitEnterFullscreen(); }
+        }
+      } catch (e) {}
+      true;
+    `;
+    webViewRef.current?.injectJavaScript(js);
+  };
 
   const htmlContent = youtubeId
     ? `<!DOCTYPE html>
@@ -117,15 +205,35 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; background: #000; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
-    iframe { width: 100%; height: 100%; border: none; }
+    #player, iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
-  <iframe
-    src="https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&controls=1&enablejsapi=1"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
+  <div id="player"></div>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    var player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        videoId: '${youtubeId}',
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          rel: 0,
+          modestbranding: 0,
+          playsinline: 1,
+          enablejsapi: 1,
+          fs: 1
+        },
+        events: {
+          'onReady': function(e) {
+            try { e.target.playVideo(); } catch(err){}
+          }
+        }
+      });
+      window.player = player;
+    }
+  </script>
 </body>
 </html>`
     : `<!DOCTYPE html>
@@ -139,7 +247,10 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   </style>
 </head>
 <body>
-  <video src="${videoUrl}" controls autoplay playsinline preload="auto"></video>
+  <video id="videoElement" src="${videoUrl}" controls controlslist="nodownload" autoplay playsinline webkit-playsinline preload="auto"></video>
+  <script>
+    window.videoElement = document.getElementById('videoElement');
+  </script>
 </body>
 </html>`;
 
@@ -166,6 +277,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
           <View style={styles.videoPlayerContainer}>
             <WebViewErrorBoundary videoUrl={videoUrl} youtubeId={youtubeId}>
               <WebView
+                ref={webViewRef}
                 source={{ html: htmlContent }}
                 style={styles.webView}
                 javaScriptEnabled={true}
@@ -183,6 +295,68 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                 )}
               />
             </WebViewErrorBoundary>
+          </View>
+
+          {/* Interactive Player Quick Controls Bar */}
+          <View style={styles.controlsBar}>
+            <TouchableOpacity
+              style={styles.primaryControlBtn}
+              onPress={handleTogglePlay}
+              activeOpacity={0.8}
+            >
+              {isPlaying ? (
+                <Pause size={14} color="#ffffff" fill="#ffffff" />
+              ) : (
+                <Play size={14} color="#ffffff" fill="#ffffff" />
+              )}
+              <Text style={styles.primaryControlBtnText}>
+                {isPlaying ? 'Pause' : 'Play'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconControlBtn}
+              onPress={() => handleSeek(-10)}
+              activeOpacity={0.7}
+            >
+              <RotateCcw size={14} color="#e2e8f0" />
+              <Text style={styles.iconControlText}>-10s</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconControlBtn}
+              onPress={() => handleSeek(10)}
+              activeOpacity={0.7}
+            >
+              <RotateCw size={14} color="#e2e8f0" />
+              <Text style={styles.iconControlText}>+10s</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconControlBtn}
+              onPress={handleToggleMute}
+              activeOpacity={0.7}
+            >
+              {isMuted ? (
+                <VolumeX size={14} color="#f87171" />
+              ) : (
+                <Volume2 size={14} color="#e2e8f0" />
+              )}
+              <Text style={[styles.iconControlText, isMuted && { color: '#f87171' }]}>
+                {isMuted ? 'Muted' : 'Sound'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.iconControlBtn, styles.fullscreenBtn]}
+              onPress={handleFullscreen}
+              activeOpacity={0.7}
+            >
+              <Maximize size={14} color="#38bdf8" />
+              <Text style={[styles.iconControlText, { color: '#38bdf8' }]}>
+                Full
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Details & Metadata Card */}
@@ -227,9 +401,15 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             ) : null}
 
             {description ? (
-              <Text style={styles.metaDesc} numberOfLines={3}>
-                “{description}”
-              </Text>
+              <ScrollView
+                style={styles.metaDescScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+              >
+                <Text style={styles.metaDesc}>
+                  “{description}”
+                </Text>
+              </ScrollView>
             ) : null}
           </View>
         </View>
@@ -299,6 +479,55 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#94a3b8',
+  },
+  controlsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#090d16',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  primaryControlBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f97316',
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 10,
+    shadowColor: '#f97316',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  primaryControlBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  iconControlBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  iconControlText: {
+    color: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  fullscreenBtn: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
   },
   metaCard: {
     padding: 16,
@@ -373,11 +602,20 @@ const styles = StyleSheet.create({
     color: '#38bdf8',
     marginBottom: 6,
   },
+  metaDescScroll: {
+    maxHeight: 85,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
   metaDesc: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#94a3b8',
-    lineHeight: 17,
+    color: '#cbd5e1',
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
   fallbackContainer: {
     width: '100%',

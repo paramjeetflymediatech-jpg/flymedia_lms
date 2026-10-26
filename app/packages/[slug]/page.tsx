@@ -177,7 +177,8 @@ export default async function PackageDetailPage({ params }: Props) {
                   /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(pkgJson.videoUrl) ? (
                     <video 
                       src={pkgJson.videoUrl} 
-                      controls 
+                      controls
+                      playsInline
                       className="w-full h-full object-contain"
                     />
                   ) : (
@@ -187,21 +188,21 @@ export default async function PackageDetailPage({ params }: Props) {
                         if (!url) return '';
                         if (url.includes('youtube.com/shorts/')) {
                           const videoId = url.split('youtube.com/shorts/')[1].split(/[?&]/)[0];
-                          return `https://www.youtube.com/embed/${videoId}`;
+                          return `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&playsinline=1`;
                         }
                         if (url.includes('youtube.com/watch')) {
                           try {
                             const videoId = new URL(url).searchParams.get('v');
-                            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+                            return videoId ? `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&playsinline=1` : url;
                           } catch { return url; }
                         }
                         if (url.includes('youtu.be/')) {
                           const videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
-                          return `https://www.youtube.com/embed/${videoId}`;
+                          return `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&playsinline=1`;
                         }
                         if (url.includes('vimeo.com/')) {
                           const videoId = url.split('vimeo.com/')[1].split(/[?&]/)[0];
-                          return `https://player.vimeo.com/video/${videoId}`;
+                          return `https://player.vimeo.com/video/${videoId}?title=0&byline=0&portrait=0`;
                         }
                         return url;
                       })()}
@@ -589,13 +590,15 @@ export default async function PackageDetailPage({ params }: Props) {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {successStories.map((story: any, i: number) => (
-                      <div key={i} className="p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-md transition-all duration-300">
-                        <div className="flex gap-1 text-orange-400 mb-4">
-                          {[...Array(5)].map((_, si) => (
-                            <svg key={si} className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                          ))}
+                      <div key={i} className="p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
+                        <div>
+                          <div className="flex gap-1 text-orange-400 mb-4">
+                            {[...Array(5)].map((_, si) => (
+                              <svg key={si} className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                            ))}
+                          </div>
+                          <p className="text-slate-700 text-sm leading-relaxed font-medium mb-5 break-words [overflow-wrap:anywhere] hyphens-auto">"{story.quote}"</p>
                         </div>
-                        <p className="text-slate-700 text-sm leading-relaxed font-medium mb-5">"{story.quote}"</p>
                         <div className="flex items-center gap-3">
                           {story.avatar ? (
                             <img src={story.avatar} alt={story.name} className="w-10 h-10 rounded-full object-cover border-2 border-slate-100" />
