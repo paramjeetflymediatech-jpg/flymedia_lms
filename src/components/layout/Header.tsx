@@ -75,6 +75,12 @@ export default async function Header() {
 
           {/* Right: Quick Utility Links */}
           <div className="flex items-center gap-4 text-xs font-semibold">
+            <Link href="/partner-with-us?type=college#partner-form-section" className="text-slate-400 hover:text-white transition-colors">
+              College Tie-Ups
+            </Link>
+            <Link href="/partner-with-us?type=charity#partner-form-section" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+              Non-Profit Org Tie-Ups
+            </Link>
             <Link href="/become-tutor" className="text-slate-400 hover:text-white transition-colors">
               Teach With Us
             </Link>

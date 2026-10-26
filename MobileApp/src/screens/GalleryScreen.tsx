@@ -233,7 +233,7 @@ export const GalleryScreen: React.FC = () => {
                     <CachedImage
                       uri={mediaSource}
                       style={styles.mediaImage}
-                      resizeMode="cover"
+                      resizeMode="contain"
                     />
 
                     {/* Gradient Overlay */}
@@ -522,6 +522,7 @@ const styles = StyleSheet.create({
   mediaImage: {
     width: '100%',
     height: '100%',
+    backgroundColor:'black'
   },
   imageOverlay: {
     ...StyleSheet.absoluteFill,
@@ -713,7 +714,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    backgroundColor: 'rgba(8, 8, 8, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -744,6 +745,7 @@ const styles = StyleSheet.create({
   modalImage: {
     width: '100%',
     height: '100%',
+    backgroundColor:"#000000"
   },
   modalMetaCard: {
     marginTop: 16,
