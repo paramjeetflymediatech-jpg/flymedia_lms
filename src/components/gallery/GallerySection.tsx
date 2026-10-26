@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export interface GalleryItemData {
@@ -34,6 +34,28 @@ export default function GallerySection({
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
+
+  // Close modals on Escape key and prevent background scrolling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveVideoUrl(null);
+        setActiveImageUrl(null);
+      }
+    };
+
+    if (activeVideoUrl || activeImageUrl) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeVideoUrl, activeImageUrl]);
 
   const categories = [
     { label: 'All Media', value: 'ALL' },
@@ -123,7 +145,7 @@ export default function GallerySection({
                   <img
                     src={item.thumbnailUrl || item.mediaUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />
 
                   {/* Media Type Badge */}
@@ -236,24 +258,41 @@ export default function GallerySection({
       {/* VIDEO LIGHTBOX MODAL */}
       {activeVideoUrl && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
           onClick={() => setActiveVideoUrl(null)}
         >
+          {/* Always-visible top-right close button */}
+          <button
+            onClick={() => setActiveVideoUrl(null)}
+            className="fixed top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-lg font-bold backdrop-blur-lg border border-white/20 transition-all hover:scale-105 cursor-pointer shadow-lg"
+            title="Close (Esc)"
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
+
           <div
-            className="relative w-full max-w-4xl bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-white/20"
+            className="relative w-full max-h-[90vh] flex flex-col bg-slate-950 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/20 my-auto"
+            style={{ maxWidth: 'min(56rem, calc((90vh - 56px) * 16 / 9))' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-white/10">
-              <span className="text-sm font-bold text-slate-300">Flymedia Student Video Experience</span>
+            <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5 bg-slate-900 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-2 min-w-0 pr-3">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                <span className="text-xs sm:text-sm font-bold text-slate-200 truncate">
+                  Flymedia Student Video Experience
+                </span>
+              </div>
               <button
                 onClick={() => setActiveVideoUrl(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg font-bold transition-colors cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-sm sm:text-base font-bold transition-colors cursor-pointer shrink-0"
+                aria-label="Close modal"
               >
                 ✕
               </button>
             </div>
 
-            <div className="aspect-video w-full bg-black">
+            <div className="aspect-video w-full bg-black shrink-0">
               {activeVideoUrl.includes('youtube.com') || activeVideoUrl.includes('youtu.be') ? (
                 <iframe
                   src={getYouTubeEmbedUrl(activeVideoUrl)}
@@ -267,6 +306,7 @@ export default function GallerySection({
                   src={activeVideoUrl}
                   controls
                   autoPlay
+                  playsInline
                   className="w-full h-full object-contain"
                 />
               )}
@@ -278,23 +318,25 @@ export default function GallerySection({
       {/* IMAGE LIGHTBOX MODAL */}
       {activeImageUrl && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
           onClick={() => setActiveImageUrl(null)}
         >
+          <button
+            onClick={() => setActiveImageUrl(null)}
+            className="fixed top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-lg font-bold backdrop-blur-lg border border-white/20 transition-all hover:scale-105 cursor-pointer shadow-lg"
+            title="Close (Esc)"
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-white/20"
+            className="relative max-w-5xl max-h-[90vh] bg-slate-950 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/20 p-2 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setActiveImageUrl(null)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center text-lg font-bold transition-colors cursor-pointer"
-            >
-              ✕
-            </button>
             <img
               src={activeImageUrl}
               alt="Success View"
-              className="max-h-[85vh] w-auto object-contain mx-auto"
+              className="max-h-[82vh] w-auto max-w-full object-contain mx-auto rounded-xl"
             />
           </div>
         </div>

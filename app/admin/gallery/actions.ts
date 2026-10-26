@@ -27,31 +27,36 @@ export async function createGalleryItem(formData: FormData) {
   await requireAdmin();
   await GalleryItem.sync({ alter: true });
 
+  const getString = (key: string): string => {
+    const val = formData.get(key);
+    return typeof val === 'string' ? val.trim() : '';
+  };
+
   const mediaFile = formData.get('mediaFile') as File | null;
   const thumbFile = formData.get('thumbFile') as File | null;
 
-  let mediaUrl = formData.get('mediaUrl') as string || '';
+  let mediaUrl = getString('mediaUrl');
   if (mediaFile && mediaFile.size > 0) {
     const uploadedMedia = await handleFileUpload(mediaFile, 'gallery');
     if (uploadedMedia) mediaUrl = uploadedMedia;
   }
 
-  let thumbnailUrl = formData.get('thumbnailUrl') as string || null;
+  let thumbnailUrl = getString('thumbnailUrl') || null;
   if (thumbFile && thumbFile.size > 0) {
     const uploadedThumb = await handleFileUpload(thumbFile, 'gallery');
     if (uploadedThumb) thumbnailUrl = uploadedThumb;
   }
 
-  const mediaType = (formData.get('mediaType') as string) === 'VIDEO' ? 'VIDEO' : 'IMAGE';
-  const title = (formData.get('title') as string || '').trim();
-  const description = (formData.get('description') as string || '').trim();
-  const studentName = (formData.get('studentName') as string || '').trim();
-  const courseName = (formData.get('courseName') as string || '').trim();
-  const companyPlaced = (formData.get('companyPlaced') as string || '').trim();
-  const salaryPackage = (formData.get('salaryPackage') as string || '').trim();
-  const category = (formData.get('category') as string || 'SUCCESS_STORY').trim();
-  const rating = parseInt(formData.get('rating') as string || '5', 10);
-  const order = parseInt(formData.get('order') as string || '0', 10);
+  const mediaType = getString('mediaType') === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+  const title = getString('title');
+  const description = getString('description');
+  const studentName = getString('studentName');
+  const courseName = getString('courseName');
+  const companyPlaced = getString('companyPlaced');
+  const salaryPackage = getString('salaryPackage');
+  const category = getString('category') || 'SUCCESS_STORY';
+  const rating = parseInt(getString('rating') || '5', 10);
+  const order = parseInt(getString('order') || '0', 10);
   const isActive = formData.get('isActive') === 'on' || formData.get('isActive') === 'true';
 
   if (!title || !mediaUrl) {
@@ -85,34 +90,39 @@ export async function updateGalleryItem(id: string, formData: FormData) {
   await requireAdmin();
   await GalleryItem.sync({ alter: true });
 
+  const getString = (key: string): string => {
+    const val = formData.get(key);
+    return typeof val === 'string' ? val.trim() : '';
+  };
+
   const mediaFile = formData.get('mediaFile') as File | null;
   const thumbFile = formData.get('thumbFile') as File | null;
 
   const updateData: any = {
-    title: (formData.get('title') as string || '').trim(),
-    description: (formData.get('description') as string || '').trim() || null,
-    mediaType: (formData.get('mediaType') as string) === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-    studentName: (formData.get('studentName') as string || '').trim() || null,
-    courseName: (formData.get('courseName') as string || '').trim() || null,
-    companyPlaced: (formData.get('companyPlaced') as string || '').trim() || null,
-    salaryPackage: (formData.get('salaryPackage') as string || '').trim() || null,
-    category: (formData.get('category') as string || 'SUCCESS_STORY').trim(),
-    rating: parseInt(formData.get('rating') as string || '5', 10),
-    order: parseInt(formData.get('order') as string || '0', 10),
+    title: getString('title'),
+    description: getString('description') || null,
+    mediaType: getString('mediaType') === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+    studentName: getString('studentName') || null,
+    courseName: getString('courseName') || null,
+    companyPlaced: getString('companyPlaced') || null,
+    salaryPackage: getString('salaryPackage') || null,
+    category: getString('category') || 'SUCCESS_STORY',
+    rating: parseInt(getString('rating') || '5', 10),
+    order: parseInt(getString('order') || '0', 10),
     isActive: formData.get('isActive') === 'on' || formData.get('isActive') === 'true',
   };
 
-  const manualMediaUrl = formData.get('mediaUrl') as string;
+  const manualMediaUrl = getString('mediaUrl');
   if (manualMediaUrl) {
-    updateData.mediaUrl = manualMediaUrl.trim();
+    updateData.mediaUrl = manualMediaUrl;
   }
   if (mediaFile && mediaFile.size > 0) {
     const uploadedMedia = await handleFileUpload(mediaFile, 'gallery');
     if (uploadedMedia) updateData.mediaUrl = uploadedMedia;
   }
 
-  const manualThumbUrl = formData.get('thumbnailUrl') as string;
-  if (manualThumbUrl !== undefined) {
+  const manualThumbUrl = formData.get('thumbnailUrl');
+  if (typeof manualThumbUrl === 'string') {
     updateData.thumbnailUrl = manualThumbUrl.trim() || null;
   }
   if (thumbFile && thumbFile.size > 0) {
