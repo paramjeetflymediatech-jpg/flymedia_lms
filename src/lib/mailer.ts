@@ -668,3 +668,84 @@ export async function sendPartnerApprovalEmail(application: {
   });
 }
 
+export async function sendPartnerRejectionEmail(application: {
+  type: 'COLLEGE' | 'CHARITY';
+  organizationName: string;
+  contactPerson: string;
+  email: string;
+  adminNotes?: string | null;
+}) {
+  const isCollege = application.type === 'COLLEGE';
+  const partnerLabel = isCollege ? 'College / Institutional Partnership' : 'Trust / NGO Free Education Partnership';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Partnership Application Status - Flymedia Technology</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #475569 0%, #1e293b 100%);padding:32px 36px;color:#ffffff;text-align:center;">
+              <h1 style="margin:0;font-size:22px;font-weight:800;">Partnership Application Update</h1>
+              <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">${application.organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Dear ${application.contactPerson},</h2>
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                Thank you for your interest in collaborating with Flymedia Technology and for submitting a proposal for our <strong>${partnerLabel}</strong>.
+              </p>
+
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                After a thorough review of your proposal and our current institutional scheduling capacity, we regret to inform you that we are unable to approve or move forward with this partnership application at this time.
+              </p>
+
+              ${application.adminNotes ? `
+              <div style="background:#f8fafc;border:1px dashed #cbd5e1;padding:16px;border-radius:10px;margin:20px 0;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;">Note from Partnership Committee:</p>
+                <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.5;">${application.adminNotes}</p>
+              </div>
+              ` : ''}
+
+              <p style="margin:20px 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                We appreciate the educational initiatives undertaken by <strong>${application.organizationName}</strong> and welcome the opportunity to re-evaluate potential collaboration in future academic cycles.
+              </p>
+
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                If you have any questions or would like to share additional details, feel free to reply directly to this email or contact our partnerships desk.
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0 16px;"/>
+
+              <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
+                Warm regards,<br/>
+                <strong>Flymedia Technology Partner Network</strong><br/>
+                Phone: +91-97793-24178 | Email: learnwithflymedia@gmail.com<br/>
+                Campus: First Floor, Plot 20, Vishal Nagar Ext, Ludhiana, Punjab 141013
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: application.email,
+    subject: `Update regarding your Partnership Application - ${application.organizationName}`,
+    html,
+  });
+}
+
+

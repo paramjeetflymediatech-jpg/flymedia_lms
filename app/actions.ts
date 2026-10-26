@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance, Referral, PartnerApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers, sendPartnerApplicationAdminNotification, sendPartnerApplicationApplicantConfirmation, sendPartnerApprovalEmail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers, sendPartnerApplicationAdminNotification, sendPartnerApplicationApplicantConfirmation, sendPartnerApprovalEmail, sendPartnerRejectionEmail } from '../src/lib/mailer';
 
 import { normalizePath } from '../src/lib/seo';
 
@@ -2472,6 +2472,17 @@ export async function updatePartnerApplicationStatus(
         email: application.email,
         adminNotes: application.adminNotes,
       }).catch((err) => console.error('Failed to send partner approval email:', err));
+    }
+
+    // If newly rejected, trigger official rejection email to partner
+    if (status === 'REJECTED' && previousStatus !== 'REJECTED') {
+      sendPartnerRejectionEmail({
+        type: application.type,
+        organizationName: application.organizationName,
+        contactPerson: application.contactPerson,
+        email: application.email,
+        adminNotes: application.adminNotes,
+      }).catch((err) => console.error('Failed to send partner rejection email:', err));
     }
 
     revalidatePath('/admin/partnerships');
