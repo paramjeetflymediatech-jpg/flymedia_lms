@@ -88,7 +88,7 @@ const DEFAULT_INTERNSHIP_FAQS = [
     id: 'int-faq-2',
     question: 'Will I get an official College NOC and Experience Certificate?',
     answer:
-      'Yes, absolutely. We provide official Acceptance Letters, College NOC documentation, Weekly Progress Reports, and an ISO 9001:2015 & MSME recognized Project Completion and Experience Certificate upon successful completion.',
+      'Yes, absolutely. We provide official Acceptance Letters, College NOC documentation, Weekly Progress Reports,  recognized Project Completion and Experience Certificate upon successful completion.',
   },
   {
     id: 'int-faq-3',
@@ -148,9 +148,7 @@ export default async function InternshipPage() {
                 <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
                 <span>Summer &amp; 6 Months Industrial Internship 2025 - 2026</span>
               </span>
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-white/10 text-slate-300 border border-white/15">
-                🏛️ MSME &amp; ISO 9001:2015 Certified
-              </span>
+             
             </div>
 
             {/* H1 Title */}
