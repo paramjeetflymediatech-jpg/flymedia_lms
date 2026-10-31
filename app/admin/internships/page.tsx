@@ -35,7 +35,7 @@ export default async function AdminInternshipsPage() {
               🎓 Student Internship Desk
             </span>
             <span className="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-black uppercase rounded-lg border border-rose-200">
-              Live Client Batches 2025 - 2026
+              Live Client Batches 2026 - 2027
             </span>
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">

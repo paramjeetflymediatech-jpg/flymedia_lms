@@ -66,7 +66,7 @@ export default function InternshipModal() {
               🎓 Internship Form
             </span>
             <span className="hidden sm:block text-[10px] font-bold text-slate-400">
-              Live Client Batches 2025-26
+              Live Client Batches 2026-27
             </span>
           </div>
           <span className="text-xs text-rose-400 font-black group-hover:translate-x-0.5 transition-transform">
