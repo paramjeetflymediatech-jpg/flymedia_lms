@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { getSeoMetadata, getSeoSetting } from '../src/lib/seo';
 import SeoScriptRenderer from '../src/components/common/SeoScriptRenderer';
 import FloatingAppDownloadButtons from '../src/components/common/FloatingAppDownloadButtons';
+import InternshipModal from '../src/components/internship/InternshipModal';
 import DynamicFaqHeadSchema from '../src/components/seo/DynamicFaqHeadSchema';
 import "./globals.css";
 
@@ -48,6 +49,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
         <FloatingAppDownloadButtons />
+        <InternshipModal />
         <SeoScriptRenderer code={globalSeo?.footerScript} location="body" />
       </body>
     </html>

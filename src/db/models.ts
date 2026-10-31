@@ -1114,5 +1114,68 @@ PartnerApplication.init(
   { sequelize, modelName: 'PartnerApplication', tableName: 'partner_applications' }
 );
 
+// ==========================================
+// 23. INTERNSHIP APPLICATION MODEL
+// ==========================================
+export class InternshipApplication extends Model<
+  InferAttributes<InternshipApplication>,
+  InferCreationAttributes<InternshipApplication>
+> {
+  declare id: CreationOptional<string>;
+  declare fullName: string;
+  declare email: string;
+  declare phone: string;
+  declare college: string;
+  declare qualification: string;
+  declare yearOfStudy: string;
+  declare domain: string;
+  declare duration: string;
+  declare mode: CreationOptional<'CAMPUS' | 'ONLINE' | 'HYBRID'>;
+  declare startDate: CreationOptional<string | null>;
+  declare resumeUrl: CreationOptional<string | null>;
+  declare portfolioUrl: CreationOptional<string | null>;
+  declare city: CreationOptional<string | null>;
+  declare state: CreationOptional<string | null>;
+  declare message: CreationOptional<string | null>;
+  declare status: CreationOptional<'PENDING' | 'CONTACTED' | 'SHORTLISTED' | 'ACCEPTED' | 'REJECTED'>;
+  declare adminNotes: CreationOptional<string | null>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+InternshipApplication.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    fullName: { type: DataTypes.STRING(255), allowNull: false },
+    email: { type: DataTypes.STRING(255), allowNull: false },
+    phone: { type: DataTypes.STRING(50), allowNull: false },
+    college: { type: DataTypes.STRING(255), allowNull: false },
+    qualification: { type: DataTypes.STRING(150), allowNull: false },
+    yearOfStudy: { type: DataTypes.STRING(100), allowNull: false },
+    domain: { type: DataTypes.STRING(150), allowNull: false },
+    duration: { type: DataTypes.STRING(100), allowNull: false },
+    mode: {
+      type: DataTypes.ENUM('CAMPUS', 'ONLINE', 'HYBRID'),
+      allowNull: false,
+      defaultValue: 'HYBRID',
+    },
+    startDate: { type: DataTypes.STRING(100), allowNull: true },
+    resumeUrl: { type: DataTypes.STRING(500), allowNull: true },
+    portfolioUrl: { type: DataTypes.STRING(500), allowNull: true },
+    city: { type: DataTypes.STRING(100), allowNull: true },
+    state: { type: DataTypes.STRING(100), allowNull: true },
+    message: { type: DataTypes.TEXT, allowNull: true },
+    status: {
+      type: DataTypes.ENUM('PENDING', 'CONTACTED', 'SHORTLISTED', 'ACCEPTED', 'REJECTED'),
+      allowNull: false,
+      defaultValue: 'PENDING',
+    },
+    adminNotes: { type: DataTypes.TEXT, allowNull: true },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+  },
+  { sequelize, modelName: 'InternshipApplication', tableName: 'internship_applications' }
+);
+
 
 

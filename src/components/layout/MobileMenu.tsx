@@ -60,6 +60,19 @@ export default function MobileMenu({ session }: MobileMenuProps) {
             All Programs
           </Link>
           <Link
+            href="/internship-form"
+            onClick={() => setIsOpen(false)}
+            className="text-base font-extrabold text-orange-600 hover:text-orange-700 flex items-center justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <span>🎓</span>
+              <span>Internship Application Form</span>
+            </span>
+            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-orange-100 text-orange-800">
+              Apply Now
+            </span>
+          </Link>
+          <Link
             href="/partner-with-us?type=college#partner-form-section"
             onClick={() => setIsOpen(false)}
             className="text-base font-bold text-slate-800 hover:text-blue-600 flex items-center justify-between"

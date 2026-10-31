@@ -7,9 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance, Referral, PartnerApplication } from '../src/db/models';
+import { User, Package, LiveClass, Enrollment, Certificate, Inquiry, PasswordResetToken, Payment, Coupon, TutorApplication, SeoSetting, Review, TutorAvailability, BlogPost, NewsletterSubscriber, Category, PackageTutor, ClassSchedule, ClassAttendance, Referral, PartnerApplication, InternshipApplication } from '../src/db/models';
 import { loginUser, logoutUser, getCurrentUser, requireAuth, requireAdmin } from '../src/lib/auth';
-import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers, sendPartnerApplicationAdminNotification, sendPartnerApplicationApplicantConfirmation, sendPartnerApprovalEmail, sendPartnerRejectionEmail } from '../src/lib/mailer';
+import { sendPasswordResetEmail, sendTutorApprovalEmail, sendTutorRejectionEmail, sendMail, getAdminReceivers, sendPartnerApplicationAdminNotification, sendPartnerApplicationApplicantConfirmation, sendPartnerApprovalEmail, sendPartnerRejectionEmail, sendInternshipApplicationAdminNotification, sendInternshipStudentConfirmationEmail } from '../src/lib/mailer';
 
 import { normalizePath } from '../src/lib/seo';
 
@@ -2510,3 +2510,148 @@ export async function deletePartnerApplication(id: string) {
     return { error: error?.message || 'Failed to delete partner application.' };
   }
 }
+
+// ==========================================
+// 23. INTERNSHIP APPLICATION ACTIONS
+// ==========================================
+export async function submitInternshipApplication(prevState: any, formData: FormData) {
+  try {
+    const fullName = (formData.get('fullName') as string)?.trim();
+    const email = (formData.get('email') as string)?.trim()?.toLowerCase();
+    const phone = (formData.get('phone') as string)?.trim();
+    const college = (formData.get('college') as string)?.trim();
+    const qualification = (formData.get('qualification') as string)?.trim();
+    const yearOfStudy = (formData.get('yearOfStudy') as string)?.trim();
+    const domain = (formData.get('domain') as string)?.trim();
+    const duration = (formData.get('duration') as string)?.trim();
+    const mode = ((formData.get('mode') as string)?.trim()?.toUpperCase() || 'HYBRID') as 'CAMPUS' | 'ONLINE' | 'HYBRID';
+    const startDate = (formData.get('startDate') as string)?.trim() || null;
+    const resumeUrl = (formData.get('resumeUrl') as string)?.trim() || null;
+    const portfolioUrl = (formData.get('portfolioUrl') as string)?.trim() || null;
+    const city = (formData.get('city') as string)?.trim() || null;
+    const state = (formData.get('state') as string)?.trim() || null;
+    const message = (formData.get('message') as string)?.trim() || null;
+
+    if (!fullName || !email || !phone || !college || !qualification || !yearOfStudy || !domain || !duration) {
+      return { error: 'Please fill in all required fields marked with *.' };
+    }
+
+    if (!email.includes('@') || !email.includes('.')) {
+      return { error: 'Please enter a valid email address.' };
+    }
+
+    if (phone.replace(/\D/g, '').length < 10) {
+      return { error: 'Please enter a valid 10-digit mobile number.' };
+    }
+
+    // Auto-sync table if not yet created
+    try {
+      await InternshipApplication.sync({ alter: true });
+    } catch (sErr) {
+      console.warn('InternshipApplication sync warning:', sErr);
+    }
+
+    const application = await InternshipApplication.create({
+      fullName,
+      email,
+      phone,
+      college,
+      qualification,
+      yearOfStudy,
+      domain,
+      duration,
+      mode: ['CAMPUS', 'ONLINE', 'HYBRID'].includes(mode) ? mode : 'HYBRID',
+      startDate,
+      resumeUrl,
+      portfolioUrl,
+      city,
+      state,
+      message,
+      status: 'PENDING',
+    });
+
+    // Send admin notification email
+    sendInternshipApplicationAdminNotification({
+      id: application.id,
+      fullName,
+      email,
+      phone,
+      college,
+      qualification,
+      yearOfStudy,
+      domain,
+      duration,
+      mode,
+      startDate,
+      resumeUrl,
+      portfolioUrl,
+      city,
+      state,
+      message,
+    }).catch((err) => console.error('Failed to send admin notification for internship:', err));
+
+    // Send student confirmation email
+    sendInternshipStudentConfirmationEmail({
+      fullName,
+      email,
+      domain,
+      duration,
+      mode,
+    }).catch((err) => console.error('Failed to send student confirmation email for internship:', err));
+
+    revalidatePath('/admin/internships');
+    return {
+      success: true,
+      message: 'Your internship application has been submitted successfully! Our admissions counselor will contact you shortly.',
+    };
+  } catch (error: any) {
+    console.error('Error submitting internship application:', error);
+    return { error: error?.message || 'Failed to submit application. Please try again or call our helpline.' };
+  }
+}
+
+export async function updateInternshipApplicationStatus(
+  id: string,
+  status: 'PENDING' | 'CONTACTED' | 'SHORTLISTED' | 'ACCEPTED' | 'REJECTED',
+  adminNotes?: string
+) {
+  try {
+    await requireAdmin();
+
+    const application = await InternshipApplication.findByPk(id);
+    if (!application) {
+      return { error: 'Internship application not found.' };
+    }
+
+    application.status = status;
+    if (adminNotes !== undefined) {
+      application.adminNotes = adminNotes;
+    }
+    await application.save();
+
+    revalidatePath('/admin/internships');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error updating internship application:', error);
+    return { error: error?.message || 'Failed to update internship application.' };
+  }
+}
+
+export async function deleteInternshipApplication(id: string) {
+  try {
+    await requireAdmin();
+
+    const application = await InternshipApplication.findByPk(id);
+    if (!application) {
+      return { error: 'Internship application not found.' };
+    }
+
+    await application.destroy();
+    revalidatePath('/admin/internships');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting internship application:', error);
+    return { error: error?.message || 'Failed to delete internship application.' };
+  }
+}
+

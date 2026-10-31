@@ -748,4 +748,171 @@ export async function sendPartnerRejectionEmail(application: {
   });
 }
 
+// ── Internship Program Emails ───────────────────────────────────
+
+export async function sendInternshipApplicationAdminNotification(application: {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  college: string;
+  qualification: string;
+  yearOfStudy: string;
+  domain: string;
+  duration: string;
+  mode: string;
+  startDate?: string | null;
+  resumeUrl?: string | null;
+  portfolioUrl?: string | null;
+  city?: string | null;
+  state?: string | null;
+  message?: string | null;
+}) {
+  const receivers = getEmailReceivers();
+  if (receivers.length === 0) return;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Internship Application</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #e11d48, #ea580c);padding:28px 32px;color:#ffffff;">
+              <span style="display:inline-block;padding:4px 12px;background:rgba(255,255,255,0.2);border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">
+                🎓 Internship & Training Desk
+              </span>
+              <h1 style="margin:0;font-size:22px;font-weight:800;">New Student Internship Application</h1>
+              <p style="margin:6px 0 0;font-size:14px;color:rgba(255,255,255,0.9);">${application.fullName} • ${application.domain}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px;">
+              <h3 style="margin:0 0 16px;font-size:16px;color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">Applicant Details</h3>
+              <table width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;color:#334155;">
+                <tr><td width="35%" style="color:#64748b;font-weight:600;">Student Name:</td><td style="font-weight:700;color:#0f172a;">${application.fullName}</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Email Address:</td><td><a href="mailto:${application.email}" style="color:#ea580c;text-decoration:none;font-weight:600;">${application.email}</a></td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Phone / WhatsApp:</td><td><a href="tel:${application.phone}" style="color:#0f172a;text-decoration:none;font-weight:700;">${application.phone}</a></td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">College / University:</td><td><strong>${application.college}</strong></td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Degree & Year:</td><td>${application.qualification} (${application.yearOfStudy})</td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Domain:</td><td><span style="background:#fff1f2;color:#e11d48;padding:2px 8px;border-radius:6px;font-weight:700;">${application.domain}</span></td></tr>
+                <tr><td style="color:#64748b;font-weight:600;">Duration & Mode:</td><td>${application.duration} • <strong>${application.mode}</strong></td></tr>
+                ${application.startDate ? `<tr><td style="color:#64748b;font-weight:600;">Preferred Start:</td><td>${application.startDate}</td></tr>` : ''}
+                ${application.city || application.state ? `<tr><td style="color:#64748b;font-weight:600;">Location:</td><td>${[application.city, application.state].filter(Boolean).join(', ')}</td></tr>` : ''}
+                ${application.resumeUrl ? `<tr><td style="color:#64748b;font-weight:600;">Resume / Portfolio:</td><td><a href="${application.resumeUrl}" target="_blank" style="color:#2563eb;text-decoration:underline;">View Resume / Link</a></td></tr>` : ''}
+                ${application.portfolioUrl ? `<tr><td style="color:#64748b;font-weight:600;">Portfolio / GitHub:</td><td><a href="${application.portfolioUrl}" target="_blank" style="color:#2563eb;text-decoration:underline;">View Portfolio</a></td></tr>` : ''}
+              </table>
+
+              ${application.message ? `
+              <div style="background:#f8fafc;border-left:4px solid #ea580c;padding:14px;border-radius:0 8px 8px 0;margin:20px 0;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;">Applicant Message / Goals:</p>
+                <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.5;">${application.message}</p>
+              </div>
+              ` : ''}
+
+              <div style="text-align:center;margin-top:28px;">
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/internships" style="display:inline-block;padding:12px 28px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">
+                  Open Internships Desk in Admin Panel &rarr;
+                </a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: receivers.join(', '),
+    subject: `🎓 New Internship Application: ${application.fullName} (${application.domain})`,
+    html,
+  });
+}
+
+export async function sendInternshipStudentConfirmationEmail(application: {
+  fullName: string;
+  email: string;
+  domain: string;
+  duration: string;
+  mode: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Application Received - Flymedia Technology Internship</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #E60870 0%, #E63747 50%, #F8750E 100%);padding:32px;color:#ffffff;text-align:center;">
+              <span style="display:inline-block;padding:4px 14px;background:rgba(255,255,255,0.25);border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
+                Flymedia Technology
+              </span>
+              <h1 style="margin:0;font-size:24px;font-weight:900;">Internship Application Received! 🎉</h1>
+              <p style="margin:8px 0 0;font-size:15px;color:rgba(255,255,255,0.92);">Thank you for applying, ${application.fullName}!</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Hi ${application.fullName},</h2>
+              <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">
+                We have successfully received your application for the <strong>${application.domain}</strong> Internship Program (<strong>${application.duration}</strong> • <strong>${application.mode}</strong>).
+              </p>
+
+              <div style="background:#fff7ed;border:1px solid #ffedd5;padding:18px;border-radius:12px;margin:20px 0;">
+                <h4 style="margin:0 0 8px;font-size:14px;color:#9a3412;font-weight:800;">What happens next?</h4>
+                <ul style="margin:0;padding-left:20px;font-size:13px;color:#431407;line-height:1.7;">
+                  <li><strong>Profile Review:</strong> Our academic advisor & technical lead will review your background within 24-48 business hours.</li>
+                  <li><strong>Quick Interaction:</strong> We will reach out via WhatsApp/Phone to schedule a brief interaction and discuss your batch timings.</li>
+                  <li><strong>Offer & NOC:</strong> Once accepted, you will receive your official Internship Joining Letter / College NOC documentation.</li>
+                  <li><strong>Hands-on Training:</strong> Kick off your live client project journey with 1-on-1 mentor guidance.</li>
+                </ul>
+              </div>
+
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:12px;margin:20px 0;">
+                <h4 style="margin:0 0 6px;font-size:13px;color:#0f172a;font-weight:700;">Need immediate assistance?</h4>
+                <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">
+                  Direct Helpline: <a href="tel:+919779324178" style="color:#ea580c;font-weight:700;text-decoration:none;">+91-97793-24178</a><br/>
+                  Email: <a href="mailto:learnwithflymedia@gmail.com" style="color:#ea580c;font-weight:600;text-decoration:none;">learnwithflymedia@gmail.com</a><br/>
+                  Campus: First Floor, Plot 20, Vishal Nagar Ext, Ludhiana, Punjab 141013
+                </p>
+              </div>
+
+              <p style="margin:20px 0 0;font-size:13px;color:#64748b;line-height:1.5;">
+                Best regards,<br/>
+                <strong>Flymedia Technology Training &amp; Placement Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from: FROM,
+    to: application.email,
+    subject: `🎉 Application Received: Flymedia Internship Program (${application.domain})`,
+    html,
+  });
+}
+
 

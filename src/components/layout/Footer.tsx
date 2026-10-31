@@ -83,6 +83,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/internship" className="text-orange-400 hover:text-orange-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
+                  <span>Internship Program</span>
+                  <span className="text-[10px] bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded border border-orange-500/30 font-extrabold">2025-26</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/partner-with-us?type=college#partner-form-section" className="text-blue-400 hover:text-blue-300 font-bold transition-colors inline-flex items-center gap-2 hover:translate-x-1.5 transform duration-300">
                   <span>College Tie-Ups</span>
                   <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 font-extrabold">Campus MoU</span>

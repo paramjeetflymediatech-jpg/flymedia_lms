@@ -75,6 +75,13 @@ export default async function Header() {
 
           {/* Right: Quick Utility Links */}
           <div className="flex items-center gap-4 text-xs font-semibold">
+            <Link
+              href="/internship-form"
+              className="text-orange-400 hover:text-orange-300 font-extrabold transition-colors flex items-center gap-1.5"
+            >
+              <span>🎓 Internship 2025-26</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </Link>
             <Link href="/become-tutor" className="text-slate-400 hover:text-white transition-colors">
               Teach With Us
             </Link>
@@ -109,6 +116,14 @@ export default async function Header() {
 
           {/* Programs with category dropdown */}
           <ProgramsDropdown categories={categories} />
+
+          <Link href="/internship" className="hover:text-orange-500 transition-colors relative group py-2 flex items-center gap-1.5">
+            <span>Internship</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500 text-white tracking-wider animate-pulse">
+              Open
+            </span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
+          </Link>
 
           <Link href="/about" className="hover:text-orange-500 transition-colors relative group py-2">
             <span>About Us</span>
