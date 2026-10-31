@@ -51,7 +51,7 @@ export default function InternshipFormPage() {
           <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40 mb-3 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-              <span>2025 - 2026 Batch Admissions Open</span>
+              <span>2026 - 2027 Batch Admissions Open</span>
             </div>
 
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-3">

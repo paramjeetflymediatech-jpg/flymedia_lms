@@ -146,7 +146,7 @@ export default async function InternshipPage() {
             <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6">
               <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-rose-500/20 to-orange-500/20 text-rose-300 border border-rose-500/30 shadow-sm flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-                <span>Summer &amp; 6 Months Industrial Internship 2025 - 2026</span>
+                <span>Summer &amp; 6 Months Industrial Internship 2026 - 2027</span>
               </span>
              
             </div>
@@ -423,7 +423,7 @@ export default async function InternshipPage() {
                 Submit Your Internship Application
               </h2>
               <p className="text-slate-300 mt-2 text-sm sm:text-base">
-                Join our 2025 - 2026 batches. Fill out your details below and our training coordinator will reach out within 24 hours.
+                Join our 2026 - 2027 batches. Fill out your details below and our training coordinator will reach out within 24 hours.
               </p>
             </div>
 

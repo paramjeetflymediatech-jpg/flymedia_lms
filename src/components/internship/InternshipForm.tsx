@@ -226,7 +226,7 @@ export default function InternshipForm({
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span className="text-xs font-black text-slate-800 tracking-tight">
-            2025 - 2026 Batch Admissions Open
+            2026 - 2027 Batch Admissions Open
           </span>
         </div>
         <span className="text-[11px] font-bold text-orange-700 bg-white/80 px-2.5 py-0.5 rounded-full border border-orange-200">
