@@ -79,7 +79,7 @@ export default async function Header() {
               href="/internship-form"
               className="text-orange-400 hover:text-orange-300 font-extrabold transition-colors flex items-center gap-1.5"
             >
-              <span>🎓 Internship 2025-26</span>
+              <span>🎓 Internship 2026-27</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </Link>
             <Link href="/become-tutor" className="text-slate-400 hover:text-white transition-colors">

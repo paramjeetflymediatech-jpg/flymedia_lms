@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
   return getSeoMetadata('/internship-form', {
-    title: 'Apply for Internship Program 2025-2026 | Flymedia Technology',
+    title: 'Apply for Internship Program 2026-2027 | Flymedia Technology',
     description:
       'Submit your application for 45 Days, 6 Weeks, 3 Months & 6 Months Live Client Project Internship at Flymedia Technology. Certified training with 100% placement support.',
   });
