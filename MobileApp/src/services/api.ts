@@ -1126,5 +1126,73 @@ export const ApiService = {
       return { success: false, error: e?.message || 'Network error submitting partnership' };
     }
   },
+
+  submitInternshipApplication: async function (data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    college: string;
+    qualification: string;
+    yearOfStudy: string;
+    domain: string;
+    duration: string;
+    mode: string;
+    startDate?: string | null;
+    city?: string | null;
+    state?: string | null;
+    resumeUrl?: string | null;
+    portfolioUrl?: string | null;
+    message?: string | null;
+    resumeFile?: {
+      uri: string;
+      name: string;
+      type?: string | null;
+      size?: number | null;
+    } | null;
+  }): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      if (data.resumeFile) {
+        const formData = new FormData();
+        formData.append('fullName', data.fullName);
+        formData.append('email', data.email);
+        formData.append('phone', data.phone);
+        formData.append('college', data.college);
+        formData.append('qualification', data.qualification);
+        formData.append('yearOfStudy', data.yearOfStudy);
+        formData.append('domain', data.domain);
+        formData.append('duration', data.duration);
+        formData.append('mode', data.mode);
+        if (data.startDate) formData.append('startDate', data.startDate);
+        if (data.city) formData.append('city', data.city);
+        if (data.state) formData.append('state', data.state);
+        if (data.resumeUrl) formData.append('resumeUrl', data.resumeUrl);
+        if (data.portfolioUrl) formData.append('portfolioUrl', data.portfolioUrl);
+        if (data.message) formData.append('message', data.message);
+
+        formData.append('resumeFile', {
+          uri: data.resumeFile.uri,
+          name: data.resumeFile.name || 'resume.pdf',
+          type: data.resumeFile.type || 'application/pdf',
+        } as any);
+
+        const response = await fetch(`${API_BASE_URL}/internship`, {
+          method: 'POST',
+          body: formData,
+        });
+        return await response.json();
+      }
+
+      const response = await fetch(`${API_BASE_URL}/internship`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'Network error submitting internship application' };
+    }
+  },
 };
 

@@ -43,6 +43,8 @@ export const YEARS_OF_STUDY = [
 export default function DedicatedInternshipForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fileError, setFileError] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submittedData, setSubmittedData] = useState<{
     fullName: string;
     email: string;
@@ -50,6 +52,7 @@ export default function DedicatedInternshipForm() {
     domain: string;
     duration: string;
     mode: string;
+    resumeName?: string | null;
   } | null>(null);
 
   // Form Fields
@@ -68,6 +71,46 @@ export default function DedicatedInternshipForm() {
   const [resumeUrl, setResumeUrl] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [message, setMessage] = useState('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setFileError('');
+
+    if (!file) {
+      setResumeFile(null);
+      return;
+    }
+
+    // Check PDF format
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+    if (!isPdf) {
+      setFileError('Invalid file format. Please upload a PDF file (.pdf).');
+      setResumeFile(null);
+      e.target.value = '';
+      return;
+    }
+
+    // Check file size: 100 KB to 200 KB
+    const minBytes = 100 * 1024; // 102,400 bytes
+    const maxBytes = 200 * 1024; // 204,800 bytes
+    const sizeKb = file.size / 1024;
+
+    if (file.size < minBytes) {
+      setFileError(`File is too small (${sizeKb.toFixed(1)} KB). Resume size must be at least 100 KB.`);
+      setResumeFile(null);
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > maxBytes) {
+      setFileError(`File exceeds limit (${sizeKb.toFixed(1)} KB). Resume size must be 200 KB or less.`);
+      setResumeFile(null);
+      e.target.value = '';
+      return;
+    }
+
+    setResumeFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -89,29 +132,35 @@ export default function DedicatedInternshipForm() {
       return;
     }
 
+    if (fileError) {
+      setError('Please resolve the resume upload error before submitting.');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('fullName', fullName.trim());
+      formData.append('email', email.trim().toLowerCase());
+      formData.append('phone', cleanPhone);
+      formData.append('college', college.trim());
+      formData.append('qualification', qualification);
+      formData.append('yearOfStudy', yearOfStudy);
+      formData.append('domain', domain);
+      formData.append('duration', duration);
+      formData.append('mode', mode);
+      formData.append('startDate', startDate);
+      if (city.trim()) formData.append('city', city.trim());
+      if (state.trim()) formData.append('state', state.trim());
+      if (resumeUrl.trim()) formData.append('resumeUrl', resumeUrl.trim());
+      if (portfolioUrl.trim()) formData.append('portfolioUrl', portfolioUrl.trim());
+      if (message.trim()) formData.append('message', message.trim());
+      if (resumeFile) formData.append('resumeFile', resumeFile);
+
       const res = await fetch('/api/internship/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          college,
-          qualification,
-          yearOfStudy,
-          domain,
-          duration,
-          mode,
-          startDate,
-          city: city.trim() || null,
-          state: state.trim() || null,
-          resumeUrl: resumeUrl.trim() || null,
-          portfolioUrl: portfolioUrl.trim() || null,
-          message: message.trim() || null,
-        }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -132,6 +181,7 @@ export default function DedicatedInternshipForm() {
         domain,
         duration,
         mode,
+        resumeName: resumeFile ? resumeFile.name : null,
       });
 
       Swal.fire({
@@ -469,9 +519,89 @@ export default function DedicatedInternshipForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          {/* PDF Resume Upload Component */}
+          <div className="space-y-2 sm:col-span-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">
+                Upload Resume (PDF Format)
+              </label>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                <span>📄 PDF Only</span>
+                <span>•</span>
+                <span>Size: 100 KB – 200 KB</span>
+              </span>
+            </div>
+
+            {resumeFile ? (
+              <div className="flex items-center justify-between p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl animate-in fade-in">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black shrink-0">
+                    PDF
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900 truncate">{resumeFile.name}</p>
+                    <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1 mt-0.5">
+                      <span>{(resumeFile.size / 1024).toFixed(1)} KB</span>
+                      <span>•</span>
+                      <span>✓ Valid 100–200 KB PDF size</span>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResumeFile(null);
+                    setFileError('');
+                  }}
+                  className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all ml-3 shrink-0 cursor-pointer"
+                >
+                  Change File
+                </button>
+              </div>
+            ) : (
+              <label
+                className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                  fileError
+                    ? 'border-rose-300 bg-rose-50/50'
+                    : 'border-slate-200 bg-slate-50 hover:bg-orange-50/40 hover:border-orange-300'
+                }`}
+              >
+                <div className="flex flex-col items-center justify-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-2xl">
+                    📎
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-orange-600 hover:underline">
+                      Click to choose PDF Resume
+                    </span>
+                    <span className="text-sm text-slate-500 font-medium"> or drag and drop</span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium">
+                    Strictly PDF (.pdf) format • Required size between 100 KB and 200 KB
+                  </p>
+                </div>
+
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </label>
+            )}
+
+            {fileError && (
+              <p className="text-xs font-bold text-rose-600 animate-in fade-in flex items-center gap-1 mt-1">
+                <span>⚠️</span>
+                <span>{fileError}</span>
+              </p>
+            )}
+          </div>
+
           <div className="space-y-1.5 sm:col-span-2">
             <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">
-              Resume / LinkedIn / GitHub URL
+              Or Paste Resume / LinkedIn / Portfolio Link (Optional)
             </label>
             <input
               type="url"

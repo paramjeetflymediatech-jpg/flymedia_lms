@@ -796,6 +796,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text style={styles.sectionSubtitle}>Transparency, student rights & compliance</Text>
 
           <View style={styles.legalListWrap}>
+            {/* Internship Program Application */}
+            <TouchableOpacity
+              style={styles.legalListItem}
+              onPress={() => navigation.navigate('Internship')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.legalListIcon, { backgroundColor: '#FFF1F2' }]}>
+                <GraduationCap size={16} color={Colors.primaryRose} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.legalListTitle}>Apply for Internship</Text>
+                  <View style={{ backgroundColor: '#FFE4E6', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#BE123C' }}>Hiring</Text>
+                  </View>
+                </View>
+                <Text style={styles.legalListSub}>45 Days / 6 Months live client training &amp; certification</Text>
+              </View>
+              <ChevronRight size={16} color={Colors.textLight} />
+            </TouchableOpacity>
+
             {/* Partner With Us (Colleges & Free Edu Trusts) */}
             <TouchableOpacity
               style={styles.legalListItem}

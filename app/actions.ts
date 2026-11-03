@@ -2526,11 +2526,37 @@ export async function submitInternshipApplication(prevState: any, formData: Form
     const duration = (formData.get('duration') as string)?.trim();
     const mode = ((formData.get('mode') as string)?.trim()?.toUpperCase() || 'HYBRID') as 'CAMPUS' | 'ONLINE' | 'HYBRID';
     const startDate = (formData.get('startDate') as string)?.trim() || null;
-    const resumeUrl = (formData.get('resumeUrl') as string)?.trim() || null;
+    let resumeUrl = (formData.get('resumeUrl') as string)?.trim() || null;
     const portfolioUrl = (formData.get('portfolioUrl') as string)?.trim() || null;
     const city = (formData.get('city') as string)?.trim() || null;
     const state = (formData.get('state') as string)?.trim() || null;
     const message = (formData.get('message') as string)?.trim() || null;
+
+    const file = formData.get('resumeFile') as File | null;
+    if (file && typeof file.size === 'number' && file.size > 0) {
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      if (!isPdf) {
+        return { error: 'Invalid file format. Resume must be in PDF format (.pdf).' };
+      }
+      const minBytes = 100 * 1024;
+      const maxBytes = 200 * 1024;
+      if (file.size < minBytes || file.size > maxBytes) {
+        const sizeKb = (file.size / 1024).toFixed(1);
+        return {
+          error: `Resume PDF size must be between 100 KB and 200 KB. Your uploaded file is ${sizeKb} KB.`,
+        };
+      }
+
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'resumes');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = path.join(uploadDir, safeName);
+      const arrayBuffer = await file.arrayBuffer();
+      fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+      resumeUrl = `/uploads/resumes/${safeName}`;
+    }
 
     if (!fullName || !email || !phone || !college || !qualification || !yearOfStudy || !domain || !duration) {
       return { error: 'Please fill in all required fields marked with *.' };

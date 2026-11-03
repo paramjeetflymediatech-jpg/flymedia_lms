@@ -11,6 +11,7 @@ import { AdminDashboardScreen } from '../screens/admin';
 import { StudentPanelScreen } from '../screens/StudentPanelScreen';
 import { TutorPanelScreen } from '../screens/tutor';
 import { PartnershipScreen } from '../screens/PartnershipScreen';
+import { InternshipScreen } from '../screens/InternshipScreen';
 import { Colors } from '../theme/colors';
 
 import { Platform, View } from 'react-native';
@@ -182,6 +183,13 @@ export function AppNavigator() {
       <Stack.Screen
         name="Partnership"
         component={PartnershipScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Internship"
+        component={InternshipScreen}
         options={{
           animation: 'slide_from_right',
         }}

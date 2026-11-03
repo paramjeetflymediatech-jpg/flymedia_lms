@@ -339,6 +339,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
+        {/* INTERNSHIP & INDUSTRIAL TRAINING BANNER */}
+        <View style={styles.internshipBanner}>
+          <View style={styles.internshipContent}>
+            <View style={styles.internshipBadgeRow}>
+              <View style={styles.internshipBadge}>
+                <Text style={styles.internshipBadgeText}>GRADUATES &amp; STUDENTS</Text>
+              </View>
+              <View style={styles.internshipHiringBadge}>
+                <Text style={styles.internshipHiringText}>2026–2027 Batches Open</Text>
+              </View>
+            </View>
+            <Text style={styles.internshipTitle}>Live Client Project Internship</Text>
+            <Text style={styles.internshipText}>
+              45 Days, 6 Weeks or 6 Months live client project training in Web Dev, Python &amp; AI, Marketing, Design &amp; Video. MSME &amp; ISO certificate with 100% placement support.
+            </Text>
+            <TouchableOpacity
+              style={styles.internshipApplyBtn}
+              onPress={() => navigation.navigate('Internship')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.internshipApplyBtnText}>🎓 Apply for Internship Now &rarr;</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* INSTITUTIONAL & NON-PROFIT PARTNERSHIP BANNER */}
         <View style={styles.partnershipBanner}>
           <View style={styles.partnershipContent}>
@@ -885,6 +910,80 @@ const styles = StyleSheet.create({
   },
   bannerBtnText: {
     color: Colors.textWhite,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  internshipBanner: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    marginBottom: 10,
+    backgroundColor: '#0f172a',
+    borderRadius: 22,
+    padding: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(230, 8, 112, 0.4)',
+    ...Shadows.medium,
+  },
+  internshipContent: {
+    gap: 8,
+  },
+  internshipBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  internshipBadge: {
+    backgroundColor: 'rgba(230, 8, 112, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(230, 8, 112, 0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  internshipBadgeText: {
+    color: '#fda4af',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  internshipHiringBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 14,
+  },
+  internshipHiringText: {
+    color: '#34d399',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  internshipTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  internshipText: {
+    fontSize: 12,
+    color: '#cbd5e1',
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  internshipApplyBtn: {
+    backgroundColor: Colors.primaryRose,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.small,
+  },
+  internshipApplyBtnText: {
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: '800',
   },
