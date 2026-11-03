@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // ── Transporter ────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -771,6 +773,41 @@ export async function sendInternshipApplicationAdminNotification(application: {
   const receivers = getEmailReceivers();
   if (receivers.length === 0) return;
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    'https://flymediatech.in';
+
+  let fullResumeUrl: string | null = null;
+  const isUploadedFile = Boolean(application.resumeUrl && application.resumeUrl.startsWith('/uploads/'));
+
+  if (application.resumeUrl) {
+    if (application.resumeUrl.startsWith('http://') || application.resumeUrl.startsWith('https://')) {
+      fullResumeUrl = application.resumeUrl;
+    } else {
+      const cleanBase = baseUrl.replace(/\/$/, '');
+      const cleanPath = application.resumeUrl.startsWith('/') ? application.resumeUrl : `/${application.resumeUrl}`;
+      fullResumeUrl = `${cleanBase}${cleanPath}`;
+    }
+  }
+
+  // Attach the uploaded PDF resume directly to the email if present
+  const attachments: nodemailer.SendMailOptions['attachments'] = [];
+  if (isUploadedFile && application.resumeUrl) {
+    try {
+      const cleanRelative = application.resumeUrl.replace(/^\//, '');
+      const localFilePath = path.join(process.cwd(), 'public', cleanRelative);
+      if (fs.existsSync(localFilePath)) {
+        attachments.push({
+          filename: `${application.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume.pdf`,
+          path: localFilePath,
+        });
+      }
+    } catch (attErr) {
+      console.warn('Failed to attach resume file:', attErr);
+    }
+  }
+
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -805,7 +842,11 @@ export async function sendInternshipApplicationAdminNotification(application: {
                 <tr><td style="color:#64748b;font-weight:600;">Duration & Mode:</td><td>${application.duration} • <strong>${application.mode}</strong></td></tr>
                 ${application.startDate ? `<tr><td style="color:#64748b;font-weight:600;">Preferred Start:</td><td>${application.startDate}</td></tr>` : ''}
                 ${application.city || application.state ? `<tr><td style="color:#64748b;font-weight:600;">Location:</td><td>${[application.city, application.state].filter(Boolean).join(', ')}</td></tr>` : ''}
-                ${application.resumeUrl ? `<tr><td style="color:#64748b;font-weight:600;">Resume / Portfolio:</td><td><a href="${application.resumeUrl}" target="_blank" style="color:#2563eb;text-decoration:underline;">View Resume / Link</a></td></tr>` : ''}
+                ${fullResumeUrl ? `<tr><td style="color:#64748b;font-weight:600;">Resume:</td><td>${
+                  isUploadedFile
+                    ? `<strong>📄 PDF Attached to this email</strong> (<a href="${fullResumeUrl}" target="_blank" style="color:#ea580c;font-weight:700;text-decoration:underline;">Direct Download Link</a>)`
+                    : `<a href="${fullResumeUrl}" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600;">View Shared Cloud Link</a>`
+                }</td></tr>` : ''}
                 ${application.portfolioUrl ? `<tr><td style="color:#64748b;font-weight:600;">Portfolio / GitHub:</td><td><a href="${application.portfolioUrl}" target="_blank" style="color:#2563eb;text-decoration:underline;">View Portfolio</a></td></tr>` : ''}
               </table>
 
@@ -836,6 +877,7 @@ export async function sendInternshipApplicationAdminNotification(application: {
     to: receivers.join(', '),
     subject: `🎓 New Internship Application: ${application.fullName} (${application.domain})`,
     html,
+    attachments: attachments && attachments.length > 0 ? attachments : undefined,
   });
 }
 
