@@ -13,12 +13,15 @@ import {
   Platform,
   TurboModuleRegistry,
   NativeModules,
+  StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '../theme/colors';
 import { ApiService } from '../services/api';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import {
   ArrowLeft,
+  ArrowRight,
   GraduationCap,
   CheckCircle,
   Building,
@@ -37,50 +40,134 @@ import {
   FileText,
   Upload,
   X,
+  Code,
+  Cpu,
+  Palette,
+  Video,
+  Smartphone,
+  ShieldCheck,
+  Check,
+  Calendar,
 } from 'lucide-react-native';
 
-const INTERNSHIP_DOMAINS = [
-  'Full Stack Web Development (MERN & Next.js)',
-  'Python, AI & Machine Learning',
-  'Digital Marketing, SEO & Growth Strategy',
-  'Graphic Designing & UI/UX (Figma / Adobe)',
-  'Professional Video Editing & Motion Graphics',
-  'Mobile App Development (Flutter / React Native)',
-  'Software Testing & Automation QA',
-  'Other / Custom Training Track',
-];
+interface DomainOption {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: any;
+  color: string;
+}
 
-const INTERNSHIP_DURATIONS = [
-  '45 Days (Summer Training)',
-  '6 Weeks (Summer Internship)',
-  '3 Months (Project Internship)',
-  '6 Months (Industrial Training & Placement)',
+const DOMAIN_OPTIONS: DomainOption[] = [
+  {
+    id: 'Full Stack Web Development (MERN & Next.js)',
+    title: 'Full Stack Web Development',
+    subtitle: 'MERN, Next.js, Node.js & REST APIs',
+    icon: Code,
+    color: '#e60870',
+  },
+  {
+    id: 'Python, AI & Machine Learning',
+    title: 'Python, AI & Data Science',
+    subtitle: 'Machine Learning, Deep Learning, GenAI',
+    icon: Cpu,
+    color: '#7c3aed',
+  },
+  {
+    id: 'Digital Marketing, SEO & Growth Strategy',
+    title: 'Digital Marketing & Growth',
+    subtitle: 'SEO, Google Ads, Meta Ads & Analytics',
+    icon: Sparkles,
+    color: '#f8750e',
+  },
+  {
+    id: 'Graphic Designing & UI/UX (Figma / Adobe)',
+    title: 'UI/UX & Graphic Designing',
+    subtitle: 'Figma, Adobe XD, Photoshop, Branding',
+    icon: Palette,
+    color: '#ec4899',
+  },
+  {
+    id: 'Professional Video Editing & Motion Graphics',
+    title: 'Video Editing & VFX',
+    subtitle: 'Premiere Pro, After Effects, Reels & 3D',
+    icon: Video,
+    color: '#dc2626',
+  },
+  {
+    id: 'Mobile App Development (Flutter / React Native)',
+    title: 'Mobile App Development',
+    subtitle: 'Cross-platform Android & iOS Apps',
+    icon: Smartphone,
+    color: '#0284c7',
+  },
+  {
+    id: 'Software Testing & Automation QA',
+    title: 'QA & Software Testing',
+    subtitle: 'Manual Testing, Selenium, Automation QA',
+    icon: ShieldCheck,
+    color: '#059669',
+  },
+  {
+    id: 'Other / Custom Training Track',
+    title: 'Custom Training Track',
+    subtitle: 'Customized syllabus aligned with college',
+    icon: GraduationCap,
+    color: '#4b5563',
+  },
 ];
 
 const QUALIFICATIONS = [
-  'B.Tech / B.E (CSE / IT / ECE)',
-  'BCA (Computer Applications)',
-  'MCA (Master of Computer Apps)',
+  'B.Tech / B.E (CSE / IT)',
+  'BCA (Computer Apps)',
+  'MCA',
   'Diploma / Polytechnic',
-  'B.Sc Computer Science / IT',
-  'M.Sc Computer Science / IT',
-  'Other Degree / Graduate',
+  'B.Sc / M.Sc (CS/IT)',
+  'Other Degree',
 ];
 
 const YEARS_OF_STUDY = [
   '1st Year',
   '2nd Year',
   '3rd Year',
-  'Final Year (Sem 7-8)',
-  'Recent Passout / Graduate',
+  'Final Year',
+  'Recent Passout',
 ];
+
+const INTERNSHIP_DURATIONS = [
+  { label: '45 Days', sub: 'Summer Training' },
+  { label: '6 Weeks', sub: 'Project Internship' },
+  { label: '3 Months', sub: 'Live Project Track' },
+  { label: '6 Months', sub: 'Industrial + Placement' },
+];
+
+const MODES = [
+  {
+    id: 'CAMPUS',
+    title: 'Campus Lab',
+    desc: 'Ludhiana Offline Center',
+    badge: 'Hands-on Lab',
+  },
+  {
+    id: 'ONLINE',
+    title: 'Live Online',
+    desc: 'Interactive 1-on-1 Sessions',
+    badge: 'Flexible',
+  },
+  {
+    id: 'HYBRID',
+    title: 'Hybrid Flex',
+    desc: 'Campus Lab + Remote',
+    badge: 'Most Popular',
+  },
+] as const;
 
 const START_DATES = [
   'Immediate / Next Batch',
-  'Within 1-2 Weeks',
+  'Within 1–2 Weeks',
   'Next Month',
-  'Summer Training (June - July)',
-  'Winter Training (Dec - Jan)',
+  'Summer (June–July)',
+  'Winter (Dec–Jan)',
 ];
 
 const isDocumentPickerAvailable = (): boolean => {
@@ -91,7 +178,10 @@ const isDocumentPickerAvailable = (): boolean => {
     }
   } catch {}
   try {
-    if (NativeModules && ((NativeModules as any).RNDocumentPicker || (NativeModules as any).NativeDocumentPicker)) {
+    if (
+      NativeModules &&
+      ((NativeModules as any).RNDocumentPicker || (NativeModules as any).NativeDocumentPicker)
+    ) {
       return true;
     }
   } catch {}
@@ -102,14 +192,25 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
   navigation,
   route,
 }) => {
+  const insets = useSafeAreaInsets();
+  const topPadding = Math.max(
+    insets.top,
+    Platform.OS === 'ios' ? 44 : (StatusBar.currentHeight || 24)
+  );
+  const bottomPadding = Math.max(insets.bottom, 16);
+
+  // Stepper: 1: Profile & College, 2: Track & Mode, 3: Resume & Submit
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
+  // Form Fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [college, setCollege] = useState('');
   const [qualification, setQualification] = useState(QUALIFICATIONS[0]);
   const [yearOfStudy, setYearOfStudy] = useState(YEARS_OF_STUDY[2]);
-  const [domain, setDomain] = useState(route?.params?.defaultDomain || INTERNSHIP_DOMAINS[0]);
-  const [duration, setDuration] = useState(INTERNSHIP_DURATIONS[1]);
+  const [domain, setDomain] = useState(route?.params?.defaultDomain || DOMAIN_OPTIONS[0].id);
+  const [duration, setDuration] = useState(INTERNSHIP_DURATIONS[1].label);
   const [mode, setMode] = useState<'CAMPUS' | 'ONLINE' | 'HYBRID'>('HYBRID');
   const [startDate, setStartDate] = useState(START_DATES[0]);
   const [city, setCity] = useState('');
@@ -126,7 +227,9 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
 
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [applicationId, setApplicationId] = useState('');
 
+  // Handle Document Picker
   const handlePickResume = async () => {
     setFileError('');
 
@@ -154,7 +257,6 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
       if (!results || results.length === 0) return;
       const file = results[0];
 
-      // Format check (must be PDF)
       const fileName = file.name || 'resume.pdf';
       const isPdf = fileName.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
       if (!isPdf) {
@@ -164,7 +266,6 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
         return;
       }
 
-      // Size check (Max 5 MB)
       const maxBytes = 5 * 1024 * 1024; // 5 MB
       const fileSize = file.size ?? 0;
 
@@ -195,22 +296,48 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
     }
   };
 
-  const handleSubmit = async () => {
+  // Validation before step transition
+  const validateStep1 = () => {
     if (!fullName.trim()) {
-      Alert.alert('Required Field', 'Please enter your full name.');
-      return;
+      Alert.alert('Name Required', 'Please enter your full name.');
+      return false;
     }
     if (!email.trim() || !email.includes('@') || !email.includes('.')) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
-      return;
+      Alert.alert('Valid Email Required', 'Please enter a valid email address.');
+      return false;
     }
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) {
-      Alert.alert('Invalid Mobile', 'Please enter a valid 10-digit mobile/WhatsApp number.');
-      return;
+      Alert.alert('Mobile Number Required', 'Please enter a valid 10-digit WhatsApp/mobile number.');
+      return false;
     }
     if (!college.trim()) {
-      Alert.alert('Required Field', 'Please enter your college or university name.');
+      Alert.alert('College Name Required', 'Please enter your college or university name.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (validateStep1()) {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
+      setCurrentStep(3);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep === 3) setCurrentStep(2);
+    else if (currentStep === 2) setCurrentStep(1);
+    else navigation.goBack();
+  };
+
+  // Submit Application
+  const handleSubmit = async () => {
+    if (!validateStep1()) {
+      setCurrentStep(1);
       return;
     }
 
@@ -221,6 +348,7 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
 
     setLoading(true);
     try {
+      const cleanPhone = phone.replace(/\D/g, '');
       const res = await ApiService.submitInternshipApplication({
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
@@ -239,6 +367,8 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
       });
 
       if (res.success) {
+        const randomRef = `FLMS-${Math.floor(100000 + Math.random() * 900000)}`;
+        setApplicationId(randomRef);
         setIsSuccess(true);
       } else {
         Alert.alert('Submission Error', res.error || 'Failed to submit application. Please try again.');
@@ -252,7 +382,7 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
 
   const handleWhatsAppCounselor = () => {
     const text = encodeURIComponent(
-      `Hello Flymedia, I just submitted my application for the ${domain} internship (${duration}). My name is ${fullName || 'Student'}. Could you please guide me on the next steps?`
+      `Hello Flymedia Technology! I just submitted my internship application (Ref: ${applicationId || 'Online App'}). My name is ${fullName || 'Student'} for the ${domain} track (${duration}). Could you please guide me on batch schedules and college NOC?`
     );
     Linking.openURL(`https://wa.me/919779324178?text=${text}`).catch(() => {
       Alert.alert('Error', 'Could not open WhatsApp.');
@@ -261,112 +391,196 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
 
   const handleCallHelpline = () => {
     Linking.openURL('tel:+919779324178').catch(() => {
-      Alert.alert('Error', 'Could not open dialer.');
+      Alert.alert('Error', 'Could not open phone dialer.');
     });
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // REDESIGNED SUCCESS SCREEN
+  // ─────────────────────────────────────────────────────────────
   if (isSuccess) {
     return (
       <View style={styles.container}>
-        {/* Top Header */}
-        <View style={styles.header}>
+        <StatusBar barStyle="dark-content" />
+        {/* Top App Bar */}
+        <View style={[styles.topBar, { paddingTop: topPadding + 6 }]}>
           <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
+            style={styles.circleBtn}
+            onPress={() => navigation.navigate('Main')}
             activeOpacity={0.7}
           >
-            <ArrowLeft size={22} color={Colors.textPrimary} />
+            <ArrowLeft size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Application Status</Text>
+          <Text style={styles.topBarTitle}>Application Status</Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.successContent}>
-          <View style={styles.successIconWrap}>
-            <CheckCircle size={56} color={Colors.success} />
+        <ScrollView
+          contentContainerStyle={[styles.successScroll, { paddingBottom: bottomPadding + 30 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Celebratory Icon Badge */}
+          <View style={styles.celebrationHero}>
+            <View style={styles.successOuterGlow}>
+              <View style={styles.successInnerRing}>
+                <CheckCircle size={48} color="#10b981" />
+              </View>
+            </View>
+
+            <View style={styles.statusBadgePill}>
+              <Sparkles size={12} color="#15803d" />
+              <Text style={styles.statusBadgeText}>APPLICATION CONFIRMED</Text>
+            </View>
+
+            <Text style={styles.successMainTitle}>You&apos;re All Set, {fullName}!</Text>
+            <Text style={styles.successSubtext}>
+              Your internship application has been successfully logged. Our senior counselor will connect with you on WhatsApp within 24–48 hours to confirm your batch schedule and provide college NOC paperwork.
+            </Text>
           </View>
 
-          <View style={styles.successBadge}>
-            <Text style={styles.successBadgeText}>APPLICATION SUBMITTED</Text>
+          {/* Digital Admission Pass / Summary Card */}
+          <View style={styles.admissionPassCard}>
+            <View style={styles.passHeader}>
+              <View>
+                <Text style={styles.passOrgName}>FLYMEDIA TECHNOLOGY</Text>
+                <Text style={styles.passDeskName}>Admissions Desk • 2026–2027</Text>
+              </View>
+              <View style={styles.passTokenBadge}>
+                <Text style={styles.passTokenLabel}>REF ID</Text>
+                <Text style={styles.passTokenValue}>{applicationId || 'FLMS-2026'}</Text>
+              </View>
+            </View>
+
+            <View style={styles.passDottedDivider} />
+
+            <View style={styles.passBody}>
+              <View style={styles.passRow}>
+                <Text style={styles.passFieldLabel}>Track / Domain</Text>
+                <Text style={styles.passFieldValue}>{domain}</Text>
+              </View>
+
+              <View style={styles.passGrid}>
+                <View style={styles.passGridCol}>
+                  <Text style={styles.passFieldLabel}>Duration</Text>
+                  <Text style={styles.passFieldValueBold}>{duration}</Text>
+                </View>
+                <View style={styles.passGridCol}>
+                  <Text style={styles.passFieldLabel}>Learning Mode</Text>
+                  <Text style={[styles.passFieldValueBold, { color: Colors.primaryRose }]}>
+                    {mode === 'CAMPUS' ? '🏫 Campus Lab' : mode === 'ONLINE' ? '🌐 Live Online' : '⚡ Hybrid Flex'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.passRow}>
+                <Text style={styles.passFieldLabel}>College / University</Text>
+                <Text style={styles.passFieldValue}>{college}</Text>
+              </View>
+
+              <View style={styles.passFooterTag}>
+                <ShieldCheck size={14} color="#059669" />
+                <Text style={styles.passFooterText}>
+                  ISO 9001:2015 &amp; MSME Recognized Certification
+                </Text>
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.successTitle}>You&apos;re All Set, {fullName}!</Text>
-          <Text style={styles.successSubtitle}>
-            We have received your internship application for{' '}
-            <Text style={{ fontWeight: '700', color: Colors.primaryRose }}>{domain}</Text>. Our academic counselor will reach out via WhatsApp / Call within 24–48 hours to confirm batch schedules and college NOC documentation.
-          </Text>
+          {/* What Happens Next - Step Timeline */}
+          <View style={styles.timelineCard}>
+            <Text style={styles.timelineTitle}>Next Steps for You</Text>
 
-          {/* Application Summary Box */}
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryHeading}>Application Summary</Text>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Domain:</Text>
-              <Text style={styles.summaryValue}>{domain}</Text>
+            <View style={styles.timelineStep}>
+              <View style={styles.timelineDotActive}>
+                <Text style={styles.timelineDotNum}>1</Text>
+              </View>
+              <View style={styles.timelineContent}>
+                <Text style={styles.timelineStepHeading}>Profile Review &amp; NOC Eligibility</Text>
+                <Text style={styles.timelineStepDesc}>
+                  Our academic coordinator verifies your course requirements and issues your college acceptance letter.
+                </Text>
+              </View>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Duration:</Text>
-              <Text style={styles.summaryValue}>{duration}</Text>
+
+            <View style={styles.timelineStep}>
+              <View style={styles.timelineDot}>
+                <Text style={styles.timelineDotNum}>2</Text>
+              </View>
+              <View style={styles.timelineContent}>
+                <Text style={styles.timelineStepHeading}>Counselor Connect on WhatsApp</Text>
+                <Text style={styles.timelineStepDesc}>
+                  A senior mentor will discuss your preferred lab timings, curriculum modules, and project scope.
+                </Text>
+              </View>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Mode:</Text>
-              <Text style={[styles.summaryValue, { color: Colors.primaryRose, fontWeight: '800' }]}>
-                {mode === 'CAMPUS' ? 'Campus Lab' : mode === 'ONLINE' ? 'Live Online' : 'Hybrid Flex'}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>College:</Text>
-              <Text style={styles.summaryValue}>{college}</Text>
+
+            <View style={[styles.timelineStep, { marginBottom: 0 }]}>
+              <View style={styles.timelineDot}>
+                <Text style={styles.timelineDotNum}>3</Text>
+              </View>
+              <View style={styles.timelineContent}>
+                <Text style={styles.timelineStepHeading}>Batch Onboarding &amp; Live Projects</Text>
+                <Text style={styles.timelineStepDesc}>
+                  Receive your LMS student portal login, Git repo access, and commence your hands-on internship.
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Action Buttons */}
-          <TouchableOpacity
-            style={styles.whatsAppBtn}
-            onPress={handleWhatsAppCounselor}
-            activeOpacity={0.85}
-          >
-            <MessageSquare size={18} color="#ffffff" />
-            <Text style={styles.whatsAppBtnText}>Chat with Counselor on WhatsApp</Text>
-          </TouchableOpacity>
+          {/* Quick Contact & Action Buttons */}
+          <View style={styles.actionButtonsWrap}>
+            <TouchableOpacity
+              style={styles.whatsAppPrimaryBtn}
+              onPress={handleWhatsAppCounselor}
+              activeOpacity={0.88}
+            >
+              <MessageSquare size={18} color="#ffffff" />
+              <Text style={styles.whatsAppPrimaryBtnText}>Chat with Counselor on WhatsApp</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.callBtn}
-            onPress={handleCallHelpline}
-            activeOpacity={0.85}
-          >
-            <PhoneCall size={18} color={Colors.primaryRose} />
-            <Text style={styles.callBtnText}>Call Helpline: +91-97793-24178</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.callSecondaryBtn}
+              onPress={handleCallHelpline}
+              activeOpacity={0.85}
+            >
+              <PhoneCall size={18} color={Colors.primaryRose} />
+              <Text style={styles.callSecondaryBtnText}>Call Admissions: +91-97793-24178</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.doneBtn}
-            onPress={() => navigation.navigate('Main')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.doneBtnText}>Back to Home</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.homeReturnBtn}
+              onPress={() => navigation.navigate('Main')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.homeReturnBtnText}>Back to Home Screen</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // REDESIGNED INTERNSHIP FORM SCREEN
+  // ─────────────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.header}>
+      <StatusBar barStyle="dark-content" />
+      {/* Top App Header */}
+      <View style={[styles.topBar, { paddingTop: topPadding + 6 }]}>
         <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
+          style={styles.circleBtn}
+          onPress={handlePrevStep}
           activeOpacity={0.7}
         >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
+          <ArrowLeft size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerTitle}>Internship Program</Text>
-          <Text style={styles.headerSubtitle}>Flymedia Technology Admissions</Text>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Internship Program</Text>
+          <Text style={styles.topBarSubtitle}>Flymedia Technology</Text>
         </View>
         <TouchableOpacity
-          style={styles.callHeaderBtn}
+          style={styles.callIconBtn}
           onPress={handleCallHelpline}
           activeOpacity={0.7}
         >
@@ -374,517 +588,756 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
         </TouchableOpacity>
       </View>
 
+      {/* Modern Stepper Progress Header */}
+      <View style={styles.stepperContainer}>
+        <View style={styles.stepperTabs}>
+          <TouchableOpacity
+            style={[styles.stepPill, currentStep === 1 && styles.stepPillActive]}
+            onPress={() => setCurrentStep(1)}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.stepNumberBadge, currentStep >= 1 && styles.stepNumberBadgeDone]}>
+              <Text style={[styles.stepNumberText, currentStep >= 1 && styles.stepNumberTextDone]}>
+                1
+              </Text>
+            </View>
+            <Text style={[styles.stepPillLabel, currentStep === 1 && styles.stepPillLabelActive]}>
+              Profile
+            </Text>
+          </TouchableOpacity>
+
+          <View style={[styles.stepConnector, currentStep >= 2 && styles.stepConnectorActive]} />
+
+          <TouchableOpacity
+            style={[styles.stepPill, currentStep === 2 && styles.stepPillActive]}
+            onPress={() => {
+              if (validateStep1()) setCurrentStep(2);
+            }}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.stepNumberBadge, currentStep >= 2 && styles.stepNumberBadgeDone]}>
+              <Text style={[styles.stepNumberText, currentStep >= 2 && styles.stepNumberTextDone]}>
+                2
+              </Text>
+            </View>
+            <Text style={[styles.stepPillLabel, currentStep === 2 && styles.stepPillLabelActive]}>
+              Track
+            </Text>
+          </TouchableOpacity>
+
+          <View style={[styles.stepConnector, currentStep >= 3 && styles.stepConnectorActive]} />
+
+          <TouchableOpacity
+            style={[styles.stepPill, currentStep === 3 && styles.stepPillActive]}
+            onPress={() => {
+              if (validateStep1()) setCurrentStep(3);
+            }}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.stepNumberBadge, currentStep >= 3 && styles.stepNumberBadgeDone]}>
+              <Text style={[styles.stepNumberText, currentStep >= 3 && styles.stepNumberTextDone]}>
+                3
+              </Text>
+            </View>
+            <Text style={[styles.stepPillLabel, currentStep === 3 && styles.stepPillLabelActive]}>
+              Apply
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 30 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Hero Banner Card */}
-          <View style={styles.heroBanner}>
-            <View style={styles.heroBadgeRow}>
-              <View style={styles.heroBadge}>
-                <Sparkles size={12} color="#ffffff" />
-                <Text style={styles.heroBadgeText}>2026 - 2027 BATCHES</Text>
-              </View>
-              <Text style={styles.heroSubBadge}>ISO & MSME Certified</Text>
-            </View>
-
-            <Text style={styles.heroTitle}>Summer &amp; 6 Months Industrial Internship</Text>
-            <Text style={styles.heroText}>
-              Work on live client projects with 1-on-1 mentor guidance. Get official college NOC documentation, project reports &amp; 100% placement support.
-            </Text>
-
-            <View style={styles.pillarsGrid}>
-              <View style={styles.pillarItem}>
-                <Laptop size={14} color="#fca5a5" />
-                <Text style={styles.pillarText}>Live Client Code</Text>
-              </View>
-              <View style={styles.pillarItem}>
-                <Award size={14} color="#fca5a5" />
-                <Text style={styles.pillarText}>MSME Certificate</Text>
-              </View>
-              <View style={styles.pillarItem}>
-                <Briefcase size={14} color="#fca5a5" />
-                <Text style={styles.pillarText}>Placement Drives</Text>
-              </View>
-              <View style={styles.pillarItem}>
-                <Clock size={14} color="#fca5a5" />
-                <Text style={styles.pillarText}>Flexible Batches</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* FORM SECTION 1: PERSONAL DETAILS */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>1</Text>
-              </View>
-              <Text style={styles.sectionTitle}>Personal &amp; Contact Details</Text>
-            </View>
-
-            {/* Full Name */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Full Name <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.inputWrap}>
-                <User size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Rahul Sharma"
-                  placeholderTextColor={Colors.textLight}
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
-              </View>
-            </View>
-
-            {/* Email Address */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Email Address <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.inputWrap}>
-                <Mail size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. rahul@example.com"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-            </View>
-
-            {/* Phone Number */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                WhatsApp / Mobile <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.phoneInputWrap}>
-                <View style={styles.countryCodeBadge}>
-                  <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
+          {/* STEP 1: STUDENT & COLLEGE PROFILE */}
+          {currentStep === 1 && (
+            <View>
+              {/* Premium Hero Banner */}
+              <View style={styles.heroCard}>
+                <View style={styles.heroTopRow}>
+                  <View style={styles.batchPill}>
+                    <Sparkles size={12} color="#ffffff" />
+                    <Text style={styles.batchPillText}>2026 – 2027 BATCHES OPEN</Text>
+                  </View>
+                  <Text style={styles.heroSubTag}>MSME &amp; ISO Verified</Text>
                 </View>
-                <TextInput
-                  style={styles.phoneTextInput}
-                  placeholder="98765 43210"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  value={phone}
-                  onChangeText={setPhone}
-                />
-              </View>
-            </View>
 
-            {/* City */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Your City / Location</Text>
-              <View style={styles.inputWrap}>
-                <MapPin size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Ludhiana, Jalandhar, Chandigarh"
-                  placeholderTextColor={Colors.textLight}
-                  value={city}
-                  onChangeText={setCity}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* FORM SECTION 2: ACADEMIC DETAILS */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>2</Text>
-              </View>
-              <Text style={styles.sectionTitle}>Academic Background</Text>
-            </View>
-
-            {/* College Name */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                College / University Name <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.inputWrap}>
-                <Building size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. GNDEC, PCTE, CT University, LPU"
-                  placeholderTextColor={Colors.textLight}
-                  value={college}
-                  onChangeText={setCollege}
-                />
-              </View>
-            </View>
-
-            {/* Qualification Chips */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Current Degree / Course <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.chipsWrap}>
-                {QUALIFICATIONS.map((q) => {
-                  const isSelected = qualification === q;
-                  return (
-                    <TouchableOpacity
-                      key={q}
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      onPress={() => setQualification(q)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                        {q}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Year of Study Chips */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Year of Study <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.chipsWrap}>
-                {YEARS_OF_STUDY.map((y) => {
-                  const isSelected = yearOfStudy === y;
-                  return (
-                    <TouchableOpacity
-                      key={y}
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      onPress={() => setYearOfStudy(y)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                        {y}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </View>
-
-          {/* FORM SECTION 3: INTERNSHIP PREFERENCES */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>3</Text>
-              </View>
-              <Text style={styles.sectionTitle}>Internship Preferences</Text>
-            </View>
-
-            {/* Domain Selection */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Internship Track / Domain <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.domainList}>
-                {INTERNSHIP_DOMAINS.map((d) => {
-                  const isSelected = domain === d;
-                  return (
-                    <TouchableOpacity
-                      key={d}
-                      style={[styles.domainItem, isSelected && styles.domainItemSelected]}
-                      onPress={() => setDomain(d)}
-                      activeOpacity={0.75}
-                    >
-                      <View style={styles.domainRadio}>
-                        {isSelected && <View style={styles.domainRadioInner} />}
-                      </View>
-                      <Text style={[styles.domainText, isSelected && styles.domainTextSelected]}>
-                        {d}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Duration */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Duration <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.chipsWrap}>
-                {INTERNSHIP_DURATIONS.map((dur) => {
-                  const isSelected = duration === dur;
-                  return (
-                    <TouchableOpacity
-                      key={dur}
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      onPress={() => setDuration(dur)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                        {dur}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Preferred Learning Mode */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Preferred Mode <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.modeCardsRow}>
-                {(
-                  [
-                    { id: 'CAMPUS', label: '🏫 Campus Lab', desc: 'Ludhiana Offline' },
-                    { id: 'ONLINE', label: '🌐 Live Online', desc: 'Interactive G-Meet' },
-                    { id: 'HYBRID', label: '⚡ Hybrid Flex', desc: 'Campus + Online' },
-                  ] as const
-                ).map((m) => {
-                  const isSelected = mode === m.id;
-                  return (
-                    <TouchableOpacity
-                      key={m.id}
-                      style={[styles.modeCard, isSelected && styles.modeCardSelected]}
-                      onPress={() => setMode(m.id)}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={[styles.modeCardLabel, isSelected && styles.modeCardLabelSelected]}>
-                        {m.label}
-                      </Text>
-                      <Text style={styles.modeCardDesc}>{m.desc}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Start Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>When Can You Start?</Text>
-              <View style={styles.chipsWrap}>
-                {START_DATES.map((st) => {
-                  const isSelected = startDate === st;
-                  return (
-                    <TouchableOpacity
-                      key={st}
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      onPress={() => setStartDate(st)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                        {st}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </View>
-
-          {/* FORM SECTION 4: RESUME & GOALS */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>4</Text>
-              </View>
-              <Text style={styles.sectionTitle}>Upload Resume &amp; Goals</Text>
-            </View>
-
-            {/* Resume Submission (Mutually Exclusive: Upload File OR Paste Link) */}
-            <View style={styles.inputGroup}>
-              <View style={styles.uploadHeaderRow}>
-                <Text style={styles.inputLabel}>
-                  Resume Submission <Text style={styles.optionalText}>(Optional)</Text>
+                <Text style={styles.heroTitle}>Summer &amp; Industrial Internship Training</Text>
+                <Text style={styles.heroDescription}>
+                  Learn on live client software with 1-on-1 industry mentors. Complete with college NOC documentation and 100% placement drives.
                 </Text>
-                <Text style={styles.singleChoiceNote}>Select one option</Text>
-              </View>
 
-              {/* Segmented Tab Switcher */}
-              <View style={styles.resumeOptionTabs}>
-                <TouchableOpacity
-                  style={[
-                    styles.resumeOptionTab,
-                    resumeOption === 'FILE' && styles.resumeOptionTabActive,
-                  ]}
-                  onPress={() => {
-                    setResumeOption('FILE');
-                    setResumeUrl('');
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <FileText
-                    size={14}
-                    color={resumeOption === 'FILE' ? Colors.primaryRose : Colors.textMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.resumeOptionTabText,
-                      resumeOption === 'FILE' && styles.resumeOptionTabTextActive,
-                    ]}
-                  >
-                    Upload PDF File
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.resumeOptionTab,
-                    resumeOption === 'URL' && styles.resumeOptionTabActive,
-                  ]}
-                  onPress={() => {
-                    setResumeOption('URL');
-                    setPickedFile(null);
-                    setFileError('');
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <ExternalLink
-                    size={14}
-                    color={resumeOption === 'URL' ? Colors.primaryRose : Colors.textMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.resumeOptionTabText,
-                      resumeOption === 'URL' && styles.resumeOptionTabTextActive,
-                    ]}
-                  >
-                    Paste Link
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* OPTION 1: Upload File */}
-              {resumeOption === 'FILE' && (
-                <View>
-                  {pickedFile ? (
-                    <View style={styles.pickedFileContainer}>
-                      <View style={styles.fileIconWrap}>
-                        <FileText size={22} color={Colors.primaryRose} />
-                      </View>
-                      <View style={styles.fileDetails}>
-                        <Text style={styles.fileName} numberOfLines={1}>
-                          {pickedFile.name}
-                        </Text>
-                        <Text style={styles.fileMeta}>
-                          {pickedFile.size
-                            ? pickedFile.size > 1024 * 1024
-                              ? `${(pickedFile.size / (1024 * 1024)).toFixed(2)} MB • `
-                              : `${(pickedFile.size / 1024).toFixed(1)} KB • `
-                            : ''}
-                          <Text style={{ color: '#16a34a', fontWeight: '700' }}>✓ Valid PDF (Max 5 MB)</Text>
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.removeFileBtn}
-                        onPress={() => {
-                          setPickedFile(null);
-                          setFileError('');
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <X size={18} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={[styles.uploadBox, fileError ? styles.uploadBoxError : null]}
-                      onPress={handlePickResume}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.uploadIconWrap}>
-                        <Upload size={22} color={Colors.primaryRose} />
-                      </View>
-                      <Text style={styles.uploadBoxTitle}>Select PDF Resume from Device</Text>
-                      <Text style={styles.uploadBoxSubtitle}>
-                        Strictly PDF (.pdf) format • Maximum size: 5 MB
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {fileError ? (
-                    <Text style={styles.fileErrorText}>⚠️ {fileError}</Text>
-                  ) : null}
+                <View style={styles.perksGrid}>
+                  <View style={styles.perkChip}>
+                    <Laptop size={13} color="#e60870" />
+                    <Text style={styles.perkChipText}>Live Projects</Text>
+                  </View>
+                  <View style={styles.perkChip}>
+                    <Award size={13} color="#f8750e" />
+                    <Text style={styles.perkChipText}>MSME Certificate</Text>
+                  </View>
+                  <View style={styles.perkChip}>
+                    <Briefcase size={13} color="#059669" />
+                    <Text style={styles.perkChipText}>Placement Drives</Text>
+                  </View>
+                  <View style={styles.perkChip}>
+                    <Clock size={13} color="#0284c7" />
+                    <Text style={styles.perkChipText}>College NOC</Text>
+                  </View>
                 </View>
-              )}
+              </View>
 
-              {/* OPTION 2: Paste Link */}
-              {resumeOption === 'URL' && (
-                <View>
-                  <View style={styles.inputWrap}>
-                    <ExternalLink size={18} color={Colors.textMuted} style={styles.inputIcon} />
+              {/* Form Card 1: Personal Details */}
+              <View style={styles.modernCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardHeaderIconWrap}>
+                    <User size={18} color={Colors.primaryRose} />
+                  </View>
+                  <View>
+                    <Text style={styles.cardHeading}>Personal Information</Text>
+                    <Text style={styles.cardSubheading}>Where can our mentor reach you?</Text>
+                  </View>
+                </View>
+
+                {/* Full Name */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>
+                    Full Name <Text style={styles.requiredMark}>*</Text>
+                  </Text>
+                  <View style={styles.fieldInputWrap}>
+                    <User size={18} color={Colors.textMuted} style={styles.fieldIcon} />
                     <TextInput
-                      style={styles.textInput}
-                      placeholder="https://drive.google.com/file/d/... or LinkedIn URL"
+                      style={styles.fieldInput}
+                      placeholder="e.g. Aman Sharma"
                       placeholderTextColor={Colors.textLight}
-                      keyboardType="url"
-                      autoCapitalize="none"
-                      value={resumeUrl}
-                      onChangeText={setResumeUrl}
+                      value={fullName}
+                      onChangeText={setFullName}
                     />
                   </View>
-                  <Text style={styles.linkHelpNote}>
-                    Ensure Google Drive / OneDrive link permission is set to &ldquo;Anyone with the link can view&rdquo;.
+                </View>
+
+                {/* Email Address */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>
+                    Email Address <Text style={styles.requiredMark}>*</Text>
+                  </Text>
+                  <View style={styles.fieldInputWrap}>
+                    <Mail size={18} color={Colors.textMuted} style={styles.fieldIcon} />
+                    <TextInput
+                      style={styles.fieldInput}
+                      placeholder="e.g. aman@gmail.com"
+                      placeholderTextColor={Colors.textLight}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      value={email}
+                      onChangeText={setEmail}
+                    />
+                  </View>
+                </View>
+
+                {/* Phone Number */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>
+                    WhatsApp / Mobile Number <Text style={styles.requiredMark}>*</Text>
+                  </Text>
+                  <View style={styles.phoneGroupWrap}>
+                    <View style={styles.flagBadge}>
+                      <Text style={styles.flagText}>🇮🇳 +91</Text>
+                    </View>
+                    <TextInput
+                      style={styles.phoneFieldInput}
+                      placeholder="98765 43210"
+                      placeholderTextColor={Colors.textLight}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      value={phone}
+                      onChangeText={setPhone}
+                    />
+                  </View>
+                  <Text style={styles.inputHelper}>We will send batch confirmation via WhatsApp.</Text>
+                </View>
+
+                {/* City */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Current City</Text>
+                  <View style={styles.fieldInputWrap}>
+                    <MapPin size={18} color={Colors.textMuted} style={styles.fieldIcon} />
+                    <TextInput
+                      style={styles.fieldInput}
+                      placeholder="e.g. Ludhiana, Jalandhar, Chandigarh"
+                      placeholderTextColor={Colors.textLight}
+                      value={city}
+                      onChangeText={setCity}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Form Card 2: Academic Background */}
+              <View style={styles.modernCard}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIconWrap, { backgroundColor: '#eff6ff' }]}>
+                    <GraduationCap size={18} color="#2563eb" />
+                  </View>
+                  <View>
+                    <Text style={styles.cardHeading}>Academic Background</Text>
+                    <Text style={styles.cardSubheading}>For college NOC documentation</Text>
+                  </View>
+                </View>
+
+                {/* College Name */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>
+                    College / University Name <Text style={styles.requiredMark}>*</Text>
+                  </Text>
+                  <View style={styles.fieldInputWrap}>
+                    <Building size={18} color={Colors.textMuted} style={styles.fieldIcon} />
+                    <TextInput
+                      style={styles.fieldInput}
+                      placeholder="e.g. GNDEC, PCTE, CT University, LPU"
+                      placeholderTextColor={Colors.textLight}
+                      value={college}
+                      onChangeText={setCollege}
+                    />
+                  </View>
+                </View>
+
+                {/* Degree / Course Chips */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Degree / Program</Text>
+                  <View style={styles.chipsContainer}>
+                    {QUALIFICATIONS.map((q) => {
+                      const isSelected = qualification === q;
+                      return (
+                        <TouchableOpacity
+                          key={q}
+                          style={[styles.modernChip, isSelected && styles.modernChipActive]}
+                          onPress={() => setQualification(q)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.modernChipText,
+                              isSelected && styles.modernChipTextActive,
+                            ]}
+                          >
+                            {q}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Year of Study Chips */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Year of Study</Text>
+                  <View style={styles.chipsContainer}>
+                    {YEARS_OF_STUDY.map((y) => {
+                      const isSelected = yearOfStudy === y;
+                      return (
+                        <TouchableOpacity
+                          key={y}
+                          style={[styles.modernChip, isSelected && styles.modernChipActive]}
+                          onPress={() => setYearOfStudy(y)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.modernChipText,
+                              isSelected && styles.modernChipTextActive,
+                            ]}
+                          >
+                            {y}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Next Step Button */}
+              <TouchableOpacity
+                style={styles.primaryActionButton}
+                onPress={handleNextStep}
+                activeOpacity={0.88}
+              >
+                <Text style={styles.primaryActionButtonText}>Continue to Track Selection</Text>
+                <ArrowRight size={18} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* STEP 2: TRACK & LEARNING PREFERENCES */}
+          {currentStep === 2 && (
+            <View>
+              {/* Domain Selection Section */}
+              <View style={styles.modernCard}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIconWrap, { backgroundColor: '#fff7ed' }]}>
+                    <Code size={18} color={Colors.primaryOrange} />
+                  </View>
+                  <View>
+                    <Text style={styles.cardHeading}>Select Internship Domain</Text>
+                    <Text style={styles.cardSubheading}>Tap your preferred career specialization</Text>
+                  </View>
+                </View>
+
+                <View style={styles.domainCardsList}>
+                  {DOMAIN_OPTIONS.map((item) => {
+                    const isSelected = domain === item.id;
+                    const IconComp = item.icon;
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.domainSelectCard,
+                          isSelected && styles.domainSelectCardActive,
+                        ]}
+                        onPress={() => setDomain(item.id)}
+                        activeOpacity={0.8}
+                      >
+                        <View
+                          style={[
+                            styles.domainIconBadge,
+                            { backgroundColor: `${item.color}15` },
+                            isSelected && { backgroundColor: item.color },
+                          ]}
+                        >
+                          <IconComp
+                            size={18}
+                            color={isSelected ? '#ffffff' : item.color}
+                          />
+                        </View>
+                        <View style={styles.domainInfoWrap}>
+                          <Text
+                            style={[
+                              styles.domainItemTitle,
+                              isSelected && styles.domainItemTitleActive,
+                            ]}
+                          >
+                            {item.title}
+                          </Text>
+                          <Text style={styles.domainItemSub}>{item.subtitle}</Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.domainRadioCheck,
+                            isSelected && styles.domainRadioCheckActive,
+                          ]}
+                        >
+                          {isSelected && <Check size={12} color="#ffffff" strokeWidth={3} />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Duration & Mode Selection */}
+              <View style={styles.modernCard}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIconWrap, { backgroundColor: '#f0fdf4' }]}>
+                    <Clock size={18} color="#16a34a" />
+                  </View>
+                  <View>
+                    <Text style={styles.cardHeading}>Duration &amp; Learning Mode</Text>
+                    <Text style={styles.cardSubheading}>Tailored for your college schedule</Text>
+                  </View>
+                </View>
+
+                {/* Duration Grid */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Training Duration</Text>
+                  <View style={styles.durationGrid}>
+                    {INTERNSHIP_DURATIONS.map((dur) => {
+                      const isSelected = duration === dur.label;
+                      return (
+                        <TouchableOpacity
+                          key={dur.label}
+                          style={[
+                            styles.durationCard,
+                            isSelected && styles.durationCardActive,
+                          ]}
+                          onPress={() => setDuration(dur.label)}
+                          activeOpacity={0.75}
+                        >
+                          <Text
+                            style={[
+                              styles.durationCardLabel,
+                              isSelected && styles.durationCardLabelActive,
+                            ]}
+                          >
+                            {dur.label}
+                          </Text>
+                          <Text style={styles.durationCardSub}>{dur.sub}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Mode Selector */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Preferred Learning Mode</Text>
+                  <View style={styles.modeList}>
+                    {MODES.map((m) => {
+                      const isSelected = mode === m.id;
+                      return (
+                        <TouchableOpacity
+                          key={m.id}
+                          style={[
+                            styles.modeSelectBox,
+                            isSelected && styles.modeSelectBoxActive,
+                          ]}
+                          onPress={() => setMode(m.id)}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.modeInfo}>
+                            <View style={styles.modeTitleRow}>
+                              <Text
+                                style={[
+                                  styles.modeTitleText,
+                                  isSelected && styles.modeTitleTextActive,
+                                ]}
+                              >
+                                {m.title}
+                              </Text>
+                              <View
+                                style={[
+                                  styles.modeBadge,
+                                  isSelected && styles.modeBadgeActive,
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.modeBadgeText,
+                                    isSelected && styles.modeBadgeTextActive,
+                                  ]}
+                                >
+                                  {m.badge}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.modeDescText}>{m.desc}</Text>
+                          </View>
+                          <View
+                            style={[
+                              styles.modeRadio,
+                              isSelected && styles.modeRadioActive,
+                            ]}
+                          >
+                            {isSelected && <View style={styles.modeRadioInner} />}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Preferred Start Date */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Preferred Start Date</Text>
+                  <View style={styles.chipsContainer}>
+                    {START_DATES.map((st) => {
+                      const isSelected = startDate === st;
+                      return (
+                        <TouchableOpacity
+                          key={st}
+                          style={[styles.modernChip, isSelected && styles.modernChipActive]}
+                          onPress={() => setStartDate(st)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.modernChipText,
+                              isSelected && styles.modernChipTextActive,
+                            ]}
+                          >
+                            {st}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Step Navigation Buttons */}
+              <View style={styles.stepButtonsRow}>
+                <TouchableOpacity
+                  style={styles.secondaryStepButton}
+                  onPress={handlePrevStep}
+                  activeOpacity={0.75}
+                >
+                  <ArrowLeft size={16} color={Colors.textSecondary} />
+                  <Text style={styles.secondaryStepButtonText}>Back</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.primaryActionButton, { flex: 2 }]}
+                  onPress={handleNextStep}
+                  activeOpacity={0.88}
+                >
+                  <Text style={styles.primaryActionButtonText}>Proceed to Resume &amp; Apply</Text>
+                  <ArrowRight size={18} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* STEP 3: RESUME, GOALS & FINAL SUBMIT */}
+          {currentStep === 3 && (
+            <View>
+              {/* Application Snapshot Review Card */}
+              <View style={styles.snapshotCard}>
+                <View style={styles.snapshotHeader}>
+                  <View>
+                    <Text style={styles.snapshotTitle}>Application Summary</Text>
+                    <Text style={styles.snapshotSub}>Quick preview before submitting</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.editStepBtn}
+                    onPress={() => setCurrentStep(1)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.editStepBtnText}>Edit Details</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.snapshotDivider} />
+
+                <View style={styles.snapshotRow}>
+                  <Text style={styles.snapshotLabel}>Applicant:</Text>
+                  <Text style={styles.snapshotValueBold}>{fullName}</Text>
+                </View>
+                <View style={styles.snapshotRow}>
+                  <Text style={styles.snapshotLabel}>Phone &amp; Email:</Text>
+                  <Text style={styles.snapshotValue}>
+                    +91 {phone} • {email}
                   </Text>
                 </View>
-              )}
+                <View style={styles.snapshotRow}>
+                  <Text style={styles.snapshotLabel}>Specialization:</Text>
+                  <Text style={[styles.snapshotValueBold, { color: Colors.primaryRose }]}>
+                    {domain}
+                  </Text>
+                </View>
+                <View style={styles.snapshotRow}>
+                  <Text style={styles.snapshotLabel}>Duration &amp; Mode:</Text>
+                  <Text style={styles.snapshotValue}>
+                    {duration} • {mode === 'CAMPUS' ? 'Campus Lab' : mode === 'ONLINE' ? 'Live Online' : 'Hybrid Flex'}
+                  </Text>
+                </View>
+                <View style={styles.snapshotRow}>
+                  <Text style={styles.snapshotLabel}>College:</Text>
+                  <Text style={styles.snapshotValue}>{college}</Text>
+                </View>
+              </View>
+
+              {/* Resume Submission Card */}
+              <View style={styles.modernCard}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIconWrap, { backgroundColor: '#fdf2f8' }]}>
+                    <FileText size={18} color={Colors.primaryRose} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.cardHeading}>Resume Submission</Text>
+                    <Text style={styles.cardSubheading}>
+                      Upload PDF or paste cloud link (Optional)
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Segmented Switcher */}
+                <View style={styles.segmentedTabContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.segmentedTab,
+                      resumeOption === 'FILE' && styles.segmentedTabActive,
+                    ]}
+                    onPress={() => {
+                      setResumeOption('FILE');
+                      setResumeUrl('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <FileText
+                      size={15}
+                      color={resumeOption === 'FILE' ? Colors.primaryRose : Colors.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.segmentedTabText,
+                        resumeOption === 'FILE' && styles.segmentedTabTextActive,
+                      ]}
+                    >
+                      Upload PDF File
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.segmentedTab,
+                      resumeOption === 'URL' && styles.segmentedTabActive,
+                    ]}
+                    onPress={() => {
+                      setResumeOption('URL');
+                      setPickedFile(null);
+                      setFileError('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ExternalLink
+                      size={15}
+                      color={resumeOption === 'URL' ? Colors.primaryRose : Colors.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.segmentedTabText,
+                        resumeOption === 'URL' && styles.segmentedTabTextActive,
+                      ]}
+                    >
+                      Paste Cloud Link
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Option 1: File Upload */}
+                {resumeOption === 'FILE' && (
+                  <View>
+                    {pickedFile ? (
+                      <View style={styles.selectedFileCard}>
+                        <View style={styles.fileIconBadge}>
+                          <FileText size={24} color={Colors.primaryRose} />
+                        </View>
+                        <View style={styles.fileMetaInfo}>
+                          <Text style={styles.fileTitle} numberOfLines={1}>
+                            {pickedFile.name}
+                          </Text>
+                          <Text style={styles.fileSizeText}>
+                            {pickedFile.size
+                              ? (pickedFile.size / (1024 * 1024)).toFixed(2) + ' MB • '
+                              : ''}
+                            <Text style={styles.fileStatusGreen}>✓ Ready to Submit</Text>
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.fileDeleteBtn}
+                          onPress={() => {
+                            setPickedFile(null);
+                            setFileError('');
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <X size={18} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[
+                          styles.dashedUploadBox,
+                          fileError ? styles.dashedUploadBoxError : null,
+                        ]}
+                        onPress={handlePickResume}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.uploadCloudCircle}>
+                          <Upload size={22} color={Colors.primaryRose} />
+                        </View>
+                        <Text style={styles.uploadBoxTitle}>Select PDF Resume from Device</Text>
+                        <Text style={styles.uploadBoxSub}>
+                          PDF format only • Maximum file size: 5 MB
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {fileError ? (
+                      <Text style={styles.fileErrorAlert}>⚠️ {fileError}</Text>
+                    ) : null}
+                  </View>
+                )}
+
+                {/* Option 2: Cloud URL Link */}
+                {resumeOption === 'URL' && (
+                  <View>
+                    <View style={styles.fieldInputWrap}>
+                      <ExternalLink size={18} color={Colors.textMuted} style={styles.fieldIcon} />
+                      <TextInput
+                        style={styles.fieldInput}
+                        placeholder="https://drive.google.com/file/d/... or LinkedIn"
+                        placeholderTextColor={Colors.textLight}
+                        keyboardType="url"
+                        autoCapitalize="none"
+                        value={resumeUrl}
+                        onChangeText={setResumeUrl}
+                      />
+                    </View>
+                    <Text style={styles.inputHelper}>
+                      Ensure Google Drive / OneDrive permission is set to &ldquo;Anyone with link can view&rdquo;.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Optional Message / Notes */}
+                <View style={[styles.fieldGroup, { marginTop: 18 }]}>
+                  <Text style={styles.label}>College NOC or Learning Goals (Optional)</Text>
+                  <TextInput
+                    style={styles.textAreaField}
+                    placeholder="Tell us about your learning targets, specific batch timing preference, or if you require an official college NOC format..."
+                    placeholderTextColor={Colors.textLight}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    value={message}
+                    onChangeText={setMessage}
+                  />
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.primarySubmitButton, loading && styles.primarySubmitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={loading}
+                activeOpacity={0.88}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <>
+                    <Text style={styles.primarySubmitButtonText}>Submit Application</Text>
+                    <Sparkles size={18} color="#ffffff" />
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Trust Footer */}
+              <View style={styles.trustFooterWrap}>
+                <ShieldCheck size={14} color="#059669" />
+                <Text style={styles.trustFooterLabel}>
+                  Free Application • Direct Mentor Review • ISO &amp; MSME Certified
+                </Text>
+              </View>
+
+              {/* Helpline Assistance */}
+              <View style={styles.counselorCallout}>
+                <Text style={styles.counselorCalloutTitle}>Need guidance before applying?</Text>
+                <TouchableOpacity onPress={handleCallHelpline} activeOpacity={0.7}>
+                  <Text style={styles.counselorCalloutLink}>
+                    📞 Call Admissions Hotline: +91-97793-24178
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Message / Questions */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>College NOC or Specific Queries (Optional)</Text>
-              <TextInput
-                style={styles.textArea}
-                placeholder="Tell us about your learning goals, timings, or if you need an acceptance letter for your college..."
-                placeholderTextColor={Colors.textLight}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                value={message}
-                onChangeText={setMessage}
-              />
-            </View>
-          </View>
-
-          {/* SUBMIT BUTTON */}
-          <TouchableOpacity
-            style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Text style={styles.submitBtnText}>Submit Internship Application</Text>
-                <ArrowLeft
-                  size={18}
-                  color="#ffffff"
-                  style={{ transform: [{ rotate: '180deg' }] }}
-                />
-              </>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.trustFooterText}>
-            🔒 100% Free Application • ISO &amp; MSME Recognized Certification
-          </Text>
-
-          {/* Helpline Callout */}
-          <View style={styles.helpBox}>
-            <Text style={styles.helpBoxText}>Have questions about syllabus or batches?</Text>
-            <TouchableOpacity onPress={handleCallHelpline} activeOpacity={0.7}>
-              <Text style={styles.helpBoxLink}>📞 Call Admissions Helpline: +91-97793-24178</Text>
-            </TouchableOpacity>
-          </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -896,69 +1349,128 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  header: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     ...Shadows.small,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  circleBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitleWrap: {
-    flex: 1,
+  topBarCenter: {
     alignItems: 'center',
   },
-  headerTitle: {
+  topBarTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: Colors.textPrimary,
   },
-  headerSubtitle: {
+  topBarSubtitle: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: Colors.primaryRose,
     marginTop: 1,
   },
-  callHeaderBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fff1f2',
+  callIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#fdf2f8',
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Stepper Header
+  stepperContainer: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  stepperTabs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stepPillActive: {},
+  stepNumberBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberBadgeDone: {
+    backgroundColor: Colors.primaryRose,
+  },
+  stepNumberText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.textMuted,
+  },
+  stepNumberTextDone: {
+    color: '#ffffff',
+  },
+  stepPillLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  stepPillLabelActive: {
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  stepConnector: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 8,
+  },
+  stepConnectorActive: {
+    backgroundColor: Colors.primaryRose,
+  },
+
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
-  heroBanner: {
+
+  // Hero Card
+  heroCard: {
     backgroundColor: '#0f172a',
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 22,
+    padding: 18,
     marginBottom: 16,
     ...Shadows.medium,
   },
-  heroBadgeRow: {
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  heroBadge: {
+  batchPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     backgroundColor: 'rgba(230, 8, 112, 0.25)',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -966,32 +1478,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(230, 8, 112, 0.4)',
   },
-  heroBadgeText: {
+  batchPillText: {
     fontSize: 10,
     fontWeight: '800',
     color: '#fda4af',
     letterSpacing: 0.5,
   },
-  heroSubBadge: {
+  heroSubTag: {
     fontSize: 10,
     fontWeight: '700',
     color: '#94a3b8',
   },
   heroTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900',
     color: '#ffffff',
-    lineHeight: 26,
-    marginBottom: 8,
+    lineHeight: 25,
+    marginBottom: 6,
   },
-  heroText: {
+  heroDescription: {
     fontSize: 12,
     fontWeight: '500',
     color: '#cbd5e1',
     lineHeight: 18,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  pillarsGrid: {
+  perksGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
@@ -999,72 +1511,75 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
     paddingTop: 12,
   },
-  pillarItem: {
+  perkChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 12,
   },
-  pillarText: {
+  perkChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#f1f5f9',
+    color: '#f8fafc',
   },
-  sectionCard: {
+
+  // Modern Card Styles
+  modernCard: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 18,
-    marginBottom: 14,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#f1f5f9',
     ...Shadows.small,
   },
-  sectionHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f8fafc',
     paddingBottom: 10,
   },
-  stepNum: {
-    width: 24,
-    height: 24,
+  cardHeaderIconWrap: {
+    width: 36,
+    height: 36,
     borderRadius: 12,
-    backgroundColor: '#fff1f2',
+    backgroundColor: '#fdf2f8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepNumText: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: Colors.primaryRose,
-  },
-  sectionTitle: {
+  cardHeading: {
     fontSize: 15,
     fontWeight: '800',
     color: Colors.textPrimary,
   },
-  inputGroup: {
+  cardSubheading: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+
+  // Fields
+  fieldGroup: {
     marginBottom: 14,
   },
-  inputLabel: {
+  label: {
     fontSize: 12,
     fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
   },
-  required: {
-    color: Colors.primaryRose,
+  requiredMark: {
+    color: '#e11d48',
     fontWeight: '800',
   },
-  inputWrap: {
+  fieldInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
@@ -1073,17 +1588,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 12,
   },
-  inputIcon: {
+  fieldIcon: {
     marginRight: 8,
   },
-  textInput: {
+  fieldInput: {
     flex: 1,
-    height: 46,
-    fontSize: 14,
+    paddingVertical: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.textPrimary,
   },
-  phoneInputWrap: {
+  phoneGroupWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
@@ -1092,161 +1607,239 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
   },
-  countryCodeBadge: {
-    backgroundColor: '#e2e8f0',
+  flagBadge: {
+    backgroundColor: '#f1f5f9',
     paddingHorizontal: 12,
-    height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRightWidth: 1,
+    borderRightColor: '#e2e8f0',
   },
-  countryCodeText: {
+  flagText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: Colors.textPrimary,
   },
-  phoneTextInput: {
+  phoneFieldInput: {
     flex: 1,
-    height: 46,
     paddingHorizontal: 12,
+    paddingVertical: 12,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.textPrimary,
   },
-  chipsWrap: {
+  inputHelper: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    marginTop: 4,
+    lineHeight: 15,
+  },
+
+  // Chips
+  chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  chip: {
-    backgroundColor: '#f1f5f9',
+  modernChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  chipSelected: {
-    backgroundColor: '#fff1f2',
+  modernChipActive: {
+    backgroundColor: '#fdf2f8',
     borderColor: Colors.primaryRose,
   },
-  chipText: {
+  modernChipText: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
   },
-  chipTextSelected: {
+  modernChipTextActive: {
     color: Colors.primaryRose,
     fontWeight: '800',
   },
-  domainList: {
-    gap: 8,
+
+  // Domain Cards List
+  domainCardsList: {
+    gap: 10,
   },
-  domainItem: {
+  domainSelectCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 12,
-    gap: 10,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
   },
-  domainItemSelected: {
+  domainSelectCardActive: {
     backgroundColor: '#fff1f2',
     borderColor: Colors.primaryRose,
   },
-  domainRadio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: Colors.textLight,
+  domainIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 10,
   },
-  domainRadioInner: {
+  domainInfoWrap: {
+    flex: 1,
+  },
+  domainItemTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  domainItemTitleActive: {
+    color: Colors.primaryRose,
+    fontWeight: '800',
+  },
+  domainItemSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  domainRadioCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  domainRadioCheckActive: {
+    backgroundColor: Colors.primaryRose,
+    borderColor: Colors.primaryRose,
+  },
+
+  // Duration Grid
+  durationGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  durationCard: {
+    width: '48%',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    padding: 12,
+  },
+  durationCardActive: {
+    backgroundColor: '#fdf2f8',
+    borderColor: Colors.primaryRose,
+  },
+  durationCardLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  durationCardLabelActive: {
+    color: Colors.primaryRose,
+  },
+  durationCardSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+
+  // Mode Selection
+  modeList: {
+    gap: 8,
+  },
+  modeSelectBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    padding: 12,
+  },
+  modeSelectBoxActive: {
+    backgroundColor: '#fff1f2',
+    borderColor: Colors.primaryRose,
+  },
+  modeInfo: {
+    flex: 1,
+  },
+  modeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modeTitleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  modeTitleTextActive: {
+    color: Colors.primaryRose,
+    fontWeight: '800',
+  },
+  modeBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  modeBadgeActive: {
+    backgroundColor: '#ffe4e6',
+  },
+  modeBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Colors.textMuted,
+  },
+  modeBadgeTextActive: {
+    color: Colors.primaryRose,
+  },
+  modeDescText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  modeRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  modeRadioActive: {
+    borderColor: Colors.primaryRose,
+  },
+  modeRadioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: Colors.primaryRose,
   },
-  domainText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  domainTextSelected: {
-    fontWeight: '800',
-    color: Colors.primaryRose,
-  },
-  modeCardsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  modeCard: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    padding: 10,
-  },
-  modeCardSelected: {
-    backgroundColor: '#fff1f2',
-    borderColor: Colors.primaryRose,
-  },
-  modeCardLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 2,
-  },
-  modeCardLabelSelected: {
-    color: Colors.primaryRose,
-    fontWeight: '800',
-  },
-  modeCardDesc: {
-    fontSize: 10,
-    color: Colors.textMuted,
-  },
-  textArea: {
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    padding: 12,
-    height: 80,
-    fontSize: 13,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  uploadHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  optionalText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Colors.textMuted,
-  },
-  singleChoiceNote: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.textMuted,
-  },
-  resumeOptionTabs: {
+
+  // Resume Section
+  segmentedTabContainer: {
     flexDirection: 'row',
     backgroundColor: '#f1f5f9',
     borderRadius: 14,
-    padding: 3,
+    padding: 4,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
-  resumeOptionTab: {
+  segmentedTab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1255,56 +1848,35 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 11,
   },
-  resumeOptionTabActive: {
+  segmentedTabActive: {
     backgroundColor: '#ffffff',
     ...Shadows.small,
   },
-  resumeOptionTabText: {
+  segmentedTabText: {
     fontSize: 12,
     fontWeight: '700',
     color: Colors.textMuted,
   },
-  resumeOptionTabTextActive: {
+  segmentedTabTextActive: {
     color: Colors.primaryRose,
     fontWeight: '800',
   },
-  linkHelpNote: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Colors.textMuted,
-    marginTop: 6,
-    lineHeight: 15,
-  },
-  pdfBadge: {
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  pdfBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#b45309',
-    letterSpacing: 0.3,
-  },
-  uploadBox: {
+  dashedUploadBox: {
     backgroundColor: '#f8fafc',
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
     borderStyle: 'dashed',
     borderRadius: 16,
-    paddingVertical: 18,
+    paddingVertical: 20,
     paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  uploadBoxError: {
+  dashedUploadBoxError: {
     borderColor: '#fca5a5',
     backgroundColor: '#fff1f2',
   },
-  uploadIconWrap: {
+  uploadCloudCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -1317,15 +1889,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: Colors.primaryRose,
-    marginBottom: 3,
+    marginBottom: 2,
   },
-  uploadBoxSubtitle: {
+  uploadBoxSub: {
     fontSize: 11,
     fontWeight: '500',
     color: Colors.textMuted,
     textAlign: 'center',
   },
-  pickedFileContainer: {
+  selectedFileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f0fdf4',
@@ -1334,179 +1906,457 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
   },
-  fileIconWrap: {
-    width: 40,
-    height: 40,
+  fileIconBadge: {
+    width: 42,
+    height: 42,
     borderRadius: 12,
     backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
-  fileDetails: {
+  fileMetaInfo: {
     flex: 1,
   },
-  fileName: {
+  fileTitle: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.textPrimary,
   },
-  fileMeta: {
+  fileSizeText: {
     fontSize: 11,
     fontWeight: '500',
     color: Colors.textMuted,
     marginTop: 2,
   },
-  removeFileBtn: {
+  fileStatusGreen: {
+    color: '#16a34a',
+    fontWeight: '700',
+  },
+  fileDeleteBtn: {
     padding: 8,
   },
-  fileErrorText: {
+  fileErrorAlert: {
     fontSize: 11,
     fontWeight: '700',
     color: '#dc2626',
     marginTop: 6,
   },
-  submitBtn: {
+  textAreaField: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    padding: 12,
+    height: 80,
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+
+  // Snapshot Card
+  snapshotCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...Shadows.small,
+  },
+  snapshotHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  snapshotTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  snapshotSub: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  editStepBtn: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  editStepBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryRose,
+  },
+  snapshotDivider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginVertical: 10,
+  },
+  snapshotRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+  },
+  snapshotLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  snapshotValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'right',
+  },
+  snapshotValueBold: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'right',
+  },
+
+  // Step Navigation Buttons
+  stepButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  secondaryStepButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  secondaryStepButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  primaryActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     backgroundColor: Colors.primaryRose,
-    paddingVertical: 15,
+    paddingVertical: 14,
     borderRadius: 16,
-    marginTop: 6,
     ...Shadows.medium,
   },
-  submitBtnDisabled: {
-    opacity: 0.7,
-  },
-  submitBtnText: {
-    fontSize: 15,
+  primaryActionButtonText: {
+    fontSize: 14,
     fontWeight: '800',
     color: '#ffffff',
   },
-  trustFooterText: {
-    textAlign: 'center',
+  primarySubmitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primaryRose,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginTop: 4,
+    ...Shadows.brand,
+  },
+  primarySubmitButtonDisabled: {
+    opacity: 0.7,
+  },
+  primarySubmitButtonText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  trustFooterWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  trustFooterLabel: {
     fontSize: 11,
     fontWeight: '600',
     color: Colors.textMuted,
-    marginTop: 10,
   },
-  helpBox: {
+  counselorCallout: {
     backgroundColor: '#f1f5f9',
     borderRadius: 16,
-    padding: 14,
+    padding: 12,
     alignItems: 'center',
-    marginTop: 18,
+    marginTop: 14,
     gap: 4,
   },
-  helpBoxText: {
+  counselorCalloutTitle: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
   },
-  helpBoxLink: {
+  counselorCalloutLink: {
     fontSize: 12,
     fontWeight: '800',
     color: Colors.primaryRose,
   },
 
-  // SUCCESS VIEW STYLES
-  successContent: {
-    padding: 24,
+  // ─────────────────────────────────────────────────────────────
+  // SUCCESS SCREEN STYLES
+  // ─────────────────────────────────────────────────────────────
+  successScroll: {
+    padding: 20,
+    paddingBottom: 40,
     alignItems: 'center',
   },
-  successIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.successLight,
+  celebrationHero: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  successOuterGlow: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
+    ...Shadows.small,
   },
-  successBadge: {
+  successInnerRing: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  statusBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: '#dcfce7',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  successBadgeText: {
-    fontSize: 10,
+  statusBadgeText: {
+    fontSize: 11,
     fontWeight: '800',
     color: '#15803d',
     letterSpacing: 0.5,
   },
-  successTitle: {
+  successMainTitle: {
     fontSize: 22,
     fontWeight: '900',
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 8,
   },
-  successSubtitle: {
+  successSubtext: {
     fontSize: 13,
     fontWeight: '500',
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 20,
+    paddingHorizontal: 8,
   },
-  summaryCard: {
+
+  // Admission Pass Card
+  admissionPassCard: {
     width: '100%',
     backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    marginBottom: 20,
-    ...Shadows.small,
+    overflow: 'hidden',
+    marginBottom: 18,
+    ...Shadows.medium,
   },
-  summaryHeading: {
+  passHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  passOrgName: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  passDeskName: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  passTokenBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  passTokenLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#fca5a5',
+  },
+  passTokenValue: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#ffffff',
+    marginTop: 1,
+  },
+  passDottedDivider: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f5f9',
+    borderStyle: 'dashed',
+  },
+  passBody: {
+    padding: 16,
+    gap: 10,
+  },
+  passRow: {
+    gap: 2,
+  },
+  passGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  passGridCol: {
+    flex: 1,
+    gap: 2,
+  },
+  passFieldLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  passFieldValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  passFieldValueBold: {
     fontSize: 13,
     fontWeight: '800',
     color: Colors.textPrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    paddingBottom: 8,
-    marginBottom: 10,
   },
-  summaryRow: {
+  passFooterTag: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginTop: 4,
   },
-  summaryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textMuted,
+  passFooterText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#065f46',
   },
-  summaryValue: {
-    fontSize: 12,
+
+  // Timeline
+  timelineCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 18,
+    ...Shadows.small,
+  },
+  timelineTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 14,
+  },
+  timelineStep: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 14,
+  },
+  timelineDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  timelineDotActive: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  timelineDotNum: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  timelineContent: {
+    flex: 1,
+  },
+  timelineStepHeading: {
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.textPrimary,
-    flex: 1,
-    textAlign: 'right',
   },
-  whatsAppBtn: {
+  timelineStepDesc: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+
+  // Action Buttons
+  actionButtonsWrap: {
+    width: '100%',
+    gap: 10,
+  },
+  whatsAppPrimaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     backgroundColor: '#16a34a',
-    width: '100%',
     paddingVertical: 14,
     borderRadius: 16,
-    marginBottom: 10,
-    ...Shadows.small,
+    ...Shadows.medium,
   },
-  whatsAppBtnText: {
+  whatsAppPrimaryBtnText: {
     fontSize: 14,
     fontWeight: '800',
     color: '#ffffff',
   },
-  callBtn: {
+  callSecondaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1514,20 +2364,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
     borderColor: Colors.primaryRose,
-    width: '100%',
     paddingVertical: 14,
     borderRadius: 16,
-    marginBottom: 10,
   },
-  callBtnText: {
+  callSecondaryBtnText: {
     fontSize: 13,
     fontWeight: '800',
     color: Colors.primaryRose,
   },
-  doneBtn: {
+  homeReturnBtn: {
+    alignItems: 'center',
     paddingVertical: 12,
   },
-  doneBtnText: {
+  homeReturnBtnText: {
     fontSize: 13,
     fontWeight: '700',
     color: Colors.textMuted,

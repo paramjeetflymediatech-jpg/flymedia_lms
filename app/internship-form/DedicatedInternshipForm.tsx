@@ -198,48 +198,105 @@ export default function DedicatedInternshipForm() {
   // SUCCESS CONFIRMATION VIEW
   if (submittedData) {
     return (
-      <div className="py-8 sm:py-12 text-center space-y-6 animate-in fade-in duration-300">
-        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-sm">
-          ✓
+      <div className="py-6 sm:py-10 max-w-xl mx-auto space-y-6 animate-in fade-in duration-300">
+        {/* Celebration Header */}
+        <div className="text-center space-y-3">
+          <div className="relative inline-block">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto shadow-sm ring-8 ring-emerald-50">
+              ✓
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider rounded-full">
+              <span>🎉</span>
+              <span>Application Received • Batch 2026–2027</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight pt-1">
+              You&apos;re All Set, {submittedData.fullName}!
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              We sent a confirmation copy to <strong className="text-slate-900">{submittedData.email}</strong>. Our senior counselor will connect with you via WhatsApp or Call within 24–48 hours.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <span className="inline-block px-3.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider rounded-full">
-            Application Received Successfully
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            You&apos;re All Set, {submittedData.fullName}!
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600 max-w-lg mx-auto leading-relaxed">
-            We have sent a confirmation email to <strong className="text-slate-900">{submittedData.email}</strong>. Our admissions &amp; technical mentor team will contact you via WhatsApp or Call within 24-48 hours.
-          </p>
+        {/* Digital Admission Pass */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden text-left">
+          <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-rose-400">Flymedia Technology</p>
+              <h3 className="text-sm sm:text-base font-black">Official Admission Ticket</h3>
+            </div>
+            <div className="text-right bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+              <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Status</p>
+              <p className="text-xs font-black text-emerald-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Verified
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 sm:p-5 space-y-3 text-xs sm:text-sm">
+            <div className="flex justify-between items-start pb-2.5 border-b border-slate-100">
+              <span className="text-slate-500 font-semibold">Specialization Track:</span>
+              <span className="font-extrabold text-slate-900 text-right max-w-[60%]">{submittedData.domain}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pb-2.5 border-b border-slate-100">
+              <div>
+                <span className="text-slate-500 font-semibold block text-[11px]">Training Duration</span>
+                <span className="font-extrabold text-slate-900">{submittedData.duration}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 font-semibold block text-[11px]">Learning Mode</span>
+                <span className="font-extrabold text-rose-600">
+                  {submittedData.mode === 'CAMPUS' ? '🏫 Campus Lab' : submittedData.mode === 'ONLINE' ? '🌐 Live Online' : '⚡ Hybrid Flex'}
+                </span>
+              </div>
+            </div>
+            {submittedData.resumeName && (
+              <div className="flex justify-between items-center text-[11px] text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100 font-medium">
+                <span>📄 Resume PDF Attached:</span>
+                <span className="font-bold truncate max-w-[200px]">{submittedData.resumeName}</span>
+              </div>
+            )}
+            <div className="pt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span className="text-emerald-600">🛡️</span>
+              <span>ISO 9001:2015 &amp; MSME Recognized Certification • Official College NOC Support</span>
+            </div>
+          </div>
         </div>
 
-        {/* Application Summary Card */}
-        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 max-w-md mx-auto text-left text-xs sm:text-sm text-slate-700 space-y-2.5">
-          <div className="flex justify-between border-b border-slate-200 pb-2">
-            <span className="text-slate-500 font-semibold">Specialization:</span>
-            <span className="font-extrabold text-slate-900">{submittedData.domain}</span>
-          </div>
-          <div className="flex justify-between border-b border-slate-200 pb-2">
-            <span className="text-slate-500 font-semibold">Duration:</span>
-            <span className="font-extrabold text-slate-900">{submittedData.duration}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-500 font-semibold">Learning Mode:</span>
-            <span className="font-extrabold text-rose-600 uppercase">{submittedData.mode}</span>
+        {/* 3-Step What Happens Next */}
+        <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 text-left space-y-3">
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+            What Happens Next?
+          </h4>
+          <div className="space-y-2.5 text-xs text-slate-600">
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 font-black flex items-center justify-center shrink-0 text-[11px]">1</span>
+              <p><strong className="text-slate-800">Document Review:</strong> Our academic team verifies your college NOC and seat availability.</p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-black flex items-center justify-center shrink-0 text-[11px]">2</span>
+              <p><strong className="text-slate-800">Counselor Connect:</strong> We discuss your preferred timings, live client project allocation, and mentor mapping.</p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-black flex items-center justify-center shrink-0 text-[11px]">3</span>
+              <p><strong className="text-slate-800">Kickoff:</strong> Receive your student LMS credentials, Git setup, and begin your hands-on internship.</p>
+            </div>
           </div>
         </div>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <a
             href={`https://wa.me/919779324178?text=${encodeURIComponent(
               `Hi Flymedia, I have just submitted my application for the ${submittedData.domain} internship (${submittedData.duration}). My name is ${submittedData.fullName}.`
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 hover:shadow-lg"
           >
             <span>💬 Chat with Counselor on WhatsApp</span>
           </a>
