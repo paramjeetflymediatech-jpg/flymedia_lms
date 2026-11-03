@@ -113,6 +113,7 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
   const [mode, setMode] = useState<'CAMPUS' | 'ONLINE' | 'HYBRID'>('HYBRID');
   const [startDate, setStartDate] = useState(START_DATES[0]);
   const [city, setCity] = useState('');
+  const [resumeOption, setResumeOption] = useState<'FILE' | 'URL'>('FILE');
   const [resumeUrl, setResumeUrl] = useState('');
   const [message, setMessage] = useState('');
   const [pickedFile, setPickedFile] = useState<{
@@ -232,9 +233,9 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
         mode,
         startDate,
         city: city.trim() || null,
-        resumeUrl: resumeUrl.trim() || null,
+        resumeUrl: resumeOption === 'URL' && resumeUrl.trim() ? resumeUrl.trim() : null,
         message: message.trim() || null,
-        resumeFile: pickedFile,
+        resumeFile: resumeOption === 'FILE' ? pickedFile : null,
       });
 
       if (res.success) {
@@ -697,82 +698,143 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
               <Text style={styles.sectionTitle}>Upload Resume &amp; Goals</Text>
             </View>
 
-            {/* Resume Upload Picker Component */}
+            {/* Resume Submission (Mutually Exclusive: Upload File OR Paste Link) */}
             <View style={styles.inputGroup}>
               <View style={styles.uploadHeaderRow}>
                 <Text style={styles.inputLabel}>
-                  Upload Resume (PDF File) <Text style={styles.optionalText}>(Optional)</Text>
+                  Resume Submission <Text style={styles.optionalText}>(Optional)</Text>
                 </Text>
-                <View style={styles.pdfBadge}>
-                  <Text style={styles.pdfBadgeText}>📄 Max 5 MB</Text>
-                </View>
+                <Text style={styles.singleChoiceNote}>Select one option</Text>
               </View>
 
-              {pickedFile ? (
-                <View style={styles.pickedFileContainer}>
-                  <View style={styles.fileIconWrap}>
-                    <FileText size={22} color={Colors.primaryRose} />
-                  </View>
-                  <View style={styles.fileDetails}>
-                    <Text style={styles.fileName} numberOfLines={1}>
-                      {pickedFile.name}
-                    </Text>
-                    <Text style={styles.fileMeta}>
-                      {pickedFile.size
-                        ? pickedFile.size > 1024 * 1024
-                          ? `${(pickedFile.size / (1024 * 1024)).toFixed(2)} MB • `
-                          : `${(pickedFile.size / 1024).toFixed(1)} KB • `
-                        : ''}
-                      <Text style={{ color: '#16a34a', fontWeight: '700' }}>✓ Valid PDF (Max 5 MB)</Text>
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.removeFileBtn}
-                    onPress={() => {
-                      setPickedFile(null);
-                      setFileError('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <X size={18} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
+              {/* Segmented Tab Switcher */}
+              <View style={styles.resumeOptionTabs}>
                 <TouchableOpacity
-                  style={[styles.uploadBox, fileError ? styles.uploadBoxError : null]}
-                  onPress={handlePickResume}
-                  activeOpacity={0.8}
+                  style={[
+                    styles.resumeOptionTab,
+                    resumeOption === 'FILE' && styles.resumeOptionTabActive,
+                  ]}
+                  onPress={() => {
+                    setResumeOption('FILE');
+                    setResumeUrl('');
+                  }}
+                  activeOpacity={0.7}
                 >
-                  <View style={styles.uploadIconWrap}>
-                    <Upload size={22} color={Colors.primaryRose} />
-                  </View>
-                  <Text style={styles.uploadBoxTitle}>Select PDF Resume from Device</Text>
-                  <Text style={styles.uploadBoxSubtitle}>
-                    Strictly PDF (.pdf) format • Maximum size: 5 MB
+                  <FileText
+                    size={14}
+                    color={resumeOption === 'FILE' ? Colors.primaryRose : Colors.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.resumeOptionTabText,
+                      resumeOption === 'FILE' && styles.resumeOptionTabTextActive,
+                    ]}
+                  >
+                    Upload PDF File
                   </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.resumeOptionTab,
+                    resumeOption === 'URL' && styles.resumeOptionTabActive,
+                  ]}
+                  onPress={() => {
+                    setResumeOption('URL');
+                    setPickedFile(null);
+                    setFileError('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <ExternalLink
+                    size={14}
+                    color={resumeOption === 'URL' ? Colors.primaryRose : Colors.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.resumeOptionTabText,
+                      resumeOption === 'URL' && styles.resumeOptionTabTextActive,
+                    ]}
+                  >
+                    Paste Link
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* OPTION 1: Upload File */}
+              {resumeOption === 'FILE' && (
+                <View>
+                  {pickedFile ? (
+                    <View style={styles.pickedFileContainer}>
+                      <View style={styles.fileIconWrap}>
+                        <FileText size={22} color={Colors.primaryRose} />
+                      </View>
+                      <View style={styles.fileDetails}>
+                        <Text style={styles.fileName} numberOfLines={1}>
+                          {pickedFile.name}
+                        </Text>
+                        <Text style={styles.fileMeta}>
+                          {pickedFile.size
+                            ? pickedFile.size > 1024 * 1024
+                              ? `${(pickedFile.size / (1024 * 1024)).toFixed(2)} MB • `
+                              : `${(pickedFile.size / 1024).toFixed(1)} KB • `
+                            : ''}
+                          <Text style={{ color: '#16a34a', fontWeight: '700' }}>✓ Valid PDF (Max 5 MB)</Text>
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.removeFileBtn}
+                        onPress={() => {
+                          setPickedFile(null);
+                          setFileError('');
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <X size={18} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.uploadBox, fileError ? styles.uploadBoxError : null]}
+                      onPress={handlePickResume}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.uploadIconWrap}>
+                        <Upload size={22} color={Colors.primaryRose} />
+                      </View>
+                      <Text style={styles.uploadBoxTitle}>Select PDF Resume from Device</Text>
+                      <Text style={styles.uploadBoxSubtitle}>
+                        Strictly PDF (.pdf) format • Maximum size: 5 MB
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {fileError ? (
+                    <Text style={styles.fileErrorText}>⚠️ {fileError}</Text>
+                  ) : null}
+                </View>
               )}
 
-              {fileError ? (
-                <Text style={styles.fileErrorText}>⚠️ {fileError}</Text>
-              ) : null}
-            </View>
-
-            {/* Resume URL Fallback */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Or Resume / Drive / LinkedIn Link (Optional)</Text>
-              <View style={styles.inputWrap}>
-                <ExternalLink size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="https://drive.google.com/file/d/..."
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="url"
-                  autoCapitalize="none"
-                  value={resumeUrl}
-                  onChangeText={setResumeUrl}
-                />
-              </View>
+              {/* OPTION 2: Paste Link */}
+              {resumeOption === 'URL' && (
+                <View>
+                  <View style={styles.inputWrap}>
+                    <ExternalLink size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="https://drive.google.com/file/d/... or LinkedIn URL"
+                      placeholderTextColor={Colors.textLight}
+                      keyboardType="url"
+                      autoCapitalize="none"
+                      value={resumeUrl}
+                      onChangeText={setResumeUrl}
+                    />
+                  </View>
+                  <Text style={styles.linkHelpNote}>
+                    Ensure Google Drive / OneDrive link permission is set to &ldquo;Anyone with the link can view&rdquo;.
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Message / Questions */}
@@ -1163,12 +1225,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   optionalText: {
     fontSize: 11,
     fontWeight: '500',
     color: Colors.textMuted,
+  },
+  singleChoiceNote: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  resumeOptionTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    padding: 3,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  resumeOptionTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 11,
+  },
+  resumeOptionTabActive: {
+    backgroundColor: '#ffffff',
+    ...Shadows.small,
+  },
+  resumeOptionTabText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  resumeOptionTabTextActive: {
+    color: Colors.primaryRose,
+    fontWeight: '800',
+  },
+  linkHelpNote: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    marginTop: 6,
+    lineHeight: 15,
   },
   pdfBadge: {
     backgroundColor: '#fef3c7',

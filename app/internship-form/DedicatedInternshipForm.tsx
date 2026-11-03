@@ -44,6 +44,7 @@ export default function DedicatedInternshipForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fileError, setFileError] = useState('');
+  const [resumeOption, setResumeOption] = useState<'FILE' | 'URL'>('FILE');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submittedData, setSubmittedData] = useState<{
     fullName: string;
@@ -145,10 +146,13 @@ export default function DedicatedInternshipForm() {
       formData.append('startDate', startDate);
       if (city.trim()) formData.append('city', city.trim());
       if (state.trim()) formData.append('state', state.trim());
-      if (resumeUrl.trim()) formData.append('resumeUrl', resumeUrl.trim());
+      if (resumeOption === 'FILE' && resumeFile) {
+        formData.append('resumeFile', resumeFile);
+      } else if (resumeOption === 'URL' && resumeUrl.trim()) {
+        formData.append('resumeUrl', resumeUrl.trim());
+      }
       if (portfolioUrl.trim()) formData.append('portfolioUrl', portfolioUrl.trim());
       if (message.trim()) formData.append('message', message.trim());
-      if (resumeFile) formData.append('resumeFile', resumeFile);
 
       const res = await fetch('/api/internship/apply', {
         method: 'POST',
@@ -511,101 +515,139 @@ export default function DedicatedInternshipForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-          {/* PDF Resume Upload Component */}
-          <div className="space-y-2 sm:col-span-2">
+          {/* Resume Submission Option (Mutually Exclusive) */}
+          <div className="space-y-3 sm:col-span-2">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">
-                Upload Resume (PDF Format)
+                Resume Submission <span className="text-xs text-slate-400 font-normal">(Optional)</span>
               </label>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                <span>📄 PDF Only</span>
-                <span>•</span>
-                <span>Size: Max 5 MB</span>
-              </span>
+              <span className="text-[11px] font-semibold text-slate-400">Choose one option below</span>
             </div>
 
-            {resumeFile ? (
-              <div className="flex items-center justify-between p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl animate-in fade-in">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black shrink-0">
-                    PDF
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">{resumeFile.name}</p>
-                    <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1 mt-0.5">
-                      <span>
-                        {resumeFile.size > 1024 * 1024
-                          ? `${(resumeFile.size / (1024 * 1024)).toFixed(2)} MB`
-                          : `${(resumeFile.size / 1024).toFixed(1)} KB`}
-                      </span>
-                      <span>•</span>
-                      <span>✓ Valid PDF (Max 5 MB)</span>
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResumeFile(null);
-                    setFileError('');
-                  }}
-                  className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all ml-3 shrink-0 cursor-pointer"
-                >
-                  Change File
-                </button>
-              </div>
-            ) : (
-              <label
-                className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
-                  fileError
-                    ? 'border-rose-300 bg-rose-50/50'
-                    : 'border-slate-200 bg-slate-50 hover:bg-orange-50/40 hover:border-orange-300'
+            {/* Segmented Tab Selector */}
+            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeOption('FILE');
+                  setResumeUrl('');
+                }}
+                className={`py-2.5 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  resumeOption === 'FILE'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <div className="flex flex-col items-center justify-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-2xl">
-                    📎
+                <span>📄 Upload PDF File</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeOption('URL');
+                  setResumeFile(null);
+                  setFileError('');
+                }}
+                className={`py-2.5 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  resumeOption === 'URL'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🔗 Paste Link</span>
+              </button>
+            </div>
+
+            {/* Option 1: File Upload */}
+            {resumeOption === 'FILE' && (
+              <div className="space-y-2 animate-in fade-in duration-200">
+                {resumeFile ? (
+                  <div className="flex items-center justify-between p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black shrink-0">
+                        PDF
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">{resumeFile.name}</p>
+                        <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1 mt-0.5">
+                          <span>
+                            {resumeFile.size > 1024 * 1024
+                              ? `${(resumeFile.size / (1024 * 1024)).toFixed(2)} MB`
+                              : `${(resumeFile.size / 1024).toFixed(1)} KB`}
+                          </span>
+                          <span>•</span>
+                          <span>✓ Valid PDF (Max 5 MB)</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResumeFile(null);
+                        setFileError('');
+                      }}
+                      className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all ml-3 shrink-0 cursor-pointer"
+                    >
+                      Change File
+                    </button>
                   </div>
-                  <div>
-                    <span className="text-sm font-bold text-orange-600 hover:underline">
-                      Click to choose PDF Resume
-                    </span>
-                    <span className="text-sm text-slate-500 font-medium"> or drag and drop</span>
-                  </div>
-                  <p className="text-xs text-slate-400 font-medium">
-                    Strictly PDF (.pdf) format • Maximum size: 5 MB
+                ) : (
+                  <label
+                    className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                      fileError
+                        ? 'border-rose-300 bg-rose-50/50'
+                        : 'border-slate-200 bg-slate-50 hover:bg-orange-50/40 hover:border-orange-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center text-center space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-2xl">
+                        📎
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-orange-600 hover:underline">
+                          Click to choose PDF Resume
+                        </span>
+                        <span className="text-sm text-slate-500 font-medium"> or drag and drop</span>
+                      </div>
+                      <p className="text-xs text-slate-400 font-medium">
+                        Strictly PDF (.pdf) format • Maximum size: 5 MB
+                      </p>
+                    </div>
+
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </label>
+                )}
+
+                {fileError && (
+                  <p className="text-xs font-bold text-rose-600 animate-in fade-in flex items-center gap-1 mt-1">
+                    <span>⚠️</span>
+                    <span>{fileError}</span>
                   </p>
-                </div>
+                )}
+              </div>
+            )}
 
+            {/* Option 2: Paste URL */}
+            {resumeOption === 'URL' && (
+              <div className="space-y-1.5 animate-in fade-in duration-200">
                 <input
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  type="url"
+                  value={resumeUrl}
+                  onChange={(e) => setResumeUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/... or LinkedIn profile URL"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 text-base sm:text-sm font-semibold transition-all"
                 />
-              </label>
+                <p className="text-xs text-slate-400 font-medium">
+                  Ensure Google Drive / OneDrive link permission is set to &ldquo;Anyone with the link can view&rdquo;.
+                </p>
+              </div>
             )}
-
-            {fileError && (
-              <p className="text-xs font-bold text-rose-600 animate-in fade-in flex items-center gap-1 mt-1">
-                <span>⚠️</span>
-                <span>{fileError}</span>
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5 sm:col-span-2">
-            <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">
-              Or Paste Resume / LinkedIn / Portfolio Link (Optional)
-            </label>
-            <input
-              type="url"
-              value={resumeUrl}
-              onChange={(e) => setResumeUrl(e.target.value)}
-              placeholder="https://drive.google.com/... or https://linkedin.com/in/..."
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 text-base sm:text-sm font-semibold transition-all"
-            />
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
