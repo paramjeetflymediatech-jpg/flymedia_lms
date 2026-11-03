@@ -67,15 +67,14 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // Check file size (100 KB to 200 KB)
-        const minBytes = 100 * 1024; // 102,400 bytes
-        const maxBytes = 200 * 1024; // 204,800 bytes
-        if (file.size < minBytes || file.size > maxBytes) {
-          const sizeKb = (file.size / 1024).toFixed(1);
+        // Check file size (Max 5 MB)
+        const maxBytes = 5 * 1024 * 1024; // 5,242,880 bytes
+        if (file.size > maxBytes) {
+          const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
           return NextResponse.json(
             {
               success: false,
-              error: `Resume PDF size must be between 100 KB and 200 KB. Your uploaded file is ${sizeKb} KB.`,
+              error: `Resume PDF size must be 5 MB or less. Your uploaded file is ${sizeMb} MB.`,
             },
             { status: 400 }
           );
@@ -153,6 +152,7 @@ export async function POST(req: NextRequest) {
       domain,
       duration,
       mode,
+      
       startDate,
       resumeUrl,
       portfolioUrl,

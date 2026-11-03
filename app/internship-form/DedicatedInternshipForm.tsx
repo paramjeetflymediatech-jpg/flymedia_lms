@@ -90,20 +90,12 @@ export default function DedicatedInternshipForm() {
       return;
     }
 
-    // Check file size: 100 KB to 200 KB
-    const minBytes = 100 * 1024; // 102,400 bytes
-    const maxBytes = 200 * 1024; // 204,800 bytes
-    const sizeKb = file.size / 1024;
-
-    if (file.size < minBytes) {
-      setFileError(`File is too small (${sizeKb.toFixed(1)} KB). Resume size must be at least 100 KB.`);
-      setResumeFile(null);
-      e.target.value = '';
-      return;
-    }
+    // Check file size: Max 5 MB
+    const maxBytes = 5 * 1024 * 1024; // 5,242,880 bytes
+    const sizeMb = file.size / (1024 * 1024);
 
     if (file.size > maxBytes) {
-      setFileError(`File exceeds limit (${sizeKb.toFixed(1)} KB). Resume size must be 200 KB or less.`);
+      setFileError(`File exceeds limit (${sizeMb.toFixed(2)} MB). Resume size must be 5 MB or less.`);
       setResumeFile(null);
       e.target.value = '';
       return;
@@ -528,7 +520,7 @@ export default function DedicatedInternshipForm() {
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                 <span>📄 PDF Only</span>
                 <span>•</span>
-                <span>Size: 100 KB – 200 KB</span>
+                <span>Size: Max 5 MB</span>
               </span>
             </div>
 
@@ -541,9 +533,13 @@ export default function DedicatedInternshipForm() {
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-900 truncate">{resumeFile.name}</p>
                     <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1 mt-0.5">
-                      <span>{(resumeFile.size / 1024).toFixed(1)} KB</span>
+                      <span>
+                        {resumeFile.size > 1024 * 1024
+                          ? `${(resumeFile.size / (1024 * 1024)).toFixed(2)} MB`
+                          : `${(resumeFile.size / 1024).toFixed(1)} KB`}
+                      </span>
                       <span>•</span>
-                      <span>✓ Valid 100–200 KB PDF size</span>
+                      <span>✓ Valid PDF (Max 5 MB)</span>
                     </p>
                   </div>
                 </div>
@@ -578,7 +574,7 @@ export default function DedicatedInternshipForm() {
                     <span className="text-sm text-slate-500 font-medium"> or drag and drop</span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">
-                    Strictly PDF (.pdf) format • Required size between 100 KB and 200 KB
+                    Strictly PDF (.pdf) format • Maximum size: 5 MB
                   </p>
                 </div>
 

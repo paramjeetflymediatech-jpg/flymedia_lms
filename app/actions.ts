@@ -2538,12 +2538,11 @@ export async function submitInternshipApplication(prevState: any, formData: Form
       if (!isPdf) {
         return { error: 'Invalid file format. Resume must be in PDF format (.pdf).' };
       }
-      const minBytes = 100 * 1024;
-      const maxBytes = 200 * 1024;
-      if (file.size < minBytes || file.size > maxBytes) {
-        const sizeKb = (file.size / 1024).toFixed(1);
+      const maxBytes = 5 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
         return {
-          error: `Resume PDF size must be between 100 KB and 200 KB. Your uploaded file is ${sizeKb} KB.`,
+          error: `Resume PDF size must be 5 MB or less. Your uploaded file is ${sizeMb} MB.`,
         };
       }
 

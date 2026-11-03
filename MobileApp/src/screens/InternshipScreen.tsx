@@ -11,6 +11,8 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
+  TurboModuleRegistry,
+  NativeModules,
 } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 import { ApiService } from '../services/api';
@@ -81,6 +83,21 @@ const START_DATES = [
   'Winter Training (Dec - Jan)',
 ];
 
+const isDocumentPickerAvailable = (): boolean => {
+  try {
+    if (TurboModuleRegistry && typeof (TurboModuleRegistry as any).get === 'function') {
+      const mod = (TurboModuleRegistry as any).get('RNDocumentPicker');
+      if (mod) return true;
+    }
+  } catch {}
+  try {
+    if (NativeModules && ((NativeModules as any).RNDocumentPicker || (NativeModules as any).NativeDocumentPicker)) {
+      return true;
+    }
+  } catch {}
+  return false;
+};
+
 export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
   navigation,
   route,
@@ -111,6 +128,22 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
 
   const handlePickResume = async () => {
     setFileError('');
+
+    if (!isDocumentPickerAvailable()) {
+      Alert.alert(
+        'App Rebuild Required for iOS',
+        'The newly installed native file picker module requires rebuilding the iOS app binary.\n\nPlease run "npm run ios" in your terminal to recompile the app with native file picker support.\n\nIn the meantime, you can paste your Google Drive / Cloud PDF resume link below, or open our web upload form.',
+        [
+          {
+            text: 'Open Web Form',
+            onPress: () => Linking.openURL('https://flymediatech.in/internship-form'),
+          },
+          { text: 'OK, I will paste link', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
     try {
       const results = await pick({
         type: [types.pdf],
@@ -130,25 +163,16 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
         return;
       }
 
-      // Size check (100 KB to 200 KB)
-      const minBytes = 100 * 1024; // 100 KB
-      const maxBytes = 200 * 1024; // 200 KB
+      // Size check (Max 5 MB)
+      const maxBytes = 5 * 1024 * 1024; // 5 MB
       const fileSize = file.size ?? 0;
 
-      if (fileSize > 0) {
-        const sizeKb = (fileSize / 1024).toFixed(1);
-        if (fileSize < minBytes) {
-          const msg = `Selected file is too small (${sizeKb} KB). Required minimum is 100 KB.`;
-          setFileError(msg);
-          Alert.alert('File Too Small', msg);
-          return;
-        }
-        if (fileSize > maxBytes) {
-          const msg = `Selected file exceeds limit (${sizeKb} KB). Required maximum is 200 KB.`;
-          setFileError(msg);
-          Alert.alert('File Too Large', msg);
-          return;
-        }
+      if (fileSize > maxBytes) {
+        const sizeMb = (fileSize / (1024 * 1024)).toFixed(2);
+        const msg = `Selected file exceeds limit (${sizeMb} MB). Maximum allowed size is 5 MB.`;
+        setFileError(msg);
+        Alert.alert('File Too Large', msg);
+        return;
       }
 
       setPickedFile({
@@ -158,12 +182,15 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
         type: file.type || 'application/pdf',
       });
       setFileError('');
-    } catch (err: unknown) {
+    } catch (err: any) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         return;
       }
       console.warn('Document picker error:', err);
-      Alert.alert('Upload Error', 'Could not access file picker. Please try again.');
+      Alert.alert(
+        'Upload Notice',
+        'Could not open native document picker. You can paste your resume Google Drive link below or rebuild the iOS app.'
+      );
     }
   };
 
@@ -677,7 +704,7 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
                   Upload Resume (PDF File) <Text style={styles.optionalText}>(Optional)</Text>
                 </Text>
                 <View style={styles.pdfBadge}>
-                  <Text style={styles.pdfBadgeText}>📄 100 KB – 200 KB</Text>
+                  <Text style={styles.pdfBadgeText}>📄 Max 5 MB</Text>
                 </View>
               </View>
 
@@ -691,8 +718,12 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
                       {pickedFile.name}
                     </Text>
                     <Text style={styles.fileMeta}>
-                      {pickedFile.size ? `${(pickedFile.size / 1024).toFixed(1)} KB • ` : ''}
-                      <Text style={{ color: '#16a34a', fontWeight: '700' }}>✓ Valid PDF</Text>
+                      {pickedFile.size
+                        ? pickedFile.size > 1024 * 1024
+                          ? `${(pickedFile.size / (1024 * 1024)).toFixed(2)} MB • `
+                          : `${(pickedFile.size / 1024).toFixed(1)} KB • `
+                        : ''}
+                      <Text style={{ color: '#16a34a', fontWeight: '700' }}>✓ Valid PDF (Max 5 MB)</Text>
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -717,7 +748,7 @@ export const InternshipScreen: React.FC<{ navigation: any; route?: any }> = ({
                   </View>
                   <Text style={styles.uploadBoxTitle}>Select PDF Resume from Device</Text>
                   <Text style={styles.uploadBoxSubtitle}>
-                    Strictly PDF (.pdf) format • Required size: 100 KB – 200 KB
+                    Strictly PDF (.pdf) format • Maximum size: 5 MB
                   </Text>
                 </TouchableOpacity>
               )}
